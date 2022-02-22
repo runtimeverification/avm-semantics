@@ -126,7 +126,7 @@ fi
 
 run_command="$1" ; shift
 
-if [[ "$run_command" == 'version' ]] || [[ "$run_command" == '--version' ]]; then
+if [[ "${run_command}" == 'version' ]] || [[ "${run_command}" == '--version' ]]; then
     cat "${INSTALL_LIB}/version"
     exit 0
 fi
@@ -159,11 +159,11 @@ backend_dir="${backend_dir:-${INSTALL_LIB}/$backend}"
 run_file="$1" ; shift
 
 # Invoke the appropriate runner
-case "$run_command" in
+case "${run_command}" in
     # Running
-    kast)  run_kast  "$@"                                  ;;
-    parse) run_parse "$@"                                  ;;
-    run)   run_krun  "$@"                                  ;;
-    prove) run_prove "$@"                                  ;;
-    *)     $0 help ; fatal "Unknown command: $run_command" ;;
+    kast)  run_kast  "$@"                                    ;;
+    parse) run_parse "$@"                                    ;;
+    run)   run_krun  "$@"                                    ;;
+    prove) run_prove "$@"                                    ;;
+    *)     $0 help ; fatal "Unknown command: ${run_command}" ;;
 esac
