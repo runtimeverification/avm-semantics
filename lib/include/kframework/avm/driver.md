@@ -1,9 +1,9 @@
 ```k
 requires "blockchain-k-plugin/krypto.md"
 
-requires "../common/teal-syntax.md"
-requires "../common/blockchain.md"
-requires "../common/args.md"
+requires "common/teal-syntax.md"
+requires "common/blockchain.md"
+requires "common/args.md"
 requires "teal-stack.md"
 requires "env-init.md"
 ```
