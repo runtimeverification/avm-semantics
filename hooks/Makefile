@@ -9,7 +9,7 @@ IFLAGS += -I/usr/local/opt/openssl/include
 LFLAGS += -L/usr/local/opt/openssl/lib
 endif
 
-LIBS   += -lcurl -lsodium -lcrypto
+LIBS   += -lcurl -lcrypto
 
 CC = c++
 CCFLAGS += -std=c++14

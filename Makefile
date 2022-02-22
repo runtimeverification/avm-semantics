@@ -134,10 +134,10 @@ HOOK_ALGO_FILES   := $(CURDIR)/hooks/algorand.cpp \
 
 HOOK_SHARED_FILES := $(CURDIR)/hooks/hooks.cpp
 
-HOOK_CC_OPTS      := -g -std=c++14                                              \
-                     -L$(LOCAL_LIB)                                             \
-                     -I$(PLUGIN_SUBMODULE)/plugin-c                             \
-                     -lcryptopp -lsecp256k1 -lff -lcurl -lsodium -lssl -lcrypto
+HOOK_CC_OPTS      := -g -std=c++14                                     \
+                     -L$(LOCAL_LIB)                                    \
+                     -I$(PLUGIN_SUBMODULE)/plugin-c                    \
+                     -lcryptopp -lsecp256k1 -lff -lcurl -lssl -lcrypto
 
 ifeq ($(UNAME_S),Darwin)
 export BITCOIN_LIBEXEC := $(shell brew --prefix libbitcoin)/libexec

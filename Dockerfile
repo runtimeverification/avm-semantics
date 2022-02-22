@@ -13,7 +13,6 @@ RUN    apt-get update            \
             libmsgpack-dev       \
             libprocps-dev        \
             libsecp256k1-dev     \
-            libsodium-dev        \
             libssl-dev           \
             libyaml-dev          \
             maven                \
