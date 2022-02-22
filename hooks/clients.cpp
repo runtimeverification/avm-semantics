@@ -191,21 +191,6 @@ AlgodClient::submit(std::string rawtxn) const {
   return post(submit_url(), rawtxn);
 }
 
-JsonResponse
-AlgodClient::submit(const SignedTransaction& stxn) const {
-  std::stringstream buffer;
-  msgpack::pack(buffer, stxn);
-  return submit(buffer.str());
-}
-
-JsonResponse
-AlgodClient::submit(std::vector <SignedTransaction> txgroup) const {
-  std::stringstream buffer;
-  for (auto& txn : txgroup)
-    msgpack::pack(buffer, txn);
-  return submit(buffer.str());
-}
-
 std::string
 AlgodClient::params_url() const {
   return "/v" + version + "/transactions/params";

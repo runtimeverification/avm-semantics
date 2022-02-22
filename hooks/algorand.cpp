@@ -247,35 +247,6 @@ msgpack::packer<Stream>& MultiSig::pack(msgpack::packer<Stream>& o) const {
   return o;
 }
 
-SignedTransaction::SignedTransaction(const Transaction& txn, bytes signature) :
-  sig(signature), txn(txn) { }
-
-SignedTransaction::SignedTransaction(const Transaction& txn, LogicSig logic) :
-  lsig(logic), txn(txn) { }
-
-SignedTransaction::SignedTransaction(const Transaction& txn, MultiSig multi) :
-  msig(multi), txn(txn) { }
-
-template <typename Stream>
-msgpack::packer<Stream>& SignedTransaction::pack(msgpack::packer<Stream>& o) const {
-  o.pack_map(2 + is_present(signer)); // one of the sig types, txn, and maybe sgnr
-  kv_pack(o, "lsig", lsig);
-  kv_pack(o, "msig", msig);
-  kv_pack(o, "sgnr", signer);
-  kv_pack(o, "sig", sig);
-  kv_pack(o, "txn", txn);
-  return o;
-}
-
-bytes SignedTransaction::encode() const {
-  std::stringstream buffer;
-  msgpack::pack(buffer, *this);
-  std::string const& s = buffer.str();
-  bytes data{s.begin(), s.end()};
-  return data;
-}
-
-
 int AssetParams::key_count() const {
   /* count the non-empty fields, for msgpack */
   int keys = 0;
@@ -478,15 +449,6 @@ Transaction::app_call(Address sender,
   t.note = note;
   t.rekey_to = rekey_to;
   return t;
-}
-
-SignedTransaction Transaction::sign(Account acct) const {
-  auto sig = acct.sign("TX", encode());
-  return SignedTransaction{*this, sig};
-}
-
-SignedTransaction Transaction::sign(LogicSig logic) const {
-  return SignedTransaction{*this, logic};
 }
 
 int Transaction::key_count() const {

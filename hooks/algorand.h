@@ -73,8 +73,6 @@ public:
 };
 std::ostream& operator<<(std::ostream& os, const Account& acct);
 
-class SignedTransaction;
-
 class AssetParams {
 public:
   uint64_t total = 0;
@@ -241,9 +239,6 @@ public:
                               bytes lease, bytes note, Address rekey_to);
 
 
-  SignedTransaction sign(Account) const;
-  SignedTransaction sign(LogicSig) const;
-
   // Field names and sections are taken from:
   //  https://developer.algorand.org/docs/reference/transactions/
   // Header
@@ -309,25 +304,6 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const Transaction& txn);
 
-class SignedTransaction {
-public:
-  SignedTransaction(const Transaction& txn, bytes signature);
-  SignedTransaction(const Transaction& txn, LogicSig logic);
-  SignedTransaction(const Transaction& txn, MultiSig multi);
-  bytes encode() const;
-
-  template <typename Stream>
-  msgpack::packer<Stream>& pack(msgpack::packer<Stream>& o) const;
-  // Reconsider macro use once we do unpack for Transaction
-  // MSGPACK_DEFINE_MAP(sig, txn);
-private:
-  bytes sig;
-  LogicSig lsig;
-  MultiSig msig;
-  Address signer;
-  Transaction txn;
-};
-
 namespace msgpack {
   MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
     namespace adaptor {
@@ -379,17 +355,6 @@ namespace msgpack {
           // to "omitempty" for compatibility. That requires counting
           // keys first, to size the map, and then packing them (in
           // lexographical order).
-          return v.pack<Stream>(o);
-        }
-      };
-
-      template<>
-      struct pack<SignedTransaction> {
-        template <typename Stream>
-        packer<Stream>&
-        operator()(msgpack::packer<Stream>& o, SignedTransaction const& v) const {
-          // We don't use the MSGPACK_DEFINE_MAP macro because
-          // Transaction has no unpacking support yet.
           return v.pack<Stream>(o);
         }
       };
@@ -499,8 +464,6 @@ public:
 
   virtual std::string submit_url() const;
   JsonResponse submit(std::string raw) const;
-  JsonResponse submit(const SignedTransaction& stxn) const;
-  JsonResponse submit(const std::vector<SignedTransaction> stxn) const;
   JsonResponse transaction_pending(std::string txid = "");
 
   virtual std::string params_url() const;
