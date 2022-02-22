@@ -1,0 +1,133 @@
+#pragma version 2
+// Inspired by the Teal example in PyTeal: https://github.com/algorand/pyteal/blob/master/examples/split.py
+//
+
+// split_core = (Txn.type_enum() == TxnType.Payment).And(Txn.fee() < tmpl_fee)
+//
+
+txn TypeEnum
+int pay
+==
+
+txn Fee
+int 1000
+<
+
+&&
+
+store 0
+
+// split_transfer = And(
+//   Gtxn[0].sender() == Gtxn[1].sender(),
+//   Txn.close_remainder_to() == Global.zero_address(),
+//   Gtxn[0].receiver() == tmpl_rcv1,
+//   Gtxn[1].receiver() == tmpl_rcv2,
+//   Gtxn[0].amount() == ((Gtxn[0].amount() + Gtxn[1].amount()) * tmpl_ratn) / tmpl_ratd,
+//   Gtxn[0].amount() == tmpl_min_pay
+// )
+//
+
+gtxn 0 Sender
+gtxn 1 Sender
+==
+
+txn CloseRemainderTo
+global ZeroAddress
+==
+
+&&
+
+gtxn 0 Receiver
+byte "STF6TH6PKINM4CDIQHNSC7QEA4DM5OJKKSACAPWGTG776NWSQOMAYVGOQE"
+==
+
+&&
+
+gtxn 1 Receiver
+byte "6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXYS"
+==
+
+&&
+
+gtxn 0 Amount
+dup
+gtxn 1 Amount
++
+int 1
+*
+int 3
+/
+==
+
+&&
+
+gtxn 0 Amount
+int 1000
+==
+
+&&
+
+store 1
+
+// split_close = And(
+//   Txn.close_remainder_to() == tmpl_own,
+//   Txn.receiver() == Global.zero_address(),
+//   Txn.amount() == Int(0),
+//   Txn.first_valid() > tmpl_timeout
+// )
+//
+
+txn CloseRemainderTo
+byte "5MK5NGBRT5RL6IGUSYDIX5P7TNNZKRVXKT6FGVI6UVK6IZAWTYQGE4RZIQ"
+==
+
+txn Receiver
+global ZeroAddress
+==
+
+&&
+
+txn Amount
+int 0
+==
+
+&&
+
+txn FirstValid
+int 3000
+>
+
+&&
+
+store 2
+
+// split = And(
+//   split_core,
+//   If(Global.group_size() == Int(2),
+//     split_transfer,
+//     split_close
+//   )
+// )
+//
+
+load 0
+
+global GroupSize
+int 2
+==
+
+bz close
+
+// split_transfer condition branch
+load 1
+&&
+
+b done
+
+close:
+// split_close condition branch
+load 2
+&&
+
+done:
+

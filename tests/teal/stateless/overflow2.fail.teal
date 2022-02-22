@@ -1,0 +1,6 @@
+#pragma version 2
+#pragma mode stateless
+int 18446744073709551615
+int 2
+*
+

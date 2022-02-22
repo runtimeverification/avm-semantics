@@ -1,0 +1,6 @@
+#pragma version 3
+#pragma mode stateless
+byte "\x01\x02\x03"
+int 4
+int 1
+setbyte

@@ -1,0 +1,36 @@
+#pragma version 2
+// Based on the stateless TEAL example in PyTeal: https://github.com/algorand/pyteal/blob/master/examples/basic.teal
+//
+txn TypeEnum
+int pay
+==
+
+global GroupSize
+int 2
+==
+
+&&
+
+txn Receiver
+addr STF6TH6PKINM4CDIQHNSC7QEA4DM5OJKKSACAPWGTG776NWSQOMAYVGOQE
+==
+
+&&
+
+txn CloseRemainderTo
+global ZeroAddress
+==
+
+&&
+
+txn RekeyTo
+global ZeroAddress
+==
+
+&&
+
+txn Fee
+int 1000
+<=
+
+&&

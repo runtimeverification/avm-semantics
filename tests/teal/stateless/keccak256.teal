@@ -1,0 +1,7 @@
+#pragma version 2
+#pragma mode stateless
+
+byte 0xAABBCCDD
+keccak256
+byte 0x40eed0325a12c6c6af8db2ea05450bfe21d6343b6fe955bff65045b67d9d5fe6
+==

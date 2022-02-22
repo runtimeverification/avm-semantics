@@ -1,0 +1,10 @@
+#pragma version 2
+#pragma mode stateless
+
+//Check sender's account
+int 0
+
+//Check balance
+balance
+
+

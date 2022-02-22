@@ -1,0 +1,10 @@
+#pragma version 2
+#pragma mode stateless
+// A beginning of file comment
+//byte base64 QzYhq9JlYbn2QdOMrhyxVlNtNjeyvyJc/I8d8VAGfGc=
+//byte b64 QzYhq9JlYbn2QdOMrhyxVlNtNjeyvyJc/I8d8VAGfGc=
+// Another comment
+//byte base64(QzYhq9JlYbn2QdOMrhyxVlNtNjeyvyJc/I8d8VAGfGc=)
+//byte b64(QzYhq9JlYbn2QdOMrhyxVlNtNjeyvyJc/I8d8VAGfGc=)
+int 0
+// An end of file comment

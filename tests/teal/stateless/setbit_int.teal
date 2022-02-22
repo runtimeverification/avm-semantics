@@ -1,0 +1,9 @@
+#pragma version 3
+#pragma mode stateless
+pushint 0
+pushint 3
+pushint 1
+setbit
+// Setting bit 3 to 1 on the integer 0 yields 8, or 2^3.
+pushint 8
+==

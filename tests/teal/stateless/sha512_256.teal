@@ -1,0 +1,12 @@
+#pragma version 2
+#pragma mode stateless
+
+byte 0xAABBCCDD
+sha512_256
+byte 0x19f6bffed9fc9095f7f948ee473a6a18fb635e63272d64ff6ae14ef136b70727
+==
+byte 0xDDCCBBAA
+sha512_256
+byte 0xda059a5bf26852982eb406840aa969743ae5beaf8fe13ec717887d3675da3e9f
+==
+&&

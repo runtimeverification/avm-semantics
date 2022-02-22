@@ -20,13 +20,13 @@ pipeline {
         }
       }
       stages {
-        stage('Build') { steps { sh 'echo build' } }
-        stage('Test') {
+        stage('Build') { steps { sh 'make build -j4' } }
+        stage('Test Teal') {
           failFast true
           options { timeout(time: 20, unit: 'MINUTES') }
           parallel {
-            stage('Test 1') { steps { sh 'echo test1' } }
-            stage('Test 2') { steps { sh 'echo test2' } }
+            stage('Conformance') { steps { sh 'make -j4 test-teal-conformance' } }
+            stage('Proofs')      { steps { sh 'make -j4 test-teal-prove'       } }
           }
         }
       }

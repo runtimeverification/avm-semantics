@@ -9,6 +9,8 @@ RUN    apt-get update            \
             debhelper            \
             default-jdk-headless \
             libcrypto++-dev      \
+            libcurl4-openssl-dev \
+            libmsgpack-dev       \
             libprocps-dev        \
             libsecp256k1-dev     \
             libssl-dev           \

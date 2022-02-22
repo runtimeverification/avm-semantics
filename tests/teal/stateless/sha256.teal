@@ -1,0 +1,7 @@
+#pragma version 2
+#pragma mode stateless
+
+byte 0xAABBCCDD
+sha256
+byte 0x8d70d691c822d55638b6e7fd54cd94170c87d19eb1f628b757506ede5688d297
+==

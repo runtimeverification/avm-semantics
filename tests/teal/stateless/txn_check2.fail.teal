@@ -1,0 +1,76 @@
+#pragma version 2
+// Based on the Atomic Swap example in PyTeal: https://github.com/algorand/pyteal/blob/master/examples/atomic_swap.py
+//
+
+// fee_cond = Txn.fee() < Int(1000)
+//
+txn Fee
+int 1000
+<
+
+// type_cond = Txn.type_enum() == TxnType.Payment
+//
+txn TypeEnum
+int pay
+==
+
+// recv_cond = And(
+//   Txn.close_remainder_to() == Global.zero_address(),
+//   Txn.receiver() == tmpl_seller,
+//   tmpl_hash_fn(Arg(0)) == tmpl_secret
+// )
+//
+
+txn CloseRemainderTo
+global ZeroAddress
+==
+
+txn Receiver
+addr 6ZHGHH5Z5CTPCF5WCESXMGRSVK7QJETR63M3NY5FJCUYDHO57VTCMJOBGY
+==
+
+&&
+
+arg 0
+sha256
+byte "6ZHGHH5Z5CTPCF5WCESXMGRSVK7QJETR63M3NY5FJCUYDHO57VTCMJOBGY"
+==
+
+&&
+
+// esc_cond = And(
+//   Txn.close_remainder_to() == Global.zero_address(),
+//   Txn.receiver() == tmpl_buyer,
+//   Txn.first_valid() > Int(tmpl_timeout)
+// )
+//
+
+txn CloseRemainderTo
+global ZeroAddress
+==
+
+txn Receiver
+addr 7Z5PWO2C6LFNQFGHWKSK5H47IQP5OJW2M3HA2QPXTY3WTNP5NU2MHBW27M
+==
+
+&&
+
+txn FirstValid
+int 3000
+>
+
+&&
+
+// return And(
+//   fee_cond,
+//   type_cond,
+//   Or(recv_cond, esc_cond)
+// )
+//
+
+||
+
+&&
+
+&&
+

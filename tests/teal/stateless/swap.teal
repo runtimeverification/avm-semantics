@@ -1,0 +1,10 @@
+#pragma version 3
+// Stack is empty
+int 2
+int 1
+// Stack is 1, 2
+swap
+// Stack is 2, 1
+int 2
+==
+assert // 2 == 2

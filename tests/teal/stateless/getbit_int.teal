@@ -1,0 +1,24 @@
+#pragma version 3
+#pragma mode stateless
+// the most significant (rightmost) bit of MAX_UNIT64 - 1 is 1
+int 18446744073709551615 // MAX_UNIT64 - 1
+int 63
+getbit
+int 1
+==
+assert
+// the least significant (leftmost) bit of 1 is 1
+int 1
+int 0
+getbit
+int 1
+==
+assert
+// all other bits in 1 are 0, for example the most significant (63)
+int 1
+int 63
+getbit
+int 0
+==
+assert
+int 1
