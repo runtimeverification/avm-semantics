@@ -20,7 +20,7 @@ pipeline {
         }
       }
       stages {
-        stage('Build') { steps { sh 'echo build' } }
+        stage('Build') { steps { sh 'make build -j4' } }
         stage('Test') {
           failFast true
           options { timeout(time: 20, unit: 'MINUTES') }
