@@ -5,11 +5,10 @@ UNAME_S := $(shell uname -s)
 
 SHELL = /bin/bash -o pipefail
 
-DEPS_DIR      := deps
-BUILD_DIR     := .build
-BUILD_LOCAL   := $(abspath $(BUILD_DIR)/local)
-LOCAL_LIB     := $(BUILD_LOCAL)/lib
-ALGOCLARITY_DEPS_DIR := $(abspath algoclarity_ext)
+DEPS_DIR    := deps
+BUILD_DIR   := .build
+BUILD_LOCAL := $(abspath $(BUILD_DIR)/local)
+LOCAL_LIB   := $(BUILD_LOCAL)/lib
 
 INSTALL_PREFIX  := /usr
 INSTALL_BIN     ?= $(INSTALL_PREFIX)/bin
@@ -41,7 +40,6 @@ export CPLUS_INCLUDE_PATH
 export PATH
 export PLUGIN_SUBMODULE
 export LOCAL_LIB
-export ALGOCLARITY_DEPS_DIR
 
 # if K_OPTS is undefined, up the default heap size for kompile
 ifeq "$(origin K_OPTS)" "undefined"
