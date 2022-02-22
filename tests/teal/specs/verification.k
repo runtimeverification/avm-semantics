@@ -1,4 +1,4 @@
-requires "modules/teal/driver.md"
+requires "avm/driver.md"
 
 // Verification interface and lemmas
 module VERIFICATION
