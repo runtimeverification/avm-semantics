@@ -51,28 +51,6 @@ inline bool operator <(const Address& lhs, const Address& rhs ) {
 std::ostream& operator<<(std::ostream& os, const Address& addr);
 
 
-class Account {
-public:
-  Account(std::string address);
-  Account(Address address);
-  Account(bytes public_key, bytes secret_key);
-  Account(std::pair<bytes,bytes> key_pair);
-
-  static Account from_mnemonic(std::string mnemonic);
-  static std::pair<bytes,bytes> generate_keys();
-  static std::pair<bytes,bytes> generate_keys(bytes seed);
-
-  std::string mnemonic() const;
-  bytes seed() const;
-  bytes sign(std::string prefix, bytes msg) const;
-  bytes sign(bytes msg) const;
-
-  const bytes public_key() const { return address.public_key; }
-  const Address address;
-  const bytes secret_key;       // empty() if created from an address, not key
-};
-std::ostream& operator<<(std::ostream& os, const Account& acct);
-
 
 namespace msgpack {
   MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
@@ -148,7 +126,6 @@ public:
   virtual std::string account_url(std::string address) const;
   JsonResponse account(std::string address);
   JsonResponse account(const Address& addr) { return account(addr.as_string); }
-  JsonResponse account(const Account& acct) { return account(acct.address); }
 
   JsonResponse transactions_pending(std::string address, unsigned max = 0);
   JsonResponse application(std::string id);
