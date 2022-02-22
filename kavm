@@ -73,21 +73,21 @@ run_prove() {
 
 display_help() {
     echo "
-  Usage: $0 kast      <options> <pgm>   <output format> <K arg>*
-         $0 parse     <options> <pgm>
-         $0 interpret <options> <pgm>   <LLVM KRun arg>*
-         $0 prove     <options> <spec>  <KProve arg>*
+  Usage: $0 kast  <options> <pgm>   <output format> <K arg>*
+         $0 parse <options> <pgm>
+         $0 run   <options> <pgm>   <LLVM KRun arg>*
+         $0 prove <options> <spec>  <KProve arg>*
 
          $0 [help|--help|version|--version]
 
   Description:
-         $0 kast      : Parse a single program or test and pretty print it.
-         $0 parse     : Parse a single program and return true if well-formed.
-         $0 interpret : Run a single program or test using the fast bison parser.
-         $0 prove     : Run a reachability proof using KAVM symbolic execution.
+         $0 kast  : Parse a single program or test and pretty print it.
+         $0 parse : Parse a single program and return true if well-formed.
+         $0 run   : Run a single program or test using the fast bison parser.
+         $0 prove : Run a reachability proof using KAVM symbolic execution.
 
          $0 help    : Display this help message.
-         $0 version : Display the versions of $TOOL_NAME, K, Kore, and Z3 in use.
+         $0 version : Display the versions of ${TOOL_NAME}, K, Kore, and Z3 in use.
 
   Options:
          --backend [teal]
