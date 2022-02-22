@@ -172,18 +172,6 @@ bool is_present(bytes b) {
 bool is_present(Address a) {
   return !a.is_zero();
 }
-bool is_present(LogicSig lsig) {
-  return is_present(lsig.logic);
-};
-bool is_present(MultiSig msig) {
-  return msig.threshold > 0;
-};
-bool is_present(AssetParams ap) {
-  return ap.key_count() > 0;
-};
-bool is_present(StateSchema schema) {
-  return schema.ints > 0 || schema.byte_slices > 0;
-};
 
 template <typename E>
 bool is_present(std::vector<E> list) {
@@ -201,95 +189,4 @@ int kv_pack(msgpack::packer<Stream>& o, const char* key, V value) {
   o.pack(key);
   o.pack(value);
   return 1;
-}
-
-LogicSig LogicSig::sign(Account acct) const {
-  auto sig = acct.sign("Program", logic);
-  return LogicSig{logic, args, sig};
-}
-
-template <typename Stream>
-msgpack::packer<Stream>& LogicSig::pack(msgpack::packer<Stream>& o) const {
-  o.pack_map(1 + is_present(args) + is_present(sig));
-  kv_pack(o, "arg", args);
-  kv_pack(o, "l", logic);
-  kv_pack(o, "sig", sig);
-  return o;
-}
-
-Subsig::Subsig(bytes public_key, bytes signature)
-  : public_key(public_key), signature(signature) { }
-
-template <typename Stream>
-msgpack::packer<Stream>& Subsig::pack(msgpack::packer<Stream>& o) const {
-  o.pack_map(1 + is_present(signature));
-  kv_pack(o, "pk", public_key);
-  kv_pack(o, "s", signature);
-  return o;
-}
-
-MultiSig::MultiSig(std::vector<Address> addrs, uint64_t threshold) :
-  threshold(threshold ? threshold : addrs.size()) {
-  for (const auto& addr : addrs) {
-    sigs.push_back(Subsig(addr.public_key));
-  }
-}
-
-template <typename Stream>
-msgpack::packer<Stream>& MultiSig::pack(msgpack::packer<Stream>& o) const {
-  o.pack_map(3);
-  o.pack("subsigs"); o.pack(sigs);
-  kv_pack(o, "thr", threshold);
-  kv_pack(o, "v", version);
-  return o;
-}
-
-int AssetParams::key_count() const {
-  /* count the non-empty fields, for msgpack */
-  int keys = 0;
-  keys += is_present(total);
-  keys += is_present(decimals);
-  keys += is_present(default_frozen);
-  keys += is_present(unit_name);
-  keys += is_present(asset_name);
-  keys += is_present(url);
-  keys += is_present(meta_data_hash);
-  keys += is_present(manager_addr);
-  keys += is_present(reserve_addr);
-  keys += is_present(freeze_addr);
-  keys += is_present(clawback_addr);
-  return keys;
-}
-
-template <typename Stream>
-msgpack::packer<Stream>& AssetParams::pack(msgpack::packer<Stream>& o) const {
-  o.pack_map(key_count());
-  /* ordering is semantically ugly, but must be lexicographic */
-  kv_pack(o, "an", asset_name);
-  kv_pack(o, "au", url);
-  kv_pack(o, "c", clawback_addr.public_key);
-  kv_pack(o, "dc", decimals);
-  kv_pack(o, "df", default_frozen);
-  kv_pack(o, "f", freeze_addr);
-  kv_pack(o, "m", manager_addr);
-  kv_pack(o, "r", reserve_addr);
-  kv_pack(o, "t", total);
-  kv_pack(o, "un", unit_name);
-  return o;
-}
-
-int StateSchema::key_count() const {
-  /* count the non-empty fields, for msgpack */
-  int keys = 0;
-  keys += is_present(ints);
-  keys += is_present(byte_slices);
-  return keys;
-}
-
-template <typename Stream>
-msgpack::packer<Stream>& StateSchema::pack(msgpack::packer<Stream>& o) const {
-  o.pack_map(key_count());
-  kv_pack(o, "nui", ints);
-  kv_pack(o, "nbs", byte_slices);
-  return o;
 }

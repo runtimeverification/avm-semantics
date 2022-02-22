@@ -73,81 +73,6 @@ public:
 };
 std::ostream& operator<<(std::ostream& os, const Account& acct);
 
-class AssetParams {
-public:
-  uint64_t total = 0;
-  uint64_t decimals = 0;
-  bool default_frozen = false;
-  std::string unit_name;
-  std::string asset_name;
-  std::string url;
-  bytes meta_data_hash;
-  Address manager_addr;
-  Address reserve_addr;
-  Address freeze_addr;
-  Address clawback_addr;
-
-  template <typename Stream>
-  msgpack::packer<Stream>& pack(msgpack::packer<Stream>& o) const;
-
-  int key_count() const;
-};
-
-class StateSchema {
-public:
-  StateSchema(int, int) : StateSchema() {}
-  StateSchema() : ints(0), byte_slices(0) {}
-  uint64_t ints = 0;
-  uint64_t byte_slices = 0;
-
-  template <typename Stream>
-  msgpack::packer<Stream>& pack(msgpack::packer<Stream>& o) const;
-
-  int key_count() const;
-};
-
-class LogicSig {
-public:
-  LogicSig(bytes logic = {}, std::vector<bytes> args = {}, bytes sig = {}) :
-    logic(logic), args(args), sig(sig) {}
-  bool is_delegated() const { return !logic.empty(); }
-
-  template <typename Stream>
-  msgpack::packer<Stream>& pack(msgpack::packer<Stream>& o) const;
-
-  /* Create a new logicsig with the same program, but delegated by the Account. */
-  LogicSig sign(Account) const;
-
-  bytes logic;
-  std::vector<bytes> args;
-  bytes sig;
-};
-
-class Subsig {
-public:
-  Subsig(bytes public_key, bytes signature={});
-
-  template <typename Stream>
-  msgpack::packer<Stream>& pack(msgpack::packer<Stream>& o) const;
-
-  bytes public_key;
-  bytes signature;
-};
-
-class MultiSig {
-public:
-  MultiSig(std::vector<Address> addrs={}, uint64_t threshold=0);
-
-  template <typename Stream>
-  msgpack::packer<Stream>& pack(msgpack::packer<Stream>& o) const;
-
-  /* Create a new Multisig with the extra signature of Account */
-  MultiSig sign(Account) const;
-
-  std::vector<Subsig> sigs;
-  uint64_t threshold;
-  uint64_t version = 1;
-};
 
 namespace msgpack {
   MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
@@ -161,53 +86,6 @@ namespace msgpack {
           // encode an "outer" object here, we just want an Address to
           // encode the public_key as if that was the whole object.
           return o.pack(v.public_key);
-        }
-      };
-
-      template<>
-      struct pack<LogicSig> {
-        template <typename Stream>
-        packer<Stream>&
-        operator()(msgpack::packer<Stream>& o, LogicSig const& v) const {
-          return v.pack<Stream>(o);
-        }
-      };
-
-      template<>
-      struct pack<Subsig> {
-        template <typename Stream>
-        packer<Stream>&
-        operator()(msgpack::packer<Stream>& o, Subsig const& v) const {
-          return v.pack<Stream>(o);
-        }
-      };
-
-      template<>
-      struct pack<MultiSig> {
-        template <typename Stream>
-        packer<Stream>&
-        operator()(msgpack::packer<Stream>& o, MultiSig const& v) const {
-          return v.pack<Stream>(o);
-        }
-      };
-
-      template<>
-      struct pack<AssetParams> {
-        template <typename Stream>
-        packer<Stream>&
-        operator()(msgpack::packer<Stream>& o, AssetParams const& v) const {
-          // "omitempty" problem, and special Address handling
-          return v.pack<Stream>(o);
-        }
-      };
-
-      template<>
-      struct pack<StateSchema> {
-        template <typename Stream>
-        packer<Stream>&
-        operator()(msgpack::packer<Stream>& o, StateSchema const& v) const {
-          // "omitempty" problem
-          return v.pack<Stream>(o);
         }
       };
 
