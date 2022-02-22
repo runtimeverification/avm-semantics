@@ -35,23 +35,6 @@ Address::Address(std::string address, bytes with_checksum) :
   assert(public_key.size() == 32);
 }
 
-std::string to_hex(const std::string& in) {
-  std::stringstream ss;
-  ss << std::hex << std::setfill('0');
-  for (size_t i = 0; in.size() > i; i++) {
-    ss << std::setw(2) << (int)(unsigned char)in[i] << ':';
-  }
-  return ss.str();
-}
-std::string to_hex(const bytes& in) {
-  std::stringstream ss;
-  ss << std::hex << std::setfill('0');
-  for (size_t i = 0; in.size() > i; i++) {
-    ss << std::setw(2) << (int)(unsigned char)in[i] << ':';
-  }
-  return ss.str();
-}
-
 static bytes
 checksummed(bytes public_key) {
   bytes copy(public_key);
