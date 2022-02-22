@@ -2,13 +2,6 @@
 #include "base.h"
 #include "mnemonic.h"
 
-#include <iostream>
-#include <map>
-#include <sstream>
-#include <vector>
-
-#include <sodium.h>
-
 Address::Address() :
   Address("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ") {
 }
