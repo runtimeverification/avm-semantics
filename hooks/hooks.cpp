@@ -11,8 +11,6 @@
 #include "base.h"
 #include "mnemonic.h"
 
-std::map<std::string, int> word_map = make_word_map(english);
-
 extern "C" {
 
 size_t hook_LIST_size_long(list * l);

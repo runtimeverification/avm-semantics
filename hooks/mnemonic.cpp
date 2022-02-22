@@ -1,31 +1,10 @@
 #include "mnemonic.h"
 
 #include <iostream>
-#include <string>
-#include <map>
-#include <sstream>
-#include <cassert>
 
 #include <openssl/evp.h>
 
 #include "base.h"
-
-extern std::map<std::string, int> word_map;
-
-std::map<std::string, int> make_word_map(std::string s) {
-  std::map<std::string, int> map;
-
-  auto iss = std::istringstream{s};
-  std::string word;
-
-  int i = 0;
-  while (iss >> word) {
-    map[word] = i;
-    i++;
-  }
-
-  return map;
-}
 
 // libsodium/nacl does not implement this truncated form of sha512,
 // which is NOT simply the first 256 bits of the sha512 hash.
