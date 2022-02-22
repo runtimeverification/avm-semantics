@@ -1,0 +1,20 @@
+#pragma version 2
+// Stack is empty
+int 0
+// Stack is 0
+pop
+// Stack is empty
+//byte base64(QzYhq9JlYbn2QdOMrhyxVlNtNjeyvyJc/I8d8VAGfGc=)
+// Stack is b
+//pop
+// Stack is empty
+//byte base64(QzYhq9JlYbn2QdOMrhyxVlNtNjeyvyJc/I8d8VAGfGc=)
+// Stack is b
+//byte base64(QzYhq9JlYbn2QdOMrhyxVlNtNjeyvyJc/I8d8VAGfGc=)
+// Stack is b ~> b
+//pop
+// Stack is b
+//pop
+// Stack is empty
+int 1
+// Stack is 1

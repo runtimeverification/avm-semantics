@@ -1,0 +1,51 @@
+#pragma version 2
+
+// test `gtxns` opcode --- access TXN2 type via stack
+int 2
+gtxns TypeEnum
+int appl
+==
+
+// test `gtxnsa` opcode --- access TXN2 accounts array via stack
+int 2
+gtxnsa Accounts 1
+addr 6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY
+==
+
+&&
+
+txn TypeEnum
+int pay
+==
+
+&&
+
+global GroupSize
+int 2
+==
+
+&&
+
+txn Receiver
+addr STF6TH6PKINM4CDIQHNSC7QEA4DM5OJKKSACAPWGTG776NWSQOMAYVGOQE
+==
+
+&&
+
+txn CloseRemainderTo
+global ZeroAddress
+==
+
+&&
+
+txn RekeyTo
+global ZeroAddress
+==
+
+&&
+
+txn Fee
+int 1000
+<=
+
+&&

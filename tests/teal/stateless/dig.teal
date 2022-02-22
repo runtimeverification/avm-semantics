@@ -1,0 +1,24 @@
+#pragma version 3
+// Stack is empty
+int 4
+int 3
+int 2
+int 1
+int 0
+// Stack is 0, 1, 2, 3, 4
+dig 0
+// Stack is 0, 0, 1, 2, 3, 4
+==
+// Stack is 1, 1, 2, 3, 4
+assert // 0 == 0, dig 0 is equivalent to dup
+// Stack is 1, 2, 3, 4
+dig 3
+// Stack is 4, 1, 2, 3, 4
+int 4
+// Stack is 4, 4, 1, 2, 3, 4
+==
+assert // 4 == 4
+// Stack is 1, 2, 3, 4
+pop
+pop
+pop

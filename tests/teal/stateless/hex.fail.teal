@@ -1,0 +1,6 @@
+#pragma version 2
+#pragma mode stateless
+byte 0x1a
+byte 0x0F93
+byte "this is a string"
+int 1

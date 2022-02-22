@@ -1,0 +1,22 @@
+#pragma version 3
+// Stack is empty
+int 1
+int 2
+int 3
+// Stack is 3, 2, 1
+select
+// Stack is 2
+int 2
+==
+assert // 2 == 2, the first value was selected
+// Stack is empty
+int 0
+int 2
+int 3
+// Stack is 3, 2, 0
+select
+// Stack is 3
+int 3
+==
+assert // 3 == 3, the second value was selected
+int 1

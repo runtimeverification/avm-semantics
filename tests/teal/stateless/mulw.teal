@@ -1,0 +1,21 @@
+#pragma version 2
+#pragma mode stateless
+int 18446744073709551615
+int 18446744073709551615
+mulw
+store 0
+store 1
+
+int 18446744073709551615
+int 1
+mulw
+store 2
+store 3
+
+int 1
+int 1
+mulw
+store 4
+store 5
+
+int 1

@@ -1,0 +1,15 @@
+#pragma version 3
+#pragma mode stateless
+// the third leftmost bit of one-byte array 0x10 is 1
+byte 0x10
+int 3
+getbit
+int 1
+==
+assert
+// the rightmost bit of two-byte array 0xffff is 1
+byte 0xffff
+int 15
+getbit
+int 1
+==
