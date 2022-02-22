@@ -299,7 +299,8 @@ tests/teal/%.teal.unit: tests/teal/%.teal
 
 # Teal Proof Tests
 
-teal_prove_tests := $(wildcard tests/teal/specs/*-spec.k)
+teal_prove_tests         := $(wildcard tests/teal/specs/*-spec.k)
+teal_prove_tests_passing := $(filter-out $(teal_tests_failing), $(teal_prove_tests))
 
 test-teal-prove: $(teal_prove_tests:=.prove)
 
