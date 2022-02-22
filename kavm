@@ -73,10 +73,10 @@ run_prove() {
 
 display_help() {
     echo "
-  Usage: $0 kast  <options> <pgm>   <output format> <K arg>*
+  Usage: $0 kast  <options> <pgm>  <output format> <K arg>*
          $0 parse <options> <pgm>
-         $0 run   <options> <pgm>   <LLVM KRun arg>*
-         $0 prove <options> <spec>  <KProve arg>*
+         $0 run   <options> <pgm>  <LLVM KRun arg>*
+         $0 prove <options> <spec> <KProve arg>*
 
          $0 [help|--help|version|--version]
 
