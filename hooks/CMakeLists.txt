@@ -21,7 +21,6 @@ add_executable(interpreter
 	$ENV{PLUGIN_SUBMODULE}/plugin-c/crypto.cpp
 	$ENV{PLUGIN_SUBMODULE}/plugin-c/blake2.cpp
 	algorand.cpp
-	clients.cpp
 	base.cpp
 	mnemonic.cpp
 	hooks.cpp)

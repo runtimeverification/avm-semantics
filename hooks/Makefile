@@ -1,4 +1,4 @@
-SOURCE := algorand.cpp clients.cpp base.cpp mnemonic.cpp
+SOURCE := algorand.cpp base.cpp mnemonic.cpp
 
 OS := $(shell uname -s)
 

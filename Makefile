@@ -130,7 +130,6 @@ HOOK_PLUGIN_FILES := $(PLUGIN_SUBMODULE)/plugin-c/plugin_util.cpp \
 
 HOOK_ALGO_FILES   := $(CURDIR)/hooks/algorand.cpp \
                      $(CURDIR)/hooks/base.cpp     \
-                     $(CURDIR)/hooks/clients.cpp  \
                      $(CURDIR)/hooks/mnemonic.cpp
 
 HOOK_SHARED_FILES := $(CURDIR)/hooks/hooks.cpp
