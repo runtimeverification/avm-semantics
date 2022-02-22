@@ -113,7 +113,7 @@ display_help() {
         <LLVM KRun arg> are arguments to pass to llvm-krun.
         <KProve arg> are arguments to pass to the prover.
         <output format> is the format for Kast to output the term in.
-    "
+"
 }
 
 # Main
