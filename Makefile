@@ -49,11 +49,11 @@ K_OPTS := -Xmx8G
 endif
 export K_OPTS
 
-.PHONY: all clean distclean install uninstall       \
-        deps k-deps libsecp256k1 libff              \
-        build build-teal build-kavm                 \
-        test test-all                               \
-        test-teal test-teal-failing test-teal-prove
+.PHONY: all clean distclean install uninstall                                         \
+        deps k-deps libsecp256k1 libff                                                \
+        build build-teal build-kavm                                                   \
+        test test-all                                                                 \
+        test-teal test-teal-conformance test-teal-conformance-failing test-teal-prove
 .SECONDARY:
 
 all: build
@@ -276,17 +276,19 @@ uninstall:
 
 KAVM_OPTIONS :=
 
-test-all: test-teal test-teal-prove
+test-all: test-teal
 test: test-teal
 
-# Teal Assembly Unit Tests
+test-teal: test-teal-conformance test-teal-prove
+
+## Teal Assembly Unit Tests
 
 teal_tests         := $(wildcard tests/teal/stateless/*.teal) $(wildcard tests/teal/stateful/*.teal)
 teal_tests_failing := $(shell cat tests/failing-teal.list)
 teal_tests_passing := $(filter-out $(teal_tests_failing), $(teal_tests))
 
-test-teal:         $(teal_tests_passing:=.unit)
-test-teal-failing: $(teal_tests_failing:=.unit)
+test-teal-conformance:         $(teal_tests_passing:=.unit)
+test-teal-conformance-failing: $(teal_tests_failing:=.unit)
 
 tests/teal/%.fail.teal.unit: tests/teal/%.fail.teal
 	$(KAVM) parse $(KAVM_OPTIONS) --backend teal $< > /dev/null
