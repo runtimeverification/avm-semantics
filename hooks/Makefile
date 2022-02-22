@@ -22,7 +22,7 @@ example: $(subst .cpp,.o,$(SOURCE)) example.o
 
 # Build dependencies, expressed for brew on MacOS
 brew-deps:
-	brew install libsodium msgpack-gxx openssl rapidjson
+	brew install libsodium msgpack-gxx openssl
 
 clean:
 	rm -f $(subst .cpp,.o,$(SOURCE)) example.o example

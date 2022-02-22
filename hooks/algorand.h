@@ -3,26 +3,7 @@
 
 #include <memory>
 
-#define RAPIDJSON_HAS_STDSTRING 1
-#include "rapidjson/document.h"
-
 #include <msgpack.hpp>
-
-std::ostream& operator<<(std::ostream& os, const rapidjson::Value&);
-std::string json_to_string(const rapidjson::Value&);
-
-std::string maybe_env(std::string name, std::string def = "");
-std::string require_env(std::string name);
-
-struct JsonResponse {
-  int status;
-  std::unique_ptr<rapidjson::Document> json;
-  rapidjson::Value& operator[](const std::string& name) const {
-    return (*json)[name];
-  }
-  bool succeeded() const { return status == 200; }
-};
-std::ostream& operator<<(std::ostream& os, const JsonResponse& jr);
 
 typedef std::vector<unsigned char> bytes;
 
@@ -49,26 +30,5 @@ inline bool operator <(const Address& lhs, const Address& rhs ) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Address& addr);
-
-
-
-namespace msgpack {
-  MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
-    namespace adaptor {
-      template<>
-      struct pack<Address> {
-        template <typename Stream>
-        packer<Stream>&
-        operator()(msgpack::packer<Stream>& o, Address const& v) const {
-          // We can't use MSGPACK_DEFINE because we don't want to
-          // encode an "outer" object here, we just want an Address to
-          // encode the public_key as if that was the whole object.
-          return o.pack(v.public_key);
-        }
-      };
-
-    } // namespace adaptor
-  } // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
-}
 
 #endif
