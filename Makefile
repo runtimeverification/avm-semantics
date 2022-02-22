@@ -49,13 +49,11 @@ K_OPTS := -Xmx8G
 endif
 export K_OPTS
 
-.PHONY: all clean distclean test-clarity-clean                                                          \
-        deps k-deps                                                                                     \
-        build build-teal build-clarity build-clarity-exec build-clarity-type build-compiler build-kavm \
-        test test-all test-teal test-clarity test-clarity-exec test-clarity-type test-clarity-init      \
-        test-clarity-exec-netready test-clarity-exec-db test-clarity-exec-fb test-clarity-exec-call     \
-        test-clarity-init-netready test-clarity-init-db                                                 \
-        test-init-network test-drop-network test-compiler test-compiler-reset test-teal-prove
+.PHONY: all clean distclean install uninstall       \
+        deps k-deps libsecp256k1 libff              \
+        build build-teal build-kavm                 \
+        test test-all                               \
+        test-teal test-teal-failing test-teal-prove
 .SECONDARY:
 
 all: build
@@ -292,10 +290,10 @@ test-teal-failing: $(teal_tests_failing:=.unit)
 
 tests/teal/%.fail.teal.unit: tests/teal/%.fail.teal
 	$(KAVM) parse $(KAVM_OPTIONS) --backend teal $< > /dev/null
-	! $(KAVM) interpret $(KAVM_OPTIONS) --backend teal $< --output none
+	! $(KAVM) run $(KAVM_OPTIONS) --backend teal $< --output none
 
 tests/teal/%.teal.unit: tests/teal/%.teal
-	$(KAVM) interpret $(KAVM_OPTIONS) --backend teal $< --output none
+	$(KAVM) run $(KAVM_OPTIONS) --backend teal $< --output none
 
 # Teal Proof Tests
 

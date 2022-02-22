@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-TOOL_NAME=KAlgorand
-TOOL_ENV_PREFIX=KALGO
+TOOL_NAME=KAVM
+TOOL_ENV_PREFIX=KAVM
 
 set -euo pipefail
 
@@ -27,7 +27,7 @@ execute () {
 }
 
 INSTALL_BIN="$(cd $(dirname $0) && pwd)"
-INSTALL_LIB="$(dirname ${INSTALL_BIN})/lib/kalgo"
+INSTALL_LIB="$(dirname ${INSTALL_BIN})/lib/kavm"
 INSTALL_INCLUDE=${INSTALL_LIB}/include
 
 install_k_bin=${INSTALL_LIB}/kframework/bin
@@ -37,8 +37,6 @@ export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-}:/usr/local/lib
 
 # Runners
 # -------
-
-# User Commands
 
 run_kast() {
     local output_mode kast_args
@@ -55,80 +53,30 @@ run_parse() {
     execute kparse "${kparse_args[@]}" "$@"
 }
 
+run_krun() {
+    local parser krun_args
+    parser='cat'
+    krun_args=(--directory "${backend_dir}")
+    [[ -n ${depth} ]] && krun_args+=(--depth ${depth})
+    ! ${profile} || krun_args+=(--profile)
+    execute krun "${krun_args[@]}" "${run_file}" "$@"
+}
+
 run_prove() {
     local kprovex_args
     kprovex_args=(--directory "${backend_dir}" "${run_file}")
     execute kprovex "${kprovex_args[@]}" -I "${INSTALL_LIB}/kframework" "$@"
 }
 
-run_interpret() {
-    local parser krun_args result_process
-    parser='cat'
-    result_process=(cat -)
-
-    krun_args=(--directory "${backend_dir}")
-    [[ -n ${depth} ]] && krun_args+=(--depth ${depth})
-    if [[ ${backend} == "clarity-exec" ]] || [[ ${backend} == "clarity-type" ]] ; then
-        krun_args+=(-cADDRESS=${c_address_kore})
-        krun_args+=(-pADDRESS=${parser})
-        krun_args+=(-cNAME=${c_name_kore})
-        krun_args+=(-pNAME=${parser})
-        krun_args+=(-cADDRMAP=${c_address_map_kore})
-        krun_args+=(-pADDRMAP=${parser})
-        krun_args+=(-cSTORAGE=${c_storage_kore})
-        krun_args+=(-pSTORAGE=${parser})
-        krun_args+=(-cIMODE=${c_mode_kore})
-        krun_args+=(-pIMODE=${parser})
-        krun_args+=(-cSENDER=${c_sender_kore})
-        krun_args+=(-pSENDER=${parser})
-        krun_args+=(-cSIZE=${c_size_kore})
-        krun_args+=(-pSIZE=${parser})
-    fi
-    ! ${rw_set}      || krun_args+=(--output none)
-    ! ${profile}     || krun_args+=(--profile)
-    ! ${result_only} || result_process=(awk '/<result>/{flag=1;next}/<\/result>/{flag=0}flag')
-
-    execute ./foo "${krun_args[@]}" "${run_file}" "$@" | "${result_process[@]}"
-}
-
 # Helpers
 # -------
 
-# Construct hardcoded kore encodings of configuration variables
-#
-# Note: The encoding below assumes a particular definitional strcuture (sort
-# names, hierarchies and sort constructors) that is supposed to match exactly the
-# structuree given by the semantics. If the semantic specs changes, and if the
-# changes touch what these encodings use, they will need to be updated. To
-# facilitate updating these encodings on-demand, we provide another script
-# "update_config_vars_kalgo.sh" that can update kalgo when needed.
-#
-construct_config_vars_kore() {
-    c_address_kore="\dv{SortAddressLiteral{}}(\"${c_address}\")"
-    c_address_map_kore="\dv{SortString{}}(\"${c_address_map}\")"
-    c_storage_kore="\dv{SortString{}}(\"${c_storage}\")"
-    c_sender_kore="\dv{SortAddressLiteral{}}(\"${c_sender}\")"
-    c_size_kore="\dv{SortInt{}}(\"${c_size}\")"
-    if [[ "${c_name}" == ".no-name" ]]; then
-        c_name_kore="Lbl'Hash'NoContractName'Unds'CLARITY-INTERPRETER-STATE'Unds'ContractName{}()"
-    else
-        c_name_kore="inj{SortContractNameToken{},SortContractName{}}(\dv{SortContractNameToken{}}(\"${c_name}\"))"
-    fi
-    if [[ "${c_mode}" == "initMode" ]]; then
-        c_mode_kore="LblinitMode'Unds'CLARITY-INTERPRETER-STATE'Unds'InvocationMode{}()"
-    else
-        c_mode_kore="LblcallMode'Unds'CLARITY-INTERPRETER-STATE'Unds'InvocationMode{}()"
-    fi
-}
-
 display_help() {
     echo "
-  Usage: $0 kast      <options> <pgm>           <output format> <K arg>*
+  Usage: $0 kast      <options> <pgm>   <output format> <K arg>*
          $0 parse     <options> <pgm>
-         $0 interpret <options> <pgm>           <LLVM KRun arg>*
-         $0 init      <options> <pgm> <address> <LLVM KRun arg>*
-         $0 call      <options> <params>        <LLVM KRun arg>*
-         $0 prove     <options> <spec>          <KProve arg>*
+         $0 interpret <options> <pgm>   <LLVM KRun arg>*
+         $0 prove     <options> <spec>  <KProve arg>*
 
          $0 [help|--help|version|--version]
 
@@ -136,55 +84,21 @@ display_help() {
          $0 kast      : Parse a single program or test and pretty print it.
          $0 parse     : Parse a single program and return true if well-formed.
          $0 interpret : Run a single program or test using the fast bison parser.
-         $0 init      : Run a single program or test using the fast bison parser (Clarity).
-         $0 call      : Run a contract call using the fast bison parser (Clarity).
+         $0 prove     : Run a reachability proof using KAVM symbolic execution.
 
          $0 help    : Display this help message.
          $0 version : Display the versions of $TOOL_NAME, K, Kore, and Z3 in use.
 
   Options:
-         --backend [exec|type|teal]
+         --backend [teal]
          The K backend to use for executing the command:
-            exec is for executing Clarity programs.
-            type is for analyzing Clarity programs.
-            teal is for executing Teal programs.
-         Note: for the init command, the backend can only be exec or type,
-         and for the call command, the backend can only be exec.
-            Default: exec
-
-         --storage <path>
-         If given, this option disables DB based access and specifies the filepath of
-         the directory where previously initialized contract states are stored.
-         Default: [DB based access]
-
-         --sender <address>
-         The account address of the transaction sender.
-         Default: Algorand's zero address
-
-         --address-map <filepath>
-         A JSON file mapping contract names to addresses. This is intendeed to
-         be used by developers for runnnig tests in the test suite.
-         Default: [None]
-
-         --rw-set
-         This option suppresses printing out the final configuration and
-         causes the VM to output the contract state read-write set instead
-         (in JSON format).
-         Default: Disabled
-
-         --set-spec
-         For the Clarity backends, sets the SPECULATION_TOKEN when requested.
-         Default: Disabled
+            teal is for executing/proving Teal programs.
+            Default: teal
 
          --depth <natural number>
          For all backends, controls the maximum number of steps that the interpreter
          will take.
          Default: Infinite
-
-         --result-only
-         This option suppresses printing out the entire final configuration and
-         instead causes the VM to output the final configuration's <result> cell.
-         Default: Disabled
 
          --stderr
          This option causes the VM to capture its entire standard output and copy it
@@ -194,8 +108,6 @@ display_help() {
 
   Note:
         <pgm> is a path to a file containing the program/test.
-        <params> are space-delimited call parameters:
-            <contract_address> <function_name> <arg_list>
         <spec> is a K specification to be proved.
         <K arg> is an argument you want to pass to K.
         <LLVM KRun arg> are arguments to pass to llvm-krun.
@@ -219,144 +131,39 @@ if [[ "$run_command" == 'version' ]] || [[ "$run_command" == '--version' ]]; the
     exit 0
 fi
 
-db_access="#&DB"
 backend="exec"
 backend_dir=""
-c_storage="${db_access}"
-c_sender="@AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
-c_address=""
-c_address_map=""
-rw_set=false
-result_only=false
-set_spec=false
 depth=
 args=()
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --backend)     backend="$2"       ; shift 2 ;;
-        --backend-dir) backend_dir="$2"   ; shift 2 ;;
-        --storage)     c_storage="$2"     ; shift 2 ;;
-        --sender)      c_sender="$2"      ; shift 2 ;;
-        --address-map) c_address_map="$2" ; shift 2 ;;
-        --rw-set)      rw_set=true        ; shift   ;;
-        --result-only) result_only=true   ; shift   ;;
-        --debug)       debug=true         ; shift   ;;
-        --set-spec)    set_spec=true      ; shift   ;;
-        --depth)       depth=$2           ; shift 2 ;;
-        --stderr)      stderr=true        ; shift   ;;
-        --profile)     profile=true       ; shift   ;;
-        *)             args+=("$1")       ; shift   ;;
+        --backend)     backend="$2"     ; shift 2 ;;
+        --backend-dir) backend_dir="$2" ; shift 2 ;;
+        --debug)       debug=true       ; shift   ;;
+        --depth)       depth=$2         ; shift 2 ;;
+        --stderr)      stderr=true      ; shift   ;;
+        --profile)     profile=true     ; shift   ;;
+        *)             args+=("$1")     ; shift   ;;
     esac
 done
-! ${debug}                || set -x
+! ${debug} || set -x
 [[ "${#args[@]}" -eq 0 ]] || set -- "${args[@]}"
 ! ${debug} || set -x
-if ${result_only} && ${rw_set}; then
-    fatal "Cannot set both --rw-set and --result-only."
-fi
 
 case "$backend" in
-    exec) backend=clarity-exec ;;
-    type) backend=clarity-type ;;
-    teal) backend=teal-llvm    ;;
+    teal) backend=teal-llvm ;;
 esac
 backend_dir="${backend_dir:-${INSTALL_LIB}/$backend}"
 
-if [[ "${backend_dir}" =~ clarity ]] ; then
-
-  if ${set_spec}; then
-    set +u
-    [[ -n "${ALGOD_ADDRESS}" ]] || fatal "Environment variable \$ALGOD_ADDRESS not defined"
-    [[ -n "${ALGOD_TOKEN}"   ]] || fatal "Environment variable \$ALGOD_TOKEN not defined"
-    set -u
-    export SPECULATION_TOKEN=$(curl -s -X POST "${ALGOD_ADDRESS}/v2/blocks/0/speculation" -H  "accept: application/json" -H "X-Algo-API-Token: ${ALGOD_TOKEN}" | jq -r .token)
-  fi
-
-  if [[ "${c_storage}" != "${db_access}" ]] ; then
-      c_storage=${c_storage%/} #removes any trailing slash
-      [[ -d "${c_storage}" ]] || fatal "Could not find the specified storage directory ${c_storage}"
-      c_storage="$(cd "${c_storage}"; pwd -P)"
-  fi
-
-  if [[ -f "${c_address_map}" ]]; then
-      c_address_map="$(cd "$(dirname "${c_address_map}")"; pwd -P)/$(basename "${c_address_map}")"
-  else
-      c_address_map=""
-  fi
-
-  c_mode=""
-  c_name=""
-  run_call_exp=""
-  c_size=0
-
-  if [[ "${run_command}" != 'call' ]] ; then
-      c_mode="initMode"
-
-      # get the run file's address
-      c_address="$1" ; shift
-
-      # get the run file
-      run_file="$1" ; shift
-      if [[ "${run_file}" == '-' ]]; then
-          run_file="$(mktemp)"
-          trap "rm -rf ${run_file}" INT TERM EXIT
-          cat - > "${run_file}"
-      fi
-      [[ -f "${run_file}" ]] || fatal "File does not exist: ${run_file}"
-
-      # get the run file's base name (without the extension)
-      run_file_base="${run_file##*/}"
-      c_name=".${run_file_base%.*}"
-
-      # get the run file's size
-      c_size=$(wc -c "${run_file}" | awk '{print $1}')
-  else
-      c_mode="callMode"
-      # get the call parameters
-      id="$1" ; shift
-      if [[ ${id} == "@"* ]]; then
-          c_address=${id}
-          [[ -f "${c_address_map}" ]] && c_name=$(jq "[ .[] | .[\"${c_address}\"]? | select(. != null) ] | .[0]" "${c_address_map}")
-          c_name=${c_name#"\""}
-          c_name=${c_name%"\""}
-          [[ -z $c_name ]] && c_name=".no-name"
-      elif [[ ${id} == "."* ]]; then
-          c_name=${id}
-          c_address=$(jq -r '.[]."'${id}'"' ${c_address_map} | grep @ || true)
-          [[ -z $c_address ]] && fatal "No address found for name $c_name."
-      else
-          fatal "Unexpected contract identifier ${id}: contract identifiers must have the form '@<ADDRESS>'"
-      fi
-      c_fun="$1" ; shift
-      c_args=""
-      while [[ $# -gt 0 ]]; do
-          c_args+="$1 " ; shift
-      done
-      #construct the call expression
-      run_call_exp="(contract-call? ${c_address} ${c_fun} ${c_args})"
-      run_file="$(mktemp)"
-      trap "rm -rf ${run_file}" INT TERM EXIT
-      echo "${run_call_exp}" > "${run_file}"
-  fi
-
-  # Compute the kore representation of config vars
-  construct_config_vars_kore
-else
-
-  # Set the run_file
-  run_file="$1" ; shift
-
-fi
+run_file="$1" ; shift
 
 # Invoke the appropriate runner
 case "$run_command" in
     # Running
-    kast)      run_kast       "$@"                              ;;
-    parse)     run_parse      "$@"                              ;;
-    interpret) run_interpret  "$@"                              ;;
-    init)      run_interpret  "$@"                              ;;
-    call)      run_interpret  "$@"                              ;;
-    prove)     run_prove      "$@"                              ;;
-    *)         $0 help ; fatal "Unknown command: $run_command"  ;;
+    kast)  run_kast  "$@"                                  ;;
+    parse) run_parse "$@"                                  ;;
+    run)   run_krun  "$@"                                  ;;
+    prove) run_prove "$@"                                  ;;
+    *)     $0 help ; fatal "Unknown command: $run_command" ;;
 esac
