@@ -1,142 +1,34 @@
 ```k
 requires "blockchain-k-plugin/krypto.md"
 
-requires "common/teal-syntax.md"
-requires "common/blockchain.md"
-requires "common/args.md"
+requires "../common/teal-syntax.md"
+requires "../common/blockchain.md"
+requires "../common/args.md"
 requires "teal-stack.md"
-requires "env-init.md"
+requires "teal-execution.md"
+requires "../avm/avm-configuration.md"
 ```
 
 TEAL Interpreter State
 ======================
 
-```k
-module TEAL-INTERPRETER-STATE
-  imports ALGO-BLOCKCHAIN
-  imports TXN-ARGS
-  imports TEAL-SYNTAX
-  imports TEAL-STACK
-```
+Moved to `./teal-execution.md`
 
-Stateless and stateful TEAL programs are parameterized by slightly different
-input state. All TEAL programs have access to the:
-
--   stack
--   scratch memory
--   containing transaction and transaction group
--   globals
-
-Stateless TEAL programs additionally have access to the:
-
--   logic signature arguments
-
-Stateful TEAL programs additionally have access to:
-
--   local and global application state
--   application state for foreign applications
--   asset parameters for foreign assets
-
-Note: our configuration also contains a return code. However, this return code
-is _not_ a return code in the sense of TEAL; rather, it is a return code in the
-sense of POSIX process semantics. This return code is used by the test harness
-to determine when a test has succeeded/failed.
-
-We also maintain a list of labels seen so far in a program to check for
-illegal backward jumps.
-
-```k
-  syntax LabelList ::= List{Label, ""}
-
-  syntax Bool ::= Label "in_labels" LabelList [function]
-  // --------------------------------------------
-  rule L in_labels (L  _     ) => true
-  rule L in_labels (L' LL    ) => L in_labels LL requires L =/=K L'
-  rule _ in_labels .LabelList => false
-```
-
-```k
-  configuration
-    <teal>
-      <globals/>
-      <txGroup/>
-      <blockchain/>
-      <args/>
-      <driver>
-        <k> initGlobals
-         ~> initArgs
-         ~> initTxnGroup
-         ~> initBlockchain
-         ~> $PGM:TealInputPgm </k>           // TODO: init* items for testing only
-        <mode> stateless </mode>             // for testing purposes
-        <version> 2 </version>               // the default TEAL version is 2
-        <stack> .TStack </stack>                  // stores UInt64 or Bytes
-        <stacksize> 0 </stacksize>           // current stack size
-        <labels> .LabelList </labels>        // a list of labels seen so far in a program
-        <scratch> .Map </scratch>            // Int |-> TValue
-        <intcblock> .Map </intcblock>        // (currently not used)
-        <bytecblock> .Map </bytecblock>      // (currently not used)
-        <returncode exit=""> 4 </returncode> // the program exit code
-        <returnstatus>                       // the program exit status message
-          "Failure - program is stuck"
-        </returnstatus>
-      </driver>
-    </teal>
-```
-
-### Environment Initializer Declaration
-
-Note: these definitions can be found in the `TEAL-ENVIRONMENT-INITIALIZATION`
-module.
-
-```k
-  syntax KItem ::= "initGlobals"
-                 | "initArgs"
-                 | "initTxnGroup"
-                 | "initBlockchain"
-```
-
-```k
-endmodule
-```
 
 TEAL Interpreter Syntax
 =======================
 
-The TEAL interpreter is parameterized by several constants which define total
-program and cost. We define those constants here.
-
-```k
-module TEAL-DRIVER-SYNTAX
-  imports TEAL-SYNTAX
-
-  // Size limits
-  syntax Int ::= "MAX_STACK_DEPTH"   [macro]
-  syntax Int ::= "MAX_SCRATCH_SIZE"  [macro]
-  syntax Int ::= "LogicSigMaxSize"   [macro]
-  syntax Int ::= "LogicSigMaxCost"   [macro]
-  syntax Int ::= "MaxAppProgramLen"  [macro]
-  syntax Int ::= "MaxAppProgramCost" [macro]
-  syntax Int ::= "MAX_BYTEARRAY_LEN" [macro]
-  // ---------------------------------------
-  rule MAX_STACK_DEPTH   => 1000
-  rule MAX_SCRATCH_SIZE  => 256
-  rule LogicSigMaxSize   => 1000
-  rule LogicSigMaxCost   => 20000
-  rule MaxAppProgramLen  => 1024
-  rule MaxAppProgramCost => 700
-  rule MAX_BYTEARRAY_LEN => 4096
-endmodule
-```
+Moved to `./teal-limits.md`.
 
 TEAL Interpreter Definition
 ===========================
 
 ```k
 module TEAL-DRIVER
+  imports AVM-CONFIGURATION
   imports TEAL-INTERPRETER-STATE
-  imports TEAL-ENVIRONMENT-INITIALIZATION
-  imports TEAL-DRIVER-SYNTAX
+  imports TEAL-EXECUTION
+  imports TEAL-LIMITS
   imports TEAL-STACK
   imports KRYPTO
 ```
@@ -144,10 +36,23 @@ module TEAL-DRIVER
 TEAL Interpreter Initialization
 -------------------------------
 
+The parsed TEAL pragmas and program are initially supplied on the `<k>` cell as
+`TealPragmas` and `TealInputPgm`.
+
+Pragmas are applied directly, and then the `#LoadPgm` performs program pre-processing:
+
+* the program is transformed into a `Map` from program addresses to opcodes and stored
+  into the `<program>` cell;
+* every opcode is checked to be valid for the current execution mode and
+  `panic(INVALID_OP_FOR_MODE)` is triggered accordingly;
+* the labels are collected and stored into the `<labels>` cell as keys, with their program
+  addresses as values;
+* if a label is encountered twice, the `panic(DUPLICATE_LABEL)` computation is triggered.
+
 ```k
   // Note: Do we need to maintain the stack size? Can't we just compute it when needed?
 
-  rule <k> Rs:TealPragmas P:TealPgm => Rs ~> #LoadPgm(P, .K) </k>
+  rule <k> Rs:TealPragmas P:TealPgm => Rs ~> #LoadPgm(P, 0) ... </k>
   rule <k> R:TealPragma Rs:TealPragmas => R ~> Rs ... </k>
 
   rule <k> #pragma mode M:TealMode => .K ...  </k>
@@ -159,21 +64,44 @@ TEAL Interpreter Initialization
   rule <k> #pragma txn V => . ... </k>
        <currentTx> _ => V </currentTx>
 
-  syntax KItem ::= #LoadPgm(TealPgm, K)
+  // Load the teal program into the `<progam>` cell (program memory)
+  syntax KItem ::= #LoadPgm(TealPgm, Int)
   // ----------------------------------
-  rule <k> #LoadPgm( Op Pgm, VPgm ) => #LoadPgm( Pgm, VPgm ~> Op ) </k>
+  rule <k> #LoadPgm( Op Pgm, PC ) => #LoadPgm( Pgm, PC +Int 1 ) ... </k>
        <mode> Mode </mode>
+       <program> PGM => PGM[PC <- Op] </program>
     requires #ValidOpForMode( Mode, Op )
+     andBool (notBool isLabelCode(Op))
 
-  rule <k> #LoadPgm( Op, VPgm ) => VPgm ~> Op </k>
-       <mode> Mode </mode>
-    requires #ValidOpForMode( Mode, Op )
+  rule <k> #LoadPgm( (L:) Pgm, PC ) => #LoadPgm( Pgm, PC +Int 1 ) ... </k>
+       <program> PGM => PGM[PC <- (L:)] </program>
+       <labels> LL => LL[L <- PC] </labels>
+    requires notBool (L in_labels LL)
 
-  rule <k> #LoadPgm( Op _, _ ) => panic(INVALID_OP_FOR_MODE) </k>
+  rule <k> #LoadPgm( (L:) _, _ ) => panic(DUPLICATE_LABEL) ... </k>
+       <labels> LL </labels>
+    requires L in_labels LL
+
+  rule <k> #LoadPgm( Op _, _) => panic(INVALID_OP_FOR_MODE) ... </k>
        <mode> Mode </mode>
     requires notBool #ValidOpForMode( Mode, Op )
 
-  rule <k> #LoadPgm( Op, _ ) => panic(INVALID_OP_FOR_MODE) </k>
+  rule <k> #LoadPgm( Op, PC) => .K ... </k>
+       <mode> Mode </mode>
+       <program> PGM => PGM[PC <- Op] </program>
+    requires #ValidOpForMode( Mode, Op )
+     andBool (notBool isLabelCode(Op))
+
+  rule <k> #LoadPgm( (L:) , PC ) => .K ... </k>
+       <program> PGM => PGM[PC <- (L:)] </program>
+       <labels> LL => LL[L <- PC] </labels>
+    requires notBool (L in_labels LL)
+
+  rule <k> #LoadPgm( (L:) , _ ) => panic(DUPLICATE_LABEL) ... </k>
+       <labels> LL </labels>
+    requires L in_labels LL
+
+  rule <k> #LoadPgm( Op, _) => panic(INVALID_OP_FOR_MODE) ... </k>
        <mode> Mode </mode>
     requires notBool #ValidOpForMode( Mode, Op )
 
@@ -199,7 +127,7 @@ A TEAL program may panic for one of the following reasons:
 
 3.  Integer overflow
 
-4.  Integer undeflow
+4.  Integer underflow
 
 5.  Division by zero
 
@@ -210,6 +138,7 @@ A TEAL program may panic for one of the following reasons:
     - The transaction type is invalid
     - The requested field is invalid for the transaction type
     - Indexing an array field out of bounds
+    - Access to a field of transaction beyond `GroupIndex` is requested via `gaid(s)` or `gload(s)` opcode
 
 8.  An opcode attempts to write to or read from an invalid scratch space
     location
@@ -221,32 +150,38 @@ A TEAL program may panic for one of the following reasons:
 
 11. An input in the stack is not of the expected type
 
-12. An opcode attempts to push to a full stack
+12. An input in the stack is not in the expected range, for example not `0` or `1` for `setbit`
 
-13. An opcode attempts to pop from an empty stack
+13. An opcode attempts to push to a full stack
 
-14. An assertion is violated, i.e. the asserted expression evaluates to zero
+14. An opcode attempts to pop from an empty stack
 
-15. A negative number is supplied on stack. That panic behavior is impossible in concrete
+15. An assertion is violated, i.e. the asserted expression evaluates to zero
+
+16. A negative number is supplied on stack. That panic behavior is impossible in concrete
     execution, but is helpful in some symbolic execution scenarios.
+
+17. A subroutine call attempt with a full call stack, or a subroutine return with an empty one.
+
+18. Math attempted on a byte-array larger than `MAX_BYTE_MATH_SIZE`.
 
 Other reasons for panic behavior, which do not apply to this specification
 of TEAL, include:
 
-16. `global`: Wrong global field (rejected by our TEAL parser; syntax
+19. `global`: Wrong global field (rejected by our TEAL parser; syntax
     definition disallows invalid fields)
 
-17. `txn/txna`: wrong type argument (rejected by our TEAL parser; syntax
+20. `txn/txna`: wrong type argument (rejected by our TEAL parser; syntax
     definition disallows invalid fields)
 
-18. Loading constants from beyond the bytecblock or the intcblock of the
+21. Loading constants from beyond the bytecblock or the intcblock of the
     program (This is specific to post-assembly TEAL and does not apply to our
     abstract semantics)
 
- 19. Invalid opcode (rejected by our TEAL parser; syntax definition disallows
+22. Invalid opcode (rejected by our TEAL parser; syntax definition disallows
     invalid opcodes)
 
-Panic conditions (1 -- 15 above) are captured by the `panic` computation,
+Panic conditions (1 -- 18 above) are captured by the `panic` computation,
 which carries a message describing the reason for panicking and sets the
 return code to 3 (see return codes below).
 
@@ -269,6 +204,11 @@ return code to 3 (see return codes below).
   syntax String ::= "STACK_UNDERFLOW"            [macro]
   syntax String ::= "ASSERTION_VIOLATION"        [macro]
   syntax String ::= "IMPOSSIBLE_NEGATIVE_NUMBER" [macro]
+  syntax String ::= "DUPLICATE_LABEL"            [macro]
+  syntax String ::= "CALLSTACK_UNDERFLOW"        [macro]
+  syntax String ::= "CALLSTACK_OVERFLOW"         [macro]
+  syntax String ::= "INVALID_ARGUMENT"           [macro]
+  syntax String ::= "MATH_BYTES_ARG_TOO_LONG"    [macro]
   //----------------------------------------------------
   rule INVALID_OP_FOR_MODE => "invalid opcode for current execution mode"
   rule ERR_OPCODE          => "err opcode encountered"
@@ -279,10 +219,17 @@ return code to 3 (see return codes below).
   rule TXN_ACCESS_FAILED   => "Transaction field access failed"
   rule INVALID_SCRATCH_LOC => "Invalid scratch space location"
   rule INDEX_OUT_OF_BOUNDS => "array index out of bounds"
-  rule ILLEGAL_JUMP        => "illegal branch beyond program end or backward branch"
+  rule ILLEGAL_JUMP        => "illegal branch to a non-existing label"
   rule ILL_TYPED_STACK     => "wrong argument type(s) for opcode"
+  rule INVALID_ARGUMENT    => "wrong argument range(s) for opcode"
   rule STACK_OVERFLOW      => "stack overflow"
   rule STACK_UNDERFLOW     => "stack underflow"
+  rule ASSERTION_VIOLATION => "assertion violation"
+  rule DUPLICATE_LABEL     => "duplicate label"
+  rule IMPOSSIBLE_NEGATIVE_NUMBER => "Impossible happened: negative number on stack"
+  rule CALLSTACK_UNDERFLOW => "call stack underflow: illegal retsub"
+  rule CALLSTACK_OVERFLOW  => "call stack overflow: recursion is too deep"
+  rule MATH_BYTES_ARG_TOO_LONG => "math attempted on large byte-array"
   rule ASSERTION_VIOLATION => "assertion violation"
   rule IMPOSSIBLE_NEGATIVE_NUMBER => "Impossible happened: negative number on stack"
   //--------------------------------------------------------------------------------
@@ -290,60 +237,19 @@ return code to 3 (see return codes below).
   syntax KItem ::= panic(String)
   // ---------------------------
   rule <k> panic(S) ~> _ => .K </k>
-       <stack> _ => .TStack </stack>
-       <stacksize> _ => 0 </stacksize>
        <returncode> 4 => 3 </returncode>
        <returnstatus> _ => "Failure - panic: " +String S </returnstatus>
 ```
 
+TEAL Program Execution Pipeline
+-------------------------------
+
+See `./teal-execution.md`.
+
 TEAL Interpreter Finalization
 -----------------------------
 
-Possible return codes:
-
-- 4 - program got stuck (No valid program is expected to terminate returning this code)
-- 3 - program panicked
-- 2 - program terminated with bad stack (non-singleton or singleton byte-array stack)
-- 1 - program terminated with failure (zero-valued singleton stack)
-- 0 - program terminated with success (positive-valued singleton stack)
-
-Note: For stateless teal, failure means rejecting the transaction. For stateful
-teal, failure means undoing changes made to the state (for more details, see
-[this article](https://developer.algorand.org/docs/features/asc1/).)
-
-```k
-  rule <k> .K </k>
-       <stack> I : .TStack </stack>
-       <stacksize> SIZE </stacksize>
-       <returncode> 4 => 0 </returncode>
-       <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
-    requires I >Int 0 andBool SIZE ==Int 1
-
-  rule <k> .K </k>
-       <stack> I : .TStack => I : .TStack </stack>
-       <stacksize> _ </stacksize>
-       <returncode> 4 => 1 </returncode>
-       <returnstatus> _ => "Failure - zero-valued singleton stack" </returnstatus>
-    requires I <=Int 0
-
-  rule <k> .K </k>
-       <stack> _ </stack>
-       <stacksize> SIZE </stacksize>
-       <returncode> 4 => 2 </returncode>
-       <returnstatus> _ => "Failure - stack size greater than 1" </returnstatus>
-    requires SIZE >Int 1
-
-  rule <k> .K </k>
-       <stack> .TStack </stack>
-       <returncode> 4 => 2 </returncode>
-       <returnstatus> _ => "Failure - empty stack" </returnstatus>
-
-  rule <k> .K </k>
-       <stack> (_:Bytes) : .TStack </stack>
-       <stacksize> _ </stacksize>
-       <returncode> 4 => 2 </returncode>
-       <returnstatus> _ => "Failure - singleton stack with byte array type" </returnstatus>
-```
+See `./teal-execution.md`.
 
 Generic TEAL Operations
 -----------------------
@@ -352,7 +258,7 @@ Generic TEAL Operations
 
 *Internal NoOp*
 ```k
-  rule <k> NoOpCode => .K ... </k>
+  rule <k> NoOpCode  => .K ... </k>
 ```
 
 *The `err` Opcode*
@@ -435,6 +341,51 @@ Generic TEAL Operations
     requires I2 <=Int 0
 ```
 
+*Exponentiation*
+```k
+  rule <k> exp => .K ... </k>
+       <stack> I2 : I1 : XS => (I1 ^Int I2) : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires I1 ^Int I2 <=Int MAX_UINT64
+     andBool notBool (I1 ==Int 0 andBool I2 ==Int 0)
+
+  rule <k> exp => panic(INVALID_ARGUMENT) ... </k>
+       <stack> I2 : I1 : _ </stack>
+    requires I1 ==Int 0 andBool I2 ==Int 0
+
+  rule <k> exp => panic(INT_OVERFLOW) ... </k>
+       <stack> I2 : I1 : _ </stack>
+    requires I1 ^Int I2 >Int MAX_UINT64
+```
+
+*Wide 128-bit Division and Modulus*
+```k
+  rule <k> divmodw => .K ... </k>
+       <stack> I4 : I3 : I2 : I1 : XS =>
+               #fun(NUMERATOR
+            => #fun(DENOMINATOR
+            => #fun(QUOTIENT
+            => #fun(REMAINDER
+            =>   lowerU64(REMAINDER) : upperU64(REMAINDER) :
+                 lowerU64(QUOTIENT)  : upperU64(QUOTIENT)  : XS
+               )(NUMERATOR %Int DENOMINATOR)
+               )(NUMERATOR /Int DENOMINATOR)
+               )(asUInt128(I3, I4))
+               )(asUInt128(I1, I2))
+       </stack>
+    requires notBool (I4 ==Int 0 andBool I3 ==Int 0)
+
+  rule <k> divmodw => panic(DIV_BY_ZERO) ... </k>
+       <stack> I4 : I3 : _ : _ : _ </stack>
+    requires I4 ==Int 0 andBool I3 ==Int 0
+
+  // Auxilary funtion that interprets two `UInt64` as one Int, big-endian
+  syntax Int ::= asUInt128(TUInt64, TUInt64) [function, functional]
+  // ------------------------------------
+  rule asUInt128(I1, I2) => (I1 <<Int 64) +Int I2
+
+```
+
 *Wide 128-bit Addition*
 ```k
   rule <k> addw => .K ... </k>
@@ -445,6 +396,85 @@ Generic TEAL Operations
 ```k
   rule <k> mulw => .K ... </k>
        <stack> I2 : I1 : XS => lowerU64(I1 *Int I2) : upperU64(I1 *Int I2) : XS </stack>
+```
+
+*Wide 128-bit Exponentiation*
+```k
+  rule <k> expw => .K ... </k>
+       <stack> I2 : I1 : XS => lowerU64(I1 ^Int I2) : upperU64(I1 ^Int I2) : XS </stack>
+    requires I1 ^Int I2 <=Int MAX_UINT128
+     andBool notBool (I1 ==Int 0 andBool I2 ==Int 0)
+
+  rule <k> expw => panic(INVALID_ARGUMENT) ... </k>
+       <stack> I2 : I1 : _ </stack>
+    requires I1 ==Int 0 andBool I2 ==Int 0
+
+  rule <k> expw => panic(INT_OVERFLOW) ... </k>
+       <stack> I2 : I1 : _ </stack>
+    requires I1 ^Int I2 >Int MAX_UINT128
+```
+
+*Square root*
+
+The largest integer B such that B^2 <= X
+
+```k
+  rule <k> sqrt => .K ... </k>
+       <stack> X : XS => sqrtTUInt64(X) : XS </stack>
+    requires X >=Int 0 andBool X <=Int MAX_UINT64
+
+  rule <k> sqrt => panic(INVALID_ARGUMENT) ... </k>
+       <stack> X : _ </stack>
+    requires notBool( X >=Int 0 andBool X <=Int MAX_UINT64)
+```
+
+The `sqrtTUInt64` function implements the integer square root algorithms described by the following excerpt
+from the [reference TEAL interpreter](https://github.com/algorand/go-algorand/blob/ca3e87734833123284d3a7d87fcc9eaaede8f32a/data/transactions/logic/eval.go#L1202):
+
+```go
+last := len(cx.stack) - 1
+sq := cx.stack[last].Uint
+var rem uint64 = 0
+var root uint64 = 0
+for i := 0; i < 32; i++ {
+	root <<= 1
+	rem = (rem << 2) | (sq >> (64 - 2))
+	sq <<= 2
+	if root < rem {
+		rem -= root | 1
+		root += 2
+	}
+}
+cx.stack[last].Uint = root >> 1
+```
+
+Note that we need to perform the left shift modulo `MAX_UINT64 + 1`, otherwise the `SQ` variable will exceed `MAX_UINT64` in the last iteration.
+
+```k
+  syntax Int ::= sqrtTUInt64(TUInt64)                        [function]
+               | sqrtTUInt64(TUInt64, TUInt64, TUInt64, Int) [function]
+  // ------------------------------------------------------------------
+  rule sqrtTUInt64(SQ) => sqrtTUInt64(SQ, 0, 0, 0)
+    requires SQ >=Int 0 andBool SQ <=Int MAX_UINT64
+
+  rule sqrtTUInt64(SQ, REM, ROOT, I) =>
+       #fun(ROOT'
+    => #fun(REM'
+    => #if   ROOT' <Int REM'
+       #then sqrtTUInt64((SQ <<Int 2) %Int (MAX_UINT64 +Int 1)
+                        , REM' -Int (ROOT' |Int 1)
+                        , ROOT' +Int 2
+                        , I +Int 1)
+       #else sqrtTUInt64((SQ <<Int 2) %Int (MAX_UINT64 +Int 1)
+                        , REM'
+                        , ROOT'
+                        , I +Int 1)
+       #fi
+       )((REM <<Int 2) |Int (SQ >>Int (64 -Int 2)))
+       )(ROOT <<Int 1)
+    requires I >=Int 0 andBool I <Int 32
+  rule sqrtTUInt64(_, _  , ROOT, I) => ROOT >>Int 1
+    requires I >=Int 32
 ```
 
 ### Relational Operations
@@ -516,8 +546,57 @@ Generic TEAL Operations
        <stack> I2 : I1 : XS => (I1 xorInt I2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
+  rule <k> shl => .K ... </k>
+       <stack> I2 : I1 : XS => ((I1 <<Int I2) %Int (MAX_UINT64 +Int 1)) : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires I2 >=Int 0 andBool I2 <Int 64
+
+  rule <k> shl => panic(INVALID_ARGUMENT) ... </k>
+       <stack> I2 : _ : _ </stack>
+    requires notBool (I2 >=Int 0 andBool I2 <Int 64)
+
+  rule <k> shr => .K ... </k>
+       <stack> I2 : I1 : XS => (I1 >>Int I2) : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires I2 >=Int 0 andBool I2 <Int 64
+
+  rule <k> shr => panic(INVALID_ARGUMENT) ... </k>
+       <stack> I2 : _ : _ </stack>
+    requires notBool (I2 >=Int 0 andBool I2 <Int 64)
+
   rule <k> ~ => .K ... </k>
        <stack> I : XS => (~Int I) : XS </stack>
+```
+
+`bitlen` computes the highest set bit in X, indexed from one. Can be used for both integers and byte-arrays.
+If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen of 0 is 0, bitlen of 8 is 4.
+
+```k
+  rule <k> bitlen => .K ... </k>
+       <stack> (I:Int) : XS => 0 : XS </stack>
+    requires I ==Int 0
+
+  rule <k> bitlen => .K ... </k>
+       <stack> (I:Int) : XS => log2Int(I) +Int 1 : XS </stack>
+    requires 0 <Int I andBool I <=Int MAX_UINT64
+
+  rule <k> bitlen => panic(INVALID_ARGUMENT) ... </k>
+       <stack> (I:Int) : _ </stack>
+    requires notBool (0 <=Int I andBool I <=Int MAX_UINT64)
+
+  rule <k> bitlen => .K ... </k>
+       <stack> (B:Bytes) : XS => 0 : XS </stack>
+    requires lengthBytes(B) <=Int MAX_BYTEARRAY_LEN
+     andBool Bytes2Int(B, BE, Unsigned) ==Int 0
+
+  rule <k> bitlen => .K ... </k>
+       <stack> (B:Bytes) : XS => log2Int(Bytes2Int(B, BE, Unsigned)) +Int 1 : XS </stack>
+    requires lengthBytes(B) <=Int MAX_BYTEARRAY_LEN
+     andBool Bytes2Int(B, BE, Unsigned) >Int 0
+
+  rule <k> bitlen => panic(INVALID_ARGUMENT) ... </k>
+       <stack> (B:Bytes) : _ </stack>
+    requires lengthBytes(B) >Int MAX_BYTEARRAY_LEN
 ```
 
 ### Byte Array Operations
@@ -570,6 +649,312 @@ Generic TEAL Operations
   rule <k> substring3 => panic(INDEX_OUT_OF_BOUNDS) ... </k>
        <stack> (B:Bytes) : START : END : _ </stack>
     requires 0 >Int START orBool START >Int END orBool END >Int lengthBytes(B)
+```
+
+*Zero bytes*
+```k
+  rule <k> bzero => .K ... </k>
+       <stack> X : XS => padLeftBytes(.Bytes, X, 0) : XS </stack>
+    requires X <=Int MAX_BYTEARRAY_LEN
+
+  rule <k> bzero => panic(INVALID_ARGUMENT) ... </k>
+       <stack> X : _ </stack>
+    requires X >Int MAX_BYTEARRAY_LEN
+```
+
+*Byte-array access and modification*
+
+```k
+  rule <k> getbyte => .K ... </k>
+       <stack> ARRAY : B : XS => ARRAY[B] : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires 0 <=Int B andBool B <Int lengthBytes(ARRAY)
+
+  rule <k> getbyte => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+       <stack> ARRAY : B : _ </stack>
+    requires 0 >Int B orBool B >=Int lengthBytes(ARRAY)
+
+  rule <k> setbyte => .K ... </k>
+       <stack> ARRAY : B : C : XS => ARRAY[B <- C] : XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+    requires 0 <=Int B andBool B <Int lengthBytes(ARRAY)
+             andBool 0 <=Int C andBool C <=Int MAX_UINT8
+
+  rule <k> setbyte => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+       <stack> ARRAY : B : _ </stack>
+    requires 0 >Int B orBool B >=Int lengthBytes(ARRAY)
+
+  rule <k> setbyte => panic(ILL_TYPED_STACK) ... </k>
+       <stack> _ : _ : C : _ </stack>
+    requires 0 >Int C orBool C >Int MAX_UINT8
+```
+
+*Byte-array sub-array extraction*
+
+```k
+  rule <k> extract S L => .K ... </k>
+       <stack> ARRAY : XS => substrBytes(ARRAY, S, S +Int L) : XS </stack>
+    requires 0 <=Int S andBool S <=Int 255
+     andBool 0 <Int L andBool L <=Int 255
+     andBool L <=Int lengthBytes(ARRAY)
+     andBool S +Int L <=Int lengthBytes(ARRAY)
+
+  // If L is 0, then extract to the end of the byte-array.
+  rule <k> extract S L => .K ... </k>
+       <stack> ARRAY : XS => substrBytes(ARRAY, S, lengthBytes(ARRAY)) : XS </stack>
+    requires 0 <=Int S andBool S <=Int 255
+     andBool 0 ==Int L
+     andBool S <=Int lengthBytes(ARRAY)
+
+  rule <k> extract S L => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+       <stack> ARRAY : _ </stack>
+      requires S >Int lengthBytes(ARRAY)
+        orBool S +Int L >Int lengthBytes(ARRAY)
+
+  rule <k> extract S L => panic(INVALID_ARGUMENT) ... </k>
+      requires 0 >Int S orBool S >Int MAX_UINT8
+       orBool  0 >Int L orBool L >Int MAX_UINT8
+```
+
+```k
+  rule <k> extract3 => .K ... </k>
+       <stack> C : B : ARRAY : XS => substrBytes(ARRAY, B, B +Int C) : XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+    requires B <=Int lengthBytes(ARRAY)
+     andBool B +Int C <=Int lengthBytes(ARRAY)
+
+  rule <k> extract3 => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+       <stack> C : B : ARRAY : _ </stack>
+      requires B >Int lengthBytes(ARRAY)
+        orBool B +Int C >Int lengthBytes(ARRAY)
+```
+
+*Byte-array uint extraction*
+
+```k
+  rule <k> extract_uint16 => .K ... </k>
+       <stack> B : ARRAY : XS =>
+               Bytes2Int(substrBytes(ARRAY, B, B +Int 2), BE, Unsigned) : XS
+       </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires B <=Int lengthBytes(ARRAY)
+     andBool B +Int 2 <=Int lengthBytes(ARRAY)
+
+  rule <k> extract_uint16 => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+       <stack> B : ARRAY : _ </stack>
+      requires B >Int lengthBytes(ARRAY)
+        orBool B +Int 2 >Int lengthBytes(ARRAY)
+```
+
+```k
+  rule <k> extract_uint32 => .K ... </k>
+       <stack> B : ARRAY : XS =>
+               Bytes2Int(substrBytes(ARRAY, B, B +Int 4), BE, Unsigned) : XS
+       </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires B <=Int lengthBytes(ARRAY)
+     andBool B +Int 4 <=Int lengthBytes(ARRAY)
+
+  rule <k> extract_uint32 => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+       <stack> B : ARRAY : _ </stack>
+      requires B >Int lengthBytes(ARRAY)
+        orBool B +Int 4 >Int lengthBytes(ARRAY)
+```
+
+```k
+  rule <k> extract_uint64 => .K ... </k>
+       <stack> B : ARRAY : XS =>
+               Bytes2Int(substrBytes(ARRAY, B, B +Int 8), BE, Unsigned) : XS
+       </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires B <=Int lengthBytes(ARRAY)
+     andBool B +Int 8 <=Int lengthBytes(ARRAY)
+
+  rule <k> extract_uint64 => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+       <stack> B : ARRAY : _ </stack>
+      requires B >Int lengthBytes(ARRAY)
+        orBool B +Int 8 >Int lengthBytes(ARRAY)
+```
+
+#### Byte-arrays as big-endian unsigned integers
+
+
+The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no restriction on the length of the result.
+
+```k
+  rule <k> _OP:MathByteOpCode => panic(MATH_BYTES_ARG_TOO_LONG) ... </k>
+       <stack> B:Bytes : A:Bytes : _ </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires lengthBytes(A) >Int MAX_BYTE_MATH_SIZE
+      orBool lengthBytes(B) >Int MAX_BYTE_MATH_SIZE
+
+  rule <k> _OP:UnaryLogicalMathByteOpCode => panic(MATH_BYTES_ARG_TOO_LONG) ... </k>
+       <stack> A:Bytes : _ </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires lengthBytes(A) >Int MAX_BYTE_MATH_SIZE
+```
+
+
+##### Byte-array arithmetic operations
+
+*Byte-array addition*
+
+```k
+  rule <k> b+ => .K ... </k>
+       <stack> B:Bytes : A:Bytes : XS =>
+               Int2Bytes(Bytes2Int(A, BE, Unsigned) +Int Bytes2Int(B, BE, Unsigned), BE, Unsigned) : XS
+       </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
+     andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
+```
+
+*Byte-array subtraction*
+```k
+  rule <k> b- => .K ... </k>
+       <stack> B:Bytes : A:Bytes : XS =>
+               Int2Bytes(Bytes2Int(A, BE, Unsigned) -Int Bytes2Int(B, BE, Unsigned), BE, Unsigned) : XS
+       </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
+     andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
+     andBool Bytes2Int(A, BE, Unsigned) -Int Bytes2Int(B, BE, Unsigned) >=Int 0
+
+  rule <k> b- => panic(INT_UNDERFLOW) ... </k>
+       <stack> B:Bytes : A:Bytes : _ </stack>
+    requires Bytes2Int(A, BE, Unsigned) -Int Bytes2Int(B, BE, Unsigned) <Int 0
+```
+
+*Byte-array division*
+```k
+  rule <k> b/ => .K ... </k>
+       <stack> B:Bytes : A:Bytes : XS =>
+               Int2Bytes(Bytes2Int(A, BE, Unsigned) /Int Bytes2Int(B, BE, Unsigned), BE, Unsigned) : XS
+       </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
+     andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
+     andBool lengthBytes(B) >Int 0
+
+  rule <k> b/ => panic(DIV_BY_ZERO) ... </k>
+       <stack> B:Bytes : _:Bytes : _  </stack>
+    requires Bytes2Int(B, BE, Unsigned) ==Int 0
+```
+
+*Byte-array remainder*
+```k
+  rule <k> b% => .K ... </k>
+       <stack> B:Bytes : A:Bytes : XS =>
+               Int2Bytes(Bytes2Int(A, BE, Unsigned) %Int Bytes2Int(B, BE, Unsigned), BE, Unsigned) : XS
+       </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
+     andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
+     andBool lengthBytes(B) >Int 0
+
+  rule <k> b% => panic(DIV_BY_ZERO) ... </k>
+       <stack> B:Bytes : _:Bytes : _  </stack>
+    requires Bytes2Int(B, BE, Unsigned) ==Int 0
+```
+
+*Byte-array multiplication*
+```k
+  rule <k> b* => .K ... </k>
+       <stack> B:Bytes : A:Bytes : XS =>
+               Int2Bytes(Bytes2Int(A, BE, Unsigned) *Int Bytes2Int(B, BE, Unsigned), BE, Unsigned) : XS
+       </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
+     andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
+```
+
+##### Byte-array relational operations
+
+```k
+  rule <k> b< => .K ... </k>
+       <stack> B:Bytes : A:Bytes : XS =>
+               (#if Bytes2Int(A, BE, Unsigned) <Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+       </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
+     andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
+
+  rule <k> b> => .K ... </k>
+       <stack> B:Bytes : A:Bytes : XS =>
+               (#if Bytes2Int(A, BE, Unsigned) >Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+       </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
+     andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
+
+  rule <k> b<= => .K ... </k>
+       <stack> B:Bytes : A:Bytes : XS =>
+               (#if Bytes2Int(A, BE, Unsigned) <=Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+       </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
+     andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
+
+  rule <k> b>= => .K ... </k>
+       <stack> B:Bytes : A:Bytes : XS =>
+               (#if Bytes2Int(A, BE, Unsigned) >=Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+       </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
+     andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
+
+  rule <k> b== => .K ... </k>
+       <stack> B:Bytes : A:Bytes : XS =>
+               (#if Bytes2Int(A, BE, Unsigned) ==Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+       </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
+     andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
+
+  rule <k> b!= => .K ... </k>
+       <stack> B:Bytes : A:Bytes : XS =>
+               (#if Bytes2Int(A, BE, Unsigned) =/=Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+       </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
+     andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
+```
+
+##### Byte-array bit-wise boolean operations
+
+In our model, we diverge form the [reference TEAL interpreter](https://github.com/algorand/go-algorand/blob/master/data/transactions/logic/eval.go) by computing the bit-wise logical operations on byte-arrays via interpreting the arrays as big-endian unsigned unbounded integers.
+
+We implement the operations as follows:
+* interpret the byte-arrays as unsigned big-endian unbounded integers;
+* performing the bit-wise operation on the integers;
+* convert the result into a byte-array;
+* left-pad the result with zeroes to the length of the longest argument, if necessary.
+
+```k
+  rule <k> OP:BinaryLogicalMathByteOpCode => .K ... </k>
+       <stack> B : A : XS => BytesBitwiseOp(A, B, OP) : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
+  syntax Bytes ::= BytesBitwiseOp(Bytes, Bytes, BinaryLogicalMathByteOpCode) [function]
+
+  rule BytesBitwiseOp(A, B, b|) =>
+    padLeftBytes(Int2Bytes(Bytes2Int(A, BE, Unsigned) |Int Bytes2Int(B, BE, Unsigned), BE, Unsigned)
+                , maxInt(lengthBytes(A), lengthBytes(B)), 0)
+
+  rule BytesBitwiseOp(A, B, b&) =>
+    padLeftBytes(Int2Bytes(Bytes2Int(A, BE, Unsigned) &Int Bytes2Int(B, BE, Unsigned), BE, Unsigned)
+                , maxInt(lengthBytes(A), lengthBytes(B)), 0)
+
+  rule BytesBitwiseOp(A, B, b^) =>
+    padLeftBytes(Int2Bytes(Bytes2Int(A, BE, Unsigned) xorInt Bytes2Int(B, BE, Unsigned), BE, Unsigned)
+                , maxInt(lengthBytes(A), lengthBytes(B)), 0)
+```
+
+We implement the bit-wise complement as the exclusive or of the argument with a byte-array with all bytes set to `0xff`:
+
+```k
+  rule <k> b~ => .K ... </k>
+       <stack> A : XS => BytesBitwiseOp(A, padLeftBytes(.Bytes, lengthBytes(A), 255), b^) : XS </stack>
 ```
 
 *Byte-array access and modification*
@@ -821,11 +1206,6 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
        <stacksize> S => S -Int 1 </stacksize>
     requires I <=Int 0
 
-  rule <k> bnz L => panic(ILLEGAL_JUMP) ... </k>
-       <labels> LL </labels>
-    requires L in_labels LL
-
-
   rule <k> bz L => jump(L) ... </k>
        <stack> I : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
@@ -836,30 +1216,22 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
        <stacksize> S => S -Int 1 </stacksize>
     requires I >Int 0
 
-  rule <k> bz L => panic(ILLEGAL_JUMP) ... </k>
-       <labels> LL </labels>
-    requires L in_labels LL
-
-
   rule <k> b L => jump(L) ... </k>
 
-  rule <k> b L => panic(ILLEGAL_JUMP) ... </k>
-       <labels> LL </labels>
-    requires L in_labels LL
+  // TODO: `return` used to consume the rest of the `<k>` cell. Now we have to preceed,
+  //       but we will need to make sure that TEAL execution stops here, so
+  //       we erase only the items of sort `TealExecutionOp`.
+   rule <k> return ~> X::TealExecutionOp => #finalizeExecution() ... </k>
+        <stack> (I:Int) : _XS => I : .TStack </stack>
+        <stacksize> _ => 1 </stacksize>
+    requires notBool isTxnCommand(X)
 
-
-  rule <k> return ~> _ => .K </k>
-       <stack> (I:Int) : XS => I:XS </stack>
-       <stacksize> _ => 1 </stacksize>
-
-
-  rule <k> L: => .K ... </k>
-       <labels> LL => L LL </labels>
+  rule <k> _: => .K ... </k>
 
   rule <k> assert => .K ... </k>
        <stack> (X:Int) : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
-    requires X >Int 0
+    requires X >=Int 0
 
   rule <k> assert => panic(ASSERTION_VIOLATION) ... </k>
        <stack> (X:Int) : _ </stack>
@@ -868,20 +1240,66 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
   rule <k> assert => panic(IMPOSSIBLE_NEGATIVE_NUMBER) ... </k>
        <stack> (X:Int) : _ </stack>
     requires X <Int 0
+```
 
+#### Jump internal rules
 
+```k
   syntax KItem ::= jump(Label)
   //--------------------------
-  rule <k> jump(L) ~> L:            => .K      ... </k>
-       <labels> LL => L LL </labels>
+  rule <k> jump(L) => .K ... </k>
+       <pc> _ => getLabelAddress(L) </pc>
+       <jumped> _ => true </jumped>
+       <labels> LL </labels>
+    requires L in_labels LL
 
-  rule <k> jump(L) ~> L':           => jump(L) ... </k>
-       <labels> LL => L' LL </labels>
-    requires L =/=K L'
+  rule <k> jump(L) => panic(ILLEGAL_JUMP) ... </k>
+       <labels> LL </labels>
+    requires notBool (L in_labels LL)
+```
 
-  rule <k> jump(L) ~> _:TealOpCode  => jump(L) ... </k>
+### Subroutine call internal rules
 
-  rule <k> jump(_) => panic(ILLEGAL_JUMP) </k>
+A subroutine call in TEAL performs an unconditional jump to a target label and
+records the next program counter value on the call stack.
+
+Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL program. Either could be used to pass arguments or return results.
+
+```k
+  rule <k> callsub TARGET => callSubroutine(TARGET) ... </k>
+
+  rule <k> retsub => returnSubroutine() ... </k>
+
+  syntax KItem ::= callSubroutine(Label)
+  //-----------------------------
+  // TODO: what happens if the pc value after call is invalid? What to do? Terminate or panic?
+  // For now we do nothing, and thus trigger termination via `#fetchInstruction()`.
+  rule <k> callSubroutine(TARGET) => .K ... </k>
+       <pc> PC => getLabelAddress(TARGET) </pc>
+       <jumped> _ => true </jumped>
+       <labels> LL </labels>
+       <callStack> XS => ListItem(PC +Int 1) XS </callStack>
+    requires  (TARGET in_labels LL)
+      andBool (size(XS) <Int MAX_CALLSTACK_DEPTH)
+
+  rule <k> callSubroutine(_TARGET) => panic(CALLSTACK_OVERFLOW) ... </k>
+       <callStack> XS </callStack>
+    requires size(XS) >=Int MAX_CALLSTACK_DEPTH
+
+  rule <k> callSubroutine(TARGET) => panic(ILLEGAL_JUMP) ... </k>
+       <labels> LL </labels>
+    requires notBool(TARGET in_labels LL)
+
+  syntax KItem ::= returnSubroutine()
+  //-----------------------------
+  rule <k> returnSubroutine() => .K ... </k>
+       <pc> _ => RETURN_PC </pc>
+       <jumped> _ => true </jumped>
+       <callStack> ListItem(RETURN_PC) XS => XS </callStack>
+
+  rule <k> returnSubroutine() => panic(CALLSTACK_UNDERFLOW) ... </k>
+       <pc> _ </pc>
+       <callStack> .List </callStack>
 ```
 
 ### Stack Manipulation
@@ -919,7 +1337,17 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 
-  rule <k> dig N => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+  rule <k> dig N => panic(STACK_UNDERFLOW) ... </k>
+       <stack> _ </stack>
+       <stacksize> S </stacksize>
+    requires notBool (0 <=Int N andBool N <Int S)
+
+  rule <k> cover N => .K ... </k>
+       <stack> X : STACK => #take(N, STACK) (X : #drop(N, STACK)) </stack>
+       <stacksize> S </stacksize>
+    requires 0 <=Int N andBool N <Int S
+
+  rule <k> cover N => panic(STACK_UNDERFLOW) ... </k>
        <stack> _ </stack>
        <stacksize> S </stacksize>
     requires notBool (0 <=Int N andBool N <Int S)
@@ -954,10 +1382,14 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
 
   rule <k> gtxns I => .K ... </k>
        <stack> G : XS => ({getTxnField(G, I)}:>TValue) : XS </stack>
-       <stacksize> _ </stacksize>
 
   rule <k> txna I J => .K ... </k>
        <stack> XS => ({getTxnField(getCurrentTxn(), I, J)}:>TValue) : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires S <Int MAX_STACK_DEPTH
+
+  rule <k> txnas I => .K ... </k>
+       <stack> J : XS => ({getTxnField(getCurrentTxn(), I, J)}:>TValue) : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
 
@@ -966,9 +1398,15 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
 
+  rule <k> gtxnas G I => .K ... </k>
+       <stack> J : XS => ({getTxnField(G, I, J)}:>TValue) : XS </stack>
+
   rule <k> gtxnsa I J => .K ... </k>
        <stack> G : XS => ({getTxnField(G, I, J)}:>TValue) : XS </stack>
-       <stacksize> _ </stacksize>
+
+  rule <k> gtxnsas I => .K ... </k>
+       <stack> J : G : XS => ({getTxnField(G, I, J)}:>TValue) : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> global I => .K ... </k>
        <stack> XS => getGlobalField(I) : XS </stack>
@@ -989,6 +1427,14 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
      andBool I in_keys(M)
      andBool S <Int MAX_STACK_DEPTH
 
+  rule <k> load I => .K ... </k>
+       <stack> XS => 0 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <scratch> M => M[I <- 0] </scratch>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+     andBool notBool (I in_keys(M))
+     andBool S <Int MAX_STACK_DEPTH
+
   rule <k> store I => .K ... </k>
        <stack> V : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
@@ -999,6 +1445,26 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
   rule <k> store I => panic(INVALID_SCRATCH_LOC) ... </k>
+    requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
+
+  rule <k> loads => .K ... </k>
+       <stack> I : XS => ({M[I]}:>TValue) : XS </stack>
+       <scratch> M </scratch>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+     andBool I in_keys(M)
+
+  rule <k> loads => panic(INVALID_SCRATCH_LOC) ... </k>
+       <stack> I : _ </stack>
+    requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
+
+  rule <k> stores => .K ... </k>
+       <stack> V : I : XS => XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+       <scratch> M => M[I <- V] </scratch>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+
+  rule <k> stores => panic(INVALID_SCRATCH_LOC) ... </k>
+       <stack> _ : I : _ </stack>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
   rule <k> _:ScratchOpCode => panic(STACK_OVERFLOW) ... </k>
@@ -1012,25 +1478,29 @@ Stateless TEAL Operations
 ### Logic Signature Argument Accessors
 
 ```k
-  rule <k> arg I => .K ... </k>
-       <stack> XS => ({getArgument(I)}:>TValue) : XS </stack>
-       <stacksize> S => S +Int 1 </stacksize>
-    requires S <Int MAX_STACK_DEPTH
-     andBool isTValue(getArgument(I))
-
-  rule <k> arg I => panic(INDEX_OUT_OF_BOUNDS) ... </k>
-       <stacksize> S </stacksize>
-    requires S <Int MAX_STACK_DEPTH
-     andBool notBool (isTValue(getArgument(I)))
-
-  rule <k> arg _ => panic(STACK_OVERFLOW) ... </k>
-       <stacksize> S </stacksize>
-    requires S >=Int MAX_STACK_DEPTH
-
-  rule <k> arg_0 => arg 0 ... </k>
-  rule <k> arg_1 => arg 1 ... </k>
-  rule <k> arg_2 => arg 2 ... </k>
-  rule <k> arg_3 => arg 3 ... </k>
+//  rule <k> arg I => .K ... </k>
+//       <stack> XS => ({getArgument(I)}:>TValue) : XS </stack>
+//       <stacksize> S => S +Int 1 </stacksize>
+//    requires S <Int MAX_STACK_DEPTH
+//     andBool isTValue(getArgument(I))
+//
+//  rule <k> args => .K ... </k>
+//       <stack> I : XS => ({getArgument(I)}:>TValue) : XS </stack>
+//    requires isTValue(getArgument(I))
+//
+//  rule <k> arg I => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+//       <stacksize> S </stacksize>
+//    requires S <Int MAX_STACK_DEPTH
+//     andBool notBool (isTValue(getArgument(I)))
+//
+//  rule <k> arg _ => panic(STACK_OVERFLOW) ... </k>
+//       <stacksize> S </stacksize>
+//    requires S >=Int MAX_STACK_DEPTH
+//
+//  rule <k> arg_0 => arg 0 ... </k>
+//  rule <k> arg_1 => arg 1 ... </k>
+//  rule <k> arg_2 => arg 2 ... </k>
+//  rule <k> arg_3 => arg 3 ... </k>
 ```
 
 Stateful TEAL Operations
@@ -1380,6 +1850,39 @@ Stateful TEAL Operations
      andBool S <Int MAX_STACK_DEPTH
 ```
 
+### Access to past transactions in the group
+
+*gaid*
+
+```k
+  rule <k> gaid T => .K ... </k>
+       <stack> XS => ({getTxnField(T, ApplicationID)}:>TValue) : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires S <Int MAX_STACK_DEPTH
+     andBool T <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+     andBool ({getTxnField(T, TypeEnum)}:>Int) ==Int (@ appl)
+
+  rule <k> gaid T => panic(TXN_ACCESS_FAILED) ... </k>
+    requires T >=Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+     orBool ({getTxnField(T, TypeEnum)}:>Int) =/=Int (@ appl)
+```
+
+*gaids*
+
+```k
+  rule <k> gaids => .K ... </k>
+       <stack> T : XS => ({getTxnField(T, ApplicationID)}:>TValue) : XS </stack>
+    requires T <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+     andBool ({getTxnField(T, TypeEnum)}:>Int) ==Int (@ appl)
+
+  rule <k> gaids => panic(TXN_ACCESS_FAILED) ... </k>
+       <stack> T : _ </stack>
+    requires T >=Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+     orBool ({getTxnField(T, TypeEnum)}:>Int) =/=Int (@ appl)
+```
+
+
+
 Panic Behaviors due to Ill-typed Stack Arguments
 ------------------------------------------------
 
@@ -1390,7 +1893,7 @@ Panic Behaviors due to Ill-typed Stack Arguments
 ```k
   rule <k> Op:OpCode => panic(ILL_TYPED_STACK) ... </k>
        <stack> (V2:TValue) : (V1:TValue) : _ </stack>
-    requires (isArithOpCode(Op)         orBool
+    requires (isBinaryArithOpCode(Op)         orBool
               isInequalityOpCode(Op)    orBool
               isBinaryLogicalOpCode(Op) orBool
               isBinaryBitOpCode(Op))
@@ -1487,6 +1990,8 @@ Panic Behaviors due to Ill-typed Stack Arguments
 Panic Behaviors due to Insufficient Stack Arguments
 ---------------------------------------------------
 
+TODO: incorporate Bytes math opcodes
+
 ```k
   // Opcodes requiring at least three stack elements
   rule <k> Op:OpCode => panic(STACK_UNDERFLOW) ... </k>
@@ -1501,7 +2006,7 @@ Panic Behaviors due to Insufficient Stack Arguments
   rule <k> Op:OpCode => panic(STACK_UNDERFLOW) ... </k>
        <stack> (_:TValue) : .TStack </stack>
        <stacksize> 1 </stacksize>
-    requires isArithOpCode(Op)
+    requires isBinaryArithOpCode(Op)
       orBool isBinaryBitOpCode(Op)
       orBool isRelationalOpCode(Op)
       orBool isBinaryLogicalOpCode(Op)

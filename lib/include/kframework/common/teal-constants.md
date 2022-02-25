@@ -68,7 +68,7 @@ actions occur when the transaction completes.
   // ---------------------------------------------------------------
   rule normalizeI(V:TUInt64) => V
 
-  // Transaction Types
+  // Oncompletion Action Types
   // -----------------
   rule normalizeI(NoOp             ) => 0
   rule normalizeI(OptIn            ) => 1
@@ -77,7 +77,7 @@ actions occur when the transaction completes.
   rule normalizeI(UpdateApplication) => 4
   rule normalizeI(DeleteApplication) => 5
 
-  // Oncompletion Action Types
+  // Transaction Types
   // -------------------------
   rule normalizeI(unknown          ) => 0
   rule normalizeI(pay              ) => 1

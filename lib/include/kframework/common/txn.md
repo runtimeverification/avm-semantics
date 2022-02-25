@@ -13,6 +13,16 @@ module TXN-FIELDS
   imports TEAL-FIELDS
 ```
 
+*Pseudo fields*
+
+We maintain a number of pseudo fields that are not part of the official AVM specification and serve the internal purposes of the semantics.
+
+In TEALv4, the opcodes `gload` and `gloads` were added to access the final scratch space of the
+past application call transactions in the group. We, thus, maintain a `<finalScratch>` sub-cell, initially an empty `.Map`. The cell will be hold the final state of that transaction's scratch space.
+
+```k
+```
+
 *Transaction Header*
 
 ```k
@@ -54,7 +64,7 @@ module TXN-FIELDS
         <accounts>          NoTValue </accounts>
         <approvalProgram>   NoTValue </approvalProgram>
         <clearStateProgram> NoTValue </clearStateProgram>
-        <applicationArgs>   NoTValue </applicationArgs>       // maximum size is 2KB, and all args are internally byte strings
+        <applicationArgs>   NoTValue </applicationArgs> // maximum size is 2KB, and all args are internally byte strings
         <foreignApps>       NoTValue </foreignApps>
         <foreignAssets>     NoTValue </foreignAssets>
         <globalStateSchema>

@@ -120,7 +120,11 @@ k-deps: $(K_JAR)
 # Building
 # --------
 
-build: build-teal build-kavm
+build: build-kavm
+
+$(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
+	@mkdir -p $(dir $@)
+	install $< $@
 
 HOOK_NAMESPACES   := KRYPTO CLARITY
 
@@ -172,41 +176,56 @@ ifneq (,$(RELEASE))
     KOMPILE_OPTS += -O2 --read-only-kompiled-directory
 endif
 
-# Teal
+# AVM
 
-teal_files :=                             \
-              common/teal-types.md        \
-              common/teal-constants.md    \
-              common/teal-fields.md       \
-              common/additional-fields.md \
-              common/blockchain.md        \
-              common/txn.md               \
-              common/args.md              \
-              common/teal-syntax.md       \
-              avm/teal-stack.md           \
-              avm/driver.md               \
-              avm/env-init.md
-teal_includes := $(patsubst %, $(KAVM_INCLUDE)/kframework/%, $(teal_files))
+avm_files    :=                             \
+                common/teal-types.md        \
+                common/teal-constants.md    \
+                common/teal-fields.md       \
+                common/additional-fields.md \
+                common/blockchain.md        \
+                common/txn.md               \
+                common/args.md              \
+                common/teal-syntax.md       \
+                teal/teal-stack.md          \
+                teal/teal-limits.md         \
+                teal/teal-driver.md         \
+                teal/teal-execution.md      \
+                avm/avm-txn-deque.md        \
+                avm/avm-configuration.md    \
+                avm/avm-initialization.md   \
+                avm/avm-execution.md
 
-tangle_teal            := k & ((! type) | exec)
-TEAL_HOOK_KOMPILE_OPTS := $(CLARITY_HOOK_KOMPILE_OPTS)
-KOMPILE_TEAL           := kompile --backend llvm --md-selector "$(tangle_teal)"          \
-                          $(KOMPILE_OPTS) $(HOOK_KOMPILE_OPTS) $(TEAL_HOOK_KOMPILE_OPTS)
+avm_includes := $(patsubst %, $(KAVM_INCLUDE)/kframework/%, $(avm_files))
 
-teal_dir           := teal-llvm
-teal_main_module   := TEAL-DRIVER
-teal_syntax_module := TEAL-PARSER-SYNTAX
-teal_main_file     := avm/driver.md
-teal_main_filename := $(basename $(notdir $(teal_main_file)))
-teal_kompiled      := $(teal_dir)/$(teal_main_filename)-kompiled/timestamp
+AVM_KOMPILE_OPTS += --verbose $(COVERAGE_OPTS) $(K_INCLUDES)
+tangle_avm            := k & ((! type) | exec)
+AVM_HOOK_KOMPILE_OPTS := $(CLARITY_HOOK_KOMPILE_OPTS)
 
-build-teal: $(KAVM_LIB)/$(teal_kompiled)
+ifeq ($(K_BACKEND),)
+  K_BACKEND := llvm
+endif
 
-$(KAVM_LIB)/$(teal_kompiled): $(teal_includes) $(HOOK_PLUGIN_FILES) $(HOOK_SHARED_FILES) $(libff_out) $(plugin_includes)
-	$(KOMPILE_TEAL) $(KAVM_INCLUDE)/kframework/$(teal_main_file) \
-	                --directory $(KAVM_LIB)/$(teal_dir)          \
-	                --main-module $(teal_main_module)            \
-	                --syntax-module $(teal_syntax_module)
+KOMPILE_AVM       := kompile --backend $(K_BACKEND) --md-selector "$(tangle_avm)"          \
+                          $(AVM_KOMPILE_OPTS) $(HOOK_KOMPILE_OPTS) $(AVM_HOOK_KOMPILE_OPTS)
+
+avm_dir           := avm-llvm
+avm_main_module   := AVM-EXECUTION
+avm_syntax_module := TEAL-PARSER-SYNTAX
+avm_main_file     := avm/avm-execution.md
+avm_main_filename := $(basename $(notdir $(avm_main_file)))
+avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled
+
+build-avm: $(KAVM_LIB)/$(avm_kompiled)
+
+$(KAVM_LIB)/$(avm_kompiled): $(avm_includes) $(HOOK_PLUGIN_FILES) $(HOOK_SHARED_FILES) $(libff_out) $(plugin_includes)
+	$(KOMPILE_AVM) $(KAVM_INCLUDE)/kframework/$(avm_main_file)                     \
+	                --directory $(KAVM_LIB)/$(avm_dir)  \
+	                --main-module $(avm_main_module)     \
+	                --syntax-module $(avm_syntax_module)
+
+clean-avm:
+	rm -r $(KAVM_LIB)/$(avm_kompiled)
 
 # Runners/Helpers
 
@@ -219,29 +238,29 @@ kavm_bins      := $(patsubst %, $(KAVM_BIN)/%, $(kavm_bin_files))
 kavm_lib_files := version
 kavm_libs      := $(patsubst %, $(KAVM_LIB)/%, $(kavm_lib_files))
 
-build-kavm: $(KAVM_LIB)/version
+# build-kavm: $(KAVM_LIB)/version
 
-$(KAVM_LIB)/version: $(includes) $(kavm_bins)
+# $(KAVM_LIB)/version: $(includes) $(kavm_bins)
 
-$(KAVM_BIN)/%: %
-	@mkdir -p $(dir $@)
-	install $< $@
+# $(KAVM_BIN)/%: %
+# 	@mkdir -p $(dir $@)
+# 	install $< $@
 
-$(KAVM_LIB)/%: lib/%
-	@mkdir -p $(dir $@)
-	install $< $@
+# $(KAVM_LIB)/%: lib/%
+# 	@mkdir -p $(dir $@)
+# 	install $< $@
 
-$(KAVM_INCLUDE)/kframework/modules/%:
-	echo $@
-	@mkdir -p $(dir $@)
-	install $< $@
+# $(KAVM_INCLUDE)/kframework/modules/%:
+# 	echo $@
+# 	@mkdir -p $(dir $@)
+# 	install $< $@
 
-$(KAVM_LIB)/version:
-	@mkdir -p $(dir $@)
-	echo '== KAVM Version'    > $@
-	echo $(KAVM_RELEASE_TAG) >> $@
-	echo '== Build Date'     >> $@
-	date                     >> $@
+# $(KAVM_LIB)/version:
+# 	@mkdir -p $(dir $@)
+# 	echo '== KAVM Version'    > $@
+# 	echo $(KAVM_RELEASE_TAG) >> $@
+# 	echo '== Build Date'     >> $@
+# 	date                     >> $@
 
 # Installation
 # ------------
@@ -273,36 +292,43 @@ uninstall:
 
 KAVM_OPTIONS :=
 
-test-all: test-teal
-test: test-teal
+test-all: test-avm
+test: test-avm
 
-test-teal: test-teal-conformance test-teal-prove
+avm_tests         := $(wildcard tests/avm/*.sh)
 
-## Teal Assembly Unit Tests
+test-avm:         $(avm_tests:=.unit)
 
-teal_tests         := $(wildcard tests/teal/stateless/*.teal) $(wildcard tests/teal/stateful/*.teal)
-teal_tests_failing := $(shell cat tests/failing-teal.list)
-teal_tests_passing := $(filter-out $(teal_tests_failing), $(teal_tests))
+tests/avm/%.sh.unit: tests/avm/%.sh
+	$< >>/dev/null 2>&1
 
-test-teal-conformance:         $(teal_tests_passing:=.unit)
-test-teal-conformance-failing: $(teal_tests_failing:=.unit)
+# test-avm: test-teal-conformance test-teal-prove
 
-tests/teal/%.fail.teal.unit: tests/teal/%.fail.teal
-	$(KAVM) parse $(KAVM_OPTIONS) --backend teal $< > /dev/null
-	! $(KAVM) run $(KAVM_OPTIONS) --backend teal $< --output none
+# ## Teal Assembly Unit Tests
 
-tests/teal/%.teal.unit: tests/teal/%.teal
-	$(KAVM) run $(KAVM_OPTIONS) --backend teal $< --output none
+# teal_tests         := $(wildcard tests/teal/stateless/*.teal) $(wildcard tests/teal/stateful/*.teal)
+# teal_tests_failing := $(shell cat tests/failing-teal.list)
+# teal_tests_passing := $(filter-out $(teal_tests_failing), $(teal_tests))
 
-# Teal Proof Tests
+# test-teal-conformance:         $(teal_tests_passing:=.unit)
+# test-teal-conformance-failing: $(teal_tests_failing:=.unit)
 
-teal_prove_tests         := $(wildcard tests/teal/specs/*-spec.k)
-teal_prove_tests_passing := $(filter-out $(teal_tests_failing), $(teal_prove_tests))
+# tests/teal/%.fail.teal.unit: tests/teal/%.fail.teal
+# 	$(KAVM) parse $(KAVM_OPTIONS) --backend teal $< > /dev/null
+# 	! $(KAVM) run $(KAVM_OPTIONS) --backend teal $< --output none
 
-test-teal-prove: $(teal_prove_tests:=.prove)
+# tests/teal/%.teal.unit: tests/teal/%.teal
+# 	$(KAVM) run $(KAVM_OPTIONS) --backend teal $< --output none
 
-tests/teal/specs/%-spec.k.prove: tests/teal/specs/verification-kompiled/timestamp $(KAVM_BIN)/$(KAVM)
-	$(KAVM) prove --backend-dir tests/teal/specs tests/teal/specs/$*-spec.k $(K_INCLUDES)
+# # Teal Proof Tests
 
-tests/teal/specs/verification-kompiled/timestamp: tests/teal/specs/verification.k $(teal_includes)
-	kompile $< --backend haskell --directory tests/teal/specs $(K_INCLUDES)
+# teal_prove_tests         := $(wildcard tests/teal/specs/*-spec.k)
+# teal_prove_tests_passing := $(filter-out $(teal_tests_failing), $(teal_prove_tests))
+
+# test-teal-prove: $(teal_prove_tests:=.prove)
+
+# tests/teal/specs/%-spec.k.prove: tests/teal/specs/verification-kompiled/timestamp $(KAVM_BIN)/$(KAVM)
+# 	$(KAVM) prove --backend-dir tests/teal/specs tests/teal/specs/$*-spec.k $(K_INCLUDES)
+
+# tests/teal/specs/verification-kompiled/timestamp: tests/teal/specs/verification.k $(teal_includes)
+# 	kompile $< --backend haskell --directory tests/teal/specs $(K_INCLUDES)

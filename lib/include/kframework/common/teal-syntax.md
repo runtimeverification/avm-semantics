@@ -29,8 +29,8 @@ module TEAL-OPCODES
                         | ScratchOpCode
                         | BranchingOpCode
                         | StackOpCode
-  syntax SigOpCode    ::= SigVerOpCode | ArgOpCode // Opcodes used only by stateless TEAL
-  syntax AppOpCode    ::= StateOpCode              // Opcodes used only by stateful TEAL
+  syntax SigOpCode    ::= SigVerOpCode | ArgOpCode           // Opcodes used only by stateless TEAL
+  syntax AppOpCode    ::= StateOpCode  | TxnGroupStateOpCode // Opcodes used only by stateful TEAL
 ```
 
 ### Generic TEAL Opcodes
@@ -52,13 +52,21 @@ module TEAL-OPCODES
 #### Arithmetic Operations
 
 ```k
-  syntax ArithOpCode ::= "+"
-                       | "-"
-                       | "/"
-                       | "*"
-                       | "%"
-                       | "addw"
-                       | "mulw"
+  syntax ArithOpCode ::= UnaryArithOpCode
+                       | BinaryArithOpCode
+
+  syntax UnaryArithOpCode ::= "sqrt"
+
+  syntax BinaryArithOpCode ::= "+"
+                             | "-"
+                             | "/"
+                             | "*"
+                             | "%"
+                             | "exp"
+                             | "addw"
+                             | "divmodw"
+                             | "mulw"
+                             | "expw"
 ```
 
 #### Bitwise Operations
@@ -71,7 +79,10 @@ module TEAL-OPCODES
   syntax BinaryBitOpCode  ::= "|"
                             | "&"
                             | "^"
+                            | "shl"
+                            | "shr"
   syntax UnaryBitOpCode   ::= "~"
+                            | "bitlen"
   syntax NullaryBitOpCode ::= "getbit"
                             | "setbit"
 ```
@@ -108,6 +119,7 @@ module TEAL-OPCODES
   syntax ByteOpCode ::= UnaryByteOpCode
                       | BinaryByteOpCode
                       | TernaryByteOpCode
+                      | MathByteOpCode
 
   syntax UnaryByteOpCode   ::= "len"
                              | "itob"
@@ -115,10 +127,46 @@ module TEAL-OPCODES
                              | "substring" Int Int // start position, end position
                              | "getbyte"
                              | "setbyte"
+                             | "bzero"
+                             | "extract" TUInt8 TUInt8 // start position, length
 
   syntax BinaryByteOpCode  ::= "concat"
+                             | "extract_uint16"
+                             | "extract_uint32"
+                             | "extract_uint64"
 
   syntax TernaryByteOpCode ::= "substring3"
+                             | "extract3"
+
+  syntax MathByteOpCode ::= ArithmMathByteOpCode
+                          | RelationalMathByteOpCode
+                          | LogicalMathByteOpCode
+
+  syntax ArithmMathByteOpCode ::= "b+"
+                                | "b-"
+                                | "b/"
+                                | "b%"
+                                | "b*"
+
+  syntax RelationalMathByteOpCode ::= InequalityMathByteOpCode
+                                    | EqualityMathByteOpCode
+
+  syntax InequalityMathByteOpCode ::= "b<"
+                                    | "b>"
+                                    | "b<="
+                                    | "b>="
+
+  syntax EqualityMathByteOpCode ::= "b=="
+                                  | "b!="
+
+  syntax LogicalMathByteOpCode ::= BinaryLogicalMathByteOpCode
+                                 | UnaryLogicalMathByteOpCode
+
+  syntax BinaryLogicalMathByteOpCode ::= "b|"
+                                       | "b&"
+                                       | "b^"
+
+  syntax UnaryLogicalMathByteOpCode ::= "b~"
 ```
 
 #### Constant Loading Operations
@@ -155,8 +203,11 @@ module TEAL-OPCODES
                             | "gtxn" Int TxnField       // transaction group index, transaction field index
                             | "gtxns" TxnField          // transaction field index
                             | "txna" TxnaField Int      // transaction field index, transaction field array index
+                            | "txnas" TxnaField         // transaction field index
                             | "gtxna" Int TxnaField Int // transaction group index, transaction field index, transaction field array index
+                            | "gtxnas" Int TxnaField    // transaction group index, transaction field index
                             | "gtxnsa" TxnaField Int    // transaction field index, transaction field array index
+                            | "gtxnsas" TxnaField       // transaction field index
                             | "global" GlobalField      // global field index
 ```
 
@@ -166,7 +217,9 @@ module TEAL-OPCODES
   syntax ScratchOpCode ::= LoadOpCode
                          | StoreOpCode
   syntax LoadOpCode    ::= "load"  Int // position in scratch space to load from
+                         | "loads"     // Same as previous, but the position is on stack
   syntax StoreOpCode   ::= "store" Int // position in scratch space to store to
+                         | "stores"    // Same as previous, but the position is on stack
 ```
 
 #### Flow Control Operations
@@ -178,12 +231,15 @@ module TEAL-OPCODES
                            | JumpOpCode
                            | ReturnOpCode
                            | AssertOpCode
+                           | SubroutineOpCode
 
   syntax CondBranchOpCode ::= "bnz" Label          // forward branch offset, big endian
                             | "bz"  Label          // forward branch offset, big endian
   syntax JumpOpCode       ::= "b"   Label          // forward branch offset, big endian
   syntax ReturnOpCode     ::= "return"
   syntax AssertOpCode     ::= "assert"
+  syntax SubroutineOpCode ::= "callsub" Label
+                            | "retsub"
 ```
 
 #### Stack Manipulation Operations
@@ -192,19 +248,22 @@ module TEAL-OPCODES
                             | UnaryStackOpCode
                             | BinaryStackOpCode
                             | TernaryStackOpCode
+                            | NAryStackOpCode
 
   syntax NullaryStackOpCode ::= "pushint" PseudoTUInt64
                               | "pushbytes" TBytesLiteral
 
   syntax UnaryStackOpCode  ::= "pop"
                              | "dup"
-                             // We type `dig N` as unary, but the semantics must check
-                             // that the stack is deep enough
-                             | "dig" Int
+
   syntax BinaryStackOpCode ::= "dup2"
                              | "swap"
 
   syntax TernaryStackOpCode ::= "select"
+
+  syntax NAryStackOpCode    ::= "dig" Int
+                              | "cover" Int
+                              | "uncover" Int
 ```
 
 ### Stateless TEAL Operations
@@ -219,6 +278,7 @@ module TEAL-OPCODES
 
 ```k
   syntax ArgOpCode ::= "arg" Int // Int arg index
+                     | "args"    // arg index on stack
                      | "arg_0"
                      | "arg_1"
                      | "arg_2"
@@ -248,6 +308,20 @@ module TEAL-OPCODES
                               | "app_local_put"
 ```
 
+#### Access to past transactions in the group
+
+```k
+  syntax TxnGroupStateOpCode ::= NullaryTxnGroupStateOpCode
+                               | UnaryTxnGroupStateOpCode
+
+  syntax NullaryTxnGroupStateOpCode ::= "gaid" Int // transaction index
+                                      | "gload" Int Int // transaction index, scratch position
+
+  syntax UnaryTxnGroupStateOpCode ::= "gaids"
+                                    | "gloads" Int // scratch position
+
+```
+
 ```k
 endmodule
 ```
@@ -258,6 +332,7 @@ TEAL Program Definition
 ```k
 module TEAL-SYNTAX
   import TEAL-OPCODES
+  import INT
 
   syntax LabelCode ::= Label ":"
 
@@ -280,6 +355,20 @@ module TEAL-SYNTAX
   syntax TealPgm ::= TealOpCodeOrLabel
                    | TealOpCodeOrLabel TealPgm
   syntax TealInputPgm ::= TealPragmas TealPgm
+
+  syntax TealPrograms ::= TealInputPgm ";" TealPrograms | ".TealPrograms"
+```
+
+We provide a function to extract a teal program by index from the syntactic list of input programs.
+If the requested index is out of bounds, a trivial error program is returned.
+
+```k
+  syntax TealInputPgm ::= getTealByIndex(TealPrograms, Int) [function]
+  //------------------------------------------------------------------
+  rule getTealByIndex(PGM;_, 0) => PGM
+  rule getTealByIndex(_;REST, IDX) => getTealByIndex(REST, IDX -Int 1)
+    requires IDX >Int 0
+  rule getTealByIndex(.TealPrograms, _) => #pragma version 3 err
 endmodule
 ```
 
@@ -326,8 +415,14 @@ endmodule
 
 ### TEAL Unparser
 
-This module takes a TealPgm value and prints out a string that corresponds to
+This module takes a `TealPgm` value and prints out a string that corresponds to
 it.
+
+The opcodes that have no immediate arguments do not require specific rules, since
+they are handled by the `[owise]` rule of the `unparseTEALOp` function. The opcodes
+which are not just tokens, i.e. have at least one immediate argument, need
+an `unparseTEALOp` rule.
+
 
 ```k
 module TEAL-UNPARSER
@@ -349,8 +444,11 @@ module TEAL-UNPARSER
   rule unparseTEAL(/)                             => "/"
   rule unparseTEAL(*)                             => "*"
   rule unparseTEAL(%)                             => "%"
+  rule unparseTEAL(exp)                           => "exp"
   rule unparseTEAL(addw)                          => "addw"
+  rule unparseTEAL(divmodw)                       => "divmodw"
   rule unparseTEAL(mulw)                          => "mulw"
+  rule unparseTEAL(expw)                          => "expw"
   rule unparseTEAL(|)                             => "|"
   rule unparseTEAL(&)                             => "&"
   rule unparseTEAL(^)                             => "^"
@@ -373,7 +471,27 @@ module TEAL-UNPARSER
   rule unparseTEAL(getbyte)                       => "getbyte"
   rule unparseTEAL(setbyte)                       => "setbyte"
   rule unparseTEAL(concat)                        => "concat"
+  rule unparseTEAL(extract Start Length)          => "extract" +&+ Int2String(Start:Int) +&+ Int2String(Length:Int)
+  rule unparseTEAL(b+)                            => "b+"
+  rule unparseTEAL(b-)                            => "b-"
+  rule unparseTEAL(b/)                            => "b/"
+  rule unparseTEAL(b*)                            => "b*"
+  rule unparseTEAL(b<)                            => "b<"
+  rule unparseTEAL(b>)                            => "b>"
+  rule unparseTEAL(b<=)                           => "b<="
+  rule unparseTEAL(b>=)                           => "b>="
+  rule unparseTEAL(b==)                           => "b=="
+  rule unparseTEAL(b!=)                           => "b!="
+  rule unparseTEAL(b%)                            => "b%"
+  rule unparseTEAL(b|)                            => "b|"
+  rule unparseTEAL(b&)                            => "b&"
+  rule unparseTEAL(b^)                            => "b^"
+  rule unparseTEAL(b~)                            => "b~"
   rule unparseTEAL(substring3)                    => "substring3"
+  rule unparseTEAL(extract3)                      => "extract3"
+  rule unparseTEAL(extract_uint16)                => "extract_uint16"
+  rule unparseTEAL(extract_uint32)                => "extract_uint32"
+  rule unparseTEAL(extract_uint64)                => "extract_uint64"
   rule unparseTEAL(intcblock Size IntConsts)      => "intcblock" +&+ Int2String(Size:Int) +&+ TValueList2String(IntConsts:TValueList)
   rule unparseTEAL(intc Idx)                      => "intc" +&+ Int2String(Idx:Int)
   rule unparseTEAL(intc_0)                        => "intc_0"
@@ -397,10 +515,16 @@ module TEAL-UNPARSER
   rule unparseTEAL(gtxn TxnIdx TxnField)          => "gtxn" +&+ Int2String(TxnIdx:Int) +&+ TealField2String(TxnField:TxnField)
   rule unparseTEAL(gtxns TxnField)                => "gtxns" +&+ TealField2String(TxnField:TxnField)
   rule unparseTEAL(txna FieldName ArrIdx)         => "txna" +&+ TealField2String(FieldName:TxnaField) +&+ Int2String(ArrIdx:Int)
+  rule unparseTEAL(txnas FieldName)               => "txnas" +&+ TealField2String(FieldName:TxnaField)
   rule unparseTEAL(gtxna TxnIdx FieldName ArrIdx) => "gtxna" +&+ Int2String(TxnIdx:Int) +&+ TealField2String(FieldName:TxnaField) +&+ Int2String(ArrIdx:Int)
+  rule unparseTEAL(gtxnas TxnIdx FieldName)       => "gtxnas" +&+ Int2String(TxnIdx:Int) +&+ TealField2String(FieldName:TxnaField)
+  rule unparseTEAL(gtxnsa FieldName ArrIdx)       => "gtxnsa" +&+ TealField2String(FieldName:TxnaField) +&+ Int2String(ArrIdx:Int)
+  rule unparseTEAL(gtxnsas FieldName)             => "gtxnsas" +&+ TealField2String(FieldName:TxnaField)
   rule unparseTEAL(global FieldName)              => "global" +&+ TealField2String(FieldName:GlobalField)
   rule unparseTEAL(load SlotIdx)                  => "load" +&+ Int2String(SlotIdx:Int)
+  rule unparseTEAL(loads)                         => "loads"
   rule unparseTEAL(store SlotIdx)                 => "store" +&+ Int2String(SlotIdx:Int)
+  rule unparseTEAL(stores)                        => "stores"
   rule unparseTEAL(bnz Lbl)                       => "bnz" +&+ Label2String(Lbl:Label)
   rule unparseTEAL(bz Lbl)                        => "bz" +&+ Label2String(Lbl:Label)
   rule unparseTEAL(b Lbl)                         => "b" +&+ Label2String(Lbl:Label)
@@ -410,11 +534,14 @@ module TEAL-UNPARSER
   rule unparseTEAL(pop)                           => "pop"
   rule unparseTEAL(dup)                           => "dup"
   rule unparseTEAL(dup2)                          => "dup2"
-  rule unparseTEAL(dig N)                         => "dup" +&+ Int2String(N)
+  rule unparseTEAL(dig N)                         => "dig" +&+ Int2String(N)
+  rule unparseTEAL(cover N)                       => "cover" +&+ Int2String(N)
+  rule unparseTEAL(uncover N)                     => "uncover" +&+ Int2String(N)
   rule unparseTEAL(select)                        => "select"
   rule unparseTEAL(swap)                          => "swap"
   rule unparseTEAL(ed25519verify)                 => "ed25519verify"
   rule unparseTEAL(arg ArgIdx:Int)                => "arg" +&+ Int2String(ArgIdx)
+  rule unparseTEAL(args)                          => "args"
   rule unparseTEAL(arg_0)                         => "arg_0"
   rule unparseTEAL(arg_1)                         => "arg_1"
   rule unparseTEAL(arg_2)                         => "arg_2"
@@ -444,7 +571,7 @@ module TEAL-UNPARSER
                   | TealField2String(AssetParamsField)  [function]
                   | TealField2String(TxnField)          [function]
                   | TealField2String(TxnaFieldExt)      [function]
-  // -------------------------------------------------------------
+  // ---------------------------------------------------------------------------------------
   rule TealField2String(MinTxnFee)                => "MinTxnFee"
   rule TealField2String(MinBalance)               => "MinBalance"
   rule TealField2String(MaxTxnLife)               => "MaxTxnLife"
@@ -454,10 +581,8 @@ module TEAL-UNPARSER
   rule TealField2String(Round)                    => "Round"
   rule TealField2String(LatestTimestamp)          => "LatestTimestamp"
   rule TealField2String(CurrentApplicationID)     => "CurrentApplicationID"
-
   rule TealField2String(AssetBalance)             => "AssetBalance"
   rule TealField2String(AssetFrozen)              => "AssetFrozen"
-
   rule TealField2String(AssetTotal)               => "AssetTotal"
   rule TealField2String(AssetDecimals)            => "AssetDecimals"
   rule TealField2String(AssetDefaultFrozen)       => "AssetDefaultFrozen"
@@ -469,7 +594,6 @@ module TEAL-UNPARSER
   rule TealField2String(AssetReserve)             => "AssetReserve"
   rule TealField2String(AssetFreeze)              => "AssetFreeze"
   rule TealField2String(AssetClawback)            => "AssetClawback"
-
   rule TealField2String(TxID)                     => "TxID"
   rule TealField2String(Sender)                   => "Sender"
   rule TealField2String(Fee)                      => "Fee"
@@ -516,11 +640,11 @@ module TEAL-UNPARSER
   rule TealField2String(NumAccounts)              => "NumAccounts"
   rule TealField2String(ApprovalProgram)          => "ApprovalProgram"
   rule TealField2String(ClearStateProgram)        => "ClearStateProgram"
-
   rule TealField2String(ApplicationArgs)          => "ApplicationArgs"
   rule TealField2String(Accounts)                 => "Accounts"
   rule TealField2String(ForeignApps)              => "ForeignApps"
   rule TealField2String(ForeignAssets)            => "ForeignAssets"
+
 
   syntax String ::= TValue2String(TValue)         [function]
                   | TValuePair2String(TValuePair) [function]
@@ -540,8 +664,8 @@ module TEAL-UNPARSER
   rule TValuePairList2String(TV:TValuePair TVL:TValuePairList) => TValuePair2String(TV) +&+ TValuePairList2String(TVL)
   rule TValuePairList2String(TV:TValuePair)                    => TValuePair2String(TV)
 
-  syntax String ::= IntToken2String(TUInt64Token) [function]
-  // -------------------------------------------------------
+  syntax String ::= IntToken2String(TUInt64Token) [function, hook(STRING.token2string)]
+  // ----------------------------------------------------------------------------------
   rule IntToken2String(unknown)           => "unknown"
   rule IntToken2String(pay)               => "pay"
   rule IntToken2String(keyreg)            => "keyreg"
@@ -555,5 +679,6 @@ module TEAL-UNPARSER
   rule IntToken2String(ClearState)        => "ClearState"
   rule IntToken2String(UpdateApplication) => "UpdateApplication"
   rule IntToken2String(DeleteApplication) => "DeleteApplication"
+
 endmodule
 ```

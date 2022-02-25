@@ -35,10 +35,11 @@ module GLOBALS
 ```k
   configuration
     <globals>
-      <groupSize>            0 </groupSize>
-      <globalRound>          0 </globalRound>
-      <latestTimestamp>      0 </latestTimestamp>
-      <currentApplicationID> 0 </currentApplicationID>
+      <groupSize>                 0 </groupSize>
+      <globalRound>               0 </globalRound>
+      <latestTimestamp>           0 </latestTimestamp>
+      <currentApplicationID>      0 </currentApplicationID>
+      <currentApplicationAddress> .Bytes </currentApplicationAddress>
     </globals>
 ```
 
@@ -68,6 +69,12 @@ module GLOBALS
          <currentApplicationID> V </currentApplicationID>
          ...
        </globals>
+
+  rule [[ getGlobalField(CurrentApplicationAddress) => V ]]
+       <globals>
+         <currentApplicationAddress> V </currentApplicationAddress>
+         ...
+       </globals>
 ```
 
 ```k
@@ -80,6 +87,7 @@ Application State Representation
 ```k
 module APPLICATIONS
   imports ALGO-TXN
+  imports TEAL-SYNTAX
 ```
 
 *Application Configuration*
@@ -91,7 +99,9 @@ module APPLICATIONS
     <appsCreated>
       <app multiplicity="*" type="Map">
         <appID>           NoTValue </appID>
-        <approvalPgm>     NoTValue </approvalPgm>
+        <approvalPgm>     #pragma mode stateful
+                          int 1
+        </approvalPgm>
         <clearStatePgm>   NoTValue </clearStatePgm>
         <globalState>
           <globalInts>    NoTValue </globalInts>
@@ -192,13 +202,14 @@ module ALGO-BLOCKCHAIN
     <blockchain>
       <accountsMap>
         <account multiplicity="*" type="Map">
-          <address> NoTValue </address>
+          <address>    .Bytes  </address>
           <balance>    0       </balance>
+          <minBalance> 100000  </minBalance> // the default min balance is 0.1 Algo
           <round>      0       </round>
           <preRewards> 0       </preRewards>
           <rewards>    0       </rewards>
           <status>     0       </status>
-          <key>        NoTValue </key>
+          <key>        .Bytes  </key>
           <appsCreated/>
           <appsOptedIn/>
           <assetsCreated/>

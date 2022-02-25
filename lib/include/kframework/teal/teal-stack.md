@@ -65,6 +65,30 @@ The elements of the stack are values of sort `TValue`, i.e. either `TUInt64` or 
   rule #sizeTStack ( _ : XS, SIZE )     => #sizeTStack(XS, SIZE +Int 1)
 ```
 
+## Stack reverse
+
+```k
+  syntax TStack ::= #reverse(TStack)         [function, functional]
+                  | #reverse(TStack, TStack) [function, functional]
+  // --------------------------------------------------------------
+  rule #reverse(XS)          => #reverse(XS, .TStack)
+  rule #reverse(.TStack, YS) => YS
+  rule #reverse(X : XS , YS) => #reverse(XS, X : YS)
+```
+
+## Stack concatenation
+
+```k
+  syntax TStack ::= TStack TStack                    [function, functional]
+                 | #concatTStackImpl(TStack, TStack) [function, functional]
+  // ------------------------------------------------------------------------------
+  rule XS YS => #concatTStackImpl(#reverse(XS), YS)
+
+  rule #concatTStackImpl(.TStack, YS) => YS
+  rule #concatTStackImpl(X : XS , YS) => #concatTStackImpl(XS, X : YS)
+
+```
+
 ```k
 endmodule
 ```

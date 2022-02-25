@@ -1,0 +1,74 @@
+// A trivial stateful application that does two things:
+// * tacks how many times a specific account called the app
+//   by incrementing a counter in the caller's local state
+// * tracks haw many times the app was called overall
+//   by incrementing a counter in the app's global state
+#pragma version 4
+#pragma mode stateful
+
+// Handle each possible OnCompletion type. We don't have to worry about
+// handling ClearState, because the ClearStateProgram will execute in that
+// case, not the ApprovalProgram.
+
+txn OnCompletion
+int NoOp
+==
+bnz handle_noop
+
+txn OnCompletion
+int OptIn
+==
+bnz handle_optin
+
+txn OnCompletion
+int CloseOut
+==
+bnz handle_closeout
+
+txn OnCompletion
+int UpdateApplication
+==
+bnz handle_updateapp
+
+txn OnCompletion
+int DeleteApplication
+==
+bnz handle_deleteapp
+
+// Unexpected OnCompletion value. Should be unreachable.
+err
+
+handle_noop:
+// Increment the global calls counter
+byte "TimesCalled"
+dup
+app_global_get
+int 1
++
+app_global_put
+// Increment the caller's local counter
+int 0 //txn Sender
+byte "MyTimesCalled"
+int 0 //txn Sender
+byte "MyTimesCalled"
+app_local_get
+int 1
++
+app_local_put
+b accept
+
+handle_optin:
+// Handle OptIn
+
+handle_closeout:
+// Handle CloseOut
+
+// By default, disallow updating or deleting the app. Add custom authorization
+// logic below to allow updating or deletion in certain circumstances.
+handle_updateapp:
+handle_deleteapp:
+err
+
+accept:
+int 1
+return

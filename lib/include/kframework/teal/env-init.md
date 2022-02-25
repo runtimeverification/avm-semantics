@@ -1,5 +1,6 @@
-TEAL Environment Initialization
-===============================
+```k
+requires "teal-execution.md"
+```
 
 This module is a hard-coded TEAL environment used to test the TEAL interpreter
 definition. Eventually, it will be replaced by a custom environment loader that
@@ -13,10 +14,11 @@ module TEAL-ENVIRONMENT-INITIALIZATION
   // ------------------------
   rule <k> initGlobals => . ... </k>
     <globals>
-      <groupSize>            _ => 2 </groupSize>
+      <groupSize>            _ => 3 </groupSize>
       <globalRound>          _ => 6 </globalRound>
       <latestTimestamp>      _ => 50  </latestTimestamp>
       <currentApplicationID> _ => 0 </currentApplicationID>
+      <currentApplicationAddress> _ => 0 </currentApplicationAddress>
     </globals>
 
 
@@ -37,7 +39,7 @@ module TEAL-ENVIRONMENT-INITIALIZATION
                <sender>      DecodeAddressString("6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY") </sender>
                <txType>      "pay" </txType>
                <typeEnum>    @ pay </typeEnum>
-               <group>       "" </group>
+               <group>       0 </group>
                <genesisID>   "0" </genesisID>
                <lease>       "" </lease>
                <note>        "" </note>
@@ -59,7 +61,7 @@ module TEAL-ENVIRONMENT-INITIALIZATION
                <sender>      DecodeAddressString("STF6TH6PKINM4CDIQHNSC7QEA4DM5OJKKSACAPWGTG776NWSQOMAYVGOQE") </sender>
                <txType>      "pay" </txType>
                <typeEnum>    @ pay </typeEnum>
-               <group>       "" </group>
+               <group>       1 </group>
                <genesisID>   "0" </genesisID>
                <lease>       "" </lease>
                <note>        "" </note>
@@ -81,7 +83,95 @@ module TEAL-ENVIRONMENT-INITIALIZATION
                <sender>      DecodeAddressString("6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY") </sender>
                <txType>      "appl" </txType>
                <typeEnum>    @ appl </typeEnum>
-               <group>       "" </group>
+               <group>       2 </group>
+               <genesisID>   "0" </genesisID>
+               <lease>       "" </lease>
+               <note>        "" </note>
+               <rekeyTo>     getGlobalField(ZeroAddress) </rekeyTo>
+             </txHeader>
+             <payTxFields>
+               <receiver> NoTValue </receiver>
+               <amount>   NoTValue </amount>
+               <closeRemainderTo> NoTValue </closeRemainderTo>
+             </payTxFields>
+             <appCallTxFields>
+               <applicationID>     42 </applicationID>
+               <onCompletion>      0 </onCompletion>
+               <accounts>
+                 DecodeAddressString("6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY")
+                 DecodeAddressString("STF6TH6PKINM4CDIQHNSC7QEA4DM5OJKKSACAPWGTG776NWSQOMAYVGOQE")
+               </accounts>
+               <approvalProgram>   "" </approvalProgram>
+               <clearStateProgram> "" </clearStateProgram>
+               <applicationArgs>
+                 Int2Bytes(39, BE, Unsigned)
+                 Int2Bytes(100, BE, Unsigned)
+                 Int2Bytes(0, BE, Unsigned)
+                 Int2Bytes(0, BE, Unsigned)
+                 Int2Bytes(10000000000, BE, Unsigned)
+                 normalize("USD")
+                 Int2Bytes(4, BE, Unsigned)
+                 Int2Bytes(50, BE, Unsigned)
+               </applicationArgs>
+               <foreignApps>       "" </foreignApps>
+               <foreignAssets>     "" </foreignAssets>
+               <globalStateSchema>
+                 <globalNui> 0 </globalNui>
+                 <globalNbs> 0 </globalNbs>
+               </globalStateSchema>
+               <localStateSchema>
+                 <localNui> 0 </localNui>
+                 <localNbs> 0 </localNbs>
+               </localStateSchema>
+             </appCallTxFields>
+             <keyRegTxFields>
+               <votePk>           NoTValue </votePk>
+               <selectionPK>      NoTValue </selectionPK>
+               <voteFirst>        NoTValue </voteFirst>
+               <voteLast>         NoTValue </voteLast>
+               <voteKeyDilution>  NoTValue </voteKeyDilution>
+               <nonparticipation> NoTValue </nonparticipation>
+             </keyRegTxFields>
+             <assetConfigTxFields>
+               <configAsset> NoTValue </configAsset>
+               <assetParams>
+                 <configTotal>         NoTValue </configTotal>
+                 <configDecimals>      NoTValue </configDecimals>
+                 <configDefaultFrozen> NoTValue </configDefaultFrozen>
+                 <configUnitName>      NoTValue </configUnitName>
+                 <configAssetName>     NoTValue </configAssetName>
+                 <configAssetURL>      NoTValue </configAssetURL>
+                 <configMetaDataHash>  NoTValue </configMetaDataHash>
+                 <configManagerAddr>   NoTValue </configManagerAddr>
+                 <configReserveAddr>   NoTValue </configReserveAddr>
+                 <configFreezeAddr>    NoTValue </configFreezeAddr>
+                 <configClawbackAddr>  NoTValue </configClawbackAddr>
+               </assetParams>
+             </assetConfigTxFields>
+             <assetTransferTxFields>
+               <xferAsset>     NoTValue </xferAsset>
+               <assetAmount>   NoTValue </assetAmount>
+               <assetReceiver> NoTValue </assetReceiver>
+               <assetASender>  NoTValue </assetASender>
+               <assetCloseTo>  NoTValue </assetCloseTo>
+             </assetTransferTxFields>
+             <assetFreezeTxFields>
+               <freezeAccount> NoTValue </freezeAccount>
+               <freezeAsset>   NoTValue </freezeAsset>
+               <assetFrozen>   NoTValue </assetFrozen>
+             </assetFreezeTxFields>
+           </transaction>
+           <transaction>
+             <txID> 3 </txID>
+             <txHeader>
+               <fee>         500  </fee>
+               <firstValid>  10 </firstValid>
+               <lastValid>   11 </lastValid>
+               <genesisHash> "0" </genesisHash>
+               <sender>      DecodeAddressString("6Z3C3LDVWGMX23BMSYMANACQOSINPFIRF77H7N3AWJZYV6OH6GWTJKVMXY") </sender>
+               <txType>      "appl" </txType>
+               <typeEnum>    @ appl </typeEnum>
+               <group>       3 </group>
                <genesisID>   "0" </genesisID>
                <lease>       "" </lease>
                <note>        "" </note>

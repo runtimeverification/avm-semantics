@@ -124,7 +124,7 @@ All `TBytes` literals are interpreted into the K `Bytes` type.
   syntax TBytes ::= Bytes
 
   syntax Bytes ::= normalizeB(TBytes) [function]
-  // ---------------------------------------------
+  // -------------------------------------------
   rule normalizeB(B:Bytes)  => B
   rule normalizeB(S:String) => String2Bytes(S)
   rule normalizeB(H:HexToken) => prepBytesString(Hex2String(H))
@@ -184,35 +184,35 @@ We expose several functions for working with lists.
 
 ```k
   syntax TValue ::= getTValueAt(Int, TValueList) [function]
-  //----------------------------------------------------
+  //-------------------------------------------------------
   rule getTValueAt(I, _ VL) => getTValueAt(I -Int 1, VL)
     requires I >Int 0
   rule getTValueAt(0, V _) => V
   rule getTValueAt(0, V  ) => V
 
   syntax Int ::= size(MaybeTValue) [function]
-  //----------------------------------------
+  // ----------------------------------------
   rule size(_ VL:TValueList) => 1 +Int size(VL)
   rule size(_:TValue       ) => 1
   rule size(NoTValue       ) => 0
 
   syntax TValueList ::= reverse(TValueList) [function]
-  // -----------------------------------------------
+  // -------------------------------------------------
   rule reverse(V:TValue VL) => append(V, reverse(VL))
   rule reverse(V:TValue   ) => V
 
   syntax TValueList ::= append(TValue, TValueList) [function]
-  // -----------------------------------------------------
+  // -------------------------------------------------------
   rule append(V, V':TValue VL) => V' append(V, VL)
   rule append(V, V':TValue   ) => V' V
 
   syntax TValuePairList ::= reverse(TValuePairList) [function]
-  // -------------------------------------------------------
+  // ---------------------------------------------------------
   rule reverse(V:TValuePair VL) => append(V, reverse(VL))
   rule reverse(V:TValuePair   ) => V
 
   syntax TValuePairList ::= append(TValuePair, TValuePairList) [function]
-  // -----------------------------------------------------------------
+  // -------------------------------------------------------------------
   rule append(V, V':TValuePair VL) => V' append(V, VL)
   rule append(V, V':TValuePair   ) => V' V
 ```
@@ -222,7 +222,7 @@ our internal K representation:
 
 ```k
   syntax TValue ::= normalize(TValue) [function]
-  //-------------------------------------------------
+  // -------------------------------------------
   rule normalize(V:TUInt64) => V
   rule normalize(V:TBytes) => normalizeB(V)
 ```
