@@ -112,7 +112,7 @@ k-deps: $(K_JAR)
 # Building
 # --------
 
-build: build-kavm
+build: build-kavm build-avm
 
 $(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
 	@mkdir -p $(dir $@)
