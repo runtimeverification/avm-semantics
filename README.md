@@ -28,17 +28,17 @@ Transaction Execution Approval Language (TEAL) is the language that governs appr
 
 The K modules describing syntax and semantics of TEAL are located in [`lib/include/kframework/avm/teal/`](lib/include/kframework/avm/teal/):
 
-* [`teal-types.md`](lib/include/kframework/avm/teal-types.md) defines basic types representing values in TEAL and various operations involving them.
-* [`teal-constants.md`](lib/include/kframework/avm/teal-constants.md) defines a set of integer constants TEAL uses, including transaction types and on-completion types.
-* [`teal-fields.md`](lib/include/kframework/avm/lib/include/kframework/common/teal-fields.md) defines sets of fields that may be used as arguments to some specific opcodes in TEAL, such as `txn/txna` fields and `global` fields.
-* [`teal-syntax.md`](lib/include/kframework/avm/lib/include/kframework/common/teal-syntax.md) defines the syntax of (textual) TEAL and the structure of its programs.
-* [`teal-stack.md`](lib/include/kframework/avm/teal-stack.md) defines the K representation of TEAL stack and the associated operations.
-* [`teal-execution.md`](lib/include/kframework/avm/teal-execution.md) defines the execution flow of the interpreter:
-  - [Interpreter Initialization](lib/include/kframework/avm/teal-execution.md#teal-interpreter-initialization)
-  - [Execution](lib/include/kframework/avm/teal-execution.md#teal-execution)
-  - [Interpreter Finalization](lib/include/kframework/avm/teal-execution.md#teal-interpreter-finalization)
-  - [TEAL Panic Behaviors](lib/include/kframework/avm/teal-execution.md#panic-behaviors)
-* [`teal-driver.md`](lib/include/kframework/avm/teal-driver.md) defines the semantics of the various TEAL opcodes and specifies how a TEAL program is interpreted.
+* [`teal-types.md`](lib/include/kframework/avm/teal/teal-types.md) defines basic types representing values in TEAL and various operations involving them.
+* [`teal-constants.md`](lib/include/kframework/avm/teal/teal-constants.md) defines a set of integer constants TEAL uses, including transaction types and on-completion types.
+* [`teal-fields.md`](lib/include/kframework/avm/teal/lib/include/kframework/common/teal-fields.md) defines sets of fields that may be used as arguments to some specific opcodes in TEAL, such as `txn/txna` fields and `global` fields.
+* [`teal-syntax.md`](lib/include/kframework/avm/teal/lib/include/kframework/common/teal-syntax.md) defines the syntax of (textual) TEAL and the structure of its programs.
+* [`teal-stack.md`](lib/include/kframework/avm/teal/teal-stack.md) defines the K representation of TEAL stack and the associated operations.
+* [`teal-execution.md`](lib/include/kframework/avm/teal/teal-execution.md) defines the execution flow of the interpreter:
+  - [Interpreter Initialization](lib/include/kframework/avm/teal/teal-execution.md#teal-interpreter-initialization)
+  - [Execution](lib/include/kframework/avm/teal/teal-execution.md#teal-execution)
+  - [Interpreter Finalization](lib/include/kframework/avm/teal/teal-execution.md#teal-interpreter-finalization)
+  - [TEAL Panic Behaviors](lib/include/kframework/avm/teal/teal-execution.md#panic-behaviors)
+* [`teal-driver.md`](lib/include/kframework/avm/teal/teal-driver.md) defines the semantics of the various TEAL opcodes and specifies how a TEAL program is interpreted.
 
 `kavm` runner script
 --------------------
