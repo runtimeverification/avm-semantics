@@ -69,10 +69,10 @@ run_krun() {
     done
     teal_programs+=".TealPrograms"
     krun_args+=(-cTEAL_PROGRAMS="$teal_programs")
-    krun_args+=(-pTEAL_PROGRAMS="./parse-teal-programs.sh")
+    krun_args+=(-pTEAL_PROGRAMS="./scripts/parse-teal-programs.sh")
     # run_file will contain an AVM simulation scenario,
     # to be parsed with parse-avm-simulation.sh
-    krun_args+=(--parser "./parse-avm-simulation.sh")
+    krun_args+=(--parser "./scripts/parse-avm-simulation.sh")
     execute krun "${krun_args[@]}" "${run_file}" "$@"
 }
 

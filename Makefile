@@ -190,7 +190,7 @@ avm_files    :=                            \
 
 avm_includes := $(patsubst %, $(KAVM_INCLUDE)/kframework/%, $(avm_files))
 
-AVM_KOMPILE_OPTS += --verbose $(COVERAGE_OPTS) $(K_INCLUDES)
+AVM_KOMPILE_OPTS += --emit-json --verbose $(COVERAGE_OPTS) $(K_INCLUDES)
 tangle_avm            := k & ((! type) | exec)
 AVM_HOOK_KOMPILE_OPTS := $(CLARITY_HOOK_KOMPILE_OPTS)
 
@@ -299,3 +299,14 @@ tests/scenarios/%.fail.avm-simulation.unit: tests/scenarios/%.fail.avm-simulatio
 
 tests/scenarios/%.avm-simulation.unit: tests/scenarios/%.avm-simulation
 	kavm run $< --output none
+
+# Utils
+# -----
+
+# Generate a graph of module imports
+module-imports-graph: module-imports-graph-dot
+	dot -Tsvg $(KAVM_LIB)/$(avm_kompiled)/import-graph -o module-imports-graph.svg
+
+module-imports-graph-dot:
+	kpyk $(KAVM_LIB)/$(avm_kompiled) graph-imports
+
