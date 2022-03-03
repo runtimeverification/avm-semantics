@@ -25,8 +25,7 @@ pipeline {
           failFast true
           options { timeout(time: 20, unit: 'MINUTES') }
           parallel {
-            stage('Conformance') { steps { sh 'make -j4 test-teal-conformance' } }
-            stage('Proofs')      { steps { sh 'make -j4 test-teal-prove'       } }
+            stage('AVM tests') { steps { sh 'make -j4 test-avm' } }
           }
         }
       }
