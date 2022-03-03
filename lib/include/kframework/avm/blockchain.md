@@ -2,10 +2,10 @@ Algorand Blockchain Model
 =========================
 
 ```k
-requires "teal-constants.md"
-requires "teal-fields.md"
-requires "additional-fields.md"
-requires "txn.md"
+requires "./teal/teal-constants.md"
+requires "./teal/teal-fields.md"
+requires "./additional-fields.md"
+requires "./txn.md"
 ```
 
 Global Field State Representation

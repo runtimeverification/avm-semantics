@@ -1,8 +1,12 @@
-The TEAL interpreter is parameterized by several constants which define total
-program size and cost. We define those constants here.
+```k
+requires "./teal/teal-syntax.md"
+```
+
+AVM Limits
+===========
 
 ```k
-module TEAL-LIMITS
+module AVM-LIMITS
   imports TEAL-SYNTAX
 
   // Size limits
@@ -31,4 +35,3 @@ module TEAL-LIMITS
   rule MaxTxGroupSize      => 16
 endmodule
 ```
-

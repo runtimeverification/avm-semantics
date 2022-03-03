@@ -170,23 +170,23 @@ endif
 
 # AVM
 
-avm_files    :=                             \
-                common/teal-types.md        \
-                common/teal-constants.md    \
-                common/teal-fields.md       \
-                common/additional-fields.md \
-                common/blockchain.md        \
-                common/txn.md               \
-                common/args.md              \
-                common/teal-syntax.md       \
-                teal/teal-stack.md          \
-                teal/teal-limits.md         \
-                teal/teal-driver.md         \
-                teal/teal-execution.md      \
-                avm/avm-txn-deque.md        \
-                avm/avm-configuration.md    \
-                avm/avm-initialization.md   \
-                avm/avm-execution.md
+avm_files    :=                            \
+                avm/additional-fields.md   \
+                avm/args.md                \
+                avm/blockchain.md          \
+                avm/txn.md                 \
+                avm/avm-configuration.md   \
+                avm/avm-execution.md       \
+                avm/avm-initialization.md  \
+                avm/avm-limits.md          \
+                avm/avm-txn-deque.md       \
+                avm/teal/teal-constants.md \
+                avm/teal/teal-driver.md    \
+                avm/teal/teal-execution.md \
+                avm/teal/teal-fields.md    \
+                avm/teal/teal-stack.md     \
+                avm/teal/teal-syntax.md    \
+                avm/teal/teal-types.md
 
 avm_includes := $(patsubst %, $(KAVM_INCLUDE)/kframework/%, $(avm_files))
 
@@ -218,6 +218,7 @@ $(KAVM_LIB)/$(avm_kompiled): $(avm_includes) $(HOOK_PLUGIN_FILES) $(HOOK_SHARED_
 
 clean-avm:
 	rm -r $(KAVM_LIB)/$(avm_kompiled)
+	rm -r $(KAVM_INCLUDE)
 
 # Runners/Helpers
 
@@ -298,32 +299,3 @@ tests/scenarios/%.fail.avm-simulation.unit: tests/scenarios/%.fail.avm-simulatio
 
 tests/scenarios/%.avm-simulation.unit: tests/scenarios/%.avm-simulation
 	kavm run $< --output none
-
-# ## Teal Assembly Unit Tests
-
-# teal_tests         := $(wildcard tests/teal/stateless/*.teal) $(wildcard tests/teal/stateful/*.teal)
-# teal_tests_failing := $(shell cat tests/failing-teal.list)
-# teal_tests_passing := $(filter-out $(teal_tests_failing), $(teal_tests))
-
-# test-teal-conformance:         $(teal_tests_passing:=.unit)
-# test-teal-conformance-failing: $(teal_tests_failing:=.unit)
-
-# tests/teal/%.fail.teal.unit: tests/teal/%.fail.teal
-# 	$(KAVM) parse $(KAVM_OPTIONS) --backend teal $< > /dev/null
-# 	! $(KAVM) run $(KAVM_OPTIONS) --backend teal $< --output none
-
-# tests/teal/%.teal.unit: tests/teal/%.teal
-# 	$(KAVM) run $(KAVM_OPTIONS) --backend teal $< --output none
-
-# # Teal Proof Tests
-
-# teal_prove_tests         := $(wildcard tests/teal/specs/*-spec.k)
-# teal_prove_tests_passing := $(filter-out $(teal_tests_failing), $(teal_prove_tests))
-
-# test-teal-prove: $(teal_prove_tests:=.prove)
-
-# tests/teal/specs/%-spec.k.prove: tests/teal/specs/verification-kompiled/timestamp $(KAVM_BIN)/$(KAVM)
-# 	$(KAVM) prove --backend-dir tests/teal/specs tests/teal/specs/$*-spec.k $(K_INCLUDES)
-
-# tests/teal/specs/verification-kompiled/timestamp: tests/teal/specs/verification.k $(teal_includes)
-# 	kompile $< --backend haskell --directory tests/teal/specs $(K_INCLUDES)

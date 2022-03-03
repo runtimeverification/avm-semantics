@@ -1,5 +1,5 @@
-pTransaction execution deque
----------------------------
+Transaction Execution Deque
+===========================
 
 ```k
 module AVM-TXN-DEQUE

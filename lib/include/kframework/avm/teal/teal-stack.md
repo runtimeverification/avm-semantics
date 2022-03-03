@@ -1,5 +1,5 @@
 TEAL Stack
-===========
+==========
 
 ```k
 module TEAL-STACK

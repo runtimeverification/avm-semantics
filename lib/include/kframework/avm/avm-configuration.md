@@ -1,7 +1,7 @@
 ```k
-requires "../common/blockchain.md"
-requires "../common/teal-syntax.md"
-requires "../teal/teal-stack.md"
+requires "./blockchain.md"
+requires "./teal/teal-syntax.md"
+requires "./teal/teal-stack.md"
 ```
 
 Algorand Vitual Machine State
@@ -18,7 +18,7 @@ module AVM-CONFIGURATION
 
   configuration
     <kavm>
-      <k> $PGM:AlgorandSimulation </k>
+      <k> $PGM:AVMSimulation </k>
       <returncode exit=""> 4 </returncode> // the simulator exit code
       <returnstatus>                       // the exit status message
         "Failure - AVM is stuck"
@@ -68,7 +68,7 @@ module AVM-CONFIGURATION
 
   // Top-level control of the semantics.
   // Defined in `avm-execution.md`
-  syntax AlgorandSimulation
+  syntax AVMSimulation
   syntax AlgorandComman
 
   // Control of transaction evaluation

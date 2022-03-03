@@ -1,5 +1,5 @@
 ```k
-requires "../common/blockchain.md"
+requires "./blockchain.md"
 requires "./avm-configuration.md"
 
 module AVM-INITIALIZATION

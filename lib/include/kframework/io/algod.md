@@ -2,8 +2,8 @@ Algod Node Abstraction
 ======================
 
 ```k
-require "teal-types.md"
-require "additional-fields.md"
+require "../avm/teal/teal-types.md"
+require "../avm/additional-fields.md"
 
 module ALGOD
   imports ADDITIONAL-FIELDS

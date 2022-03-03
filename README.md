@@ -12,9 +12,7 @@ K files are located in `lib/include/kframework/`.
 Shared Modules
 --------------
 
-This subdirectory contains common modules shared by the various subsystems
-defined in this repository. They provide basic definitions shared by all other
-modules.
+The definition of TEAL syntax and 
 
 This is in subdirectory `common`.
 

@@ -1,8 +1,8 @@
 ```k
-requires "../common/blockchain.md"
-requires "../common/txn.md"
-requires "../common/teal-syntax.md"
-requires "../teal/teal-driver.md"
+requires "./blockchain.md"
+requires "./txn.md"
+requires "./teal/teal-syntax.md"
+requires "./teal/teal-driver.md"
 requires "./avm-configuration.md"
 requires "./avm-initialization.md"
 requires "./avm-txn-deque.md"
@@ -25,13 +25,13 @@ The model has a number of top-level rules that will control the configuration in
 A sequence of `AlgorandCommand`s will be supplied as `$PGM` to `krun`.
 
 ```k
-  syntax AlgorandSimulation ::= ".AS"
-                              | AlgorandCommand ";" AlgorandSimulation
-  // -----------------------------------------------------------------
+  syntax AVMSimulation ::= ".AS"
+                         | AlgorandCommand ";" AVMSimulation
+  // -------------------------------------------------------
 
-  rule <k> .AS                       => .        ... </k>
-  rule <k> AC; .AS                   => AC       ... </k>
-  rule <k> AC; AS:AlgorandSimulation => AC ~> AS ... </k>
+  rule <k> .AS                  => .        ... </k>
+  rule <k> AC; .AS              => AC       ... </k>
+  rule <k> AC; AS:AVMSimulation => AC ~> AS ... </k>
     requires AS =/=K .AS
 
   syntax AlgorandCommand

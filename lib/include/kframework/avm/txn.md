@@ -2,7 +2,7 @@ Algorand Transaction Representation
 ===================================
 
 ```k
-require "teal-types.md"
+require "./teal/teal-types.md"
 ```
 
 Transaction State Representation
