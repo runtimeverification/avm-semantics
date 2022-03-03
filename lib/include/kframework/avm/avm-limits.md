@@ -1,5 +1,5 @@
 ```k
-requires "./teal/teal-syntax.md"
+requires "avm/teal/teal-syntax.md"
 ```
 
 AVM Limits

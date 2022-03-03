@@ -1,11 +1,11 @@
 ```k
-requires "./blockchain.md"
-requires "./txn.md"
-requires "./teal/teal-syntax.md"
-requires "./teal/teal-driver.md"
-requires "./avm-configuration.md"
-requires "./avm-initialization.md"
-requires "./avm-txn-deque.md"
+requires "avm/blockchain.md"
+requires "avm/txn.md"
+requires "avm/teal/teal-syntax.md"
+requires "avm/teal/teal-driver.md"
+requires "avm/avm-configuration.md"
+requires "avm/avm-initialization.md"
+requires "avm/avm-txn-deque.md"
 
 module AVM-EXECUTION-SYNTAX
   imports INT

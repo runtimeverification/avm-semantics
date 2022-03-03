@@ -1,7 +1,7 @@
 ```k
-requires "./blockchain.md"
-requires "./teal/teal-syntax.md"
-requires "./teal/teal-stack.md"
+requires "avm/blockchain.md"
+requires "avm/teal/teal-syntax.md"
+requires "avm/teal/teal-stack.md"
 ```
 
 Algorand Vitual Machine State

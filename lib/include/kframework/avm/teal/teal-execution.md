@@ -1,7 +1,7 @@
 ```k
-requires "./teal-syntax.md"
-requires "../avm-configuration.md"
-requires "../avm-limits.md"
+requires "avm/teal/teal-syntax.md"
+requires "avm/avm-configuration.md"
+requires "avm/avm-limits.md"
 
 module TEAL-EXECUTION
   imports AVM-CONFIGURATION

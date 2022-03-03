@@ -69,7 +69,7 @@ Working on KAVM
 
 * `make deps`: build K and other dependencies.
 * `make build`: compile KAVM K modules and the `kavm` tool.
-* `make test`: run tests.
+* `make test -j8`: run tests. Adjust the `-jX` option as needed to run `X` tests in parallel.
 
 ### Adding new tests
 

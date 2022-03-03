@@ -4,8 +4,8 @@ TEAL Grammar
 Derived from the [TEAL specification](https://developer.algorand.org/docs/reference/teal/specification/).
 
 ```k
-requires "./teal-constants.md"
-requires "./teal-fields.md"
+requires "avm/teal/teal-constants.md"
+requires "avm/teal/teal-fields.md"
 ```
 
 TEAL Opcode Grammar

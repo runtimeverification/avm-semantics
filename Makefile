@@ -112,7 +112,7 @@ k-deps: $(K_JAR)
 # Building
 # --------
 
-build: build-kavm build-avm
+build: build-avm build-kavm
 
 $(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
 	@mkdir -p $(dir $@)
@@ -255,6 +255,9 @@ $(KAVM_LIB)/version:
 	echo '== Build Date'     >> $@
 	date                     >> $@
 
+clean-kavm:
+	rm $(KAVM_BIN)/kavm
+
 # Installation
 # ------------
 
@@ -310,3 +313,8 @@ module-imports-graph: module-imports-graph-dot
 module-imports-graph-dot:
 	kpyk $(KAVM_LIB)/$(avm_kompiled) graph-imports
 
+clean: clean-avm clean-kavm
+
+distclean: clean
+	rm -rf $(BUILD_DIR)
+	git clean -dffx -- tests/

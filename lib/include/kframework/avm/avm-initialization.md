@@ -1,6 +1,6 @@
 ```k
-requires "./blockchain.md"
-requires "./avm-configuration.md"
+requires "avm/blockchain.md"
+requires "avm/avm-configuration.md"
 
 module AVM-INITIALIZATION
   imports INT

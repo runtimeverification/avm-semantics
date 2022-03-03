@@ -2,7 +2,7 @@ TEAL Integer Constants
 ======================
 
 ```k
-requires "./teal-types.md"
+requires "avm/teal/teal-types.md"
 ```
 
 TEAL has a set of integer constants which may be passed as arguments to the

@@ -1,13 +1,13 @@
 ```k
 requires "blockchain-k-plugin/krypto.md"
 
-requires "../blockchain.md"
-requires "../args.md"
-requires "../avm-configuration.md"
-requires "../avm-limits.md"
-requires "./teal-syntax.md"
-requires "./teal-stack.md"
-requires "./teal-execution.md"
+requires "avm/blockchain.md"
+requires "avm/args.md"
+requires "avm/avm-configuration.md"
+requires "avm/avm-limits.md"
+requires "avm/teal/teal-syntax.md"
+requires "avm/teal/teal-stack.md"
+requires "avm/teal/teal-execution.md"
 ```
 
 TEAL Interpreter

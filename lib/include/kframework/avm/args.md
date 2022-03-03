@@ -2,7 +2,7 @@ Logic Signature Argument Representation
 =======================================
 
 ```k
-require "./teal/teal-types.md"
+require "avm/teal/teal-types.md"
 
 module TXN-ARGS
   imports TEAL-TYPES
