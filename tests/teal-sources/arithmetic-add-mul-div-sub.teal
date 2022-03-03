@@ -1,0 +1,37 @@
+#pragma version 4
+#pragma mode stateful
+
+txn OnCompletion
+int NoOp
+==
+bnz handle_noop
+
+// OnCompletetion actions other than NoOp are denied
+err
+
+// Test arithemtic
+handle_noop:
+int 1
+int 2
++
+store 0
+load 0
+int 3
+*
+store 1
+load 1
+int 3
+/
+store 2
+load 2
+int 2
+-
+store 3
+load 3
+int 1
+==
+assert
+
+accept:
+int 1
+return

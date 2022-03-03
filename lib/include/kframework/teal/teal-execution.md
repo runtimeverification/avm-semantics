@@ -118,10 +118,7 @@ put it into the `<k>` cell for execution.
 If there the PC goes one step beyond the program address space, it means that the execution is finished:
 
 ```k
-  syntax KItem ::= #halt()
-
-//  rule <k> #fetchOpcode() => #finalizeExecution() ... </k>
-  rule <k> #fetchOpcode() => #halt() ... </k>
+  rule <k> #fetchOpcode() => #finalizeExecution() ... </k>
        <pc> PC </pc>
        <program> PGM </program>
    requires PC ==Int size(PGM)

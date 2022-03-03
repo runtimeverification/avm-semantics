@@ -49,19 +49,11 @@ export K_OPTS
 
 .PHONY: all clean distclean install uninstall                                         \
         deps k-deps libsecp256k1 libff                                                \
-        build build-teal build-kavm                                                   \
-        test test-all                                                                 \
-        test-teal test-teal-conformance test-teal-conformance-failing test-teal-prove
+        build build-avm build-kavm                                                    \
+        test test-avm
 .SECONDARY:
 
 all: build
-
-clean: test-clarity-clean
-	rm -rf $(KAVM_BIN) $(KAVM_LIB)
-
-distclean: clean
-	rm -rf $(BUILD_DIR)
-	git clean -dffx -- tests/
 
 # Non-K Dependencies
 # ------------------
@@ -238,29 +230,29 @@ kavm_bins      := $(patsubst %, $(KAVM_BIN)/%, $(kavm_bin_files))
 kavm_lib_files := version
 kavm_libs      := $(patsubst %, $(KAVM_LIB)/%, $(kavm_lib_files))
 
-# build-kavm: $(KAVM_LIB)/version
+build-kavm: $(KAVM_LIB)/version
 
-# $(KAVM_LIB)/version: $(includes) $(kavm_bins)
+$(KAVM_LIB)/version: $(includes) $(kavm_bins)
 
-# $(KAVM_BIN)/%: %
-# 	@mkdir -p $(dir $@)
-# 	install $< $@
+$(KAVM_BIN)/%: %
+	@mkdir -p $(dir $@)
+	install $< $@
 
-# $(KAVM_LIB)/%: lib/%
-# 	@mkdir -p $(dir $@)
-# 	install $< $@
+$(KAVM_LIB)/%: lib/%
+	@mkdir -p $(dir $@)
+	install $< $@
 
-# $(KAVM_INCLUDE)/kframework/modules/%:
-# 	echo $@
-# 	@mkdir -p $(dir $@)
-# 	install $< $@
+$(KAVM_INCLUDE)/kframework/modules/%:
+	echo $@
+	@mkdir -p $(dir $@)
+	install $< $@
 
-# $(KAVM_LIB)/version:
-# 	@mkdir -p $(dir $@)
-# 	echo '== KAVM Version'    > $@
-# 	echo $(KAVM_RELEASE_TAG) >> $@
-# 	echo '== Build Date'     >> $@
-# 	date                     >> $@
+$(KAVM_LIB)/version:
+	@mkdir -p $(dir $@)
+	echo '== KAVM Version'    > $@
+	echo $(KAVM_RELEASE_TAG) >> $@
+	echo '== Build Date'     >> $@
+	date                     >> $@
 
 # Installation
 # ------------
@@ -292,17 +284,20 @@ uninstall:
 
 KAVM_OPTIONS :=
 
-test-all: test-avm
 test: test-avm
 
-avm_tests         := $(wildcard tests/avm/*.sh)
+## AVM
+avm_tests  := $(wildcard tests/scenarios/*.avm-simulation)
+avm_tests_failing := $(shell cat tests/failing-avm-simulation.list)
+avm_tests_passing := $(filter-out $(avm_tests_failing), $(avm_tests))
 
-test-avm:         $(avm_tests:=.unit)
+test-avm:     $(avm_tests:=.unit)
 
-tests/avm/%.sh.unit: tests/avm/%.sh
-	$< >>/dev/null 2>&1
+tests/scenarios/%.fail.avm-simulation.unit: tests/scenarios/%.fail.avm-simulation
+	! kavm run $< --output none
 
-# test-avm: test-teal-conformance test-teal-prove
+tests/scenarios/%.avm-simulation.unit: tests/scenarios/%.avm-simulation
+	kavm run $< --output none
 
 # ## Teal Assembly Unit Tests
 

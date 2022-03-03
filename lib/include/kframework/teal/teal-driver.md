@@ -61,8 +61,8 @@ Pragmas are applied directly, and then the `#LoadPgm` performs program pre-proce
   rule <k> #pragma version V => . ... </k>
        <version> _ => V </version>
 
-  rule <k> #pragma txn V => . ... </k>
-       <currentTx> _ => V </currentTx>
+  // legacy pseudo pragma for setting up current transaction --- now noop
+  rule <k> #pragma txn _ => .K ... </k>
 
   // Load the teal program into the `<progam>` cell (program memory)
   syntax KItem ::= #LoadPgm(TealPgm, Int)

@@ -1,0 +1,53 @@
+// This is an example testing scenario for the new AVM/TEAL semantics that supports transaction groups.
+//
+// Initial network state
+//   Apps: a stateful app that counts how many times it has been called
+//         State: (one global Int, one local Int)
+//   Accounts: one account that is the app's creator and had opted into the app
+//   Assets: none
+//
+// Transaction group: tree app calls from the account to the app
+//
+// Expected effect on the apps state:
+//   (Global 0, Local [(account 1, 0), (account 2, 0)]) =>
+//   (Global 3, Local [(account 1, 2), (account 2, 1)])
+
+addAccount <address> b"1" </address> <balance> 10000 </balance>;
+addAccount <address> b"2" </address> <balance> 10000 </balance>;
+
+declareTealSource "./tests/teal-sources/count_calls.teal";
+
+addApp <appID> 1 </appID> <address> b"1" </address> 0;
+
+optinApp <appID> 1 </appID> <address> b"1" </address>;
+optinApp <appID> 1 </appID> <address> b"2" </address>;
+
+#initTxGroup();
+
+addAppCallTx <txID>            0        </txID>
+             <sender>          b"1"     </sender>
+             <applicationID>   1        </applicationID>
+             <onCompletion>    0        </onCompletion>
+             <accounts>        b"1"     </accounts>
+             <applicationArgs> NoTValue </applicationArgs>;
+
+addAppCallTx <txID>            1        </txID>
+             <sender>          b"2"     </sender>
+             <applicationID>   1        </applicationID>
+             <onCompletion>    0        </onCompletion>
+             <accounts>        b"2"     </accounts>
+             <applicationArgs> NoTValue </applicationArgs>;
+
+addAppCallTx <txID>            2        </txID>
+             <sender>          b"1"     </sender>
+             <applicationID>   1        </applicationID>
+             <onCompletion>    0        </onCompletion>
+             <accounts>        b"1"     </accounts>
+             <applicationArgs> NoTValue </applicationArgs>;
+
+#initGlobals();
+#evalTxGroup();
+.AS
+
+
+

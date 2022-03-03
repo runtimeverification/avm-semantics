@@ -1,0 +1,19 @@
+#pragma version 4
+#pragma mode stateful
+
+txn OnCompletion
+int NoOp
+==
+bnz handle_noop
+
+// OnCompletetion actions other than NoOp are denied
+err
+
+handle_noop:
+int 1
+byte "10"
++
+
+accept:
+int 1
+return

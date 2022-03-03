@@ -1,7 +1,7 @@
 **UNDER CONSTRUCTION**
 
 -   `make deps`: build K.
--   `make build`: build KTeal.
+-   `make build`: build KAVM.
 -   `make test`: run tests.
 
 Code

@@ -1,4 +1,15 @@
 #pragma version 3
+#pragma mode stateful
+
+txn OnCompletion
+int NoOp
+==
+bnz handle_noop
+
+// OnCompletetion actions other than NoOp are denied
+err
+
+handle_noop:
 // Stack is empty
 int 4
 int 3
@@ -22,3 +33,7 @@ assert // 4 == 4
 pop
 pop
 pop
+
+accept:
+int 1
+return

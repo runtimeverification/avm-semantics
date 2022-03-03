@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 TOOL_NAME=KAVM
 TOOL_ENV_PREFIX=KAVM
 
-set -euo pipefail
 
 debug=false
 profile=false
 stderr=false
+verbose=false
 
 notif() { echo "== ${TOOL_NAME}: $*" >&2 ; }
 
@@ -42,29 +44,41 @@ run_kast() {
     local output_mode kast_args
     [[ $# -lt 1 ]] && fatal "kast: no output mode provided"
     output_mode="$1" ; shift
-    kast_args=(--directory "${backend_dir}" "${run_file}" --output "${output_mode}")
+    kast_args=(--directory "${mode_dir}" "${run_file}" --output "${output_mode}")
     execute kast "${kast_args[@]}" "$@"
 }
 
 run_parse() {
     local kparse_args
-    kparse_args=(--directory "${backend_dir}" "${run_file}")
+    kparse_args=(--directory "${mode_dir}" "${run_file}")
     ! ${profile} || kparse_args+=(--profile)
     execute kparse "${kparse_args[@]}" "$@"
 }
 
 run_krun() {
-    local parser krun_args
-    parser='cat'
-    krun_args=(--directory "${backend_dir}")
+    local krun_args teal_programs
+    krun_args=(--directory "${mode_dir}")
     [[ -n ${depth} ]] && krun_args+=(--depth ${depth})
     ! ${profile} || krun_args+=(--profile)
+    ! ${verbose} || krun_args+=(--verbose)
+    # TEAL source code is fetched from .teal files in ./tests/teal/
+    # by scanning the test scenario "${run_file}" for "declareTealSource <path>" commands
+    for TEAL_SRC in $(cat $run_file | grep declareTealSource | cut -d " " -f2 | tr -d '";')
+    do
+      teal_programs+=$(cat $(realpath $TEAL_SRC))";"
+    done
+    teal_programs+=".TealPrograms"
+    krun_args+=(-cTEAL_PROGRAMS="$teal_programs")
+    krun_args+=(-pTEAL_PROGRAMS="./parse-teal-programs.sh")
+    # run_file will contain an AVM simulation scenario,
+    # to be parsed with parse-avm-simulation.sh
+    krun_args+=(--parser "./parse-avm-simulation.sh")
     execute krun "${krun_args[@]}" "${run_file}" "$@"
 }
 
 run_prove() {
     local kprovex_args
-    kprovex_args=(--directory "${backend_dir}" "${run_file}")
+    kprovex_args=(--directory "${mode_dir}" "${run_file}")
     execute kprovex "${kprovex_args[@]}" -I "${INSTALL_LIB}/kframework" "$@"
 }
 
@@ -90,13 +104,14 @@ display_help() {
          $0 version : Display the versions of ${TOOL_NAME}, K, Kore, and Z3 in use.
 
   Options:
-         --backend [teal]
-         The K backend to use for executing the command:
-            teal is for executing/proving Teal programs.
-            Default: teal
+         --mode [avm|legacy-teal]
+         The mode to use for executing the command:
+            avm is for executing/proving AVM transaction groups;
+            teal is for executing/proving a single TEAL program wrapped in a singleton transaction group.
+            Default: avm
 
          --depth <natural number>
-         For all backends, controls the maximum number of steps that the interpreter
+         For all modes, controls the maximum number of steps that the interpreter
          will take.
          Default: Infinite
 
@@ -131,30 +146,34 @@ if [[ "${run_command}" == 'version' ]] || [[ "${run_command}" == '--version' ]];
     exit 0
 fi
 
-backend="exec"
-backend_dir=""
+mode="avm"
+mode_dir=""
 depth=
+teal_sources=
 args=()
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --backend)     backend="$2"     ; shift 2 ;;
-        --backend-dir) backend_dir="$2" ; shift 2 ;;
-        --debug)       debug=true       ; shift   ;;
-        --depth)       depth=$2         ; shift 2 ;;
-        --stderr)      stderr=true      ; shift   ;;
-        --profile)     profile=true     ; shift   ;;
-        *)             args+=("$1")     ; shift   ;;
+        --mode)          mode="$2"         ; shift 2 ;;
+        --mode-dir)      mode_dir="$2"     ; shift 2 ;;
+        --debug)         debug=true        ; shift   ;;
+        --depth)         depth=$2          ; shift 2 ;;
+        --stderr)        stderr=true       ; shift   ;;
+        --profile)       profile=true      ; shift   ;;
+        --verbose)       verbose=true      ; shift   ;;
+      # --teal-sources)  teal_sources="$2" ; shift 2 ;;
+        *)               args+=("$1")      ; shift   ;;
     esac
 done
+
 ! ${debug} || set -x
 [[ "${#args[@]}" -eq 0 ]] || set -- "${args[@]}"
 ! ${debug} || set -x
 
-case "$backend" in
-    teal) backend=teal-llvm ;;
+case "$mode" in
+    avm) mode=avm-llvm ;;
 esac
-backend_dir="${backend_dir:-${INSTALL_LIB}/$backend}"
+mode_dir="${mode_dir:-${INSTALL_LIB}/$mode}"
 
 run_file="$1" ; shift
 

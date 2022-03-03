@@ -1,0 +1,43 @@
+addAccount <address> b"1" </address> <balance> 1500000 </balance>;
+addAccount <address> b"2" </address> <balance> 3000000 </balance>;
+
+declareTealSource "./tests/teal-sources/appAccountsParams.teal";
+
+addApp <appID> 1 </appID> <address> b"1" </address> 0;
+
+optinApp <appID> 1 </appID> <address> b"1" </address>;
+optinApp <appID> 1 </appID> <address> b"2" </address>;
+
+#initTxGroup();
+
+addPaymentTx <txID>     0       </txID>
+             <sender>   b"1" </sender>
+             <receiver> b"2" </receiver>
+             <amount>   50000 </amount>;
+
+addPaymentTx <txID>     1       </txID>
+             <sender>   b"2" </sender>
+             <receiver> b"1" </receiver>
+             <amount>   50005 </amount>;
+
+addAppCallTx <txID>            2        </txID>
+             <sender>          b"1" </sender>
+             <applicationID>   1        </applicationID>
+             <onCompletion>    0        </onCompletion>
+             <accounts>        b"1"
+                               b"2"
+             </accounts>
+             <applicationArgs>
+                 Int2Bytes(39, BE, Unsigned)
+                 Int2Bytes(100, BE, Unsigned)
+                 Int2Bytes(0, BE, Unsigned)
+                 Int2Bytes(0, BE, Unsigned)
+                 Int2Bytes(10000000000, BE, Unsigned)
+                 normalize("USD")
+                 Int2Bytes(4, BE, Unsigned)
+                 Int2Bytes(50, BE, Unsigned)
+             </applicationArgs>;
+
+#initGlobals();
+#evalTxGroup();
+.AS
