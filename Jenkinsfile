@@ -21,7 +21,7 @@ pipeline {
       }
       stages {
         stage('Build') { steps { sh 'make build -j4' } }
-        stage('Test Teal') {
+        stage('Test AVM') {
           failFast true
           options { timeout(time: 20, unit: 'MINUTES') }
           parallel {
