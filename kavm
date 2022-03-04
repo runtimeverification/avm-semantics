@@ -45,6 +45,14 @@ run_kast() {
     [[ $# -lt 1 ]] && fatal "kast: no output mode provided"
     output_mode="$1" ; shift
     kast_args=(--directory "${backend_dir}" "${run_file}" --output "${output_mode}")
+    filename=$(basename -- "${run_file}")
+    extension="${filename##*.}"
+    case "$extension" in
+        avm-simulation) kast_args+=(--sort AVMSimulation); kast_args+=(--module AVM-EXECUTION) ;;
+        teal)           kast_args+=(--sort TealInputPgm); kast_args+=(--module TEAL-PARSER-SYNTAX) ;;
+        teals)          kast_args+=(--sort TealPrograms); kast_args+=(--module TEAL-PARSER-SYNTAX) ;;
+        *)              fatal "unrecognized file extension .${extension}; kavm kast expects .avm-simulation, .teal or .teals";;
+    esac
     execute kast "${kast_args[@]}" "$@"
 }
 
@@ -52,6 +60,14 @@ run_parse() {
     local kparse_args
     kparse_args=(--directory "${backend_dir}" "${run_file}")
     ! ${profile} || kparse_args+=(--profile)
+    filename=$(basename -- "${run_file}")
+    extension="${filename##*.}"
+    case "$extension" in
+        avm-simulation) kparse_args+=(--sort AVMSimulation); kparse_args+=(--module AVM-EXECUTION) ;;
+        teal)           kparse_args+=(--sort TealInputPgm); kparse_args+=(--module TEAL-PARSER-SYNTAX) ;;
+        teals)          kparse_args+=(--sort TealPrograms); kparse_args+=(--module TEAL-PARSER-SYNTAX) ;;
+        *)              fatal "unrecognized file extension .${extension}; kavm parse expects .avm-simulation, .teal or .teals";;
+    esac
     execute kparse "${kparse_args[@]}" "$@"
 }
 
@@ -95,10 +111,10 @@ display_help() {
          $0 [help|--help|version|--version]
 
   Description:
-         $0 kast  : Parse a single program or test and pretty print it.
-         $0 parse : Parse a single program and return true if well-formed.
-         $0 run   : Run a single program or test using the fast bison parser.
-         $0 prove : Run a reachability proof using KAVM symbolic execution.
+         $0 kast  : Parse an AVM simulation scenario or a TEAL program and pretty print it.
+         $0 parse : Parse an AVM simulation scenario or a TEAL program and return true if well-formed.
+         $0 run   : Run a AVM simulation scenario.
+         $0 prove : [NOT YET IMPLEMENTED] Run a reachability proof using KAVM symbolic execution.
 
          $0 help    : Display this help message.
          $0 version : Display the versions of ${TOOL_NAME}, K, Kore, and Z3 in use.

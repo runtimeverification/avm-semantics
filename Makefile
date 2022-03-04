@@ -288,20 +288,55 @@ uninstall:
 
 KAVM_OPTIONS :=
 
-test: test-avm
+test: test-avm test-kavm
 
+######
 ## AVM
-avm_tests  := $(wildcard tests/scenarios/*.avm-simulation)
+######
+avm_simulation_sources := $(wildcard tests/scenarios/*.avm-simulation)
 avm_tests_failing := $(shell cat tests/failing-avm-simulation.list)
-avm_tests_passing := $(filter-out $(avm_tests_failing), $(avm_tests))
+avm_tests_passing := $(filter-out $(avm_tests_failing), $(avm_simulation_sources))
+teal_sources := $(wildcard tests/teal-sources/*.teal)
+all_sources := $(join $(avm_simulation_sources), $(teal_sources))
 
-test-avm:     $(avm_tests:=.unit)
+test-avm: $(avm_simulation_sources:=.unit)
 
 tests/scenarios/%.fail.avm-simulation.unit: tests/scenarios/%.fail.avm-simulation
 	! kavm run $< --output none
 
 tests/scenarios/%.avm-simulation.unit: tests/scenarios/%.avm-simulation
 	kavm run $< --output none
+
+#######
+## kavm
+#######
+test-kavm: test-kavm-parse test-kavm-kast
+
+## * kavm parse
+test-kavm-parse: test-kavm-parse-avm-scenario test-kavm-parse-teal
+
+test-kavm-parse-avm-scenario: $(avm_simulation_sources:=.kavm-parse.unit)
+
+tests/scenarios/%.avm-simulation.kavm-parse.unit: tests/scenarios/%.avm-simulation
+	kavm parse $< > /dev/null 2>&1
+
+test-kavm-parse-teal: $(teal_sources:=.kavm-parse.unit)
+
+tests/teal-sources/%.teal.kavm-parse.unit: tests/teal-sources/%.teal
+	kavm parse $< > /dev/null 2>&1
+
+## * kavm kast
+test-kavm-kast: test-kavm-kast-avm-scenario test-kavm-kast-teal
+
+test-kavm-kast-avm-scenario: $(avm_simulation_sources:=.kavm-kast.unit)
+
+tests/scenarios/%.avm-simulation.kavm-kast.unit: tests/scenarios/%.avm-simulation
+	kavm kast $< none
+
+test-kavm-kast-teal: $(teal_sources:=.kavm-kast.unit)
+
+tests/teal-sources/%.teal.kavm-kast.unit: tests/teal-sources/%.teal
+	kavm kast $< none
 
 # Utils
 # -----
