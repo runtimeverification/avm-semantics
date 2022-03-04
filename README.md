@@ -56,11 +56,25 @@ See `kavm --help` for more information.
 Testing harness
 ---------------
 
+### Concrete Execution Tests
+
 The tests are located in [`tests/`](tests/). Each test has two components:
 * a TEAL program `.teal`, or several programs, in [`tests/teal-sources/`](tests/teal-sources/);
 * a test scenario, `.avm-simulation` in [`tests/scenarios/`](tests/scenarios/) that defines the initial network state, the input transaction group and declares which TEAL programs should it uses.
 
 Note that negative test scenarios are mist have the `.fail.avm-simulation` file extension.
+
+### Symbolic Proofs
+
+The specifications are located in [`tests/specs/`](tests/specs/).
+
+Run `make test-avm-prove` to verify the specifications.
+
+The [`verification.md`](tests/specs/verification.k) module must be compiled with the Haskell backend and included in every spec file.
+The Makefile target `test-avm-prove` ensures that the verification module is compiled properly before checking the specs.
+
+**NOTE**: the specs have not yet been fully ported to the current semantics and are failing.
+They are not checked on CI and are not called by `make test`.
 
 Working on KAVM
 ---------------
