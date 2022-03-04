@@ -21,7 +21,14 @@ pipeline {
       }
       stages {
         stage('Build') { steps { sh 'make build -j4' } }
-        stage('Test AVM') {
+        stage('Test kavm parse') {
+          failFast true
+          options { timeout(time: 10, unit: 'MINUTES') }
+          parallel {
+            stage('Parse TEAL Tests') { steps { sh 'make -j4 test-kavm-parse-teal' } }
+          }
+        }
+        stage('Test AVM Semantics') {
           failFast true
           options { timeout(time: 20, unit: 'MINUTES') }
           parallel {
