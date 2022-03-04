@@ -31,7 +31,6 @@ module MAX-SPEC
           "Failure - program is stuck" => ?RETURN_STATUS
         </returnstatus>
         <globals> _ </globals>
-        <args> _ </args>
         <txGroup> _ </txGroup>
         <blockchain> _ </blockchain>
     requires  notBool (MAX_Y in_labels LL)

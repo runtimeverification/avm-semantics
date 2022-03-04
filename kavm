@@ -120,10 +120,11 @@ display_help() {
          $0 version : Display the versions of ${TOOL_NAME}, K, Kore, and Z3 in use.
 
   Options:
-         --backend [avm]
+         --backend [avm-llvm|avm-haskell]
          The mode to use for executing the command:
-            avm is for executing/proving AVM transaction groups;
-            Default: avm
+            avm-llvm is for fast concrete execution of AVM transaction groups using the K LLVM backend;
+            avm-haskell is for concrete and symbolic execution of AVM transaction groups using the K Haskell backend;
+            Default: avm-llvm
 
          --depth <natural number>
          For all backends, controls the maximum number of steps that the interpreter
@@ -161,7 +162,7 @@ if [[ "${run_command}" == 'version' ]] || [[ "${run_command}" == '--version' ]];
     exit 0
 fi
 
-backend="avm"
+backend="avm-llvm"
 backend_dir=""
 depth=
 teal_sources=
@@ -185,7 +186,7 @@ done
 ! ${debug} || set -x
 
 case "$backend" in
-    avm) backend=avm-llvm ;;
+    llvm) backend=avm-llvm ;;
 esac
 backend_dir="${backend_dir:-${INSTALL_LIB}/$backend}"
 

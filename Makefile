@@ -151,7 +151,7 @@ endif
 HOOK_KOMPILE_OPTS := --hook-namespaces "$(HOOK_NAMESPACES)"                     \
                      $(addprefix -ccopt , $(HOOK_PLUGIN_FILES) $(HOOK_CC_OPTS))
 
-CLARITY_HOOK_KOMPILE_OPTS  := $(addprefix -ccopt , $(HOOK_SHARED_FILES) $(HOOK_ALGO_FILES))
+AVM_HOOK_KOMPILE_OPTS  := $(addprefix -ccopt , $(HOOK_SHARED_FILES) $(HOOK_ALGO_FILES))
 
 ifneq ($(COVERAGE),)
     COVERAGE_OPTS := --coverage
@@ -192,7 +192,6 @@ avm_includes := $(patsubst %, $(KAVM_INCLUDE)/kframework/%, $(avm_files))
 
 AVM_KOMPILE_OPTS += --emit-json --verbose $(COVERAGE_OPTS) $(K_INCLUDES)
 tangle_avm            := k & ((! type) | exec)
-AVM_HOOK_KOMPILE_OPTS := $(CLARITY_HOOK_KOMPILE_OPTS)
 
 ifeq ($(K_BACKEND),)
   K_BACKEND := llvm
@@ -290,9 +289,9 @@ KAVM_OPTIONS :=
 
 test: test-avm test-kavm
 
-######
-## AVM
-######
+#################
+## AVM Unit Tests
+#################
 avm_simulation_sources := $(wildcard tests/scenarios/*.avm-simulation)
 avm_tests_failing := $(shell cat tests/failing-avm-simulation.list)
 avm_tests_passing := $(filter-out $(avm_tests_failing), $(avm_simulation_sources))
@@ -302,10 +301,24 @@ all_sources := $(join $(avm_simulation_sources), $(teal_sources))
 test-avm: $(avm_simulation_sources:=.unit)
 
 tests/scenarios/%.fail.avm-simulation.unit: tests/scenarios/%.fail.avm-simulation
-	! kavm run $< --output none
+	! $(KAVM) run $< --output none
 
 tests/scenarios/%.avm-simulation.unit: tests/scenarios/%.avm-simulation
-	kavm run $< --output none
+	$(KAVM) run $< --output none
+
+###########################
+## AVM Symbolic Proof Tests
+###########################
+
+avm_prove_tests := $(wildcard tests/specs/*-spec.k)
+
+test-avm-prove: $(avm_prove_tests:=.prove)
+
+tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_BIN)/$(KAVM)
+	$(KAVM) prove --backend-dir tests/specs tests/specs/$*-spec.k
+
+tests/specs/verification-kompiled/timestamp: tests/specs/verification.k $(kavm_includes)
+	kompile $< --backend haskell --directory tests/specs $(K_INCLUDES)
 
 #######
 ## kavm
@@ -318,12 +331,12 @@ test-kavm-parse: test-kavm-parse-avm-scenario test-kavm-parse-teal
 test-kavm-parse-avm-scenario: $(avm_simulation_sources:=.kavm-parse.unit)
 
 tests/scenarios/%.avm-simulation.kavm-parse.unit: tests/scenarios/%.avm-simulation
-	kavm parse $< > /dev/null 2>&1
+	$(KAVM) parse $< > /dev/null 2>&1
 
 test-kavm-parse-teal: $(teal_sources:=.kavm-parse.unit)
 
 tests/teal-sources/%.teal.kavm-parse.unit: tests/teal-sources/%.teal
-	kavm parse $< > /dev/null 2>&1
+	$(KAVM) parse $< > /dev/null 2>&1
 
 ## * kavm kast
 test-kavm-kast: test-kavm-kast-avm-scenario test-kavm-kast-teal
@@ -331,12 +344,12 @@ test-kavm-kast: test-kavm-kast-avm-scenario test-kavm-kast-teal
 test-kavm-kast-avm-scenario: $(avm_simulation_sources:=.kavm-kast.unit)
 
 tests/scenarios/%.avm-simulation.kavm-kast.unit: tests/scenarios/%.avm-simulation
-	kavm kast $< none
+	$(KAVM) kast $< none
 
 test-kavm-kast-teal: $(teal_sources:=.kavm-kast.unit)
 
 tests/teal-sources/%.teal.kavm-kast.unit: tests/teal-sources/%.teal
-	kavm kast $< none
+	$(KAVM) kast $< none
 
 # Utils
 # -----
