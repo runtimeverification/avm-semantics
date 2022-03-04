@@ -40,6 +40,10 @@ The K modules describing syntax and semantics of TEAL are located in [`lib/inclu
   - [TEAL Panic Behaviors](lib/include/kframework/avm/teal/teal-execution.md#panic-behaviors)
 * [`teal-driver.md`](lib/include/kframework/avm/teal/teal-driver.md) defines the semantics of the various TEAL opcodes and specifies how a TEAL program is interpreted.
 
+### Opcode support and costs
+
+Not all TEAL opcodes are supported by the semantics as of yet. See the relevant [wiki page](https://github.com/runtimeverification/avm-semantics/wiki/TEAL-opcodes-support-and-costs) for the table of supported opcodes and their execution costs.
+
 `kavm` runner script
 --------------------
 
