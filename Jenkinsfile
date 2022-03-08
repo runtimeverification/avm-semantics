@@ -21,12 +21,18 @@ pipeline {
       }
       stages {
         stage('Build') { steps { sh 'make build -j4' } }
-        stage('Test Teal') {
+        stage('Test kavm parse') {
+          failFast true
+          options { timeout(time: 10, unit: 'MINUTES') }
+          parallel {
+            stage('Parse TEAL Tests') { steps { sh 'make -j4 test-kavm-parse-teal' } }
+          }
+        }
+        stage('Test AVM Semantics') {
           failFast true
           options { timeout(time: 20, unit: 'MINUTES') }
           parallel {
-            stage('Conformance') { steps { sh 'make -j4 test-teal-conformance' } }
-            stage('Proofs')      { steps { sh 'make -j4 test-teal-prove'       } }
+            stage('AVM tests') { steps { sh 'make -j4 test-avm' } }
           }
         }
       }

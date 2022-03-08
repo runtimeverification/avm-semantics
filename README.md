@@ -1,42 +1,103 @@
-**UNDER CONSTRUCTION**
+Algorand Virtual Machine Semantics in K
+=======================================
 
--   `make deps`: build K.
--   `make build`: build KTeal.
--   `make test`: run tests.
+AVM Files
+---------
 
-Code
-====
+The AVM semantics source files are located in [`lib/include/kframework/avm/`](lib/include/kframework/avm/):
 
-K files are located in `lib/include/kframework/`.
+* [`avm-configuration.md`](lib/include/kframework/avm/avm-configuration.md) defines the top-level K configuration of the AVM:
+  - AVM execution state
+  - TEAL interpreter state
+* [`blockchain.md`](lib/include/kframework/avm/blockchain.md) defines the Algorand network state: accounts, apps and assets.
+* [`txn.md`](lib/include/kframework/avm/txn.md) defines the representation of Algorand transactions.
+* [`avm-execution.md`](lib/include/kframework/avm/avm-execution.md) defines the execution flow of AVM:
+  - transaction evaluation and execution process, depending on its type;
+  - starting/stopping TEAL execution;
+  - AVM-level panic behaviors;
+  - basic syntax of simulation scenarios.
+* [`avm-initialization.md`](lib/include/kframework/avm/avm-initialization.md) defines rules that initialize AVM with a specific initial network state and the supplied transaction group;
+* [`avm-limits.md`](lib/include/kframework/avm/avm-limits.md) defines the constants that govern AVM execution: max transaction group size, max TEAL stack depth, etc.
+* [`avm-txn-deque.md`](lib/include/kframework/avm/avm-txn-deque.md) defines an internal data structure that handles transaction execution schedule.
+* [`args.md`](lib/include/kframework/avm/args.md) defines the representation of Logic Signature transaction arguments.
 
-Shared Modules
---------------
+TEAL Interpreter Files
+----------------------
 
-This subdirectory contains common modules shared by the various subsystems
-defined in this repository. They provide basic definitions shared by all other
-modules.
+Transaction Execution Approval Language (TEAL) is the language that governs approval of Algorand transactions and serves as the execution layer for Algorand Smart Contracts.
 
-This is in subdirectory `common`.
+The K modules describing syntax and semantics of TEAL are located in [`lib/include/kframework/avm/teal/`](lib/include/kframework/avm/teal/):
 
-### Shared TEAL Modules
+* [`teal-types.md`](lib/include/kframework/avm/teal/teal-types.md) defines basic types representing values in TEAL and various operations involving them.
+* [`teal-constants.md`](lib/include/kframework/avm/teal/teal-constants.md) defines a set of integer constants TEAL uses, including transaction types and on-completion types.
+* [`teal-fields.md`](lib/include/kframework/avm/teal/teal-fields.md) defines sets of fields that may be used as arguments to some specific opcodes in TEAL, such as `txn/txna` fields and `global` fields.
+* [`teal-syntax.md`](lib/include/kframework/avm/teal/teal-syntax.md) defines the syntax of (textual) TEAL and the structure of its programs.
+* [`teal-stack.md`](lib/include/kframework/avm/teal/teal-stack.md) defines the K representation of TEAL stack and the associated operations.
+* [`teal-execution.md`](lib/include/kframework/avm/teal/teal-execution.md) defines the execution flow of the interpreter:
+  - [Interpreter Initialization](lib/include/kframework/avm/teal/teal-execution.md#teal-interpreter-initialization)
+  - [Execution](lib/include/kframework/avm/teal/teal-execution.md#teal-execution)
+  - [Interpreter Finalization](lib/include/kframework/avm/teal/teal-execution.md#teal-interpreter-finalization)
+  - [TEAL Panic Behaviors](lib/include/kframework/avm/teal/teal-execution.md#panic-behaviors)
+* [`teal-driver.md`](lib/include/kframework/avm/teal/teal-driver.md) defines the semantics of the various TEAL opcodes and specifies how a TEAL program is interpreted.
 
-- [`teal-types.md`](./lib/include/kframework/common/teal-types.md) defines basic types representing values in TEAL and various operations involving them.
-- [`teal-constants.md`](./lib/include/kframework/common/teal-constants.md) defines a set of integer constants TEAL uses, including transaction types and on-completion types.
-- [`teal-fields.md`](./lib/include/kframework/common/teal-fields.md) defines sets of fields that may be used as arguments to some specific opcodes in TEAL, such as `txn/txna` fields and `global` fields.
-- [`teal-syntax.md`](./lib/include/kframework/common/teal-syntax.md) defines the syntax of (textual) TEAL and the structure of its programs.
-- [`additional-fields.md`](./lib/include/kframework/common/additional-fields.md) defines an additional set of fields that cannot appear in TEAL but may be used in other subsystems.
+### Opcode support and costs
 
-### Shared Blockchain Modules
+Not all TEAL opcodes are supported by the semantics as of yet. See the relevant [wiki page](https://github.com/runtimeverification/avm-semantics/wiki/TEAL-opcodes-support-and-costs) for the table of supported opcodes and their execution costs.
 
-- [`txn.md`](./lib/include/kframework/common/txn.md) provides a representation of all Algorand transaction types as nested K cell data structures along with data accessors.
-- [`blockchain.md`](./lib/include/kframework/common/blockchain.md) provides a representation of the state of the Algorand blockchain and along with state accessors.
-- [`args.md`](./lib/include/kframework/common/args.md) provides a representation of global arguments.
+`kavm` runner script
+--------------------
 
-AVM Code
---------
+`kavm` is a shell script that provides a command-line interface for the semantics:
+* concrete simulations and tests are run via `krun` and the K LLVM Backend
+* symbolic execution proofs are run with `kprovex` and the K Haskell Backend
 
-This is in subdirectory `avm`.
+See `kavm --help` for more information.
 
-- [`teal-stack.md`](./lib/include/kframework/avm/teal-stack.md): Everyone needs a stack and so does Teal.
-- [`env-init.md`](./lib/include/kframework/avm/env-init.md): A dirty hack.
-- [`driver.md`](./lib/include/kframework/avm/driver.md): Testing harness.
+`kavm` uses two auxiliary scripts located in [`scripts/`](scripts/):
+* [`parse-avm-simulation.sh`](scripts/parse-avm-simulation.sh) calls `kparse` to parse a simulation scenario from a `.avm-simulation` file;
+* [`parse-teal-programs.sh`](scripts/parse-teal-programs.sh) calls `kparse` to parse a `;`-separated list of TEAL source codes.
+
+Testing harness
+---------------
+
+### Concrete Execution Tests
+
+The tests are located in [`tests/`](tests/). Each test has two components:
+* a TEAL program `.teal`, or several programs, in [`tests/teal-sources/`](tests/teal-sources/);
+* a test scenario, `.avm-simulation` in [`tests/scenarios/`](tests/scenarios/) that defines the initial network state, the input transaction group and declares which TEAL programs should it uses.
+
+Note that negative test scenarios are mist have the `.fail.avm-simulation` file extension.
+
+### Symbolic Proofs
+
+The specifications are located in [`tests/specs/`](tests/specs/).
+
+Run `make test-avm-prove` to verify the specifications.
+
+The [`verification.md`](tests/specs/verification.k) module must be compiled with the Haskell backend and included in every spec file.
+The Makefile target `test-avm-prove` ensures that the verification module is compiled properly before checking the specs.
+
+**NOTE**: the specs have not yet been fully ported to the current semantics and are failing.
+They are not checked on CI and are not called by `make test`.
+
+Working on KAVM
+---------------
+
+### Build system
+
+* `make deps`: build K and other dependencies.
+* `make build`: compile KAVM K modules and the `kavm` tool.
+  By default, `kompile` is called with the LLVM backend. To compile the semantics with the Haskell backend, execute `K_BACKEND=haskell make build`.
+* `make test -j8`: run tests. Adjust the `-jX` option as needed to run `X` tests in parallel.
+
+### Adding new tests
+
+TBD
+
+### Managing `PATH` with `direnv`
+
+We use [`direnv`](https://direnv.net/) to manage the environment variables such as `PATH`, see [`.envrc`](.envrc).
+
+After installing `direnv`, run `direnv allow` to activate the settings for the project's directory.
+
+Feel free to ignore `direnv` if you prefer your global installation of K.

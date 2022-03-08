@@ -1,5 +1,0 @@
-#pragma mode stateless
-#pragma version 2
-int 1
-int 2
-int 3
