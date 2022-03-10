@@ -48,7 +48,7 @@ endif
 export K_OPTS
 
 .PHONY: all clean distclean install uninstall                                         \
-        deps k-deps libsecp256k1 libff                                                \
+        deps k-deps libsecp256k1 libff plugin-deps                                    \
         build build-avm build-kavm                                                    \
         test test-avm
 .SECONDARY:
@@ -63,13 +63,6 @@ libff_out        := $(LOCAL_LIB)/libff.a
 
 libsecp256k1: $(libsecp256k1_out)
 libff:        $(libff_out)
-
-plugin_k        := blockchain-k-plugin/krypto.md
-plugin_includes := $(patsubst %, $(KAVM_INCLUDE)/kframework/%, $(plugin_k))
-
-$(KAVM_INCLUDE)/kframework/blockchain-k-plugin/%: $(PLUGIN_SUBMODULE)/plugin/%
-	@mkdir -p $(dir $@)
-	install $< $@
 
 $(libsecp256k1_out): $(PLUGIN_SUBMODULE)/deps/secp256k1/autogen.sh
 	cd $(PLUGIN_SUBMODULE) && CXXFLAGS="$(CXXFLAGS) -std=c++14" make PREFIX="$(BUILD_LOCAL)" INSTALL_PREFIX="$(BUILD_LOCAL)" libsecp256k1
@@ -120,9 +113,25 @@ $(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
 
 HOOK_NAMESPACES   := KRYPTO CLARITY
 
-HOOK_PLUGIN_FILES := $(PLUGIN_SUBMODULE)/plugin-c/plugin_util.cpp \
-                     $(PLUGIN_SUBMODULE)/plugin-c/crypto.cpp      \
-                     $(PLUGIN_SUBMODULE)/plugin-c/blake2.cpp
+plugin_include    := $(abspath $(KAVM_LIB)/blockchain-k-plugin/include)
+plugin_k          := krypto.md
+plugin_c          := plugin_util.cpp crypto.cpp blake2.cpp plugin_util.h blake2.h
+plugin_includes   := $(patsubst %, $(plugin_include)/kframework/%, $(plugin_k))
+plugin_c_includes := $(patsubst %, $(plugin_include)/c/%,          $(plugin_c))
+
+HOOK_PLUGIN_FILES := $(plugin_include)/c/plugin_util.cpp \
+                     $(plugin_include)/c/crypto.cpp      \
+                     $(plugin_include)/c/blake2.cpp
+
+$(plugin_include)/c/%: $(PLUGIN_SUBMODULE)/plugin-c/%
+	@mkdir -p $(dir $@)
+	install $< $@
+
+$(plugin_include)/kframework/%: $(PLUGIN_SUBMODULE)/plugin/%
+	@mkdir -p $(dir $@)
+	install $< $@
+
+plugin-deps: $(plugin_includes) $(plugin_c_includes)
 
 HOOK_ALGO_FILES   := $(CURDIR)/hooks/algorand.cpp \
                      $(CURDIR)/hooks/base.cpp     \
@@ -132,7 +141,7 @@ HOOK_SHARED_FILES := $(CURDIR)/hooks/hooks.cpp
 
 HOOK_CC_OPTS      := -g -std=c++14                                     \
                      -L$(LOCAL_LIB)                                    \
-                     -I$(PLUGIN_SUBMODULE)/plugin-c                    \
+                     -I$(plugin_include)/c                             \
                      -lcryptopp -lsecp256k1 -lff -lcurl -lssl -lcrypto
 
 ifeq ($(UNAME_S),Darwin)
@@ -161,7 +170,8 @@ endif
 
 K_INCLUDES   :=                                         \
                 -I $(CURDIR)/$(KAVM_INCLUDE)/kframework \
-                -I $(INSTALL_INCLUDE)/kframework
+                -I $(INSTALL_INCLUDE)/kframework        \
+                -I $(plugin_include)/kframework
 KOMPILE_OPTS += --verbose --gen-glr-bison-parser $(COVERAGE_OPTS) $(K_INCLUDES)
 
 ifneq (,$(RELEASE))
@@ -209,7 +219,7 @@ avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled
 
 build-avm: $(KAVM_LIB)/$(avm_kompiled)
 
-$(KAVM_LIB)/$(avm_kompiled): $(avm_includes) $(HOOK_PLUGIN_FILES) $(HOOK_SHARED_FILES) $(libff_out) $(plugin_includes)
+$(KAVM_LIB)/$(avm_kompiled): $(avm_includes) $(HOOK_SHARED_FILES) $(libff_out) $(plugin_includes) $(plugin_c_includes)
 	$(KOMPILE_AVM) $(KAVM_INCLUDE)/kframework/$(avm_main_file)                     \
 	                --directory $(KAVM_LIB)/$(avm_dir)  \
 	                --main-module $(avm_main_module)     \
