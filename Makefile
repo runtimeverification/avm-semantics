@@ -48,7 +48,7 @@ endif
 export K_OPTS
 
 .PHONY: all clean distclean install uninstall                                         \
-        deps k-deps libsecp256k1 libff plugin-deps                                    \
+        deps k-deps libsecp256k1 libff plugin-deps hook-deps                          \
         build build-avm build-kavm                                                    \
         test test-avm
 .SECONDARY:
@@ -133,11 +133,20 @@ $(plugin_include)/kframework/%: $(PLUGIN_SUBMODULE)/plugin/%
 
 plugin-deps: $(plugin_includes) $(plugin_c_includes)
 
-HOOK_ALGO_FILES   := $(CURDIR)/hooks/algorand.cpp \
-                     $(CURDIR)/hooks/base.cpp     \
-                     $(CURDIR)/hooks/mnemonic.cpp
+hook_include  := $(abspath $(KAVM_LIB)/include/c)
+hook_c        := algorand.cpp base.cpp hooks.cpp mnemonic.cpp algorand.h base.h mnemonic.h
+hook_includes := $(patsubst %, $(hook_include)/%, $(hook_c))
 
-HOOK_SHARED_FILES := $(CURDIR)/hooks/hooks.cpp
+HOOK_ALGO_FILES := $(hook_include)/algorand.cpp \
+                   $(hook_include)/base.cpp     \
+                   $(hook_include)/mnemonic.cpp \
+                   $(hook_include)/hooks.cpp
+
+$(hook_include)/%: $(CURDIR)/hooks/%
+	@mkdir -p $(dir $@)
+	install $< $@
+
+hook-deps: $(hook_includes)
 
 HOOK_CC_OPTS      := -g -std=c++14                                     \
                      -L$(LOCAL_LIB)                                    \
@@ -160,7 +169,7 @@ endif
 HOOK_KOMPILE_OPTS := --hook-namespaces "$(HOOK_NAMESPACES)"                     \
                      $(addprefix -ccopt , $(HOOK_PLUGIN_FILES) $(HOOK_CC_OPTS))
 
-AVM_HOOK_KOMPILE_OPTS  := $(addprefix -ccopt , $(HOOK_SHARED_FILES) $(HOOK_ALGO_FILES))
+AVM_HOOK_KOMPILE_OPTS  := $(addprefix -ccopt , $(HOOK_ALGO_FILES))
 
 ifneq ($(COVERAGE),)
     COVERAGE_OPTS := --coverage
@@ -219,7 +228,7 @@ avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled
 
 build-avm: $(KAVM_LIB)/$(avm_kompiled)
 
-$(KAVM_LIB)/$(avm_kompiled): $(avm_includes) $(HOOK_SHARED_FILES) $(libff_out) $(plugin_includes) $(plugin_c_includes)
+$(KAVM_LIB)/$(avm_kompiled): $(avm_includes) $(hook_includes) $(libff_out) $(plugin_includes) $(plugin_c_includes)
 	$(KOMPILE_AVM) $(KAVM_INCLUDE)/kframework/$(avm_main_file)                     \
 	                --directory $(KAVM_LIB)/$(avm_dir)  \
 	                --main-module $(avm_main_module)     \
