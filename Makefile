@@ -59,7 +59,7 @@ all: build
 # ------------------
 
 libsecp256k1_out := $(LOCAL_LIB)/pkgconfig/libsecp256k1.pc
-libff_out        := $(LOCAL_LIB)/libff.a
+libff_out        := $(KAVM_LIB)/libff/lib/libff.a
 
 libsecp256k1: $(libsecp256k1_out)
 libff:        $(libff_out)
@@ -79,10 +79,10 @@ endif
 
 $(libff_out): $(PLUGIN_SUBMODULE)/deps/libff/CMakeLists.txt
 	@mkdir -p $(PLUGIN_SUBMODULE)/deps/libff/build
-	cd $(PLUGIN_SUBMODULE)/deps/libff/build                                                               \
-	    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(BUILD_LOCAL) $(LIBFF_CMAKE_FLAGS) \
-	    && make -s -j4                                                                                    \
-	    && make install
+	cd $(PLUGIN_SUBMODULE)/deps/libff/build                                                                     \
+	    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(INSTALL_LIB)/libff $(LIBFF_CMAKE_FLAGS) \
+	    && make -s -j4                                                                                          \
+	    && make install DESTDIR=$(CURDIR)/$(BUILD_DIR)
 
 # K Dependencies
 # --------------
@@ -149,7 +149,8 @@ $(hook_include)/%: $(CURDIR)/hooks/%
 hook-deps: $(hook_includes)
 
 HOOK_CC_OPTS      := -g -std=c++14                                     \
-                     -L$(LOCAL_LIB)                                    \
+                     -L$(CURDIR)/$(KAVM_LIB)/libff/lib                 \
+                     -I$(CURDIR)/$(KAVM_LIB)/libff/include             \
                      -I$(plugin_include)/c                             \
                      -lcryptopp -lsecp256k1 -lff -lcurl -lssl -lcrypto
 
