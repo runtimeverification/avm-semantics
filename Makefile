@@ -210,15 +210,14 @@ avm_files    :=                            \
 
 avm_includes := $(patsubst %, $(KAVM_INCLUDE)/kframework/%, $(avm_files))
 
-AVM_KOMPILE_OPTS += --emit-json --verbose $(COVERAGE_OPTS) $(K_INCLUDES)
+AVM_KOMPILE_OPTS += --verbose $(COVERAGE_OPTS)
 tangle_avm            := k & ((! type) | exec)
 
 ifeq ($(K_BACKEND),)
   K_BACKEND := llvm
 endif
 
-KOMPILE_AVM       := kompile --backend $(K_BACKEND) --md-selector "$(tangle_avm)"          \
-                          $(AVM_KOMPILE_OPTS) $(HOOK_KOMPILE_OPTS) $(AVM_HOOK_KOMPILE_OPTS)
+KOMPILE_AVM := kavm kompile
 
 avm_dir           := avm-llvm
 avm_main_module   := AVM-EXECUTION
@@ -233,7 +232,8 @@ $(KAVM_LIB)/$(avm_kompiled): $(avm_includes) $(hook_includes) $(libff_out) $(plu
 	$(KOMPILE_AVM) $(KAVM_INCLUDE)/kframework/$(avm_main_file)                     \
 	                --directory $(KAVM_LIB)/$(avm_dir)  \
 	                --main-module $(avm_main_module)     \
-	                --syntax-module $(avm_syntax_module)
+	                --syntax-module $(avm_syntax_module) \
+	                $(AVM_KOMPILE_OPTS)
 
 clean-avm:
 	rm -r $(KAVM_LIB)/$(avm_kompiled)
@@ -335,7 +335,7 @@ avm_prove_tests := $(wildcard tests/specs/*-spec.k)
 test-avm-prove: $(avm_prove_tests:=.prove)
 
 tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_BIN)/$(KAVM)
-	$(KAVM) prove --backend-dir tests/specs tests/specs/$*-spec.k
+	$(KAVM) prove --directory tests/specs tests/specs/$*-spec.k
 
 tests/specs/verification-kompiled/timestamp: tests/specs/verification.k $(kavm_includes)
 	kompile $< --backend haskell --directory tests/specs $(K_INCLUDES)
