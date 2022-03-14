@@ -50,30 +50,32 @@ run_kompile() {
     kompile_opts+=( -I "${INSTALL_INCLUDE}/kframework" -I "${plugin_include}/kframework" )
     kompile_opts+=( --hook-namespaces "KRYPTO CLARITY"                                   )
     kompile_opts+=( --emit-json                                                          )
-    kompile_opts+=( --backend llvm                                                       )
+    kompile_opts+=( --backend "$backend"                                                 )
     ! ${verbose} || kompile_opts+=(--verbose)
 
-    kompile_opts+=( -ccopt -I${libff_dir}/include -ccopt -L${libff_dir}/lib              )
-    kompile_opts+=( -ccopt ${plugin_include}/c/plugin_util.cpp                           )
-    kompile_opts+=( -ccopt ${plugin_include}/c/crypto.cpp                                )
-    kompile_opts+=( -ccopt ${plugin_include}/c/blake2.cpp                                )
-    kompile_opts+=( -ccopt ${INSTALL_INCLUDE}/c/algorand.cpp                             )
-    kompile_opts+=( -ccopt ${INSTALL_INCLUDE}/c/base.cpp                                 )
-    kompile_opts+=( -ccopt ${INSTALL_INCLUDE}/c/mnemonic.cpp                             )
-    kompile_opts+=( -ccopt ${INSTALL_INCLUDE}/c/hooks.cpp                                )
-    kompile_opts+=( -ccopt -g -ccopt -std=c++14                                          )
-    kompile_opts+=( -ccopt -lcryptopp -ccopt -lsecp256k1 -ccopt -lff -ccopt -lcurl -ccopt -lssl -ccopt -lcrypto )
-    if [[ "$(uname -s)" == 'Linux' ]]; then
-        kompile_opts+=( -ccopt -lprocps )
-    elif [[ "$(uname -s)" == 'Darwin' ]]; then
-        openssl_root="$(brew --prefix openssl)"
-        bitcoin_libexec="$(brew --prefix libbitcoin)/libexec"
-        brew_root="$(brew --prefix)"
-        kompile_opts+=( -ccopt -I${brew_root}/include -ccopt -L/${brew_root}/lib            )
-        kompile_opts+=( -ccopt -I${openssl_root}/include -ccopt -L${openssl_root}/lib       )
-        kompile_opts+=( -ccopt -I${bitcoin_libexec}/include -ccopt -L${bitcoin_libexec}/lib )
-    fi
-
+    case "$backend" in
+        llvm) kompile_opts+=( -ccopt -I${libff_dir}/include -ccopt -L${libff_dir}/lib              )
+              kompile_opts+=( -ccopt ${plugin_include}/c/plugin_util.cpp                           )
+              kompile_opts+=( -ccopt ${plugin_include}/c/crypto.cpp                                )
+              kompile_opts+=( -ccopt ${plugin_include}/c/blake2.cpp                                )
+              kompile_opts+=( -ccopt ${INSTALL_INCLUDE}/c/algorand.cpp                             )
+              kompile_opts+=( -ccopt ${INSTALL_INCLUDE}/c/base.cpp                                 )
+              kompile_opts+=( -ccopt ${INSTALL_INCLUDE}/c/mnemonic.cpp                             )
+              kompile_opts+=( -ccopt ${INSTALL_INCLUDE}/c/hooks.cpp                                )
+              kompile_opts+=( -ccopt -g -ccopt -std=c++14                                          )
+              kompile_opts+=( -ccopt -lcryptopp -ccopt -lsecp256k1 -ccopt -lff -ccopt -lcurl -ccopt -lssl -ccopt -lcrypto )
+              if [[ "$(uname -s)" == 'Linux' ]]; then
+                  kompile_opts+=( -ccopt -lprocps )
+              elif [[ "$(uname -s)" == 'Darwin' ]]; then
+                  openssl_root="$(brew --prefix openssl)"
+                  bitcoin_libexec="$(brew --prefix libbitcoin)/libexec"
+                  brew_root="$(brew --prefix)"
+                  kompile_opts+=( -ccopt -I${brew_root}/include -ccopt -L${brew_root}/lib             )
+                  kompile_opts+=( -ccopt -I${openssl_root}/include -ccopt -L${openssl_root}/lib       )
+                  kompile_opts+=( -ccopt -I${bitcoin_libexec}/include -ccopt -L${bitcoin_libexec}/lib )
+              fi
+              ;;
+    esac
     execute kompile "${kompile_opts[@]}" "$@"
 }
 
@@ -203,7 +205,7 @@ if [[ "${run_command}" == 'version' ]] || [[ "${run_command}" == '--version' ]];
     exit 0
 fi
 
-backend="avm-llvm"
+backend="llvm"
 backend_dir=""
 depth=
 teal_sources=
@@ -226,10 +228,7 @@ done
 [[ "${#args[@]}" -eq 0 ]] || set -- "${args[@]}"
 ! ${debug} || set -x
 
-case "$backend" in
-    llvm) backend=avm-llvm ;;
-esac
-backend_dir="${backend_dir:-${INSTALL_LIB}/$backend}"
+backend_dir="${backend_dir:-${INSTALL_LIB}/avm-$backend}"
 
 run_file="$1" ; shift
 
