@@ -228,7 +228,7 @@ avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled
 
 build-avm: $(KAVM_LIB)/$(avm_kompiled)
 
-$(KAVM_LIB)/$(avm_kompiled): $(avm_includes) $(hook_includes) $(libff_out) $(plugin_includes) $(plugin_c_includes)
+$(KAVM_LIB)/$(avm_kompiled): $(KAVM_LIB)/version $(libff_out)
 	$(KOMPILE_AVM) $(KAVM_INCLUDE)/kframework/$(avm_main_file)                     \
 	                --directory $(KAVM_LIB)/$(avm_dir)  \
 	                --main-module $(avm_main_module)     \
@@ -241,8 +241,7 @@ clean-avm:
 
 # Runners/Helpers
 
-kavm_includes := $(teal_includes)
-includes      := $(kavm_includes) $(plugin_includes)
+includes := $(avm_includes) $(plugin_includes) $(plugin_c_includes) $(hook_includes)
 
 kavm_bin_files := kavm
 kavm_bins      := $(patsubst %, $(KAVM_BIN)/%, $(kavm_bin_files))
@@ -334,11 +333,11 @@ avm_prove_tests := $(wildcard tests/specs/*-spec.k)
 
 test-avm-prove: $(avm_prove_tests:=.prove)
 
-tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_BIN)/$(KAVM)
+tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
 	$(KAVM) prove --directory tests/specs tests/specs/$*-spec.k
 
-tests/specs/verification-kompiled/timestamp: tests/specs/verification.k $(kavm_includes)
-	kompile $< --backend haskell --directory tests/specs $(K_INCLUDES)
+tests/specs/verification-kompiled/timestamp: tests/specs/verification.k
+	$(KAVM) kompile $< --backend haskell --directory tests/specs
 
 #######
 ## kavm
