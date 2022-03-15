@@ -33,12 +33,51 @@ INSTALL_LIB="$(dirname ${INSTALL_BIN})/lib/kavm"
 INSTALL_INCLUDE=${INSTALL_LIB}/include
 
 install_k_bin=${INSTALL_LIB}/kframework/bin
+plugin_include=${INSTALL_LIB}/blockchain-k-plugin/include
+libff_dir=${INSTALL_LIB}/libff
 
 export PATH="$install_k_bin:$INSTALL_BIN:$INSTALL_LIB:$PATH"
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-}:/usr/local/lib
 
 # Runners
 # -------
+
+run_kompile() {
+    local kompile_opts openssl_root bitcoin_libexec brew_root
+
+    kompile_opts=( "${run_file}" --directory "${backend_dir}"                            )
+    kompile_opts+=( --md-selector "k & ((! type) | exec)"                                )
+    kompile_opts+=( -I "${INSTALL_INCLUDE}/kframework" -I "${plugin_include}/kframework" )
+    kompile_opts+=( --hook-namespaces "KRYPTO CLARITY"                                   )
+    kompile_opts+=( --emit-json                                                          )
+    kompile_opts+=( --backend "$backend"                                                 )
+    ! ${verbose} || kompile_opts+=(--verbose)
+
+    case "$backend" in
+        llvm) kompile_opts+=( -ccopt -I${libff_dir}/include -ccopt -L${libff_dir}/lib              )
+              kompile_opts+=( -ccopt ${plugin_include}/c/plugin_util.cpp                           )
+              kompile_opts+=( -ccopt ${plugin_include}/c/crypto.cpp                                )
+              kompile_opts+=( -ccopt ${plugin_include}/c/blake2.cpp                                )
+              kompile_opts+=( -ccopt ${INSTALL_INCLUDE}/c/algorand.cpp                             )
+              kompile_opts+=( -ccopt ${INSTALL_INCLUDE}/c/base.cpp                                 )
+              kompile_opts+=( -ccopt ${INSTALL_INCLUDE}/c/mnemonic.cpp                             )
+              kompile_opts+=( -ccopt ${INSTALL_INCLUDE}/c/hooks.cpp                                )
+              kompile_opts+=( -ccopt -g -ccopt -std=c++14                                          )
+              kompile_opts+=( -ccopt -lcryptopp -ccopt -lsecp256k1 -ccopt -lff -ccopt -lcurl -ccopt -lssl -ccopt -lcrypto )
+              if [[ "$(uname -s)" == 'Linux' ]]; then
+                  kompile_opts+=( -ccopt -lprocps )
+              elif [[ "$(uname -s)" == 'Darwin' ]]; then
+                  openssl_root="$(brew --prefix openssl)"
+                  bitcoin_libexec="$(brew --prefix libbitcoin)/libexec"
+                  brew_root="$(brew --prefix)"
+                  kompile_opts+=( -ccopt -I${brew_root}/include -ccopt -L${brew_root}/lib             )
+                  kompile_opts+=( -ccopt -I${openssl_root}/include -ccopt -L${openssl_root}/lib       )
+                  kompile_opts+=( -ccopt -I${bitcoin_libexec}/include -ccopt -L${bitcoin_libexec}/lib )
+              fi
+              ;;
+    esac
+    execute kompile "${kompile_opts[@]}" "$@"
+}
 
 run_kast() {
     local output_mode kast_args
@@ -103,18 +142,20 @@ run_prove() {
 
 display_help() {
     echo "
-  Usage: $0 kast  <options> <pgm>  <output format> <K arg>*
-         $0 parse <options> <pgm>
-         $0 run   <options> <pgm>  <LLVM KRun arg>*
-         $0 prove <options> <spec> <KProve arg>*
+  Usage: $0 kast    <options> <pgm>  <output format> <K arg>*
+         $0 parse   <options> <pgm>
+         $0 run     <options> <pgm>  <LLVM KRun arg>*
+         $0 prove   <options> <spec> <KProve arg>*
+         $0 kompile <options> <main> <Kompile arg>*
 
          $0 [help|--help|version|--version]
 
   Description:
-         $0 kast  : Parse an AVM simulation scenario or a TEAL program and pretty print it.
-         $0 parse : Parse an AVM simulation scenario or a TEAL program and return true if well-formed.
-         $0 run   : Run a AVM simulation scenario.
-         $0 prove : [NOT YET IMPLEMENTED] Run a reachability proof using KAVM symbolic execution.
+         $0 kast    : Parse an AVM simulation scenario or a TEAL program and pretty print it.
+         $0 parse   : Parse an AVM simulation scenario or a TEAL program and return true if well-formed.
+         $0 run     : Run a AVM simulation scenario.
+         $0 prove   : [NOT YET IMPLEMENTED] Run a reachability proof using KAVM symbolic execution.
+         $0 kompile : Kompile a definition that uses KAVM
 
          $0 help    : Display this help message.
          $0 version : Display the versions of ${TOOL_NAME}, K, Kore, and Z3 in use.
@@ -140,9 +181,11 @@ display_help() {
   Note:
         <pgm> is a path to a file containing the program/test.
         <spec> is a K specification to be proved.
+        <main> is a K definition to be kompiled, which may include files from KAVM.
         <K arg> is an argument you want to pass to K.
         <LLVM KRun arg> are arguments to pass to llvm-krun.
         <KProve arg> are arguments to pass to the prover.
+        <Kompile arg> are arguments to pass to kompile.
         <output format> is the format for Kast to output the term in.
 "
 }
@@ -162,7 +205,7 @@ if [[ "${run_command}" == 'version' ]] || [[ "${run_command}" == '--version' ]];
     exit 0
 fi
 
-backend="avm-llvm"
+backend="llvm"
 backend_dir=""
 depth=
 teal_sources=
@@ -171,7 +214,7 @@ args=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --backend)       backend="$2"      ; shift 2 ;;
-        --backend-dir)   backend_dir="$2"  ; shift 2 ;;
+        --directory)     backend_dir="$2"  ; shift 2 ;;
         --debug)         debug=true        ; shift   ;;
         --depth)         depth=$2          ; shift 2 ;;
         --stderr)        stderr=true       ; shift   ;;
@@ -185,19 +228,17 @@ done
 [[ "${#args[@]}" -eq 0 ]] || set -- "${args[@]}"
 ! ${debug} || set -x
 
-case "$backend" in
-    llvm) backend=avm-llvm ;;
-esac
-backend_dir="${backend_dir:-${INSTALL_LIB}/$backend}"
+backend_dir="${backend_dir:-${INSTALL_LIB}/avm-$backend}"
 
 run_file="$1" ; shift
 
 # Invoke the appropriate runner
 case "${run_command}" in
     # Running
-    kast)  run_kast  "$@"                                    ;;
-    parse) run_parse "$@"                                    ;;
-    run)   run_krun  "$@"                                    ;;
-    prove) run_prove "$@"                                    ;;
-    *)     $0 help ; fatal "Unknown command: ${run_command}" ;;
+    kompile) run_kompile "$@"                                  ;;
+    kast)    run_kast    "$@"                                  ;;
+    parse)   run_parse   "$@"                                  ;;
+    run)     run_krun    "$@"                                  ;;
+    prove)   run_prove   "$@"                                  ;;
+    *)       $0 help ; fatal "Unknown command: ${run_command}" ;;
 esac

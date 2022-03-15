@@ -48,7 +48,7 @@ endif
 export K_OPTS
 
 .PHONY: all clean distclean install uninstall                                         \
-        deps k-deps libsecp256k1 libff                                                \
+        deps k-deps libsecp256k1 libff plugin-deps hook-deps                          \
         build build-avm build-kavm                                                    \
         test test-avm
 .SECONDARY:
@@ -59,17 +59,10 @@ all: build
 # ------------------
 
 libsecp256k1_out := $(LOCAL_LIB)/pkgconfig/libsecp256k1.pc
-libff_out        := $(LOCAL_LIB)/libff.a
+libff_out        := $(KAVM_LIB)/libff/lib/libff.a
 
 libsecp256k1: $(libsecp256k1_out)
 libff:        $(libff_out)
-
-plugin_k        := blockchain-k-plugin/krypto.md
-plugin_includes := $(patsubst %, $(KAVM_INCLUDE)/kframework/%, $(plugin_k))
-
-$(KAVM_INCLUDE)/kframework/blockchain-k-plugin/%: $(PLUGIN_SUBMODULE)/plugin/%
-	@mkdir -p $(dir $@)
-	install $< $@
 
 $(libsecp256k1_out): $(PLUGIN_SUBMODULE)/deps/secp256k1/autogen.sh
 	cd $(PLUGIN_SUBMODULE) && CXXFLAGS="$(CXXFLAGS) -std=c++14" make PREFIX="$(BUILD_LOCAL)" INSTALL_PREFIX="$(BUILD_LOCAL)" libsecp256k1
@@ -86,10 +79,10 @@ endif
 
 $(libff_out): $(PLUGIN_SUBMODULE)/deps/libff/CMakeLists.txt
 	@mkdir -p $(PLUGIN_SUBMODULE)/deps/libff/build
-	cd $(PLUGIN_SUBMODULE)/deps/libff/build                                                               \
-	    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(BUILD_LOCAL) $(LIBFF_CMAKE_FLAGS) \
-	    && make -s -j4                                                                                    \
-	    && make install
+	cd $(PLUGIN_SUBMODULE)/deps/libff/build                                                                     \
+	    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(INSTALL_LIB)/libff $(LIBFF_CMAKE_FLAGS) \
+	    && make -s -j4                                                                                          \
+	    && make install DESTDIR=$(CURDIR)/$(BUILD_DIR)
 
 # K Dependencies
 # --------------
@@ -120,19 +113,45 @@ $(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
 
 HOOK_NAMESPACES   := KRYPTO CLARITY
 
-HOOK_PLUGIN_FILES := $(PLUGIN_SUBMODULE)/plugin-c/plugin_util.cpp \
-                     $(PLUGIN_SUBMODULE)/plugin-c/crypto.cpp      \
-                     $(PLUGIN_SUBMODULE)/plugin-c/blake2.cpp
+plugin_include    := $(abspath $(KAVM_LIB)/blockchain-k-plugin/include)
+plugin_k          := krypto.md
+plugin_c          := plugin_util.cpp crypto.cpp blake2.cpp plugin_util.h blake2.h
+plugin_includes   := $(patsubst %, $(plugin_include)/kframework/%, $(plugin_k))
+plugin_c_includes := $(patsubst %, $(plugin_include)/c/%,          $(plugin_c))
 
-HOOK_ALGO_FILES   := $(CURDIR)/hooks/algorand.cpp \
-                     $(CURDIR)/hooks/base.cpp     \
-                     $(CURDIR)/hooks/mnemonic.cpp
+HOOK_PLUGIN_FILES := $(plugin_include)/c/plugin_util.cpp \
+                     $(plugin_include)/c/crypto.cpp      \
+                     $(plugin_include)/c/blake2.cpp
 
-HOOK_SHARED_FILES := $(CURDIR)/hooks/hooks.cpp
+$(plugin_include)/c/%: $(PLUGIN_SUBMODULE)/plugin-c/%
+	@mkdir -p $(dir $@)
+	install $< $@
+
+$(plugin_include)/kframework/%: $(PLUGIN_SUBMODULE)/plugin/%
+	@mkdir -p $(dir $@)
+	install $< $@
+
+plugin-deps: $(plugin_includes) $(plugin_c_includes)
+
+hook_include  := $(abspath $(KAVM_LIB)/include/c)
+hook_c        := algorand.cpp base.cpp hooks.cpp mnemonic.cpp algorand.h base.h mnemonic.h
+hook_includes := $(patsubst %, $(hook_include)/%, $(hook_c))
+
+HOOK_ALGO_FILES := $(hook_include)/algorand.cpp \
+                   $(hook_include)/base.cpp     \
+                   $(hook_include)/mnemonic.cpp \
+                   $(hook_include)/hooks.cpp
+
+$(hook_include)/%: $(CURDIR)/hooks/%
+	@mkdir -p $(dir $@)
+	install $< $@
+
+hook-deps: $(hook_includes)
 
 HOOK_CC_OPTS      := -g -std=c++14                                     \
-                     -L$(LOCAL_LIB)                                    \
-                     -I$(PLUGIN_SUBMODULE)/plugin-c                    \
+                     -L$(CURDIR)/$(KAVM_LIB)/libff/lib                 \
+                     -I$(CURDIR)/$(KAVM_LIB)/libff/include             \
+                     -I$(plugin_include)/c                             \
                      -lcryptopp -lsecp256k1 -lff -lcurl -lssl -lcrypto
 
 ifeq ($(UNAME_S),Darwin)
@@ -151,7 +170,7 @@ endif
 HOOK_KOMPILE_OPTS := --hook-namespaces "$(HOOK_NAMESPACES)"                     \
                      $(addprefix -ccopt , $(HOOK_PLUGIN_FILES) $(HOOK_CC_OPTS))
 
-AVM_HOOK_KOMPILE_OPTS  := $(addprefix -ccopt , $(HOOK_SHARED_FILES) $(HOOK_ALGO_FILES))
+AVM_HOOK_KOMPILE_OPTS  := $(addprefix -ccopt , $(HOOK_ALGO_FILES))
 
 ifneq ($(COVERAGE),)
     COVERAGE_OPTS := --coverage
@@ -161,7 +180,8 @@ endif
 
 K_INCLUDES   :=                                         \
                 -I $(CURDIR)/$(KAVM_INCLUDE)/kframework \
-                -I $(INSTALL_INCLUDE)/kframework
+                -I $(INSTALL_INCLUDE)/kframework        \
+                -I $(plugin_include)/kframework
 KOMPILE_OPTS += --verbose --gen-glr-bison-parser $(COVERAGE_OPTS) $(K_INCLUDES)
 
 ifneq (,$(RELEASE))
@@ -190,15 +210,14 @@ avm_files    :=                            \
 
 avm_includes := $(patsubst %, $(KAVM_INCLUDE)/kframework/%, $(avm_files))
 
-AVM_KOMPILE_OPTS += --emit-json --verbose $(COVERAGE_OPTS) $(K_INCLUDES)
+AVM_KOMPILE_OPTS += --verbose $(COVERAGE_OPTS)
 tangle_avm            := k & ((! type) | exec)
 
 ifeq ($(K_BACKEND),)
   K_BACKEND := llvm
 endif
 
-KOMPILE_AVM       := kompile --backend $(K_BACKEND) --md-selector "$(tangle_avm)"          \
-                          $(AVM_KOMPILE_OPTS) $(HOOK_KOMPILE_OPTS) $(AVM_HOOK_KOMPILE_OPTS)
+KOMPILE_AVM := kavm kompile
 
 avm_dir           := avm-llvm
 avm_main_module   := AVM-EXECUTION
@@ -209,11 +228,12 @@ avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled
 
 build-avm: $(KAVM_LIB)/$(avm_kompiled)
 
-$(KAVM_LIB)/$(avm_kompiled): $(avm_includes) $(HOOK_PLUGIN_FILES) $(HOOK_SHARED_FILES) $(libff_out) $(plugin_includes)
+$(KAVM_LIB)/$(avm_kompiled): $(KAVM_LIB)/version $(libff_out)
 	$(KOMPILE_AVM) $(KAVM_INCLUDE)/kframework/$(avm_main_file)                     \
 	                --directory $(KAVM_LIB)/$(avm_dir)  \
 	                --main-module $(avm_main_module)     \
-	                --syntax-module $(avm_syntax_module)
+	                --syntax-module $(avm_syntax_module) \
+	                $(AVM_KOMPILE_OPTS)
 
 clean-avm:
 	rm -r $(KAVM_LIB)/$(avm_kompiled)
@@ -221,8 +241,7 @@ clean-avm:
 
 # Runners/Helpers
 
-kavm_includes := $(teal_includes)
-includes      := $(kavm_includes) $(plugin_includes)
+includes := $(avm_includes) $(plugin_includes) $(plugin_c_includes) $(hook_includes)
 
 kavm_bin_files := kavm
 kavm_bins      := $(patsubst %, $(KAVM_BIN)/%, $(kavm_bin_files))
@@ -314,11 +333,11 @@ avm_prove_tests := $(wildcard tests/specs/*-spec.k)
 
 test-avm-prove: $(avm_prove_tests:=.prove)
 
-tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_BIN)/$(KAVM)
-	$(KAVM) prove --backend-dir tests/specs tests/specs/$*-spec.k
+tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
+	$(KAVM) prove --directory tests/specs tests/specs/$*-spec.k
 
-tests/specs/verification-kompiled/timestamp: tests/specs/verification.k $(kavm_includes)
-	kompile $< --backend haskell --directory tests/specs $(K_INCLUDES)
+tests/specs/verification-kompiled/timestamp: tests/specs/verification.k
+	$(KAVM) kompile $< --backend haskell --directory tests/specs
 
 #######
 ## kavm
