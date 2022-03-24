@@ -46,7 +46,6 @@ run_kompile() {
     local kompile_opts openssl_root bitcoin_libexec brew_root
 
     kompile_opts=( "${run_file}" --directory "${backend_dir}"                            )
-    kompile_opts+=( --md-selector "k & ((! type) | exec)"                                )
     kompile_opts+=( -I "${INSTALL_INCLUDE}/kframework" -I "${plugin_include}/kframework" )
     kompile_opts+=( --hook-namespaces "KRYPTO CLARITY"                                   )
     kompile_opts+=( --emit-json                                                          )
