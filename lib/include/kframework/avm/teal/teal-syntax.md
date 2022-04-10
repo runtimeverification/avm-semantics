@@ -397,9 +397,16 @@ We define the syntax of TEAL's comments (using K's built-in sort `#Layout`), alo
   syntax #Layout  ::= r"\\/\\/[^\\n\\r]*" // comments
                     | r"([\\ \\n\\r\\t])" // whitespace
 
-  syntax Label           ::= r"[_a-zA-Z][_0-9a-zA-Z]*" [token]
-  syntax HexToken        ::= r"0x[0-9a-fA-F]+"         [token]
-  syntax TAddressLiteral ::= r"[0-9A-Z]{58}"           [prec(1),token]
+  syntax lexical Digit     = r"[0-9]"
+  syntax lexical HexDigit  = r"[0-9a-fA-F]"
+  syntax lexical Alpha     = r"[a-zA-Z]"
+  syntax lexical Alnum     = r"{Alpha}|{Digit}"
+  syntax lexical AlnumUbar = r"{Alnum}|_"
+  syntax lexical Special   = r"[-!?+<>=/*]"
+
+  syntax Label           ::= r"({AlnumUbar}|{Special})+" [token]
+  syntax HexToken        ::= r"0x{HexDigit}+"            [prec(2),token]
+  syntax TAddressLiteral ::= r"[0-9A-Z]{58}"             [prec(1),token]
 ```
 
 NOTE: the following definitions are _disabled_.
