@@ -50,6 +50,20 @@ module TEAL-FIELDS
                             | "AssetClawback" [klabel(AssetClawback), symbol]
 ```
 
+### `app_params_get` Fields
+
+```k
+  syntax AppParamsField ::= "AppApprovalProgram" [klabel(AppApprovalProgram), symbol]
+                          | "AppClearStateProgram" [klabel(AppClearStateProgram), symbol]
+                          | "AppGlobalNumUint" [klabel(AppGlobalNumUint), symbol]
+                          | "AppGlobalNumByteSlice" [klabel(AppGlobalNumByteSlice), symbol]
+                          | "AppLocalNumUint" [klabel(AppLocalNumUint), symbol]
+                          | "AppLocalNumByteSlice" [klabel(AppLocalNumByteSlice), symbol]
+                          | "AppExtraProgramPages" [klabel(AppExtraProgramPages), symbol]
+                          | "AppCreator" [klabel(AppCreator), symbol]
+                          | "AppAddress" [klabel(AppAddress), symbol]
+```
+
 ## Transaction Fields
 
 ### `txn`/`gtxn` fields

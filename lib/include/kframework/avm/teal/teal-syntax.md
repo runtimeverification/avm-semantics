@@ -297,7 +297,8 @@ module TEAL-OPCODES
   syntax UnaryStateOpCode   ::= "balance"
                               | "app_global_del"
                               | "app_global_get"
-                              | "asset_params_get"  AssetParamsField
+                              | "asset_params_get" AssetParamsField
+                              | "app_params_get" AppParamsField
   syntax BinaryStateOpCode  ::= "app_opted_in"
                               | "app_local_get"
                               | "app_global_get_ex"
@@ -557,6 +558,7 @@ module TEAL-UNPARSER
   rule unparseTEAL(app_global_del)                => "app_global_del"
   rule unparseTEAL(app_global_get)                => "app_global_get"
   rule unparseTEAL(asset_params_get FieldName)    => "asset_params_get" +&+ TealField2String(FieldName:AssetParamsField)
+  rule unparseTEAL(app_params_get FieldName)      => "app_params_get" +&+ TealField2String(FieldName:AppParamsField)
   rule unparseTEAL(app_opted_in)                  => "app_opted_in"
   rule unparseTEAL(app_local_get)                 => "app_local_get"
   rule unparseTEAL(app_global_get_ex)             => "app_global_get_ex"
@@ -576,6 +578,7 @@ module TEAL-UNPARSER
   syntax String ::= TealField2String(GlobalField)       [function]
                   | TealField2String(AssetHoldingField) [function]
                   | TealField2String(AssetParamsField)  [function]
+                  | TealField2String(AppParamsField)    [function]
                   | TealField2String(TxnField)          [function]
                   | TealField2String(TxnaFieldExt)      [function]
   // ---------------------------------------------------------------------------------------
@@ -601,6 +604,17 @@ module TEAL-UNPARSER
   rule TealField2String(AssetReserve)             => "AssetReserve"
   rule TealField2String(AssetFreeze)              => "AssetFreeze"
   rule TealField2String(AssetClawback)            => "AssetClawback"
+
+  rule TealField2String(AppApprovalProgram)       => "AppApprovalProgram"
+  rule TealField2String(AppClearStateProgram)     => "AppClearStateProgram"
+  rule TealField2String(AppGlobalNumUint)         => "AppGlobalNumUint"
+  rule TealField2String(AppGlobalNumByteSlice)    => "AppGlobalNumByteSlice"
+  rule TealField2String(AppLocalNumUint)          => "AppLocalNumUint"
+  rule TealField2String(AppLocalNumByteSlice)     => "AppLocalNumByteSlice"
+  rule TealField2String(AppExtraProgramPages)     => "AppExtraProgramPages"
+  rule TealField2String(AppCreator)               => "AppCreator"
+  rule TealField2String(AppAddress)               => "AppAddress"
+
   rule TealField2String(TxID)                     => "TxID"
   rule TealField2String(Sender)                   => "Sender"
   rule TealField2String(Fee)                      => "Fee"

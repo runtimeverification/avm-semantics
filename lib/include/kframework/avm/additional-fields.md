@@ -38,6 +38,7 @@ module ADDITIONAL-FIELDS
 ```k
   syntax TealField ::= AssetHoldingField
                      | AssetParamsField
+                     | AppParamsField
                      | AssetField
                      | AccountField
                      | VersionField
