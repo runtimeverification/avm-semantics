@@ -15,6 +15,8 @@ public:
   std::string as_string;
   bytes public_key;
   bool is_zero() const;
+  static bool is_valid(std::string b32form);
+  static bool is_valid_checksummed(bytes public_key_with_checksum);
 private:
   Address(std::string s, bytes with_csum);
   Address(bytes public_key, bytes with_csum);

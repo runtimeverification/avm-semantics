@@ -171,11 +171,17 @@ We also need hooks which convert between the string and byte representations of 
   syntax Bytes  ::= DecodeAddressString(String) [function]
   syntax String ::= EncodeAddressBytes(Bytes)   [function]
   // -----------------------------------------------------
-  rule DecodeAddressString(S) => DecodeAddressStringInternal(S) requires lengthString(S) ==Int 58
+  rule DecodeAddressString(S) => DecodeAddressStringInternal(S) requires IsAddressValid(S)
   rule EncodeAddressBytes(B)  => EncodeAddressBytesInternal(B)  requires lengthBytes(B)  ==Int 32
 
   syntax Bytes  ::= DecodeAddressStringInternal(String) [function, hook(CLARITY.address_decode)]
   syntax String ::= EncodeAddressBytesInternal(Bytes)   [function, hook(CLARITY.address_encode)]
+```
+
+We also have a hook just for checking whether an address is valid.
+
+```k
+  syntax Bool ::= IsAddressValid(String) [function, hook(CLARITY.check_address)]
 ```
 
 ### TEAL Value Processing

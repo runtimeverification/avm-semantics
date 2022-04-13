@@ -54,3 +54,11 @@ bytes b32_decode(const std::string &in) {
   }
   return out;
 }
+
+bool uses_b32_alphabet(const std::string& in) {
+  static std::vector<int> dd = decode32_digits();
+  for (auto c : in) {
+    if (dd[c] == -1) return false;
+  }
+  return true;
+}
