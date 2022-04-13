@@ -45,6 +45,18 @@ Address::Address(bytes public_key, bytes checksummed) :
   assert(public_key.size() == 32);
 }
 
+bool Address::is_valid(const std::string address) {
+  return address.size() == 58
+      && uses_b32_alphabet(address)
+      && Address::is_valid_checksummed(b32_decode(address));
+}
+
+bool Address::is_valid_checksummed(const bytes checksummed_key) {
+  if (checksummed_key.size() != 36) return false;
+  bytes key = bytes{checksummed_key.begin(), checksummed_key.begin()+32};
+  return checksummed_key == checksummed(key);
+}
+
 std::ostream&
 operator<<(std::ostream& os, const Address& addr) {
   os << addr.as_string;
