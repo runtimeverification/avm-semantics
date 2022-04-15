@@ -19,6 +19,7 @@ KAVM_RELEASE_TAG ?= $(shell git describe --tags --dirty --long)
 KAVM_BIN         := $(BUILD_DIR)$(INSTALL_BIN)
 KAVM_LIB         := $(BUILD_DIR)$(INSTALL_LIB)
 KAVM_INCLUDE     := $(KAVM_LIB)/include
+KAVM_SCRIPTS     := $(KAVM_LIB)/scripts
 KAVM_K_BIN       := $(KAVM_LIB)/kframework/bin
 KAVM             := kavm
 KAVM_LIB_ABS     := $(abspath $(KAVM_LIB))
@@ -243,6 +244,8 @@ clean-avm:
 
 includes := $(avm_includes) $(plugin_includes) $(plugin_c_includes) $(hook_includes)
 
+kavm_scripts := $(patsubst %, $(KAVM_SCRIPTS)/%, parse-avm-simulation.sh  parse-teal-programs.sh)
+
 kavm_bin_files := kavm
 kavm_bins      := $(patsubst %, $(KAVM_BIN)/%, $(kavm_bin_files))
 
@@ -251,7 +254,7 @@ kavm_libs      := $(patsubst %, $(KAVM_LIB)/%, $(kavm_lib_files))
 
 build-kavm: $(KAVM_LIB)/version
 
-$(KAVM_LIB)/version: $(includes) $(kavm_bins)
+$(KAVM_LIB)/version: $(includes) $(kavm_scripts) $(kavm_bins)
 
 $(KAVM_BIN)/%: %
 	@mkdir -p $(dir $@)
