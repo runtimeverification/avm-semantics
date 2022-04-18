@@ -123,10 +123,10 @@ run_krun() {
     done
     teal_programs+=".TealPrograms"
     krun_args+=(-cTEAL_PROGRAMS="$teal_programs")
-    krun_args+=(-pTEAL_PROGRAMS="./scripts/parse-teal-programs.sh")
+    krun_args+=(-pTEAL_PROGRAMS="$INSTALL_LIB/scripts/parse-teal-programs.sh")
     # run_file will contain an AVM simulation scenario,
     # to be parsed with parse-avm-simulation.sh
-    krun_args+=(--parser "./scripts/parse-avm-simulation.sh")
+    krun_args+=(--parser "$INSTALL_LIB/scripts/parse-avm-simulation.sh")
     execute krun "${krun_args[@]}" "${run_file}" "$@"
 }
 
@@ -227,7 +227,7 @@ done
 [[ "${#args[@]}" -eq 0 ]] || set -- "${args[@]}"
 ! ${debug} || set -x
 
-backend_dir="${backend_dir:-${INSTALL_LIB}/avm-$backend}"
+export backend_dir="${backend_dir:-${INSTALL_LIB}/avm-$backend}"
 
 run_file="$1" ; shift
 
