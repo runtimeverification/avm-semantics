@@ -1,5 +1,11 @@
 pipeline {
-  agent { label 'docker' }
+  agent {
+    label 'docker'
+    dockerfile {
+      additionalBuildArgs '--build-arg K_COMMIT="${K_VERSION}" --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)'
+      reuseNode true
+    }
+  }
   environment {
     VERSION   = '0.1.0'
     LONG_REV  = """${sh(returnStdout: true, script: 'git rev-parse HEAD').trim()}"""
@@ -13,12 +19,6 @@ pipeline {
       steps { script { currentBuild.displayName = "PR ${env.CHANGE_ID}: ${env.CHANGE_TITLE}" } }
     }
     stage('Build and Test') {
-      agent {
-        dockerfile {
-          additionalBuildArgs '--build-arg K_COMMIT="${K_VERSION}" --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)'
-          reuseNode true
-        }
-      }
       stages {
         stage('Build') { steps { sh 'make build -j4' } }
         stage('Test kavm parse') {
@@ -33,6 +33,19 @@ pipeline {
           options { timeout(time: 20, unit: 'MINUTES') }
           parallel {
             stage('AVM tests') { steps { sh 'make -j4 test-avm' } }
+          }
+        }
+      }
+    }
+    stage('Deploy') {
+      stages {
+        stage('Update Dependents') {
+          steps {
+            build job: 'DevOps/master', propagate: false, wait: false                                                     \
+                , parameters: [ booleanParam ( name: 'UPDATE_DEPS'         , value: true                                ) \
+                              , string       ( name: 'UPDATE_DEPS_REPO'    , value: 'runtimeverification/avm-semantics' ) \
+                              , string       ( name: 'UPDATE_DEPS_VERSION' , value: "${env.LONG_REV}")                    \
+                              ]
           }
         }
       }
