@@ -15,7 +15,6 @@ pipeline {
     stage('Build and Test') {
       agent {
         dockerfile {
-          label 'docker'
           additionalBuildArgs '--build-arg K_COMMIT="${K_VERSION}" --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)'
           reuseNode true
         }
@@ -41,7 +40,6 @@ pipeline {
     stage('Deploy') {
       agent {
         dockerfile {
-          label 'docker'
           additionalBuildArgs '--build-arg K_COMMIT="${K_VERSION}" --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)'
           reuseNode true
         }
