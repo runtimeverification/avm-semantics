@@ -1,4 +1,5 @@
 pipeline {
+  environment { K_VERSION = """${sh(returnStdout: true, script: 'cd deps/k && git tag --points-at HEAD | cut --characters=2-').trim()}""" }
   agent {
     dockerfile {
       label 'docker'
