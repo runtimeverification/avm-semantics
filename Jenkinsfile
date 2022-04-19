@@ -37,5 +37,28 @@ pipeline {
         }
       }
     }
+    stage('Deploy') {
+      agent {
+        dockerfile {
+          additionalBuildArgs '--build-arg K_COMMIT="${K_VERSION}" --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)'
+          reuseNode true
+        }
+      }
+      when {
+        branch 'master'
+        beforeAgent true
+      }
+      stages {
+        stage('Update Dependents') {
+          steps {
+            build job: 'DevOps/master', propagate: false, wait: false                                                     \
+                , parameters: [ booleanParam ( name: 'UPDATE_DEPS'         , value: true                                ) \
+                              , string       ( name: 'UPDATE_DEPS_REPO'    , value: 'runtimeverification/avm-semantics' ) \
+                              , string       ( name: 'UPDATE_DEPS_VERSION' , value: "${env.LONG_REV}")                    \
+                              ]
+          }
+        }
+      }
+    }
   }
 }
