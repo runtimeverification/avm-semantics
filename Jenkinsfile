@@ -1,12 +1,6 @@
 pipeline {
   environment { K_VERSION = """${sh(returnStdout: true, script: 'cd deps/k && git tag --points-at HEAD | cut --characters=2-').trim()}""" }
-  agent {
-    dockerfile {
-      label 'docker'
-      additionalBuildArgs '--build-arg K_COMMIT="${K_VERSION}" --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)'
-      reuseNode true
-    }
-  }
+  agent { label 'docker' }
   environment {
     VERSION   = '0.1.0'
     LONG_REV  = """${sh(returnStdout: true, script: 'git rev-parse HEAD').trim()}"""
@@ -20,6 +14,13 @@ pipeline {
       steps { script { currentBuild.displayName = "PR ${env.CHANGE_ID}: ${env.CHANGE_TITLE}" } }
     }
     stage('Build and Test') {
+      agent {
+        dockerfile {
+          label 'docker'
+          additionalBuildArgs '--build-arg K_COMMIT="${K_VERSION}" --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)'
+          reuseNode true
+        }
+      }
       stages {
         stage('Build') { steps { sh 'make build -j4' } }
         stage('Test kavm parse') {
@@ -39,6 +40,13 @@ pipeline {
       }
     }
     stage('Deploy') {
+      agent {
+        dockerfile {
+          label 'docker'
+          additionalBuildArgs '--build-arg K_COMMIT="${K_VERSION}" --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)'
+          reuseNode true
+        }
+      }
       when {
         branch 'master'
         beforeAgent true
