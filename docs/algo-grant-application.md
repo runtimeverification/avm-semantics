@@ -14,7 +14,7 @@
 
 * **Estimated Total Cost of Project (In USD)**: 420000
 
-* **Provide The URL Of Your Project Repository**: https://github.com/runtimeverification/avm-semantics [Note: currently a private Github repo] 
+* **Provide The URL Of Your Project Repository**: https://github.com/runtimeverification/avm-semantics [Note: currently a private Github repo]
 
 * **Are you building on any other layer 1 blockchain?**: Yes: Ethereum, Tezos, Cardano, Polkadot, and Cosmos.
 
@@ -47,7 +47,7 @@ The solution is based on developing formal specifications of the TEAL language a
 
 ### Motivation:
 
-The Algorand DeFi ecosystem is experiencing a boom of new projects that utilise the platform's scalability and fast transaction finality. The developer community is vibrant, productive and supportive, as witnessed by the active developer-focused Discord community with nearly two thousand active members and many active discussions on Twitter. We also see a major surge of requests for security audits of Algorand smart contracts. 
+The Algorand DeFi ecosystem is experiencing a boom of new projects that utilise the platform's scalability and fast transaction finality. The developer community is vibrant, productive and supportive, as witnessed by the active developer-focused Discord community with nearly two thousand active members and many active discussions on Twitter. We also see a major surge of requests for security audits of Algorand smart contracts.
 
 Runtime Verification Inc is a leading security audit service provider for smart contracts, and the Algorand Foundation's Security Partner. The Algorand auditors team at RV has grown significantly over the past months, primarily in response to this surge in audit requests. While the auditing services we provide for Algroand at the moment mostly comprise manual code review and pen-and-paper reasoning, we already have clients approaching us and requesting full mechanised formal verification of their smart contracts.
 Besides traditional security audits, we have extensive experience of applying the K Framework to building mechanised formal proofs of smart contract correctness. The KEVM semantics of the Ethereum Virtual Machine is the bedrock of our verification toolchain for Ethereum smart contracts.
@@ -92,8 +92,13 @@ We envision the semantics to take as input the following:
 The purpose of the basic symbolic proof suite is to both serve as a sanity-check for the semantics, and to showcase the methodology of constructing specification for simple TEAL programs. It is essential for the specification to be clear and concise, and to only mention the state they absolutely must refer to. This becomes vital to retain ease of understanding as we scale up to larger proofs.
 **Deliverables**: A substantial suite of concrete unit-tests and symbolic proofs of correctness of TEAL programs.
 
-4. Case-study phase (4 weeks) Having the complete semantics in place, we will battle-test it to verify a public mainnet-launched smart contract. We would like this effort to benefit the community; hence, we will pick a contract deployed by the Algorand Foundation. A good candidate is the Governance Rewards contract, which we have previously audited.
-**Deliverables**: A case-study of a real mainnet-launched smart contract verification.
+4. Case-study phase (4 weeks) Having the complete semantics in place, we will work on developing an add-on that will leverage the semantics to perform property-based testing of TEAL smart contracts:
+   - Provide a simple Python bindings to supply the semantics with the initial network state and the transaction group
+   - Leverage existing testing frameworks in the Python ecosystem, like `pytest` and Hypothesis, to drive the test generation and execution process
+**Deliverables**:
+    - A prototype command-line tool for describing and checking properties of TEAL smart contracts by testing
+    - Python bindings to enable programmatic interaction with the semantics
+    - Examples of properties and testing scenarios for a real-world smart contract
 
 ### Key Milestones:
 
@@ -101,8 +106,17 @@ There is one key milestone for each project phase as described above. The key mi
 - (2 weeks) Informal description of the semantics architecture of TEAL and its structures and behavior
 - (7 weeks) An executable, formal semantics for TEAL in K along with a set of tools (interpreter, symbolic execution engine, formal verifier)
 - (4 weeks) A test suite and a proof suite for TEAL (with documentation)
-- (4 weeks) A verified real-world-sized TEAL contract verified in KTEAL
+- (4 weeks) A case-study property testing tool developed on top of the semantics
 
+### Future Work
 
+We give a number of directions for developing the semantics and the tools on top of it in the future:
 
+- **Automatic symbolic proofs of common properties**
+  We have in the past developed a library of symbolic properties to test the compliance with ERC20 standard, which we have deployed as a push-button web-based tool (See https://erc20.fireflyblockchain.com/). The Algorand ecosystem has already seen a number of smart contract exploits that could have been prevented by a well-defined automated analysis. We propose to build such an automated analysis tool by collecting a curated set of properties and automatically checking them by symbolically executing the contract's code.
 
+- **From property-testing to formal proof**
+  The practise shows that for smart contract developers, it is relatively easy to make the jump from writing unit tests to writing property tests. When we get the engineers hooked on the property testing, we can seamlessly turn many property tests into symbolic proofs, without requiring any addition import from the user. Under the hood, the semantics will now be run in symbolic mode with the Haskell backend, and instead of testing the program with a randomly generated set of inputs, it will be executed symbolically.
+
+- **Community outreach: conference talks and workshops**
+  We are very happy to be vocal about our work, and present in to the community in an accessible way. We can deliver talks at developer conferences showcasing the semantics and add-on tools, as well as workshops for diverse audiences for hands-on expedience.
