@@ -297,7 +297,8 @@ module TEAL-OPCODES
   syntax UnaryStateOpCode   ::= "balance"
                               | "app_global_del"
                               | "app_global_get"
-                              | "asset_params_get"  AssetParamsField
+                              | "asset_params_get" AssetParamsField
+                              | "app_params_get" AppParamsField
   syntax BinaryStateOpCode  ::= "app_opted_in"
                               | "app_local_get"
                               | "app_global_get_ex"
@@ -397,9 +398,16 @@ We define the syntax of TEAL's comments (using K's built-in sort `#Layout`), alo
   syntax #Layout  ::= r"\\/\\/[^\\n\\r]*" // comments
                     | r"([\\ \\n\\r\\t])" // whitespace
 
-  syntax Label           ::= r"[_a-zA-Z][_0-9a-zA-Z]*" [token]
-  syntax HexToken        ::= r"0x[0-9a-fA-F]+"         [token]
-  syntax TAddressLiteral ::= r"[0-9A-Z]{58}"           [prec(1),token]
+  syntax lexical Digit     = r"[0-9]"
+  syntax lexical HexDigit  = r"[0-9a-fA-F]"
+  syntax lexical Alpha     = r"[a-zA-Z]"
+  syntax lexical Alnum     = r"{Alpha}|{Digit}"
+  syntax lexical AlnumUbar = r"{Alnum}|_"
+  syntax lexical Special   = r"[-!?+<>=/*]"
+
+  syntax Label           ::= r"({AlnumUbar}|{Special})+" [token]
+  syntax HexToken        ::= r"0x{HexDigit}+"            [prec(2),token]
+  syntax TAddressLiteral ::= r"[0-9A-Z]{58}"             [prec(1),token]
 ```
 
 NOTE: the following definitions are _disabled_.
@@ -550,6 +558,7 @@ module TEAL-UNPARSER
   rule unparseTEAL(app_global_del)                => "app_global_del"
   rule unparseTEAL(app_global_get)                => "app_global_get"
   rule unparseTEAL(asset_params_get FieldName)    => "asset_params_get" +&+ TealField2String(FieldName:AssetParamsField)
+  rule unparseTEAL(app_params_get FieldName)      => "app_params_get" +&+ TealField2String(FieldName:AppParamsField)
   rule unparseTEAL(app_opted_in)                  => "app_opted_in"
   rule unparseTEAL(app_local_get)                 => "app_local_get"
   rule unparseTEAL(app_global_get_ex)             => "app_global_get_ex"
@@ -569,6 +578,7 @@ module TEAL-UNPARSER
   syntax String ::= TealField2String(GlobalField)       [function]
                   | TealField2String(AssetHoldingField) [function]
                   | TealField2String(AssetParamsField)  [function]
+                  | TealField2String(AppParamsField)    [function]
                   | TealField2String(TxnField)          [function]
                   | TealField2String(TxnaFieldExt)      [function]
   // ---------------------------------------------------------------------------------------
@@ -594,6 +604,17 @@ module TEAL-UNPARSER
   rule TealField2String(AssetReserve)             => "AssetReserve"
   rule TealField2String(AssetFreeze)              => "AssetFreeze"
   rule TealField2String(AssetClawback)            => "AssetClawback"
+
+  rule TealField2String(AppApprovalProgram)       => "AppApprovalProgram"
+  rule TealField2String(AppClearStateProgram)     => "AppClearStateProgram"
+  rule TealField2String(AppGlobalNumUint)         => "AppGlobalNumUint"
+  rule TealField2String(AppGlobalNumByteSlice)    => "AppGlobalNumByteSlice"
+  rule TealField2String(AppLocalNumUint)          => "AppLocalNumUint"
+  rule TealField2String(AppLocalNumByteSlice)     => "AppLocalNumByteSlice"
+  rule TealField2String(AppExtraProgramPages)     => "AppExtraProgramPages"
+  rule TealField2String(AppCreator)               => "AppCreator"
+  rule TealField2String(AppAddress)               => "AppAddress"
+
   rule TealField2String(TxID)                     => "TxID"
   rule TealField2String(Sender)                   => "Sender"
   rule TealField2String(Fee)                      => "Fee"

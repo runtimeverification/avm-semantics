@@ -2,6 +2,7 @@ Algorand Transaction Representation
 ===================================
 
 ```k
+require "avm/teal/teal-fields.md"
 require "avm/teal/teal-types.md"
 ```
 
