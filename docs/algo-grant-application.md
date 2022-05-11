@@ -60,6 +60,8 @@ This project intends to build:
 1. a formal, executable and open-source semantics of TEAL available to everyone;
 2. through the Haskell backend of K, a symbolic execution engine and a formal verification tool for TEAL smart contracts;
 3. through the LLVM backend of K, a simulation and unit-testing framework (with coverage analysis) with performance that is comparable to that of the reference implementation.
+4. a Python library that can be used for programmatic interaction with the semantics in both simulation and symbolic execution modes from a Python program
+5. a prototype property testing framework with a Python API, supporting both concrete and symbolic modes
 
 ### Non-goals:
 
@@ -70,47 +72,61 @@ We do not intend to build a replacement of the existing Algorand node implementa
 
 We envision the semantics to take as input the following:
 1. an Algorand blockchain state, i.e. the lists and states of Accounts, ASAs and Applications;
-2. a description of an atomic transaction group; and perform the group's evaluation. The result should be either approval and the commitment of the new, altered blockchain state, or denial and the rollback to the previous valid state before group evaluation (see the attached TEAL execution flowchart). Note that, at least for now, we do not intend to model the evaluation of several transaction groups or the wider Algorand consensus.
+2. a description of an atomic transaction group,
+
+and perform the group's evaluation. The result should be either approval and the commitment of the new, altered blockchain state, or denial and the rollback to the previous valid state before group evaluation (see the attached TEAL execution flowchart). Note that, at least for now, we do not intend to model the evaluation of several transaction groups or the wider Algorand consensus.
 
 ### Project Phases and Timeline:
 
 1. Discovery phase (2 weeks). Over the past year, we have accumulated a number of internal developments, both in K and other languages, that model TEAL. More specifically, We have an existing prototype semantics that model the execution of a single transaction and TEAL v3. Additionally, we have developed semantics in K for other blockchain virtual machines. We need to consolidate the knowledge and develop a semantics architecture in the K framework that supports current (and future) versions of TEAL and the AVM.
-**Deliverables**: Semantics architecture, description of the data structures and algorithms in form of flowcharts and natural language descriptions.
+**Deliverables**: Semantics architecture, description of the data structures and algorithms in form of flowcharts and natural language descriptions. Preliminary Python API interface.
 
-2. Development phase (7 weeks). Following the architecture developed in the discovery phase, we will develop the semantics as a collection of K Framework modules. We will implement the semantics of all TEAL opcodes, the execution cycle of a single TEAL transaction and the execution cycle of an atomic transaction group. We will work closely with the implementors of KEVM to make use of their experience. More specifically, we need to accomplish the following tasks:
+2. Python SDK development phase (3 weeks)
+   While developing the semantics, we need, from the very start, to aim for its wide adoption by the developers building for the Algorand ecosystem. From our auditing practice we see that most smart contract developers use either JavaScript or Python Algorand SDK for writing test harnesses for their contacts. Additionally, the Alogorand ecosystem has a strong skew towards Python thanks to PyTeal. Considering these factors, we propose to invest time at the beginning of the project to develop a Python library for programmatic interaction with the semantics. Such a library will both bring benefits for the internals of the project (we can develop a test harness in Python) and the external users.
+**Deliverables**:
+    - A Python SDK to enable programmatic interaction with the semantics, with an interface inspired by `py-algorand-sdk` for additional ease of adoption by developers (2 weeks)
+    - A test harness for the already developed parts of the semantics leveraging the developed SDK and exercised in CI/CD (1 week)
+
+3. Development phase (7 weeks). Following the architecture developed in the discovery phase, we will develop the semantics as a collection of K Framework modules. We will implement the semantics of all TEAL opcodes, the execution cycle of a single TEAL transaction and the execution cycle of an atomic transaction group. We will work closely with the implementors of KEVM to make use of their experience. More specifically, we need to accomplish the following tasks:
     - Bring the current unfinished KTEAL semantics (which supports TEAL v3) up-to-date with the architecture developed in the Discovery Phase (2 weeks)
     - Implement remaining TEAL v4 opcodes (1 week)
     - Implement inner transactions support (2 weeks)
     - Implement remaining TEAL v5 opcodes (1 week)
-    - research and implement the recently added TEAL v6 features (1 week)
+    - Implement the recently added TEAL v6 features (1 week)
     **Deliverables**: A complete and executable semantics of TEAL in K Framework. Unit-tests for individual opcode semantics. Limited integration tests in form of simple TEAL programs.
 
-3. Testing phase (4 weeks) The testing phase will focus on enlarging the unit and integration test suite, and on adding symbolic proofs. The symbolic proof development will proceed bottom-up:
+4. Property testing framework development phase (4 weeks) Having the complete semantics in place, we will work on developing an add-on that will leverage the semantics to perform property-based testing of TEAL smart contracts:
+**Deliverables**:
+    - An extension of the Python SDK developed in Phase 2 that enables both property testing with concrete data (akin to Hypothesis) and limited symbolic property testing via the semantics' Haskell backend (3 weeks)
+   - property tests for a selected (simple) smart contract (1 week)
+
+5. Testing phase (4 weeks) The testing phase will focus on enlarging the unit and integration test suite, and on adding symbolic proofs. The symbolic proof development will proceed bottom-up:
     - First, we will develop correctness proofs for arithmetic opcodes, such as add, mul, div, etc. We will consider both uint64 and byte versions (1 week).
     - Second, we will work on proofs of correctness of control-flow operations, such as conditional jumps, loops and procedure calls (1 week).
-    - Finally, we will verify a number of simple algorithms implemented in TEAL (2 weeks).
+    - Finally, we will proceed towards formally specifying and verifying a real-world  smart contract (remaining time).
+
 The purpose of the basic symbolic proof suite is to both serve as a sanity-check for the semantics, and to showcase the methodology of constructing specification for simple TEAL programs. It is essential for the specification to be clear and concise, and to only mention the state they absolutely must refer to. This becomes vital to retain ease of understanding as we scale up to larger proofs.
+
 **Deliverables**: A substantial suite of concrete unit-tests and symbolic proofs of correctness of TEAL programs.
 
-4. Case-study phase (4 weeks) Having the complete semantics in place, we will work on developing an add-on that will leverage the semantics to perform property-based testing of TEAL smart contracts:
-   - Provide a simple Python bindings to supply the semantics with the initial network state and the transaction group
-   - Leverage existing testing frameworks in the Python ecosystem, like `pytest` and Hypothesis, to drive the test generation and execution process
-**Deliverables**:
-    - A prototype command-line tool for describing and checking properties of TEAL smart contracts by testing
-    - Python bindings to enable programmatic interaction with the semantics
-    - Examples of properties and testing scenarios for a real-world smart contract
+
 
 ### Key Milestones:
 
 There is one key milestone for each project phase as described above. The key milestones are as follows:
 - (2 weeks) Informal description of the semantics architecture of TEAL and its structures and behavior
+- (3 weeks) A Python library for programmatic interaction with the semantics and executing TEAL smart contracts either in simulation (LLVM backend) or symbolically (Haskell backend).
 - (7 weeks) An executable, formal semantics for TEAL in K along with a set of tools (interpreter, symbolic execution engine, formal verifier)
+- (4 weeks) A property testing functionality extending the Python SDK developed in Phase 2
 - (4 weeks) A test suite and a proof suite for TEAL (with documentation)
-- (4 weeks) A case-study property testing tool developed on top of the semantics
+
 
 ### Future Work
 
 We give a number of directions for developing the semantics and the tools on top of it in the future:
+
+- **Maintenance and support**
+  We aim to provide support for the users of the semantics and tools via hosting them publicly on GitHub and possibly addressing any reporting issues, depending on how critical those will be. We will use the semantics and tools internally as well in our audit engagements, and thus plan to keep them up to date with `go-algorand`.
 
 - **Automatic symbolic proofs of common properties**
   We have in the past developed a library of symbolic properties to test the compliance with ERC20 standard, which we have deployed as a push-button web-based tool (See https://erc20.fireflyblockchain.com/). The Algorand ecosystem has already seen a number of smart contract exploits that could have been prevented by a well-defined automated analysis. We propose to build such an automated analysis tool by collecting a curated set of properties and automatically checking them by symbolically executing the contract's code.
