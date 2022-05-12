@@ -128,6 +128,9 @@ We give a number of directions for developing the semantics and the tools on top
 - **Maintenance and support**
   We aim to provide support for the users of the semantics and tools via hosting them publicly on GitHub and possibly addressing any reporting issues, depending on how critical those will be. We will use the semantics and tools internally as well in our audit engagements, and thus plan to keep them up to date with `go-algorand`.
 
+- **Integration with other tools**
+  The Algorand ecosystem has a surge in tool development, and there are many great tools coming from the Foundation itself. We would like the semantics to be able to integrate with this tools. In particular, we think that [`py-algorand-sdk`](https://www.google.com/search?client=firefox-b-d&q=py-algorand-sdk) and [`graviton`](https://github.com/algorand/graviton) are a priority for us. The Python SDK we will be developing in Phase 2 will likely integrate closely with `py-algorand-sdk` and we will keep an eye on `graviton`, since there are some similar use cases and we would like the interfaces to be somewhat compatible.
+
 - **Automatic symbolic proofs of common properties**
   We have in the past developed a library of symbolic properties to test the compliance with ERC20 standard, which we have deployed as a push-button web-based tool (See https://erc20.fireflyblockchain.com/). The Algorand ecosystem has already seen a number of smart contract exploits that could have been prevented by a well-defined automated analysis. We propose to build such an automated analysis tool by collecting a curated set of properties and automatically checking them by symbolically executing the contract's code.
 
