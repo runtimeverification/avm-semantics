@@ -4,7 +4,18 @@ from typing import Any, Callable, Dict, Mapping
 
 from pyk.cli_utils import check_dir_path, check_file_path
 from pyk.kast import KDefinition, KFlatModule
-from pyk.ktool import KPrint
+from pyk.ktool import KPrint, paren
+
+
+class KAVM(KPrint):
+
+    def __init__(self, kompiled_dir: Path):
+        super().__init__(kompiled_dir)
+        self.patch_symbol_table(self.symbolTable)
+
+    @staticmethod
+    def patch_symbol_table(symbol_table: Dict[str, Callable[..., str]]) -> None:
+        symbol_table['_+Int_'] = paren(symbol_table['_+Int_'])
 
 
 def teal_to_k(definition_dir: Path, contract_file: Path) -> str:
@@ -14,12 +25,9 @@ def teal_to_k(definition_dir: Path, contract_file: Path) -> str:
     with open(contract_file, 'r') as f:
         contract_json = json.load(f)
 
+    kavm = KAVM(definition_dir)
     definition = create_definition(contract_json)
-
-    kprint = KPrint(definition_dir)
-    patch_symbol_table(kprint.symbolTable)
-
-    return kprint.prettyPrint(definition)
+    return kavm.prettyPrint(definition)
 
 
 def create_definition(contract_json: Mapping[str, Any]) -> KDefinition:
@@ -29,7 +37,3 @@ def create_definition(contract_json: Mapping[str, Any]) -> KDefinition:
             KFlatModule('TEST_MODULE'),
         ],
     )
-
-
-def patch_symbol_table(symbol_table: Dict[str, Callable[..., str]]) -> None:
-    return
