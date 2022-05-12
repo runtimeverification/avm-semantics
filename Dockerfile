@@ -18,7 +18,10 @@ RUN    apt-get update            \
             maven                \
             pkg-config           \
             python3              \
+            python3-pip          \
             zlib1g-dev
+
+RUN pip3 install virtualenv
 
 RUN    git clone 'https://github.com/z3prover/z3' --branch=z3-4.8.11 \
     && cd z3                                                         \
