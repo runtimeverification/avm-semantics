@@ -41,7 +41,7 @@ $(VENV_PROD_DIR): $(VENV_PROD)
 test: test-unit
 
 test-unit: $(VUnitTestENV_DEV)
-	$(ACTIVATE_DEV) && python3 -m unittest discover -s src
+	$(ACTIVATE_DEV) && python3 -m unittest discover -vs src
 
 
 # Checks
