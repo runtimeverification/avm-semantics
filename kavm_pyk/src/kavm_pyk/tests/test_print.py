@@ -48,7 +48,7 @@ class PrintTest(TestCase):
                 expected = expected_str.split()
 
                 # When
-                actual = self.kavm.prettyPrint(term).split()
+                actual = self.kavm.pretty_print(term).split()
 
                 # Then
                 self.assertListEqual(expected, actual)
