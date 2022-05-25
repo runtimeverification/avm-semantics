@@ -11,7 +11,7 @@ class KAVM(KPrint):
 
     def __init__(self, kompiled_dir: Path):
         super().__init__(kompiled_dir)
-        self.patch_symbol_table(self.symbolTable)
+        self.patch_symbol_table(self.symbol_table)
 
     @staticmethod
     def patch_symbol_table(symbol_table: Dict[str, Callable[..., str]]) -> None:
@@ -27,7 +27,7 @@ def teal_to_k(definition_dir: Path, contract_file: Path) -> str:
 
     kavm = KAVM(definition_dir)
     definition = create_definition(contract_json)
-    return kavm.prettyPrint(definition)
+    return kavm.pretty_print(definition)
 
 
 def create_definition(contract_json: Mapping[str, Any]) -> KDefinition:
