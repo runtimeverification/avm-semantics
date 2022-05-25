@@ -131,9 +131,9 @@ run_krun() {
 }
 
 run_prove() {
-    local kprovex_args
-    kprovex_args=(--directory "${backend_dir}" "${run_file}")
-    execute kprovex "${kprovex_args[@]}" -I "${INSTALL_LIB}/kframework" "$@"
+    local kprove_args
+    kprove_args=(--directory "${backend_dir}" "${run_file}")
+    execute kprove "${kprove_args[@]}" -I "${INSTALL_LIB}/kframework" "$@"
 }
 
 # Helpers

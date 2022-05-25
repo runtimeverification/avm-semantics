@@ -49,7 +49,7 @@ Not all TEAL opcodes are supported by the semantics as of yet. See the relevant 
 
 `kavm` is a shell script that provides a command-line interface for the semantics:
 * concrete simulations and tests are run via `krun` and the K LLVM Backend
-* symbolic execution proofs are run with `kprovex` and the K Haskell Backend
+* symbolic execution proofs are run with `kprove` and the K Haskell Backend
 
 See `kavm --help` for more information.
 
