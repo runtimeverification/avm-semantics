@@ -1,0 +1,36 @@
+#pragma version 4
+#pragma mode stateful
+
+txn OnCompletion
+int NoOp
+==
+bnz handle_noop
+
+err
+
+handle_noop:
+
+// store sum of 0
+int 0
+store 0
+
+// initialize loop counter to 10
+int 10
+
+loop_top:
+
+// add loop counter to sum
+dup
+load 0
++
+store 0
+
+// decrement loop counter
+int 1
+-
+
+dup
+bnz loop_top
+
+int 1
+return
