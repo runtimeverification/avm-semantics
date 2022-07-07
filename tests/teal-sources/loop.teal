@@ -32,5 +32,10 @@ int 1
 dup
 bnz loop_top
 
+load 0
+int 55
+==
+assert
+
 int 1
 return

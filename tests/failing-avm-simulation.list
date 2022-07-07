@@ -1,0 +1,2 @@
+tests/scenarios/loads-uninitialized.avm-simulation
+tests/scenarios/uncover.avm-simulation
