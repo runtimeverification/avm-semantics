@@ -1,0 +1,10 @@
+#pragma version 4
+#pragma mode stateful
+
+byte "group_index"
+txn 
+txn GroupIndex
+app_global_put
+
+int 1
+return
