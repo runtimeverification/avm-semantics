@@ -1,0 +1,23 @@
+declareTealSource "./tests/teal-sources/gload.teal";
+
+addAccount <address> b"1" </address> <balance> 10000 </balance>;
+addApp     <appID>   1    </appID>   <address> b"1" </address> 0;
+optinApp   <appID>   1    </appID>   <address> b"1" </address>;
+
+#initTxGroup();
+
+addAppCallTx <txID>            0        </txID>
+             <sender>          b"1"     </sender>
+             <applicationID>   1        </applicationID>
+             <onCompletion>    0        </onCompletion>
+             <accounts>        b"1"     </accounts>
+             <applicationArgs> 0        </applicationArgs>;
+
+addAppCallTx <txID>            1        </txID>
+             <sender>          b"1"     </sender>
+             <applicationID>   1        </applicationID>
+             <onCompletion>    0        </onCompletion>
+             <accounts>        b"1"     </accounts>
+             <applicationArgs> 1        </applicationArgs>;
+
+#initGlobals(); #evalTxGroup(); .AS
