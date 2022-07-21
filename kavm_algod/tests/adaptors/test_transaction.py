@@ -1,18 +1,17 @@
-from algosdk.future.transaction import PaymentTxn, SuggestedParams
-
 from algosdk import account
-from kavm_algod.adaptors.transaction import transaction_to_k, transaction_from_k
+from algosdk.future.transaction import PaymentTxn
+
+from kavm_algod.adaptors.transaction import transaction_from_k, transaction_to_k
 
 
-def test_payment_txn_encode_decode():
-    sp = SuggestedParams(1000, 0, 1, "ktealktealktealkteal", flat_fee=True)
-
+def test_payment_txn_encode_decode(suggested_params):
     # generate accounts
     private_key_sender, sender = account.generate_account()
 
     private_key_receiver, receiver = account.generate_account()
 
     # create a transaction
+    sp = suggested_params
     amount = 10000
     txn = PaymentTxn(sender, sp, receiver, amount)
 

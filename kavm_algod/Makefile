@@ -41,25 +41,24 @@ $(VENV_PROD_DIR): $(VENV_PROD)
 test: test-unit
 
 test-unit: $(VUnitTestENV_DEV)
-	$(ACTIVATE_DEV) && python3 -m unittest discover -vs src
+	$(ACTIVATE_DEV) && pytest
 
 
 # Checks
 
-check-code-style: check-isort check-flake8 check-mypy check-black
+check-code-style: check-isort check-flake8 check-black
 
 isort: $(VENV_DEV)
-	$(ACTIVATE_DEV) && isort src
+	$(ACTIVATE_DEV) && isort --profile black .
 
 check-isort: $(VENV_DEV)
-	$(ACTIVATE_DEV) && isort --check src
+	$(ACTIVATE_DEV) && isort --profile black --check .
 
 check-flake8: $(VENV_DEV)
-	$(ACTIVATE_DEV) && flake8 src
+	$(ACTIVATE_DEV) && flake8 kavm_algod tests
 
-check-mypy: $(VENV_DEV)
-	$(ACTIVATE_DEV) && mypy src
-
+check-black: $(VENV_DEV)
+	$(ACTIVATE_DEV) && black --check .
 
 clean:
 	rm -rf $(VENV_DEV_DIR) $(VENV_PROD_DIR) build src/kavm_pyk.egg-info .myp_cache

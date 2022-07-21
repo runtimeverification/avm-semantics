@@ -21,6 +21,7 @@ pipeline {
       }
       stages {
         stage('Build') { steps { sh 'make build -j4' } }
+        stage('Test kavm_algod') { steps { sh 'make -C ./kavm_algod' } }
         stage('Test kavm parse') {
           failFast true
           options { timeout(time: 10, unit: 'MINUTES') }
