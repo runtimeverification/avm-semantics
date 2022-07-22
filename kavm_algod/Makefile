@@ -42,8 +42,10 @@ $(VENV_PROD_DIR): $(VENV_PROD)
 test: test-unit
 
 test-unit: $(VENV_DEV)
-	$(ACTIVATE_DEV) && python -m pytest
+	$(ACTIVATE_DEV) && python -m pytest --ignore=tests/contracts
 
+test-integration: $(VENV_DEV)
+	$(ACTIVATE_DEV) && python -m pytest tests/contracts
 
 # Checks
 
