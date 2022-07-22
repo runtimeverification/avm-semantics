@@ -14,9 +14,10 @@ VENV_DEV     := $(VENV_DEV_DIR)/pyvenv.cfg
 ACTIVATE_DEV := . $(VENV_DEV_DIR)/bin/activate
 
 $(VENV_DEV):
-	   python -m venv $(VENV_DEV_DIR)          \
+	   virtualenv -p python3.9 $(VENV_DEV_DIR) \
 	&& $(ACTIVATE_DEV)                         \
-	&& pip install -r requirements/dev.txt
+	&& pip install -r requirements/dev.txt     \
+	&& pip install --editable .
 
 $(VENV_DEV_DIR): $(VENV_DEV)
 	@echo $(ACTIVATE_DEV)
@@ -27,7 +28,7 @@ VENV_PROD     := $(VENV_PROD_DIR)/pyvenv.cfg
 ACTIVATE_PROD := . $(VENV_PROD_DIR)/bin/activate
 
 $(VENV_PROD):
-	   python -m venv $(VENV_PROD_DIR)          \
+	   virtualenv -p python3.9 $(VENV_PROD_DIR) \
 	&& $(ACTIVATE_PROD)                         \
 	&& pip install -r requirements/base.txt     \
 	&& pip install --editable . --no-deps
@@ -40,8 +41,8 @@ $(VENV_PROD_DIR): $(VENV_PROD)
 
 test: test-unit
 
-test-unit: $(VUnitTestENV_DEV)
-	$(ACTIVATE_DEV) && pytest
+test-unit: $(VENV_DEV)
+	$(ACTIVATE_DEV) && python -m pytest
 
 
 # Checks
