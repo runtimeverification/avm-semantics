@@ -1,0 +1,258 @@
+#pragma version 5
+
+int 0
+txn ApplicationID
+==
+bnz lbl_create
+
+// Disable rekeys
+txn RekeyTo
+global ZeroAddress
+==
+assert
+
+// Protect against high fees
+txn Fee
+int 1000
+<=
+assert
+
+// Has at least one app arg
+int 1
+txn NumAppArgs
+<=
+assert
+
+txna ApplicationArgs 0
+byte "init"
+==
+bnz lbl_init
+
+txna ApplicationArgs 0
+byte "respond"
+==
+bnz lbl_respond
+
+txna ApplicationArgs 0
+byte "reveal"
+==
+bnz lbl_reveal
+
+// Fail if no operation specified
+err
+
+lbl_create:
+
+int 1
+return
+
+lbl_init:
+
+// Must be an opt-in so we can save to local state
+int OptIn
+txn OnCompletion
+==
+assert
+
+// Has 2 app args
+int 2
+txn NumAppArgs
+==
+assert
+
+// Has 2 accounts
+int 2
+txn NumAccounts
+==
+assert
+
+// 2 Transactions in this group
+int 2
+global GroupSize
+==
+assert
+
+// First transaction in group
+int 0
+txn GroupIndex
+==
+assert
+
+// Other transaction is a payment
+int pay
+gtxn 1 TypeEnum
+==
+assert
+
+// Other transaction receiver is contract addr
+global CurrentApplicationAddress
+gtxn 1 Receiver
+==
+assert
+
+// Store hash of player 1's secret
+txn Sender
+byte "player1_secret_hash"
+txna ApplicationArgs 1
+app_local_put
+
+// Store player 2's address
+txn Sender
+byte "player2_addr"
+txna Accounts 1
+app_local_put
+
+// Store amount sent
+txn Sender
+byte "player1_wager"
+gtxn 1 Amount
+app_local_put
+
+int 1
+return
+
+
+lbl_respond:
+
+// Must be an opt-in so we can save to local state
+int OptIn
+txn OnCompletion
+==
+assert
+
+// Has 2 app args
+int 2
+txn NumAppArgs
+==
+assert
+
+// Has 2 accounts
+int 2
+txn NumAccounts
+==
+assert
+
+// 2 Transactions in this group
+int 2
+global GroupSize
+==
+assert
+
+// First transaction in group
+int 0
+txn GroupIndex
+==
+assert
+
+// Other transaction is a payment
+int pay
+gtxn 1 TypeEnum
+==
+assert
+
+// Other transaction receiver is contract addr
+global CurrentApplicationAddress
+gtxn 1 Receiver
+==
+assert
+
+// Player 2 wagered the same as player 1
+gtxn 1 Amount
+txna Accounts 1
+byte "player1_wager"
+app_local_get
+==
+
+// Store player 2's secret
+txn Sender
+byte "player2_secret"
+txna ApplicationArgs 1
+app_local_put
+
+// Store player 1's address
+txn Sender
+byte "player1_addr"
+txna Accounts 1
+app_local_put
+
+// Store amount sent
+txn Sender
+byte "player2_wager"
+gtxn 1 Amount
+app_local_put
+
+int 1
+return
+
+
+lbl_reveal:
+
+// Must be NoOp
+int NoOp
+txn OnCompletion
+==
+assert
+
+// Has 2 app args
+int 2
+txn NumAppArgs
+==
+assert
+
+// Has 2 accounts
+int 2
+txn NumAccounts
+==
+assert
+
+// 1 Transaction in this group
+int 1
+global GroupSize
+==
+assert
+
+// sha-256 hash of given secret matches earlier given hash 
+txna ApplicationArgs 1
+sha256
+txn Sender
+byte "player1_secret_hash"
+app_local_get
+==
+assert
+
+// Prepare accounts for select
+txn Sender
+txna Accounts 1
+
+// Concatenate p1 and p2 secret and compute first bit of the hash of that
+txna Accounts 1
+byte "player2_secret"
+app_local_get
+itob
+txna ApplicationArgs 1
+concat
+sha256
+int 0
+getbit
+
+itxn_begin
+
+// Select receiver based on first bit
+select
+itxn_field Receiver
+
+int pay
+itxn_field TypeEnum
+
+// Set amount = 2*wager
+txn Sender
+byte "player1_wager"
+app_local_get
+int 2
+*
+itxn_field Amount
+
+itxn_submit
+
+int 1
+return
