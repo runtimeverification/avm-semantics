@@ -22,8 +22,8 @@ PLAYER_2_SECRET = "defgh"
 
 def load_and_compile_teal(algod, filename_base):
 
-    filename_approval = f'tests/contracts/algosdk_test/{filename_base}.approval.teal'
-    filename_clear = f'tests/contracts/algosdk_test/{filename_base}.clear.teal'
+    filename_approval = f'tests/contracts/coinflip/{filename_base}.approval.teal'
+    filename_clear = f'tests/contracts/coinflip/{filename_base}.clear.teal'
 
     approval_file = open(filename_approval, "r")
     clear_file = open(filename_clear, "r")
