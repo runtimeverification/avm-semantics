@@ -136,14 +136,14 @@ put it into the `<k>` cell for execution.
   rule <k> #fetchOpcode() => PGM[PC] ~> #incrementPC() ... </k>
        <pc> PC </pc>
        <program> PGM </program>
-   requires isValidProgamAddress(PC)
+   requires isValidProgramAddress(PC)
 
-  syntax Bool ::= isValidProgamAddress(Int) [function]
+  syntax Bool ::= isValidProgramAddress(Int) [function]
   // -------------------------------------------------
-  rule [[ isValidProgamAddress(ADDR) => true ]]
+  rule [[ isValidProgramAddress(ADDR) => true ]]
        <program> PGM </program>
     requires 0 <=Int ADDR andBool ADDR <Int size(PGM)
-  rule isValidProgamAddress(_) => false [owise]
+  rule isValidProgramAddress(_) => false [owise]
 ```
 
 If there the PC goes one step beyond the program address space, it means that the execution is finished:
@@ -192,26 +192,26 @@ teal, failure means undoing changes made to the state (for more details, see
        <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
     requires I >Int 0 andBool SIZE ==Int 1
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #finalizeExecution() => .K ... </k>
        <stack> I : .TStack => I : .TStack </stack>
        <stacksize> _ </stacksize>
        <returncode> 4 => 1 </returncode>
        <returnstatus> _ => "Failure - zero-valued singleton stack" </returnstatus>
     requires I <=Int 0
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #finalizeExecution() => .K ... </k>
        <stack> _ </stack>
        <stacksize> SIZE </stacksize>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - stack size greater than 1" </returnstatus>
     requires SIZE >Int 1
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #finalizeExecution() => .K ... </k>
        <stack> .TStack </stack>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - empty stack" </returnstatus>
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #finalizeExecution() => .K ... </k>
        <stack> (_:Bytes) : .TStack </stack>
        <stacksize> _ </stacksize>
        <returncode> 4 => 2 </returncode>
