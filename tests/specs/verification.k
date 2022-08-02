@@ -39,8 +39,8 @@ module VERIFICATION
   rule X in_keys( M:Map [Y <- _] ) => X in_keys(M) 
     requires X =/=K Y [simplification]
 
-  rule _:Map [X:Label <- N] [X] => N  [simplification]
-  rule M:Map [X:Label <- _] [Y] => M [Y]  
+  rule _:Map [X <- N] [X] => N  [simplification]
+  rule M:Map [X <- _] [Y] => M [Y]  
     requires X =/=K Y [simplification]
 
   rule size( _:Map [_ <- _] ) >Int 0 => true  [simplification]
@@ -61,5 +61,15 @@ module VERIFICATION
 
   rule #sizeTStack( S:TStack, N:Int ) >Int 0 => N >=Int 0
     requires S =/=K .TStack  [simplification, smt-lemma]
+
+  rule #if COND #then 1 #else 0 #fi <=Int 0 => notBool ( COND ) [simplification]
+  rule #if COND #then 1 #else 0 #fi >Int 0 => COND [simplification]
+
+  rule Bytes2Int ( Int2Bytes ( X, BYTE_ORDER, SIGNEDNESS ), BYTE_ORDER, SIGNEDNESS ) => X [simplification]
+
+//   rule #Not ( { true #Equals X:Int <=Int Y:Int } ) => { true #Equals X >Int Y } [simplification]
+
+//   rule {X <=Int 0} #And {X >Int 0} => #Bottom [simplification]
+//   rule {X <Int 0} #And {X >=Int 0} => #Bottom [simplification]
 
 endmodule
