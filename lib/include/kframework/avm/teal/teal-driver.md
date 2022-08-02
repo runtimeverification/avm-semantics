@@ -1132,16 +1132,6 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <stacksize> S </stacksize>
     requires notBool (0 <=Int N andBool N <Int S)
 
-  rule <k> uncover N => .K ... </k>
-       <stack> STACK => (#take(1, #drop(N, STACK)) #take(N, STACK)) #drop(N +Int 1, STACK) </stack>
-       <stacksize> S </stacksize>
-    requires 0 <=Int N andBool N <Int S
-
-  rule <k> uncover N => panic(STACK_UNDERFLOW) ... </k>
-       <stack> _ </stack>
-       <stacksize> S </stacksize>
-    requires notBool (0 <=Int N andBool N <Int S)
-
   rule <k> swap => .K ... </k>
        <stack> X : Y : XS => Y : X : XS </stack>
 
@@ -1180,6 +1170,8 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
 
   rule <k> txnas I => .K ... </k>
        <stack> J : XS => ({getTxnField(getCurrentTxn(), I, J)}:>TValue) : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires S <Int MAX_STACK_DEPTH
 
   rule <k> gtxna G I J => .K ... </k>
        <stack> XS => ({getTxnField(G, I, J)}:>TValue) : XS </stack>
