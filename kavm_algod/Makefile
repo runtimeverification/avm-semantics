@@ -1,7 +1,8 @@
 .PHONY: all clean                                                  \
         $(VENV_DEV_DIR) $(VENV_PROD_DIR)                           \
         test test-unit                                             \
-        check-code-style isort check-isort check-flake8 check-mypy check-black
+        check-code-style black check-black isort check-isort       \
+	check-flake8 check-mypy
 
 
 all: check-code-style test
@@ -63,8 +64,11 @@ check-flake8: $(VENV_DEV)
 check-mypy: $(VENV_DEV)
 	$(ACTIVATE_DEV) && mypy .
 
+black: $(VENV_DEV)
+	$(ACTIVATE_DEV) && black --skip-string-normalization .
+
 check-black: $(VENV_DEV)
-	$(ACTIVATE_DEV) && black --check .
+	$(ACTIVATE_DEV) && black --check --skip-string-normalization .
 
 clean:
 	rm -rf $(VENV_DEV_DIR) $(VENV_PROD_DIR) build src/kavm_pyk.egg-info .myp_cache
