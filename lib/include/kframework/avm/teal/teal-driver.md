@@ -1140,7 +1140,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
 
   rule <k> select => .K ... </k>
        <stack> A : B : C : XS =>
-               (#if C =/=Int 0 #then B #else A #fi) : XS
+               (#if A =/=Int 0 #then B #else C #fi) : XS
        </stack>
        <stacksize> S => S -Int 2 </stacksize>
 ```
