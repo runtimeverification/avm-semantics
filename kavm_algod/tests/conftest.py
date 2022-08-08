@@ -28,28 +28,28 @@ def faucet(algod: AlgodClient, kmd: KMDClient) -> dict[str, Optional[Any]]:
     """
     wallets = kmd.list_wallets()
     default_wallet = [
-        w if w["name"] == "unencrypted-default-wallet" else None for w in wallets
+        w if w['name'] == 'unencrypted-default-wallet' else None for w in wallets
     ][0]
-    default_wallet_handle = kmd.init_wallet_handle(default_wallet["id"], "")
+    default_wallet_handle = kmd.init_wallet_handle(default_wallet['id'], '')
     default_wallet_keys = kmd.list_keys(default_wallet_handle)
     faucet_address = None
     for key in default_wallet_keys:
         account = algod.account_info(key)
-        if account["status"] != "Offline" and account["amount"] > 1000_000_000:
+        if account['status'] != 'Offline' and account['amount'] > 1000_000_000:
             faucet_address = key
             break
         pass
 
-    faucet_private_key = kmd.export_key(default_wallet_handle, "", faucet_address)
+    faucet_private_key = kmd.export_key(default_wallet_handle, '', faucet_address)
 
-    return {"address": faucet_address, "private_key": faucet_private_key}
+    return {'address': faucet_address, 'private_key': faucet_private_key}
 
 
 @pytest.fixture
 def kalgod() -> KAVMClient:
     """Dummy KAVMAlgodClient"""
-    algod_token = "ktealktealktealkteal"
-    algod_address = "http://kteal:8080"
+    algod_token = 'ktealktealktealkteal'
+    algod_address = 'http://kteal:8080'
     return KAVMClient(algod_token, algod_address)
 
 
@@ -57,5 +57,5 @@ def kalgod() -> KAVMClient:
 def suggested_params() -> SuggestedParams:
     """Dummy transaction parameters"""
     return SuggestedParams(
-        fee=1000, first=0, last=1, gh="ktealktealktealkteal", flat_fee=True
+        fee=1000, first=0, last=1, gh='ktealktealktealkteal', flat_fee=True
     )
