@@ -1,6 +1,7 @@
 from base64 import b64decode
 
 from algosdk import account
+from algosdk.v2client import AlgodClient
 from algosdk.future import transaction
 from algosdk.future.transaction import (
     ApplicationCallTxn,
@@ -55,7 +56,9 @@ return
 """
 
 
-def generate_and_fund_account(algod, faucet):
+def generate_and_fund_account(
+    algod: AlgodClient, faucet: dict[str, str]
+) -> dict[str, str]:
     private_key, address = account.generate_account()
 
     # fund the account from the faucet
@@ -69,7 +72,7 @@ def generate_and_fund_account(algod, faucet):
     return {"address": address, "private_key": private_key}
 
 
-def create_calculator_app(algod, faucet):
+def create_calculator_app(algod: AlgodClient, faucet: dict[str, str]) -> int:
 
     sp = algod.suggested_params()
 
@@ -102,7 +105,7 @@ def create_calculator_app(algod, faucet):
     return created_app_id
 
 
-def test_call_calculator(algod, faucet):
+def test_call_calculator(algod: AlgodClient, faucet: dict[str, str]) -> None:
     # create app
     app_id = create_calculator_app(algod, faucet)
 

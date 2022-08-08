@@ -1,3 +1,4 @@
+from typing import Any, Dict, Optional
 import pytest
 from algosdk.future.transaction import SuggestedParams
 from algosdk.kmd import KMDClient
@@ -9,19 +10,19 @@ from .constants import ALGOD_ADDRESS, ALGOD_TOKEN, KMD_ADDRESS, KMD_TOKEN
 
 
 @pytest.fixture
-def algod():
+def algod() -> AlgodClient:
     """AlgodClient connected to an Algorand Sandbox"""
     return AlgodClient(ALGOD_TOKEN, ALGOD_ADDRESS)
 
 
 @pytest.fixture
-def kmd():
+def kmd() -> KMDClient:
     """KMDClient connected to an Algorand Sandbox"""
     return KMDClient(KMD_TOKEN, KMD_ADDRESS)
 
 
 @pytest.fixture
-def faucet(algod, kmd):
+def faucet(algod: AlgodClient, kmd: KMDClient) -> dict[str, Optional[Any]]:
     """
     Faucet address and private key of the active Algorand Sandbox
     """
@@ -45,7 +46,7 @@ def faucet(algod, kmd):
 
 
 @pytest.fixture
-def kalgod():
+def kalgod() -> KAVMClient:
     """Dummy KAVMAlgodClient"""
     algod_token = "ktealktealktealkteal"
     algod_address = "http://kteal:8080"
@@ -53,7 +54,7 @@ def kalgod():
 
 
 @pytest.fixture
-def suggested_params():
+def suggested_params() -> SuggestedParams:
     """Dummy transaction parameters"""
     return SuggestedParams(
         fee=1000, first=0, last=1, gh="ktealktealktealkteal", flat_fee=True

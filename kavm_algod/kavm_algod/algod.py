@@ -1,12 +1,14 @@
 import logging
 from pprint import PrettyPrinter
+from typing import Any, List, Dict
 
 import msgpack
 from algosdk import encoding
 from algosdk.v2client import algod
+from algosdk.future.transaction import Transaction
 
 
-def msgpack_decode_txn_list(enc):
+def msgpack_decode_txn_list(enc: bytes) -> list[Transaction]:
     """
     Decode a msgpack encoded object from a string.
     Args:
@@ -36,7 +38,7 @@ class KAVMClient(algod.AlgodClient):
 
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.algodLogger = logging.getLogger(f"${__name__}.algodLogger")
         self.pretty_printer = PrettyPrinter(width=41, compact=True)
@@ -44,7 +46,7 @@ class KAVMClient(algod.AlgodClient):
 
         # Initialize KAVM here
 
-    def set_log_level(self, log_level):
+    def set_log_level(self, log_level: logging._Level) -> None:
         """
         Set log level for algod requests
         """
@@ -52,19 +54,20 @@ class KAVMClient(algod.AlgodClient):
 
     def algod_request(
         self,
-        method,
-        requrl,
-        params=None,
-        data=None,
-        headers=None,
-        response_format="Json",
-    ):
+        method: str,
+        requrl: str,
+        params: list[str] = None,
+        data: bytes = None,
+        headers: list[str] = None,
+        response_format: str = "Json",
+    ) -> dict[str, Any]:
         """
         Log requests made to algod, but execute local actions instead
 
         Need to override this method, and the more specific methods using it can remain the same.
         """
-        txn_msg = ""
+        txn_msg = ''
+
         if data is not None:
             txns = map(lambda t: t.dictify()["txn"], msgpack_decode_txn_list(data))
             txn_msg = self.pretty_printer.pformat(list(txns))
@@ -78,7 +81,7 @@ class KAVMClient(algod.AlgodClient):
         else:
             raise NotImplementedError(f"{method} {requrl}")
 
-    def _handle_get_requests(self, requrl):
+    def _handle_get_requests(self, requrl: str) -> dict[str, Any]:
         """
         Handle GET requests to algod with PyTeal_eval
         """
@@ -97,7 +100,7 @@ class KAVMClient(algod.AlgodClient):
             raise NotImplementedError(f"Endpoint not implemented: {requrl}")
         raise NotImplementedError(requrl.split())
 
-    def _handle_post_requests(self, requrl):
+    def _handle_post_requests(self, requrl: str) -> dict[str, Any]:
         """
         Handle POST requests to algod with PyTeal_eval
         """
