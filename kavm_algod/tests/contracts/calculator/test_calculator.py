@@ -1,13 +1,12 @@
 from base64 import b64decode
-import pytest
 
 from algosdk import account
 from algosdk.future import transaction
 from algosdk.future.transaction import (
-    PaymentTxn,
     ApplicationCallTxn,
     ApplicationCreateTxn,
     OnComplete,
+    PaymentTxn,
 )
 
 approval_program_src = """

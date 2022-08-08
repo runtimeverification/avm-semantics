@@ -1,4 +1,3 @@
-import algosdk
 
 # Algorand sandbox algod's and kmd's tokens and addresss
 ALGOD_TOKEN = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
