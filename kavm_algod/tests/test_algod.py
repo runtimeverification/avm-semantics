@@ -1,6 +1,6 @@
 from algosdk import account
 from algosdk.future import transaction
-from algosdk.future.transaction import SuggestedParams, PaymentTxn
+from algosdk.future.transaction import PaymentTxn, SuggestedParams
 
 from kavm_algod.algod import KAVMClient
 

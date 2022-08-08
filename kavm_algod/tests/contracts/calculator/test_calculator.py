@@ -1,8 +1,7 @@
-from typing import Dict
 from base64 import b64decode
+from typing import Dict
 
 from algosdk import account
-from algosdk.v2client import AlgodClient
 from algosdk.future import transaction
 from algosdk.future.transaction import (
     ApplicationCallTxn,
@@ -10,6 +9,7 @@ from algosdk.future.transaction import (
     OnComplete,
     PaymentTxn,
 )
+from algosdk.v2client import AlgodClient
 
 approval_program_src = '''
 #pragma version 4

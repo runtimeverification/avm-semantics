@@ -1,11 +1,11 @@
 import logging
 from pprint import PrettyPrinter
-from typing import Any, List, Dict
+from typing import Any, Dict, List
 
 import msgpack
 from algosdk import encoding
-from algosdk.v2client import algod
 from algosdk.future.transaction import Transaction
+from algosdk.v2client import algod
 
 
 def msgpack_decode_txn_list(enc: bytes) -> List[Transaction]:
