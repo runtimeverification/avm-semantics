@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 name = "kavm_algod"
 description = "KAVM backend for py-algorand-sdk"
 readme = "README.md"
-requires-python = ">= 3.9.*, < 3.10"
+requires-python = ">= 3.8.*, < 3.10"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -23,21 +23,20 @@ where = ["src"]
 
 [tool.mypy]
 ignore_missing_imports = "True"
-# check_untyped_defs = "True"
 disallow_untyped_defs = "True"
 show_column_numbers = "True"
 exclude = "(venv-dev|venv-prod)"
 
 [tool.black]
 exclude = "(venv-dev)"
-target_version = ["py39"]
+target_version = ["py38"]
 line-length = 88
 
 [tool.isort]
-py_version=39
+py_version=38
 profile = "black"
 skip = ["venv-dev", "venv-prod"]
 multi_line_output=3
 include_trailing_comma=true
 ensure_newline_before_comments=true
-line-length = 88
+line_length = 88

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict
 
 from algosdk.future.transaction import PaymentTxn, SuggestedParams, Transaction
 from pyk.kast import KApply, KAst
@@ -144,21 +144,21 @@ def payment_fields_to_k(txn: PaymentTxn) -> KApply:
 
 def transaction_from_k(kast_term: KAst) -> Transaction:
     term_dict = kast_term.to_dict()
-    txHeader: dict[str, Any] = {}
-    payTxFields: dict[str, Any] = {}
+    txHeader: Dict[str, Any] = {}
+    payTxFields: Dict[str, Any] = {}
     for i, term in enumerate(term_dict['args']):
         txHeader = term if term['label']['name'] == '<txHeader>' else txHeader
         payTxFields = term if term['label']['name'] == '<payTxFields>' else payTxFields
-    sender: dict[str, Any] = {}
-    sp: dict[str, Any] = {}
-    note: dict[str, Any] = {}
-    lease: dict[str, Any] = {}
-    txn_type: dict[str, Any] = {}
-    rekey_to: dict[str, Any] = {}
-    fee: dict[str, Any] = {}
-    first_valid: dict[str, Any] = {}
-    last_valid: dict[str, Any] = {}
-    genesis_hash: dict[str, Any] = {}
+    sender: Dict[str, Any] = {}
+    sp: Dict[str, Any] = {}
+    note: Dict[str, Any] = {}
+    lease: Dict[str, Any] = {}
+    txn_type: Dict[str, Any] = {}
+    rekey_to: Dict[str, Any] = {}
+    fee: Dict[str, Any] = {}
+    first_valid: Dict[str, Any] = {}
+    last_valid: Dict[str, Any] = {}
+    genesis_hash: Dict[str, Any] = {}
     for i, term in enumerate(txHeader['args']):
         sender = term if term['label']['name'] == '<sender>' else sender
         note = term if term['label']['name'] == '<note>' else note
@@ -171,9 +171,9 @@ def transaction_from_k(kast_term: KAst) -> Transaction:
         genesis_hash = (
             term if term['label']['name'] == '<genesisHash>' else genesis_hash
         )
-    receiver: dict[str, Any] = {}
-    amount: dict[str, Any] = {}
-    close_to: dict[str, Any] = {}
+    receiver: Dict[str, Any] = {}
+    amount: Dict[str, Any] = {}
+    close_to: Dict[str, Any] = {}
     for i, term in enumerate(payTxFields['args']):
         receiver = term if term['label']['name'] == '<receiver>' else receiver
         amount = term if term['label']['name'] == '<amount>' else amount

@@ -1,3 +1,4 @@
+from typing import Dict
 from base64 import b64decode
 
 from algosdk import account
@@ -57,8 +58,8 @@ return
 
 
 def generate_and_fund_account(
-    algod: AlgodClient, faucet: dict[str, str]
-) -> dict[str, str]:
+    algod: AlgodClient, faucet: Dict[str, str]
+) -> Dict[str, str]:
     private_key, address = account.generate_account()
 
     # fund the account from the faucet
@@ -72,7 +73,7 @@ def generate_and_fund_account(
     return {'address': address, 'private_key': private_key}
 
 
-def create_calculator_app(algod: AlgodClient, faucet: dict[str, str]) -> int:
+def create_calculator_app(algod: AlgodClient, faucet: Dict[str, str]) -> int:
 
     sp = algod.suggested_params()
 
@@ -105,7 +106,7 @@ def create_calculator_app(algod: AlgodClient, faucet: dict[str, str]) -> int:
     return created_app_id
 
 
-def test_call_calculator(algod: AlgodClient, faucet: dict[str, str]) -> None:
+def test_call_calculator(algod: AlgodClient, faucet: Dict[str, str]) -> None:
     # create app
     app_id = create_calculator_app(algod, faucet)
 

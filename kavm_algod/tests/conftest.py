@@ -22,7 +22,7 @@ def kmd() -> KMDClient:
 
 
 @pytest.fixture
-def faucet(algod: AlgodClient, kmd: KMDClient) -> dict[str, Optional[Any]]:
+def faucet(algod: AlgodClient, kmd: KMDClient) -> Dict[str, Optional[Any]]:
     """
     Faucet address and private key of the active Algorand Sandbox
     """

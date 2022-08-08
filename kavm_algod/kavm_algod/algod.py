@@ -8,7 +8,7 @@ from algosdk.v2client import algod
 from algosdk.future.transaction import Transaction
 
 
-def msgpack_decode_txn_list(enc: bytes) -> list[Transaction]:
+def msgpack_decode_txn_list(enc: bytes) -> List[Transaction]:
     """
     Decode a msgpack encoded object from a string.
     Args:
@@ -56,11 +56,11 @@ class KAVMClient(algod.AlgodClient):
         self,
         method: str,
         requrl: str,
-        params: list[str] = None,
+        params: List[str] = None,
         data: bytes = None,
-        headers: list[str] = None,
+        headers: List[str] = None,
         response_format: str = 'Json',
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Log requests made to algod, but execute local actions instead
 
@@ -81,7 +81,7 @@ class KAVMClient(algod.AlgodClient):
         else:
             raise NotImplementedError(f'{method} {requrl}')
 
-    def _handle_get_requests(self, requrl: str) -> dict[str, Any]:
+    def _handle_get_requests(self, requrl: str) -> Dict[str, Any]:
         """
         Handle GET requests to algod with PyTeal_eval
         """
@@ -100,7 +100,7 @@ class KAVMClient(algod.AlgodClient):
             raise NotImplementedError(f'Endpoint not implemented: {requrl}')
         raise NotImplementedError(requrl.split())
 
-    def _handle_post_requests(self, requrl: str) -> dict[str, Any]:
+    def _handle_post_requests(self, requrl: str) -> Dict[str, Any]:
         """
         Handle POST requests to algod with PyTeal_eval
         """
