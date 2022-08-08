@@ -1,0 +1,105 @@
+#pragma version 5
+
+int 0
+
+// Load first application arg with txnas. The stack size should remain 1, as the index is popped off the stack
+// and the ApplicationArg is pushed on.
+txnas ApplicationArgs
+btoi
+
+// Fill stack to max depth (1000) by loading 0 999 times
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0 int 0
+
+// Pop 999 0s off the stack leaving only the app arg
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop
+pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop pop

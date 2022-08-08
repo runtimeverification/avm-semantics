@@ -1170,8 +1170,6 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
 
   rule <k> txnas I => .K ... </k>
        <stack> J : XS => ({getTxnField(getCurrentTxn(), I, J)}:>TValue) : XS </stack>
-       <stacksize> S => S +Int 1 </stacksize>
-    requires S <Int MAX_STACK_DEPTH
 
   rule <k> gtxna G I J => .K ... </k>
        <stack> XS => ({getTxnField(G, I, J)}:>TValue) : XS </stack>
