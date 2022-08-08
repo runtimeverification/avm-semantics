@@ -1,8 +1,32 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Union
 
 from algosdk.future.transaction import PaymentTxn, SuggestedParams, Transaction
 from pyk.kast import KApply, KAst
 from pyk.prelude import intToken, stringToken
+
+
+def int_token_cell(name: str, value: Optional[int]) -> KApply:
+    """Construct a cell containing an Int token. Default to 0 if None is supplied."""
+
+    if isinstance(value, int):
+        token = intToken(value)
+    elif value is None:
+        token = intToken(0)
+    else:
+        raise TypeError(f'value {value} has unexpected type {type(value)}')
+    return KApply(f'<{name}>', [token])
+
+
+def string_token_cell(name: str, value: Optional[str]) -> KApply:
+    """Construct a cell containing an String token. Default to the empty string if None is supplied."""
+
+    if isinstance(value, str):
+        token = stringToken(value)
+    elif value is None:
+        token = stringToken('')
+    else:
+        raise TypeError(f'value {value} has unexpected type {type(value)}')
+    return KApply(f'<{name}>', [token])
 
 
 def transaction_to_k(txn: Transaction) -> KApply:
@@ -10,91 +34,19 @@ def transaction_to_k(txn: Transaction) -> KApply:
     header = KApply(
         '<txHeader>',
         [
-            KApply(
-                '<fee>',
-                [
-                    intToken(
-                        txn.fee,
-                    )
-                ],
-            ),
-            KApply(
-                '<firstValid>',
-                [intToken(txn.first_valid_round)],
-            ),
-            KApply(
-                '<lastValid>',
-                [
-                    intToken(
-                        txn.last_valid_round,
-                    )
-                ],
-            ),
-            KApply(
-                '<genesisHash>',
-                [
-                    stringToken(
-                        f'{txn.genesis_hash}',
-                    )
-                ],
-            ),
-            KApply(
-                '<sender>',
-                [
-                    stringToken(
-                        f'{txn.sender}',
-                    )
-                ],
-            ),
-            KApply(
-                '<txType>',
-                [
-                    stringToken(
-                        f'{txn.type}',
-                    )
-                ],
-            ),
-            # TODO: convert type to type enum
-            KApply(
-                '<typeEnum>',
-                [
-                    stringToken(
-                        f'{txn.type}',
-                    )
-                ],
-            ),
-            KApply(
-                '<group>',
-                [
-                    stringToken(
-                        f'{txn.group}',
-                    )
-                ],
-            ),
-            KApply(
-                '<genesisID>',
-                [
-                    stringToken(
-                        f'{txn.genesis_id}',
-                    )
-                ],
-            ),
-            KApply(
-                '<lease>',
-                [
-                    stringToken(
-                        f'{txn.lease}',
-                    )
-                ],
-            ),
-            KApply(
-                '<rekeyTo>',
-                [
-                    stringToken(
-                        f'{txn.rekey_to}',
-                    )
-                ],
-            ),
+            int_token_cell('fee', txn.fee),
+            int_token_cell('firstValid', txn.first_valid_round),
+            int_token_cell('lastValid', txn.last_valid_round),
+            string_token_cell('genesisHash', txn.genesis_hash),
+            string_token_cell('sender', txn.sender),
+            string_token_cell('txType', txn.type),
+            # TODO: convert type to type enum, an int token
+            string_token_cell('typeEnum', txn.type),
+            # TODO: 'group' should probably be int, investigate
+            string_token_cell('group', str(txn.group)),
+            string_token_cell('genesisID', str(txn.genesis_id)),
+            string_token_cell('lease', str(txn.lease)),
+            string_token_cell('rekeyTo', str(txn.rekey_to)),
         ],
     )
     type_specific_fields = None
@@ -113,30 +65,9 @@ def payment_fields_to_k(txn: PaymentTxn) -> KApply:
     config = KApply(
         '<payTxFields>',
         [
-            KApply(
-                '<receiver>',
-                [
-                    stringToken(
-                        f'{txn.receiver}',
-                    )
-                ],
-            ),
-            KApply(
-                '<amount>',
-                [
-                    intToken(
-                        txn.amt,
-                    )
-                ],
-            ),
-            KApply(
-                '<closeRemainderTo>',
-                [
-                    stringToken(
-                        f'{txn.close_remainder_to}',
-                    )
-                ],
-            ),
+            string_token_cell('receiver', txn.receiver),
+            int_token_cell('amount', txn.amt),
+            string_token_cell('closeRemainderTo', txn.close_remainder_to),
         ],
     )
     return config
