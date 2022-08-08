@@ -10,16 +10,17 @@ name = "kavm_algod"
 description = "KAVM backend for py-algorand-sdk"
 readme = "README.md"
 requires-python = ">= 3.8.*, < 3.10"
+dynamic = ["version", "entry-points"]
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["kavm_algod"]
 
-[tool.setuptools.package_data]
+[tool.setuptools.package-data]
 "*" = ["py.typed"]
 
+[tool.setuptools.dynamic]
+entry-points = {file = ["kavm-algod = kavm_algod.__main__:main"]}
 
-[tool.setuptools.entry_points]
-"console_scripts" = ["kavm-algod = kavm_algod.__main__:main"]
 
 [tool.mypy]
 ignore_missing_imports = "True"
