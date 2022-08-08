@@ -60,6 +60,9 @@ check-isort: $(VENV_DEV)
 check-flake8: $(VENV_DEV)
 	$(ACTIVATE_DEV) && flake8 kavm_algod tests
 
+check-mypy: $(VENV_DEV)
+	$(ACTIVATE_DEV) && mypy .
+
 check-black: $(VENV_DEV)
 	$(ACTIVATE_DEV) && black --check .
 

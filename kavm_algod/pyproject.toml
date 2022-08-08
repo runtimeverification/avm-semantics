@@ -21,6 +21,13 @@ where = ["src"]
 [tool.setuptools.entry_points]
 "console_scripts" = ["kavm-algod = kavm_algod.__main__:main"]
 
+[tool.mypy]
+ignore_missing_imports = "True"
+# check_untyped_defs = "True"
+disallow_untyped_defs = "True"
+show_column_numbers = "True"
+exclude = "(venv-dev|venv-prod)"
+
 [tool.black]
 exclude = "(venv-dev)"
 target_version = ["py39"]
