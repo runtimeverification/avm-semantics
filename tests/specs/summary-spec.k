@@ -26,37 +26,50 @@ module SUMMARY-SPEC
 
 // From counterexample, prove summary:
 // Note that you can not read `SS +Int 2 <Int MAX_STACK_DEPTH` off directly from the counterexample.
-    claim <k> #pragma version 2
-              #pragma mode stateless
-              int 18446744073709551615
-              int 18446744073709551615
-              mulw
-              store 0
-              store 1
-              int 18446744073709551615
-              int 1
-              mulw
-              store 2
-              store 3
-              int 1
-              int 1
-              mulw
-              store 4
-              store 5
-              int 1
-           => . </k>
-          <mode> stateless </mode>
-          <version> 2 </version>
-          <stacksize> SS => SS +Int 1 </stacksize>
-          <stack> .TStack => 1 : .TStack </stack>
-          <scratch> SCRATCH
-                 => SCRATCH [ 0 <- 1                    ]
-                            [ 1 <- 18446744073709551614 ]
-                            [ 2 <- 18446744073709551615 ]
-                            [ 3 <- 0                    ]
-                            [ 4 <- 1                    ]
-                            [ 5 <- 0                    ]
-          </scratch>
-      requires SS +Int 2 <Int MAX_STACK_DEPTH
+//     claim <k> 
+//               #pragma version 2
+//               #pragma mode stateless
+//               int 18446744073709551615
+//               int 18446744073709551615
+//               mulw
+//               store 0
+//               store 1
+//               int 18446744073709551615
+//               int 1
+//               mulw
+//               store 2
+//               store 3
+//               int 1
+//               int 1
+//               mulw
+//               store 4
+//               store 5
+//               int 1
+//             ~> #startExecution()
+//            => . </k>
+//           <mode> stateless </mode>
+//           <pc> 0 => ?_ </pc>
+//           <program> .Map => ?_ </program>
+//           <jumped> false </jumped>
+//           <version> 2 </version>
+//           <stacksize> 1 => 1 +Int 1 </stacksize>
+//           <stack> .TStack => 1 : .TStack </stack>
+//           <scratch> SCRATCH
+//                  => SCRATCH [ 0 <- 1                    ]
+//                             [ 1 <- 18446744073709551614 ]
+//                             [ 2 <- 18446744073709551615 ]
+//                             [ 3 <- 0                    ]
+//                             [ 4 <- 1                    ]
+//                             [ 5 <- 0                    ]
+//           </scratch>
+//           <returncode> 4 => ?_ </returncode>
+//           <returnstatus>
+//             "Failure - program is stuck" => ?_
+//           </returnstatus>
+//       requires SS +Int 2 <Int MAX_STACK_DEPTH
+
+claim <k>  #if notBool #if ARG3 >Int ARG2 #then 1 #else 0 #fi ==Int 0 #then ARG3:Int #else #if notBool #if
+ARG2 >Int ARG1 #then 1 #else 0 #fi ==Int 0 #then ARG2:Int #else #if notBool #if ARG1 >Int 0 #then 1 #else 0
+#fi ==Int 0 #then ARG1:Int #else 0 #fi #fi #fi  => #Bottom </k>
 
 endmodule
