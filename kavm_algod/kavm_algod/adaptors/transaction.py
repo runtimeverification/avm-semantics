@@ -1,32 +1,15 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-from algosdk.future.transaction import PaymentTxn, SuggestedParams, Transaction
-from pyk.kast import KApply, KAst, KInner, top_down
-from pyk.prelude import intToken, stringToken
+from algosdk.constants import ASSETTRANSFER_TXN, PAYMENT_TXN
+from algosdk.future.transaction import (
+    AssetTransferTxn,
+    PaymentTxn,
+    SuggestedParams,
+    Transaction,
+)
+from pyk.kast import KApply, KAst
 
-
-def int_token_cell(name: str, value: Optional[int]) -> KApply:
-    """Construct a cell containing an Int token. Default to 0 if None is supplied."""
-
-    if isinstance(value, int):
-        token = intToken(value)
-    elif value is None:
-        token = intToken(0)
-    else:
-        raise TypeError(f'value {value} has unexpected type {type(value)}')
-    return KApply(f'{name}', [token])
-
-
-def string_token_cell(name: str, value: Optional[str]) -> KApply:
-    """Construct a cell containing an String token. Default to the empty string if None is supplied."""
-
-    if isinstance(value, str):
-        token = stringToken(value)
-    elif value is None:
-        token = stringToken('')
-    else:
-        raise TypeError(f'value {value} has unexpected type {type(value)}')
-    return KApply(f'{name}', [token])
+from kavm_algod.pyk_utils import extract_cells, int_token_cell, string_token_cell
 
 
 def transaction_to_k(txn: Transaction) -> KApply:
@@ -50,15 +33,17 @@ def transaction_to_k(txn: Transaction) -> KApply:
         ],
     )
     type_specific_fields = None
-    if txn.type == 'pay':
-        type_specific_fields = payment_to_k(txn)
+    if txn.type == PAYMENT_TXN:
+        type_specific_fields = _payment_to_k(txn)
+    if txn.type == ASSETTRANSFER_TXN:
+        type_specific_fields = _asset_transfer_to_k(txn)
     if type_specific_fields is None:
         raise ValueError(f'Transaction object {txn} is invalid')
     return KApply('<transaction>', [header, type_specific_fields])
 
 
-def payment_to_k(txn: PaymentTxn) -> KApply:
-    """Convert a PaymentTxn objet to K configuration"""
+def _payment_to_k(txn: PaymentTxn) -> KApply:
+    """Convert a PaymentTxn objet to a K cell"""
     assert isinstance(txn, PaymentTxn)
     config = KApply(
         '<payTxFields>',
@@ -71,17 +56,21 @@ def payment_to_k(txn: PaymentTxn) -> KApply:
     return config
 
 
-def extract_cells(kast_term: KInner, label_names: List[str]) -> Dict[str, KInner]:
-    """Iterate over the Kast term and extract a flat Python list of cells with the specified labels"""
-    result: Dict[str, KAst] = {}
-
-    def find_labels(x, labels):
-        if isinstance(x, KApply) and x.label.name in labels:
-            result[x.label.name] = x
-        return x
-
-    top_down(lambda x: find_labels(x, label_names), kast_term)
-    return result
+def _asset_transfer_to_k(txn: AssetTransferTxn) -> KApply:
+    """Convert an AssetTransferTxn objet to a K cell"""
+    assert isinstance(txn, AssetTransferTxn)
+    config = KApply(
+        '<assetTransferTxFields>',
+        [
+            int_token_cell('<xferAsset>', txn.index),
+            int_token_cell('<assetAmount>', txn.amount),
+            string_token_cell('<assetReceiver>', txn.receiver),
+            string_token_cell('<closeRemainderTo>', txn.close_assets_to),
+            # TODO: make sure assetASender indeed corresponds to revocation_target
+            string_token_cell('<assetASender>', txn.revocation_target),
+        ],
+    )
+    return config
 
 
 def transaction_from_k(kast_term: KAst) -> Transaction:
@@ -111,17 +100,39 @@ def transaction_from_k(kast_term: KAst) -> Transaction:
         flat_fee=True,
     )
 
-    txnType = txHeaderFields['<txType>'].args[0].token
-    if txnType == '"pay"':
+    txnType = txHeaderFields['<txType>'].args[0].token.strip('"')
+    result = None
+    if txnType == PAYMENT_TXN:
         payTxFields: Dict[str, Any] = {}
         payTxFields = extract_cells(kast_term, ['<receiver>', '<amount>', '<closeTo>'])
-        return PaymentTxn(
-            txHeaderFields['<sender>'].args[0].token.strip('"'),
-            sp,
-            payTxFields['<receiver>'].args[0].token.strip('"'),
-            int(payTxFields['<amount>'].args[0].token),
+        result = PaymentTxn(
+            sender=txHeaderFields['<sender>'].args[0].token.strip('"'),
+            sp=sp,
+            receiver=payTxFields['<receiver>'].args[0].token.strip('"'),
+            amt=int(payTxFields['<amount>'].args[0].token),
+        )
+    elif txnType == ASSETTRANSFER_TXN:
+        assetTransferTxFields: Dict[str, Any] = {}
+        assetTransferTxFields = extract_cells(
+            kast_term,
+            [
+                '<xferAsset>',
+                '<assetAmount>',
+                '<assetReceiver>',
+                '<assetASender>',
+                '<assetCloseTo>',
+            ],
+        )
+        result = AssetTransferTxn(
+            sender=txHeaderFields['<sender>'].args[0].token.strip('"'),
+            sp=sp,
+            receiver=assetTransferTxFields['<assetReceiver>'].args[0].token.strip('"'),
+            amt=int(assetTransferTxFields['<assetAmount>'].args[0].token.strip('"')),
+            index=int(assetTransferTxFields['<xferAsset>'].args[0].token.strip('"')),
         )
     else:
         raise ValueError(
             f'Cannot instantiate a Transaction of an unexpected type {txnType}'
         )
+
+    return result
