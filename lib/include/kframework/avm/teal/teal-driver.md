@@ -261,36 +261,36 @@ Note that we need to perform the left shift modulo `MAX_UINT64 + 1`, otherwise t
 
 ```k
   rule <k> < => .K ... </k>
-       <stack> I2 : I1 : XS => (#if I1 <Int I2 #then 1 #else 0 #fi) : XS </stack>
+       <stack> I2 : I1 : XS => bool2Int (I1 <Int I2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> > => .K ... </k>
-       <stack> I2 : I1 : XS => (#if I1 >Int I2 #then 1 #else 0 #fi) : XS </stack>
+       <stack> I2 : I1 : XS => bool2Int (I1 >Int I2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> <= => .K ... </k>
-       <stack> I2 : I1 : XS => (#if I1 <=Int I2 #then 1 #else 0 #fi) : XS </stack>
+       <stack> I2 : I1 : XS => bool2Int (I1 <=Int I2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> >= => .K ... </k>
-       <stack> I2 : I1 : XS => (#if I1 >=Int I2 #then 1 #else 0 #fi) : XS </stack>
+       <stack> I2 : I1 : XS => bool2Int (I1 >=Int I2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> == => .K ... </k>
-       <stack> (I2:Int) : (I1:Int) : XS => (#if I1 ==Int I2 #then 1 #else 0 #fi) : XS </stack>
+       <stack> (I2:Int) : (I1:Int) : XS => bool2Int (I1 ==Int I2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> == => .K ... </k>
-       <stack> (B2:Bytes) : (B1:Bytes) : XS => (#if B1 ==K B2 #then 1 #else 0 #fi) : XS </stack>
+       <stack> (B2:Bytes) : (B1:Bytes) : XS => bool2Int (B1 ==K B2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> != => .K ... </k>
-       <stack> (I2:Int) : (I1:Int) : XS => (#if I1 =/=K I2 #then 1 #else 0 #fi) : XS </stack>
+       <stack> (I2:Int) : (I1:Int) : XS => bool2Int (I1 =/=K I2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> != => .K ... </k>
        <stack> (B2:Bytes) : (B1:Bytes) : XS =>
-               (#if B1 =/=K B2 #then 1 #else 0 #fi) : XS </stack>
+               bool2Int (B1 =/=K B2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 ```
 
@@ -299,16 +299,16 @@ Note that we need to perform the left shift modulo `MAX_UINT64 + 1`, otherwise t
 ```k
   rule <k> && => .K ... </k>
        <stack> I2 : I1 : XS =>
-               (#if I1 >Int 0 andBool I2 >Int 0 #then 1 #else 0 #fi) : XS </stack>
+               bool2Int (I1 >Int 0 andBool I2 >Int 0) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> || => .K ... </k>
        <stack> I2 : I1 : XS =>
-               (#if I1 >Int 0 orBool I2 >Int 0 #then 1 #else 0 #fi) : XS </stack>
+               bool2Int (I1 >Int 0 orBool I2 >Int 0) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> ! => .K ... </k>
-       <stack> I : XS => (#if I ==Int 0 #then 1 #else 0 #fi) : XS </stack>
+       <stack> I : XS => bool2Int (I ==Int 0) : XS </stack>
 ```
 
 ### Bitwise Operations
@@ -653,7 +653,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
 ```k
   rule <k> b< => .K ... </k>
        <stack> B:Bytes : A:Bytes : XS =>
-               (#if Bytes2Int(A, BE, Unsigned) <Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+               bool2Int (Bytes2Int(A, BE, Unsigned) <Int Bytes2Int(B, BE, Unsigned)) : XS
        </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
@@ -661,7 +661,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
 
   rule <k> b> => .K ... </k>
        <stack> B:Bytes : A:Bytes : XS =>
-               (#if Bytes2Int(A, BE, Unsigned) >Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+               bool2Int (Bytes2Int(A, BE, Unsigned) >Int Bytes2Int(B, BE, Unsigned)) : XS
        </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
@@ -669,7 +669,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
 
   rule <k> b<= => .K ... </k>
        <stack> B:Bytes : A:Bytes : XS =>
-               (#if Bytes2Int(A, BE, Unsigned) <=Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+               bool2Int (Bytes2Int(A, BE, Unsigned) <=Int Bytes2Int(B, BE, Unsigned)) : XS
        </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
@@ -677,7 +677,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
 
   rule <k> b>= => .K ... </k>
        <stack> B:Bytes : A:Bytes : XS =>
-               (#if Bytes2Int(A, BE, Unsigned) >=Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+               bool2Int (Bytes2Int(A, BE, Unsigned) >=Int Bytes2Int(B, BE, Unsigned)) : XS
        </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
@@ -685,7 +685,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
 
   rule <k> b== => .K ... </k>
        <stack> B:Bytes : A:Bytes : XS =>
-               (#if Bytes2Int(A, BE, Unsigned) ==Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+               bool2Int (Bytes2Int(A, BE, Unsigned) ==Int Bytes2Int(B, BE, Unsigned)) : XS
        </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
@@ -693,7 +693,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
 
   rule <k> b!= => .K ... </k>
        <stack> B:Bytes : A:Bytes : XS =>
-               (#if Bytes2Int(A, BE, Unsigned) =/=Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+               bool2Int (Bytes2Int(A, BE, Unsigned) =/=Int Bytes2Int(B, BE, Unsigned)) : XS
        </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
@@ -953,7 +953,7 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
 #### Constant Loading Auxiliary Functions
 
 ```k
-  syntax Map ::= genIntcBlockMap(Int, Int, TValueList) [function]
+  syntax Map ::= genIntcBlockMap(Int, Int, TValueNeList) [function]
   //------------------------------------------------------------
   rule genIntcBlockMap(N, I, V VL) =>
          I |-> V
@@ -962,7 +962,7 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
 
   rule genIntcBlockMap(1, I, V) => I |-> V
 
-  syntax Map ::= genBytecBlockMap(Int, Int, TValuePairList) [function]
+  syntax Map ::= genBytecBlockMap(Int, Int, TValuePairNeList) [function]
   //-----------------------------------------------------------------
   // Note: byte array size is ignored
   rule genBytecBlockMap(N, I, (_, V) VPL) =>
@@ -1139,52 +1139,65 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <stack> _:.TStack </stack>
 
   rule <k> select => .K ... </k>
-       <stack> A : B : C : XS =>
-               (#if A =/=Int 0 #then B #else C #fi) : XS
+       <stack> A : B : _ : XS =>
+               B : XS
        </stack>
        <stacksize> S => S -Int 2 </stacksize>
+    requires int2Bool(A)
+
+  rule <k> select => .K ... </k>
+       <stack> A : _ : C : XS =>
+               C : XS
+       </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+    requires notBool (int2Bool(A))
 ```
 
 ### Blockchain State Accessors
 
 ```k
-  rule <k> txn I => .K ... </k>
-       <stack> XS => ({getTxnField(getCurrentTxn(), I)}:>TValue) : XS </stack>
+  syntax KItem ::= pushTxnToStack(MaybeTValue)
+
+  rule <k> pushFieldValue(VAL:TValue) => . ...</k>
+       <stack> XS => VAL : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
+
+  rule <k> pushFieldValue(VAL:TValue) => panic(STACK_OVERFLOW) ...</k>
+       <stacksize> S </stacksize>
+    requires S >=Int MAX_STACK_DEPTH
+
+  rule <k> pushFieldValue(NoTValue) => panic(TXN_ACCESS_FAILED) ...</k>
+
+  rule <k> txn I => pushFieldValue(getTxnField(getCurrentTxn(), I)) ... </k>
 
   rule <k> txn I J => txna I J ... </k>
 
-  rule <k> gtxn G I => .K ... </k>
-       <stack> XS => ({getTxnField(G, I)}:>TValue) : XS </stack>
-       <stacksize> S => S +Int 1 </stacksize>
-    requires S <Int MAX_STACK_DEPTH
+  rule <k> gtxn G I => pushFieldValue(getTxnField(G, I)) ... </k>
 
-  rule <k> gtxns I => .K ... </k>
-       <stack> G : XS => ({getTxnField(G, I)}:>TValue) : XS </stack>
-
-  rule <k> txna I J => .K ... </k>
-       <stack> XS => ({getTxnField(getCurrentTxn(), I, J)}:>TValue) : XS </stack>
-       <stacksize> S => S +Int 1 </stacksize>
-    requires S <Int MAX_STACK_DEPTH
-
-  rule <k> txnas I => .K ... </k>
-       <stack> J : XS => ({getTxnField(getCurrentTxn(), I, J)}:>TValue) : XS </stack>
-
-  rule <k> gtxna G I J => .K ... </k>
-       <stack> XS => ({getTxnField(G, I, J)}:>TValue) : XS </stack>
-       <stacksize> S => S +Int 1 </stacksize>
-    requires S <Int MAX_STACK_DEPTH
-
-  rule <k> gtxnas G I => .K ... </k>
-       <stack> J : XS => ({getTxnField(G, I, J)}:>TValue) : XS </stack>
-
-  rule <k> gtxnsa I J => .K ... </k>
-       <stack> G : XS => ({getTxnField(G, I, J)}:>TValue) : XS </stack>
-
-  rule <k> gtxnsas I => .K ... </k>
-       <stack> J : G : XS => ({getTxnField(G, I, J)}:>TValue) : XS </stack>
+  rule <k> gtxns I => pushFieldValue(getTxnField(G, I)) ... </k>
+       <stack> G : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
+
+  rule <k> txna I J => pushFieldValue(getTxnField(getCurrentTxn(), I, J)) ... </k>
+
+  rule <k> txnas I => pushFieldValue(getTxnField(getCurrentTxn(), I, J)) ... </k>
+       <stack> J : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
+  rule <k> gtxna G I J => pushFieldValue(getTxnField(G, I, J)) ... </k>
+
+  rule <k> gtxnas G I => pushFieldValue(getTxnField(G, I, J)) ... </k>
+       <stack> J : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
+  rule <k> gtxnsa I J => pushFieldValue(getTxnField(G, I, J)) ... </k>
+       <stack> G : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
+  rule <k> gtxnsas I => pushFieldValue(getTxnField(G, I, J)) ... </k>
+       <stack> J : G : XS => XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
 
   rule <k> global I => .K ... </k>
        <stack> XS => getGlobalField(I) : XS </stack>

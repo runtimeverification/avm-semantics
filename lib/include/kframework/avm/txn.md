@@ -199,8 +199,8 @@ module ALGO-TXN
   rule [[ getCurrentTxn() => I ]]
     <currentTx> I </currentTx>
 
-  syntax MaybeTValue ::= getTxnField(Int, TxnField)          [function]
-  syntax MaybeTValue ::= getTxnField(Int, TxnaFieldExt, Int) [function]
+  syntax MaybeTValue ::= getTxnField(Int, TxnField)          [function, functional]
+  syntax MaybeTValue ::= getTxnField(Int, TxnaFieldExt, Int) [function, functional]
   //------------------------------------------------------------------
   rule [[ getTxnField(I, TxID) => normalize(I) ]]
        <transaction>
