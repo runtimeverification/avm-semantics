@@ -60,14 +60,14 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
 ```k
   configuration
       <appCallTxFields multiplicity="?">
-        <applicationID>     NoTValue </applicationID>
-        <onCompletion>      NoTValue </onCompletion>
-        <accounts>          NoTValue </accounts>
-        <approvalProgram>   NoTValue </approvalProgram>
-        <clearStateProgram> NoTValue </clearStateProgram>
-        <applicationArgs>   NoTValue </applicationArgs> // maximum size is 2KB, and all args are internally byte strings
-        <foreignApps>       NoTValue </foreignApps>
-        <foreignAssets>     NoTValue </foreignAssets>
+        <applicationID>     NoTValue    </applicationID>
+        <onCompletion>      NoTValue    </onCompletion>
+        <accounts>          .TValueList </accounts>
+        <approvalProgram>   NoTValue    </approvalProgram>
+        <clearStateProgram> NoTValue    </clearStateProgram>
+        <applicationArgs>   .TValueList </applicationArgs> // maximum size is 2KB, and all args are internally byte strings
+        <foreignApps>       .TValueList </foreignApps>
+        <foreignAssets>     .TValueList </foreignAssets>
         <globalStateSchema>
           <globalNui> NoTValue </globalNui>
           <globalNbs> NoTValue </globalNbs>
@@ -201,7 +201,7 @@ module ALGO-TXN
 
   syntax MaybeTValue ::= getTxnField(Int, TxnField)          [function, functional]
   syntax MaybeTValue ::= getTxnField(Int, TxnaFieldExt, Int) [function, functional]
-  //------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
   rule [[ getTxnField(I, TxID) => normalize(I) ]]
        <transaction>
          <txID> I </txID>
@@ -728,15 +728,15 @@ module ALGO-TXN
 
 ```k
   syntax MaybeTValue ::= getAccountAddressAt(Int) [function]
-  //--------------------------------------------------
+  //--------------------------------------------------------
   rule getAccountAddressAt(I) => getTxnField(getCurrentTxn(), Accounts, I)
 
   syntax MaybeTValue ::= getForeignAppAt(Int) [function]
-  //----------------------------------------------
+  //----------------------------------------------------
   rule getForeignAppAt(I) => getTxnField(getCurrentTxn(), ForeignApps, I)
 
   syntax MaybeTValue ::= getForeignAssetAt(Int) [function]
-  //------------------------------------------------
+  //------------------------------------------------------
   rule getForeignAssetAt(I) => getTxnField(getCurrentTxn(), ForeignAssets, I)
 ```
 

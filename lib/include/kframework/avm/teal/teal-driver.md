@@ -161,7 +161,7 @@ Opcode Semantics
 
   // Auxilary funtion that interprets two `UInt64` as one Int, big-endian
   syntax Int ::= asUInt128(TUInt64, TUInt64) [function, functional]
-  // ------------------------------------
+  // --------------------------------------------------------------
   rule asUInt128(I1, I2) => (I1 <<Int 64) +Int I2
 
 ```
@@ -788,7 +788,7 @@ We recite the [specification](https://developer.algorand.org/docs/get-details/da
    requires notBool (0 <=Int B andBool B <Int lengthBytes(ARRAY) *Int 8)
 
   syntax Bytes ::= setBitInBytes(Bytes, Int, Int) [function]
-  //------------------------------------------------------------
+  //--------------------------------------------------------
   rule setBitInBytes(ARRAY, B, V) =>
          ARRAY[B divInt 8 <- setBitUInt8( ARRAY[B divInt 8]
                                         , 7 -Int B modInt 8
@@ -800,7 +800,7 @@ We recite the [specification](https://developer.algorand.org/docs/get-details/da
   // panics on invalid arguments.
   syntax Int ::= setBitUInt8 (Int, Int, Int) [function]
                | setBitUInt64(Int, Int, Int) [function]
-  //------------------------------------------------------------
+  //---------------------------------------------------
   // to unset a bit, shift 1 to the desired position and conjunct
   rule setBitUInt8(X, B, 0) => X &Int (~Int (1 <<Int B))
    requires 0 <=Int X andBool X <=Int MAX_UINT8
@@ -854,7 +854,7 @@ We recite the [specification](https://developer.algorand.org/docs/get-details/da
     requires notBool (0 <=Int B andBool B <Int lengthBytes(ARRAY) *Int 8)
 
   syntax Int ::= getBitFromBytes(Bytes, Int) [function]
-  //------------------------------------------------------------
+  //---------------------------------------------------
   // TODO: alternatively, we could use a bitmask here like in `setbit`.
   // Let's see which way causes more problems down the road.
   rule getBitFromBytes(ARRAY, B) =>
@@ -954,7 +954,7 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
 
 ```k
   syntax Map ::= genIntcBlockMap(Int, Int, TValueNeList) [function]
-  //------------------------------------------------------------
+  //---------------------------------------------------------------
   rule genIntcBlockMap(N, I, V VL) =>
          I |-> V
          genIntcBlockMap(N -Int 1, I +Int 1, VL)
@@ -963,7 +963,7 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
   rule genIntcBlockMap(1, I, V) => I |-> V
 
   syntax Map ::= genBytecBlockMap(Int, Int, TValuePairNeList) [function]
-  //-----------------------------------------------------------------
+  //--------------------------------------------------------------------
   // Note: byte array size is ignored
   rule genBytecBlockMap(N, I, (_, V) VPL) =>
          I |-> V
@@ -1051,7 +1051,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
   rule <k> retsub => returnSubroutine() ... </k>
 
   syntax KItem ::= callSubroutine(Label)
-  //-----------------------------
+  //------------------------------------
   // TODO: what happens if the pc value after call is invalid? What to do? Terminate or panic?
   // For now we do nothing, and thus trigger termination via `#fetchInstruction()`.
   rule <k> callSubroutine(TARGET) => .K ... </k>
@@ -1071,7 +1071,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
     requires notBool(TARGET in_labels LL)
 
   syntax KItem ::= returnSubroutine()
-  //-----------------------------
+  //---------------------------------
   rule <k> returnSubroutine() => .K ... </k>
        <pc> _ => RETURN_PC </pc>
        <jumped> _ => true </jumped>
@@ -1156,14 +1156,14 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
 ### Blockchain State Accessors
 
 ```k
-  syntax KItem ::= pushTxnToStack(MaybeTValue)
+  syntax KItem ::= pushFieldValue(MaybeTValue)
 
   rule <k> pushFieldValue(VAL:TValue) => . ...</k>
        <stack> XS => VAL : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
 
-  rule <k> pushFieldValue(VAL:TValue) => panic(STACK_OVERFLOW) ...</k>
+  rule <k> pushFieldValue(_:TValue) => panic(STACK_OVERFLOW) ...</k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 
@@ -1344,14 +1344,14 @@ Stateful TEAL Operations
     requires notBool isTValue(getAccountAddressAt(I))
 
   syntax KItem ::= "#app_local_get" TValue
-  //-------------------------------------
+  //--------------------------------------
   rule <k> #app_local_get V => .K ... </k>
        <stack> (_:Bytes) : ( _:Int) : XS => V : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires (notBool isInt(V)) orElseBool {V}:>Int >=Int 0
 
   syntax KItem ::= "#app_local_get" TValue
-  //-------------------------------------
+  //--------------------------------------
   rule <k> #app_local_get V => .K ... </k>
        <stack> (_:Bytes) : (_:Int) : XS => 0 : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
@@ -1372,7 +1372,7 @@ Stateful TEAL Operations
 
 
   syntax KItem ::= "#app_local_get_ex" TValue
-  //----------------------------------------
+  //-----------------------------------------
   rule <k> #app_local_get_ex V => .K ... </k>
        <stack> (_:Bytes) : (_:Int) : (_:Int) : XS => 1 : V : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
@@ -1397,7 +1397,7 @@ Stateful TEAL Operations
     requires notBool isTValue(getAccountAddressAt(I))
 
   syntax KItem ::= "#app_local_put" TValue TValue
-  //-------------------------------------------
+  //---------------------------------------------
   rule <k> #app_local_put ADDR APP => .K ... </k>
        <stack> (NEWVAL:TValue) : (KEY:Bytes) : (_:Int) : XS => XS </stack>
        <stacksize> S => S -Int 3 </stacksize>
@@ -1443,7 +1443,7 @@ Stateful TEAL Operations
 
 
   syntax KItem ::= "#app_local_del" TValue TValue
-  //-------------------------------------------
+  //---------------------------------------------
   rule <k> #app_local_del ADDR APP => .K ... </k>
        <stack> (KEY:Bytes) : (_:Int) : XS => XS </stack>
        <stacksize> S => S -Int 2 </stacksize>
@@ -1483,7 +1483,7 @@ Stateful TEAL Operations
        <stack> (KEY:Bytes) : _ </stack>
 
   syntax KItem ::= "#app_global_get" TValue
-  //--------------------------------------
+  //---------------------------------------
   rule <k> #app_global_get V => .K ... </k>
        <stack> (_:Bytes) : XS => V : XS </stack>
     requires (notBool isInt(V)) orElseBool {V}:>Int >=Int 0
@@ -1506,7 +1506,7 @@ Stateful TEAL Operations
     requires notBool isTValue(getForeignAppAt(I))
 
   syntax KItem ::= "#app_global_get_ex" TValue
-  //-----------------------------------------
+  //------------------------------------------
   rule <k> #app_global_get_ex V  => .K ... </k>
        <stack> (_:Bytes) : (_:Int) : XS => 1 : V : XS </stack>
     requires (notBool isInt(V)) orElseBool {V}:>Int >=Int 0
@@ -1523,7 +1523,7 @@ Stateful TEAL Operations
        <stack> (_:TValue) : (_:Bytes) : _ </stack>
 
   syntax KItem ::= "#app_global_put" TValue
-  //--------------------------------------
+  //---------------------------------------
   rule <k> #app_global_put APP => .K ... </k>
        <stack> (NEWVAL:TValue) : (KEY:Bytes) : XS => XS </stack>
        <stacksize> S => S -Int 2 </stacksize>
@@ -1554,7 +1554,7 @@ Stateful TEAL Operations
        <stack> (_:Bytes) : _ </stack>
 
   syntax KItem ::= "#app_global_del" TValue
-  //--------------------------------------
+  //---------------------------------------
   rule <k> #app_global_put APP => .K ... </k>
        <stack> (KEY:Bytes) : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
@@ -1593,7 +1593,7 @@ Stateful TEAL Operations
     requires notBool isTValue(getAccountAddressAt(I))
 
   syntax KItem ::= "#asset_holding_get" TValue
-  // ----------------------------------------
+  // -----------------------------------------
   rule <k> #asset_holding_get RET => .K ... </k>
        <stack> (_:Int) : (_:Int) : XS => 1 : RET : XS </stack>
     requires {RET}:>Int >=Int 0
@@ -1627,7 +1627,7 @@ Stateful TEAL Operations
     requires S >=Int MAX_STACK_DEPTH
 
   syntax KItem ::= "#asset_params_get" TValue
-  // ---------------------------------------
+  // ----------------------------------------
   rule <k> #asset_params_get RET => .K ... </k>
        <stack> (_:Int) : XS => 1 : RET : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>

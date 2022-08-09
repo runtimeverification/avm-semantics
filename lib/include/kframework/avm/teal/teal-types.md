@@ -53,18 +53,18 @@ There are only two types in TEAL:
     ```
 
 TEAL TValue Representation
--------------------------
+--------------------------
 
 The `TValue` sort represents all possible TEAL values.
 
 ```k
   syntax TValue ::= TUInt64 | TBytes
-  syntax TValueNeList ::= TValue | TValue TValueList
+  syntax TValueNeList ::= TValue | TValue TValueNeList
   syntax TValueList ::= ".TValueList" | TValueNeList
   syntax MaybeTValue ::= "NoTValue" [klabel(NoTValue), symbol] | TValue
 
   syntax TValuePair ::= "(" TValue "," TValue ")"
-  syntax TValuePairNeList ::= TValuePair | TValuePair TValuePairList
+  syntax TValuePairNeList ::= TValuePair | TValuePair TValuePairNeList
   syntax TValuePairList ::= ".TValuePairList" | TValuePairNeList
   syntax MaybeTValuePair ::= "NoTValuePair" | TValuePair
 ```
@@ -192,25 +192,25 @@ We expose several functions for working with lists.
 
 ```k
   syntax TValue ::= getTValueAt(Int, TValueNeList) [function]
-  //-------------------------------------------------------
+  //---------------------------------------------------------
   rule getTValueAt(I, _ VL) => getTValueAt(I -Int 1, VL)
     requires I >Int 0
   rule getTValueAt(0, V _) => V
   rule getTValueAt(0, V  ) => V
 
   syntax Int ::= size(TValueList) [function]
-  // ----------------------------------------
-  rule size(_ VL:TValueList) => 1 +Int size(VL)
+  // ---------------------------------------
+  rule size(_ VL:TValueNeList) => 1 +Int size(VL)
   rule size(_:TValue       ) => 1
   rule size(.TValueList    ) => 0
 
   syntax TValueNeList ::= reverse(TValueNeList) [function]
-  // -------------------------------------------------
+  // -----------------------------------------------------
   rule reverse(V:TValue VL) => append(V, reverse(VL))
   rule reverse(V:TValue   ) => V
 
   syntax TValueNeList ::= append(TValue, TValueList) [function]
-  // -------------------------------------------------------
+  // ----------------------------------------------------------
   rule append(V, V':TValue VL) => V' append(V, VL)
   rule append(V, V':TValue   ) => V' V
   rule append(V, .TValueList ) => V
@@ -220,8 +220,8 @@ We expose several functions for working with lists.
   rule reverse(V:TValuePair VL) => append(V, reverse(VL))
   rule reverse(V:TValuePair   ) => V
 
-  syntax TValuePairList ::= append(TValuePair, TValuePairList) [function]
-  // -------------------------------------------------------------------
+  syntax TValuePairNeList ::= append(TValuePair, TValuePairList) [function]
+  // ----------------------------------------------------------------------
   rule append(V, V':TValuePair VL) => V' append(V, VL)
   rule append(V, V':TValuePair   ) => V' V
 ```
@@ -239,11 +239,11 @@ our internal K representation:
 ### Boolean conversions
 
 ```k
-  syntax Bool ::= int2Bool(TUInt64) [function, functional]
+  syntax Bool ::= int2Bool(Int) [function, functional]
   rule int2Bool(0) => false
   rule int2Bool(A) => true requires A =/=Int 0
 
-  syntax TUInt64 := bool2Int(Bool)  [function, functional]
+  syntax Int ::= bool2Int(Bool)  [function, functional, smtlib(bool2Int)]
   rule bool2Int(true ) => 1
   rule bool2Int(false) => 0
 ```
