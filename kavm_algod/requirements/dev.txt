@@ -1,6 +1,7 @@
 -r base.txt
-flake8==4.0.1
+autoflake==1.4
 isort==5.10.1
 mypy==0.942
 pytest==7.1.2
 black==22.6.0
+

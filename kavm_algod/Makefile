@@ -59,7 +59,7 @@ check-isort: $(VENV_DEV)
 	$(ACTIVATE_DEV) && isort --profile black --check .
 
 autoflake: $(VENV_DEV)
-	$(ACTIVATE_DEV) && autoflake --remove-all-unused-imports --recursive kavm_algod tests
+	$(ACTIVATE_DEV) && autoflake --in-place --remove-all-unused-imports --recursive kavm_algod tests
 
 check-autoflake: $(VENV_DEV)
 	$(ACTIVATE_DEV) && autoflake --remove-all-unused-imports --recursive --check kavm_algod tests
