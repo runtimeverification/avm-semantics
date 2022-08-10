@@ -332,7 +332,7 @@ tests/scenarios/%.avm-simulation.unit: tests/scenarios/%.avm-simulation
 ## AVM Symbolic Proof Tests
 ###########################
 
-avm_prove_tests := $(wildcard tests/specs/*-spec.k)
+avm_prove_tests := $(wildcard tests/specs/*-spec.k) $(wildcard tests/specs/*/*-spec.k)
 
 test-avm-prove: $(avm_prove_tests:=.prove)
 
