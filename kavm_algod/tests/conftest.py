@@ -39,7 +39,6 @@ def faucet(algod: AlgodClient, kmd: KMDClient) -> Dict[str, Optional[Any]]:
         if account['status'] != 'Offline' and account['amount'] > 1000_000_000:
             faucet_address = key
             break
-        pass
 
     faucet_private_key = kmd.export_key(default_wallet_handle, '', faucet_address)
 

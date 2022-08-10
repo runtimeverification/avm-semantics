@@ -32,6 +32,7 @@ exclude = "(venv-dev|venv-prod)"
 exclude = "(venv-dev)"
 target_version = ["py38"]
 line-length = 88
+skip-string-normalization="True"
 
 [tool.isort]
 py_version=38

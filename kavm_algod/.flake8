@@ -1,8 +1,0 @@
-[flake8]
-ignore =
-   # line too long
-   E501
-   # whitespace before ':'
-   E203
-max_line_length = 88
-exclude = venv-dev,venv-prod

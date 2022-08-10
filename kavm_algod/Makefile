@@ -2,7 +2,7 @@
         $(VENV_DEV_DIR) $(VENV_PROD_DIR)                           \
         test test-unit                                             \
         check-code-style black check-black isort check-isort       \
-	check-flake8 check-mypy
+	autoflake check-autoflake check-mypy
 
 
 all: check-code-style test
@@ -50,7 +50,7 @@ test-integration: $(VENV_DEV)
 
 # Checks
 
-check-code-style: check-isort check-flake8 check-black
+check-code-style: check-isort check-autoflake check-black
 
 isort: $(VENV_DEV)
 	$(ACTIVATE_DEV) && isort --profile black .
@@ -58,17 +58,20 @@ isort: $(VENV_DEV)
 check-isort: $(VENV_DEV)
 	$(ACTIVATE_DEV) && isort --profile black --check .
 
-check-flake8: $(VENV_DEV)
-	$(ACTIVATE_DEV) && flake8 kavm_algod tests
+autoflake: $(VENV_DEV)
+	$(ACTIVATE_DEV) && autoflake --remove-all-unused-imports --recursive kavm_algod tests
+
+check-autoflake: $(VENV_DEV)
+	$(ACTIVATE_DEV) && autoflake --remove-all-unused-imports --recursive --check kavm_algod tests
 
 check-mypy: $(VENV_DEV)
 	$(ACTIVATE_DEV) && mypy .
 
 black: $(VENV_DEV)
-	$(ACTIVATE_DEV) && black --skip-string-normalization .
+	$(ACTIVATE_DEV) && black .
 
 check-black: $(VENV_DEV)
-	$(ACTIVATE_DEV) && black --check --skip-string-normalization .
+	$(ACTIVATE_DEV) && black --check .
 
 clean:
 	rm -rf $(VENV_DEV_DIR) $(VENV_PROD_DIR) build src/kavm_pyk.egg-info .myp_cache
