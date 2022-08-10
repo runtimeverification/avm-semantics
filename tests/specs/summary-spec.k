@@ -66,6 +66,5 @@ module SUMMARY-SPEC
           <returnstatus>
             "Failure - program is stuck" => ?_
           </returnstatus>
-      requires SS +Int 2 <Int MAX_STACK_DEPTH
 
 endmodule

@@ -23,21 +23,19 @@ module VERIFICATION
      andBool (log2Int(I) <Int B andBool B <Int 64)
     [simplification]
 
-  syntax Int ::= sum(TValueNeList) [function]
-  rule sum(N:TBytes REST:TValueNeList) => Bytes2Int(normalizeB(N), BE, Unsigned) +Int sum(REST)
-  rule sum(N:TBytes) => Bytes2Int(normalizeB(N), BE, Unsigned)
-  rule sum(_) => 0 [owise]
+////////////////////////////////////////////////////////////////////////////////
+// Map reasoning
+////////////////////////////////////////////////////////////////////////////////
 
-  syntax Int ::= sumTo(Int) [macro]
-  rule sumTo(N:Int) => (N *Int (N +Int 1)) /Int 2
-
-  syntax Int ::= sumTo(Int, Int) [macro]
-  rule sumTo(I:Int, N:Int) => maxInt(0, sumTo(N) -Int sumTo(I -Int 1))
-
-//  rule sum({N:TUInt64}:>Int REST:TValueList) => N +Int sum(REST)
-//  rule sum({N:TUInt64}:>Int) => N
-//  rule sum(NoTValue) => 0
+  rule _:Map [X <- N] [X] => N                        [simplification]
+  rule M:Map [X <- _] [Y] => M [Y]  requires X =/=K Y [simplification]
     
+  // Normalize Maps
+  rule M:Map [ K <- _ ] [ K <- V ] => M [ K <- V ]  [simplification]
+  rule M:Map [ K1 <- V1 ] [ K2 <- V2 ] => M [ K2 <- V2 ] [ K1 <- V1 ]
+    requires K2 <Int K1 [simplification]
+
+  // in_keys
   rule X:Label in_keys( M:Map [Y:Label <- _] ) => false
     requires (notBool (X in_keys ( M ))) andBool (X =/=K Y)  [simplification]
 
@@ -45,39 +43,51 @@ module VERIFICATION
   rule X in_keys( M:Map [Y <- _] ) => X in_keys(M) 
     requires X =/=K Y [simplification]
 
-  rule _:Map [X <- N] [X] => N  [simplification]
-  rule M:Map [X <- _] [Y] => M [Y]  
-    requires X =/=K Y [simplification]
-
-  rule size( _:Map [_ <- _] ) >Int 0 => true  [simplification]
+  // size
+  rule size( _:Map [_ <- _] )  >Int 0 => true   [simplification]
   rule size( _:Map [_ <- _] ) ==Int 0 => false  [simplification]
   rule { size( _:Map [_ <- _] ) #Equals 0 } => #Bottom  [simplification]
 
-  rule N:Int +Int M:Int >Int M:Int => N:Int >Int 0
-    requires M =/=Int 0 [simplification]
+  // Subterm equality
+  rule { M1:Map [ K <- V1 ] #Equals M2:Map [ K <- V2 ] } => { M1 #Equals M2 } #And { V1 #Equals V2 } [simplification]
+  rule { M1:Map [ K <- V  ] #Equals M2:Map [ K <- V  ] } => { M1 #Equals M2 }
+    requires notBool (K in_keys(M1) orBool K in_keys (M1)) [simplification]
 
+////////////////////////////////////////////////////////////////////////////////
+// TStack
+////////////////////////////////////////////////////////////////////////////////
+
+  // #sizeTStack
   rule #sizeTStack( S:TStack ) => 0
-    requires S ==K .TStack  [simplification, smt-lemma]
+    requires S ==K .TStack  [simplification]
 
   rule #sizeTStack( S:TStack, N:Int ) => N
-    requires S ==K .TStack  [simplification, smt-lemma]
+    requires S ==K .TStack  [simplification]
 
   rule #sizeTStack( S:TStack ) >Int 0 => true
-    requires S =/=K .TStack  [simplification, smt-lemma]
+    requires S =/=K .TStack  [simplification]
 
   rule #sizeTStack( S:TStack, N:Int ) >Int 0 => N >=Int 0
-    requires S =/=K .TStack  [simplification, smt-lemma]
+    requires S =/=K .TStack  [simplification]
 
-  rule #sizeTStack(_) >=Int 0 => true  [simplification, smt-lemma]
+  rule #sizeTStack(_) >=Int 0 => true  [simplification]
   rule #sizeTStack(_, 0) >=Int 0 => true  [simplification, smt-lemma]
 
   rule #sizeTStack(_, N) >=Int N => true  [simplification, smt-lemma]
 
-  rule #if COND #then 1 #else 0 #fi <=Int 0 => notBool ( COND ) [simplification]
-  rule #if COND #then 1 #else 0 #fi >Int 0 => COND [simplification]
+////////////////////////////////////////////////////////////////////////////////
+// Int and Byte conversions
+////////////////////////////////////////////////////////////////////////////////
 
   rule Bytes2Int ( Int2Bytes ( X, BYTE_ORDER, SIGNEDNESS ), BYTE_ORDER, SIGNEDNESS ) => X [simplification]
   rule Bytes2Int ( Int2Bytes ( (log2Int(X) +Int 8) /Int 8, X, BYTE_ORDER ), BYTE_ORDER, Unsigned ) => X [simplification]
+
+  // Subterm equality
+  rule { Int2Bytes( I1, BYTE_ORDER:Endianness, SIGNEDNESS:Signedness ) #Equals Int2Bytes( I2, BYTE_ORDER, SIGNEDNESS ) } => { I1 #Equals I2 } [simplification]
+
+////////////////////////////////////////////////////////////////////////////////
+// Int and Bool conversions
+////////////////////////////////////////////////////////////////////////////////
 
   rule bool2Int(B)  <=Int 0 => notBool B  [simplification, smt-lemma]
   rule bool2Int(B)   >Int 0 =>         B  [simplification, smt-lemma]
@@ -91,16 +101,18 @@ module VERIFICATION
   rule A >=Int bool2Int(_) => true requires A >=Int 1 [simplification]
   rule A <=Int bool2Int(_) => true requires A <=Int 0 [simplification]
 
-  rule M:Map [ K <- _ ] [ K <- V ] => M [ K <- V ]  [simplification]
+////////////////////////////////////////////////////////////////////////////////
+// #if #then #else #fi
+////////////////////////////////////////////////////////////////////////////////
 
-  rule M:Map [ K1 <- V1 ] [ K2 <- V2 ] => M [ K2 <- V2 ] [ K1 <- V1 ]
-    requires K2 <Int K1 [simplification]
+  rule #if COND #then 1 #else 0 #fi <=Int 0 => notBool (COND) [simplification]
+  rule #if COND #then 1 #else 0 #fi  >Int 0 =>          COND  [simplification]
 
-  rule { M1:Map [ K <- V ] #Equals M2:Map [ K <- V ] } => { M1 #Equals M2 } [simplification]
+////////////////////////////////////////////////////////////////////////////////
+// Arithmetic
+////////////////////////////////////////////////////////////////////////////////
 
-  rule { M1:Map [ K <- V1 ] #Equals M2:Map [ K <- V2 ] } => { M1 #Equals M2 } #And { V1 #Equals V2 } [simplification]
-
-  rule { Int2Bytes( I1, BYTE_ORDER:Endianness, SIGNEDNESS:Signedness ) #Equals Int2Bytes( I2, BYTE_ORDER, SIGNEDNESS ) } => 
-  { I1 #Equals I2 } [simplification]
+  rule N:Int +Int M:Int >Int M:Int => N:Int >Int 0
+    requires M =/=Int 0 [simplification, concrete(M)]
 
 endmodule
