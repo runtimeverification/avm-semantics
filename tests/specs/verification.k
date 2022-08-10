@@ -23,11 +23,17 @@ module VERIFICATION
      andBool (log2Int(I) <Int B andBool B <Int 64)
     [simplification]
 
-  syntax Int ::= sum(MaybeTValue) [function]
-
-  rule sum(N:TBytes REST:TValueList) => Bytes2Int(normalizeB(N), BE, Unsigned) +Int sum(REST)
+  syntax Int ::= sum(TValueNeList) [function]
+  rule sum(N:TBytes REST:TValueNeList) => Bytes2Int(normalizeB(N), BE, Unsigned) +Int sum(REST)
   rule sum(N:TBytes) => Bytes2Int(normalizeB(N), BE, Unsigned)
   rule sum(_) => 0 [owise]
+
+  syntax Int ::= sumTo(Int) [macro]
+  rule sumTo(N:Int) => (N *Int (N +Int 1)) /Int 2
+
+  syntax Int ::= sumTo(Int, Int) [macro]
+  rule sumTo(I:Int, N:Int) => maxInt(0, sumTo(N) -Int sumTo(I -Int 1))
+
 //  rule sum({N:TUInt64}:>Int REST:TValueList) => N +Int sum(REST)
 //  rule sum({N:TUInt64}:>Int) => N
 //  rule sum(NoTValue) => 0
@@ -62,14 +68,39 @@ module VERIFICATION
   rule #sizeTStack( S:TStack, N:Int ) >Int 0 => N >=Int 0
     requires S =/=K .TStack  [simplification, smt-lemma]
 
+  rule #sizeTStack(_) >=Int 0 => true  [simplification, smt-lemma]
+  rule #sizeTStack(_, 0) >=Int 0 => true  [simplification, smt-lemma]
+
+  rule #sizeTStack(_, N) >=Int N => true  [simplification, smt-lemma]
+
   rule #if COND #then 1 #else 0 #fi <=Int 0 => notBool ( COND ) [simplification]
   rule #if COND #then 1 #else 0 #fi >Int 0 => COND [simplification]
 
   rule Bytes2Int ( Int2Bytes ( X, BYTE_ORDER, SIGNEDNESS ), BYTE_ORDER, SIGNEDNESS ) => X [simplification]
+  rule Bytes2Int ( Int2Bytes ( (log2Int(X) +Int 8) /Int 8, X, BYTE_ORDER ), BYTE_ORDER, Unsigned ) => X [simplification]
 
-//   rule #Not ( { true #Equals X:Int <=Int Y:Int } ) => { true #Equals X >Int Y } [simplification]
+  rule bool2Int(B)  <=Int 0 => notBool B  [simplification, smt-lemma]
+  rule bool2Int(B)   >Int 0 =>         B  [simplification, smt-lemma]
 
-//   rule {X <=Int 0} #And {X >Int 0} => #Bottom [simplification]
-//   rule {X <Int 0} #And {X >=Int 0} => #Bottom [simplification]
+  rule bool2Int(_) <=Int A => true requires A >=Int 1 [simplification]
+  rule bool2Int(_) >=Int A => true requires A <=Int 0 [simplification]
+
+  rule int2Bool(bool2Int(I)) => I [simplification]
+  rule bool2Int(int2Bool(B)) => B [simplification]
+
+  rule A >=Int bool2Int(_) => true requires A >=Int 1 [simplification]
+  rule A <=Int bool2Int(_) => true requires A <=Int 0 [simplification]
+
+  rule M:Map [ K <- _ ] [ K <- V ] => M [ K <- V ]  [simplification]
+
+  rule M:Map [ K1 <- V1 ] [ K2 <- V2 ] => M [ K2 <- V2 ] [ K1 <- V1 ]
+    requires K2 <Int K1 [simplification]
+
+  rule { M1:Map [ K <- V ] #Equals M2:Map [ K <- V ] } => { M1 #Equals M2 } [simplification]
+
+  rule { M1:Map [ K <- V1 ] #Equals M2:Map [ K <- V2 ] } => { M1 #Equals M2 } #And { V1 #Equals V2 } [simplification]
+
+  rule { Int2Bytes( I1, BYTE_ORDER:Endianness, SIGNEDNESS:Signedness ) #Equals Int2Bytes( I2, BYTE_ORDER, SIGNEDNESS ) } => 
+  { I1 #Equals I2 } [simplification]
 
 endmodule
