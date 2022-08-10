@@ -1,5 +1,3 @@
-from typing import Any, Dict
-
 from algosdk.constants import ASSETTRANSFER_TXN, PAYMENT_TXN
 from algosdk.future.transaction import (
     AssetTransferTxn,
@@ -8,8 +6,9 @@ from algosdk.future.transaction import (
     Transaction,
 )
 from pyk.kast import KApply, KAst
+from pyk.kastManip import splitConfigFrom
 
-from kavm_algod.pyk_utils import extract_cells, int_token_cell, string_token_cell
+from kavm_algod.pyk_utils import int_token_cell, string_token_cell
 
 
 def transaction_to_k(txn: Transaction) -> KApply:
@@ -79,56 +78,34 @@ def transaction_from_k(kast_term: KAst) -> Transaction:
 
     Raise ValueError if the transaction is marformed
     """
-    txHeaderFields: Dict[str, KAst] = {}
-    txHeaderFields = extract_cells(
-        kast_term,
-        [
-            '<sender>',
-            '<fee>',
-            '<firstValid>',
-            '<lastValid>',
-            '<genesisHash>',
-            '<txType>',
-        ],
-    )
+    (_, txHeaderCells) = splitConfigFrom(kast_term)
 
     sp = SuggestedParams(
-        int(txHeaderFields['<fee>'].args[0].token),
-        int(txHeaderFields['<firstValid>'].args[0].token),
-        int(txHeaderFields['<lastValid>'].args[0].token),
-        txHeaderFields['<genesisHash>'].args[0].token,
+        int(txHeaderCells['FEE_CELL'].token),
+        int(txHeaderCells['FIRSTVALID_CELL'].token),
+        int(txHeaderCells['LASTVALID_CELL'].token),
+        txHeaderCells['GENESISHASH_CELL'].token,
         flat_fee=True,
     )
 
-    txnType = txHeaderFields['<txType>'].args[0].token.strip('"')
+    txnType = txHeaderCells['TXTYPE_CELL'].token.strip('"')
     result = None
     if txnType == PAYMENT_TXN:
-        payTxFields: Dict[str, Any] = {}
-        payTxFields = extract_cells(kast_term, ['<receiver>', '<amount>', '<closeTo>'])
+        (_, payTxCells) = splitConfigFrom(kast_term)
         result = PaymentTxn(
-            sender=txHeaderFields['<sender>'].args[0].token.strip('"'),
+            sender=txHeaderCells['SENDER_CELL'].token.strip('"'),
             sp=sp,
-            receiver=payTxFields['<receiver>'].args[0].token.strip('"'),
-            amt=int(payTxFields['<amount>'].args[0].token),
+            receiver=payTxCells['RECEIVER_CELL'].token.strip('"'),
+            amt=int(payTxCells['AMOUNT_CELL'].token),
         )
     elif txnType == ASSETTRANSFER_TXN:
-        assetTransferTxFields: Dict[str, Any] = {}
-        assetTransferTxFields = extract_cells(
-            kast_term,
-            [
-                '<xferAsset>',
-                '<assetAmount>',
-                '<assetReceiver>',
-                '<assetASender>',
-                '<assetCloseTo>',
-            ],
-        )
+        (_, assetTransferTxCells) = splitConfigFrom(kast_term)
         result = AssetTransferTxn(
-            sender=txHeaderFields['<sender>'].args[0].token.strip('"'),
+            sender=txHeaderCells['SENDER_CELL'].token.strip('"'),
             sp=sp,
-            receiver=assetTransferTxFields['<assetReceiver>'].args[0].token.strip('"'),
-            amt=int(assetTransferTxFields['<assetAmount>'].args[0].token.strip('"')),
-            index=int(assetTransferTxFields['<xferAsset>'].args[0].token.strip('"')),
+            receiver=assetTransferTxCells['ASSETRECEIVER_CELL'].token.strip('"'),
+            amt=int(assetTransferTxCells['ASSETAMOUNT_CELL'].token.strip('"')),
+            index=int(assetTransferTxCells['XFERASSET_CELL'].token.strip('"')),
         )
     else:
         raise ValueError(
