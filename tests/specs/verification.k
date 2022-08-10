@@ -71,9 +71,16 @@ module VERIFICATION
     requires S =/=K .TStack  [simplification]
 
   rule #sizeTStack(_) >=Int 0 => true  [simplification]
-  rule #sizeTStack(_, 0) >=Int 0 => true  [simplification, smt-lemma]
+  rule #sizeTStack(_, 0) >=Int 0 => true  [simplification]
+  
+  rule L <Int #sizeTStack(_, N) +Int M => true
+    requires L <Int (N +Int M)  [simplification]
 
-  rule #sizeTStack(_, N) >=Int N => true  [simplification, smt-lemma]
+  rule L <Int #sizeTStack(_, M) => true
+    requires L <Int M  [simplification]
+
+  rule L <Int #sizeTStack(_) +Int M => true
+    requires L <Int M  [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Int and Byte conversions
@@ -89,8 +96,8 @@ module VERIFICATION
 // Int and Bool conversions
 ////////////////////////////////////////////////////////////////////////////////
 
-  rule bool2Int(B)  <=Int 0 => notBool B  [simplification, smt-lemma]
-  rule bool2Int(B)   >Int 0 =>         B  [simplification, smt-lemma]
+  rule bool2Int(B)  <=Int 0 => notBool B  [simplification]
+  rule bool2Int(B)   >Int 0 =>         B  [simplification]
 
   rule bool2Int(_) <=Int A => true requires A >=Int 1 [simplification]
   rule bool2Int(_) >=Int A => true requires A <=Int 0 [simplification]
