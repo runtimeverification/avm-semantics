@@ -60,14 +60,14 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
 ```k
   configuration
       <appCallTxFields multiplicity="?">
-        <applicationID>     NoTValue </applicationID>
-        <onCompletion>      NoTValue </onCompletion>
-        <accounts>          NoTValue </accounts>
-        <approvalProgram>   NoTValue </approvalProgram>
-        <clearStateProgram> NoTValue </clearStateProgram>
-        <applicationArgs>   NoTValue </applicationArgs> // maximum size is 2KB, and all args are internally byte strings
-        <foreignApps>       NoTValue </foreignApps>
-        <foreignAssets>     NoTValue </foreignAssets>
+        <applicationID>     NoTValue    </applicationID>
+        <onCompletion>      NoTValue    </onCompletion>
+        <accounts>          .TValueList </accounts>
+        <approvalProgram>   NoTValue    </approvalProgram>
+        <clearStateProgram> NoTValue    </clearStateProgram>
+        <applicationArgs>   .TValueList </applicationArgs> // maximum size is 2KB, and all args are internally byte strings
+        <foreignApps>       .TValueList </foreignApps>
+        <foreignAssets>     .TValueList </foreignAssets>
         <globalStateSchema>
           <globalNui> NoTValue </globalNui>
           <globalNbs> NoTValue </globalNbs>
@@ -199,9 +199,9 @@ module ALGO-TXN
   rule [[ getCurrentTxn() => I ]]
     <currentTx> I </currentTx>
 
-  syntax MaybeTValue ::= getTxnField(Int, TxnField)          [function]
-  syntax MaybeTValue ::= getTxnField(Int, TxnaFieldExt, Int) [function]
-  //------------------------------------------------------------------
+  syntax MaybeTValue ::= getTxnField(Int, TxnField)          [function, functional]
+  syntax MaybeTValue ::= getTxnField(Int, TxnaFieldExt, Int) [function, functional]
+  //-------------------------------------------------------------------------------
   rule [[ getTxnField(I, TxID) => normalize(I) ]]
        <transaction>
          <txID> I </txID>
@@ -664,79 +664,23 @@ module ALGO-TXN
 
 *Failure*
 ```k
-  // 1. transaction does not exist,
-  rule [[ getTxnField(I, _) => NoTValue ]]
-       <transactions> TS </transactions>
-    requires notBool (I in_txns (<transactions> TS </transactions>))
-
-  rule [[ getTxnField(I, _, _) => NoTValue ]]
-       <transactions> TS </transactions>
-    requires notBool (I in_txns (<transactions> TS </transactions>))
-
-  // 2. field is not valid for the transaction type (or the transaction type is invalid)
-  rule [[ getTxnField(ID, FIELD) => NoTValue ]]
-       <transaction>
-         <txID>     ID  </txID>
-         <typeEnum> TYPE  </typeEnum>
-         ...
-       </transaction>
-    requires notBool #isValidForTxnType(FIELD, TYPE)
-
-  rule [[ getTxnField(ID, FIELD, _) => NoTValue ]]
-       <transaction>
-         <txID>     ID  </txID>
-         <typeEnum> TYPE  </typeEnum>
-         ...
-       </transaction>
-    requires notBool #isValidForTxnType(FIELD, TYPE)
-
-  // 3. index is out of bounds (for array fields)
-  rule [[ getTxnField(I, ApplicationArgs, J) => NoTValue ]]
-       <transaction>
-         <txID> I </txID>
-         <applicationArgs> X </applicationArgs>
-         ...
-       </transaction>
-    requires 0 >Int J orBool J >=Int size(X)
-
-  rule [[ getTxnField(I, Accounts, J) => NoTValue ]]
-       <transaction>
-         <txID> I </txID>
-         <accounts> X </accounts>
-         ...
-       </transaction>
-    requires 0 >Int J orBool J >=Int size(X)
-
-  rule [[ getTxnField(I, ForeignApps, J) => NoTValue ]]
-       <transaction>
-         <txID> I </txID>
-         <foreignApps> X </foreignApps>
-         ...
-       </transaction>
-    requires 0 >Int J orBool J >=Int size(X)
-
-  rule [[ getTxnField(I, ForeignAssets, J) => NoTValue ]]
-       <transaction>
-         <txID> I </txID>
-         <foreignAssets> X </foreignAssets>
-         ...
-       </transaction>
-    requires 0 >Int J orBool J >=Int size(X)
+  rule getTxnField(_, _   ) => NoTValue [owise]
+  rule getTxnField(_, _, _) => NoTValue [owise]
 ```
 
 *Other Helper Functions*
 
 ```k
   syntax MaybeTValue ::= getAccountAddressAt(Int) [function]
-  //--------------------------------------------------
+  //--------------------------------------------------------
   rule getAccountAddressAt(I) => getTxnField(getCurrentTxn(), Accounts, I)
 
   syntax MaybeTValue ::= getForeignAppAt(Int) [function]
-  //----------------------------------------------
+  //----------------------------------------------------
   rule getForeignAppAt(I) => getTxnField(getCurrentTxn(), ForeignApps, I)
 
   syntax MaybeTValue ::= getForeignAssetAt(Int) [function]
-  //------------------------------------------------
+  //------------------------------------------------------
   rule getForeignAssetAt(I) => getTxnField(getCurrentTxn(), ForeignAssets, I)
 ```
 
