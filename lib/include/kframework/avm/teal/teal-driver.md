@@ -161,7 +161,7 @@ Opcode Semantics
 
   // Auxilary funtion that interprets two `UInt64` as one Int, big-endian
   syntax Int ::= asUInt128(TUInt64, TUInt64) [function, functional]
-  // ------------------------------------
+  // --------------------------------------------------------------
   rule asUInt128(I1, I2) => (I1 <<Int 64) +Int I2
 
 ```
@@ -261,36 +261,36 @@ Note that we need to perform the left shift modulo `MAX_UINT64 + 1`, otherwise t
 
 ```k
   rule <k> < => .K ... </k>
-       <stack> I2 : I1 : XS => (#if I1 <Int I2 #then 1 #else 0 #fi) : XS </stack>
+       <stack> I2 : I1 : XS => bool2Int (I1 <Int I2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> > => .K ... </k>
-       <stack> I2 : I1 : XS => (#if I1 >Int I2 #then 1 #else 0 #fi) : XS </stack>
+       <stack> I2 : I1 : XS => bool2Int (I1 >Int I2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> <= => .K ... </k>
-       <stack> I2 : I1 : XS => (#if I1 <=Int I2 #then 1 #else 0 #fi) : XS </stack>
+       <stack> I2 : I1 : XS => bool2Int (I1 <=Int I2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> >= => .K ... </k>
-       <stack> I2 : I1 : XS => (#if I1 >=Int I2 #then 1 #else 0 #fi) : XS </stack>
+       <stack> I2 : I1 : XS => bool2Int (I1 >=Int I2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> == => .K ... </k>
-       <stack> (I2:Int) : (I1:Int) : XS => (#if I1 ==Int I2 #then 1 #else 0 #fi) : XS </stack>
+       <stack> (I2:Int) : (I1:Int) : XS => bool2Int (I1 ==Int I2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> == => .K ... </k>
-       <stack> (B2:Bytes) : (B1:Bytes) : XS => (#if B1 ==K B2 #then 1 #else 0 #fi) : XS </stack>
+       <stack> (B2:Bytes) : (B1:Bytes) : XS => bool2Int (B1 ==K B2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> != => .K ... </k>
-       <stack> (I2:Int) : (I1:Int) : XS => (#if I1 =/=K I2 #then 1 #else 0 #fi) : XS </stack>
+       <stack> (I2:Int) : (I1:Int) : XS => bool2Int (I1 =/=K I2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> != => .K ... </k>
        <stack> (B2:Bytes) : (B1:Bytes) : XS =>
-               (#if B1 =/=K B2 #then 1 #else 0 #fi) : XS </stack>
+               bool2Int (B1 =/=K B2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 ```
 
@@ -299,16 +299,16 @@ Note that we need to perform the left shift modulo `MAX_UINT64 + 1`, otherwise t
 ```k
   rule <k> && => .K ... </k>
        <stack> I2 : I1 : XS =>
-               (#if I1 >Int 0 andBool I2 >Int 0 #then 1 #else 0 #fi) : XS </stack>
+               bool2Int (I1 >Int 0 andBool I2 >Int 0) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> || => .K ... </k>
        <stack> I2 : I1 : XS =>
-               (#if I1 >Int 0 orBool I2 >Int 0 #then 1 #else 0 #fi) : XS </stack>
+               bool2Int (I1 >Int 0 orBool I2 >Int 0) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> ! => .K ... </k>
-       <stack> I : XS => (#if I ==Int 0 #then 1 #else 0 #fi) : XS </stack>
+       <stack> I : XS => bool2Int (I ==Int 0) : XS </stack>
 ```
 
 ### Bitwise Operations
@@ -653,7 +653,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
 ```k
   rule <k> b< => .K ... </k>
        <stack> B:Bytes : A:Bytes : XS =>
-               (#if Bytes2Int(A, BE, Unsigned) <Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+               bool2Int (Bytes2Int(A, BE, Unsigned) <Int Bytes2Int(B, BE, Unsigned)) : XS
        </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
@@ -661,7 +661,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
 
   rule <k> b> => .K ... </k>
        <stack> B:Bytes : A:Bytes : XS =>
-               (#if Bytes2Int(A, BE, Unsigned) >Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+               bool2Int (Bytes2Int(A, BE, Unsigned) >Int Bytes2Int(B, BE, Unsigned)) : XS
        </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
@@ -669,7 +669,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
 
   rule <k> b<= => .K ... </k>
        <stack> B:Bytes : A:Bytes : XS =>
-               (#if Bytes2Int(A, BE, Unsigned) <=Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+               bool2Int (Bytes2Int(A, BE, Unsigned) <=Int Bytes2Int(B, BE, Unsigned)) : XS
        </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
@@ -677,7 +677,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
 
   rule <k> b>= => .K ... </k>
        <stack> B:Bytes : A:Bytes : XS =>
-               (#if Bytes2Int(A, BE, Unsigned) >=Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+               bool2Int (Bytes2Int(A, BE, Unsigned) >=Int Bytes2Int(B, BE, Unsigned)) : XS
        </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
@@ -685,7 +685,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
 
   rule <k> b== => .K ... </k>
        <stack> B:Bytes : A:Bytes : XS =>
-               (#if Bytes2Int(A, BE, Unsigned) ==Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+               bool2Int (Bytes2Int(A, BE, Unsigned) ==Int Bytes2Int(B, BE, Unsigned)) : XS
        </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
@@ -693,7 +693,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
 
   rule <k> b!= => .K ... </k>
        <stack> B:Bytes : A:Bytes : XS =>
-               (#if Bytes2Int(A, BE, Unsigned) =/=Int Bytes2Int(B, BE, Unsigned) #then 1 #else 0 #fi) : XS
+               bool2Int (Bytes2Int(A, BE, Unsigned) =/=Int Bytes2Int(B, BE, Unsigned)) : XS
        </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
@@ -788,7 +788,7 @@ We recite the [specification](https://developer.algorand.org/docs/get-details/da
    requires notBool (0 <=Int B andBool B <Int lengthBytes(ARRAY) *Int 8)
 
   syntax Bytes ::= setBitInBytes(Bytes, Int, Int) [function]
-  //------------------------------------------------------------
+  //--------------------------------------------------------
   rule setBitInBytes(ARRAY, B, V) =>
          ARRAY[B divInt 8 <- setBitUInt8( ARRAY[B divInt 8]
                                         , 7 -Int B modInt 8
@@ -800,7 +800,7 @@ We recite the [specification](https://developer.algorand.org/docs/get-details/da
   // panics on invalid arguments.
   syntax Int ::= setBitUInt8 (Int, Int, Int) [function]
                | setBitUInt64(Int, Int, Int) [function]
-  //------------------------------------------------------------
+  //---------------------------------------------------
   // to unset a bit, shift 1 to the desired position and conjunct
   rule setBitUInt8(X, B, 0) => X &Int (~Int (1 <<Int B))
    requires 0 <=Int X andBool X <=Int MAX_UINT8
@@ -854,7 +854,7 @@ We recite the [specification](https://developer.algorand.org/docs/get-details/da
     requires notBool (0 <=Int B andBool B <Int lengthBytes(ARRAY) *Int 8)
 
   syntax Int ::= getBitFromBytes(Bytes, Int) [function]
-  //------------------------------------------------------------
+  //---------------------------------------------------
   // TODO: alternatively, we could use a bitmask here like in `setbit`.
   // Let's see which way causes more problems down the road.
   rule getBitFromBytes(ARRAY, B) =>
@@ -953,8 +953,8 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
 #### Constant Loading Auxiliary Functions
 
 ```k
-  syntax Map ::= genIntcBlockMap(Int, Int, TValueList) [function]
-  //------------------------------------------------------------
+  syntax Map ::= genIntcBlockMap(Int, Int, TValueNeList) [function]
+  //---------------------------------------------------------------
   rule genIntcBlockMap(N, I, V VL) =>
          I |-> V
          genIntcBlockMap(N -Int 1, I +Int 1, VL)
@@ -962,8 +962,8 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
 
   rule genIntcBlockMap(1, I, V) => I |-> V
 
-  syntax Map ::= genBytecBlockMap(Int, Int, TValuePairList) [function]
-  //-----------------------------------------------------------------
+  syntax Map ::= genBytecBlockMap(Int, Int, TValuePairNeList) [function]
+  //--------------------------------------------------------------------
   // Note: byte array size is ignored
   rule genBytecBlockMap(N, I, (_, V) VPL) =>
          I |-> V
@@ -1051,7 +1051,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
   rule <k> retsub => returnSubroutine() ... </k>
 
   syntax KItem ::= callSubroutine(Label)
-  //-----------------------------
+  //------------------------------------
   // TODO: what happens if the pc value after call is invalid? What to do? Terminate or panic?
   // For now we do nothing, and thus trigger termination via `#fetchInstruction()`.
   rule <k> callSubroutine(TARGET) => .K ... </k>
@@ -1071,7 +1071,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
     requires notBool(TARGET in_labels LL)
 
   syntax KItem ::= returnSubroutine()
-  //-----------------------------
+  //---------------------------------
   rule <k> returnSubroutine() => .K ... </k>
        <pc> _ => RETURN_PC </pc>
        <jumped> _ => true </jumped>
@@ -1139,52 +1139,65 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <stack> _:.TStack </stack>
 
   rule <k> select => .K ... </k>
-       <stack> A : B : C : XS =>
-               (#if A =/=Int 0 #then B #else C #fi) : XS
+       <stack> A : B : _ : XS =>
+               B : XS
        </stack>
        <stacksize> S => S -Int 2 </stacksize>
+    requires int2Bool(A)
+
+  rule <k> select => .K ... </k>
+       <stack> A : _ : C : XS =>
+               C : XS
+       </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+    requires notBool (int2Bool(A))
 ```
 
 ### Blockchain State Accessors
 
 ```k
-  rule <k> txn I => .K ... </k>
-       <stack> XS => ({getTxnField(getCurrentTxn(), I)}:>TValue) : XS </stack>
+  syntax KItem ::= pushFieldValue(MaybeTValue)
+
+  rule <k> pushFieldValue(VAL:TValue) => . ...</k>
+       <stack> XS => VAL : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
+
+  rule <k> pushFieldValue(_:TValue) => panic(STACK_OVERFLOW) ...</k>
+       <stacksize> S </stacksize>
+    requires S >=Int MAX_STACK_DEPTH
+
+  rule <k> pushFieldValue(NoTValue) => panic(TXN_ACCESS_FAILED) ...</k>
+
+  rule <k> txn I => pushFieldValue(getTxnField(getCurrentTxn(), I)) ... </k>
 
   rule <k> txn I J => txna I J ... </k>
 
-  rule <k> gtxn G I => .K ... </k>
-       <stack> XS => ({getTxnField(G, I)}:>TValue) : XS </stack>
-       <stacksize> S => S +Int 1 </stacksize>
-    requires S <Int MAX_STACK_DEPTH
+  rule <k> gtxn G I => pushFieldValue(getTxnField(G, I)) ... </k>
 
-  rule <k> gtxns I => .K ... </k>
-       <stack> G : XS => ({getTxnField(G, I)}:>TValue) : XS </stack>
-
-  rule <k> txna I J => .K ... </k>
-       <stack> XS => ({getTxnField(getCurrentTxn(), I, J)}:>TValue) : XS </stack>
-       <stacksize> S => S +Int 1 </stacksize>
-    requires S <Int MAX_STACK_DEPTH
-
-  rule <k> txnas I => .K ... </k>
-       <stack> J : XS => ({getTxnField(getCurrentTxn(), I, J)}:>TValue) : XS </stack>
-
-  rule <k> gtxna G I J => .K ... </k>
-       <stack> XS => ({getTxnField(G, I, J)}:>TValue) : XS </stack>
-       <stacksize> S => S +Int 1 </stacksize>
-    requires S <Int MAX_STACK_DEPTH
-
-  rule <k> gtxnas G I => .K ... </k>
-       <stack> J : XS => ({getTxnField(G, I, J)}:>TValue) : XS </stack>
-
-  rule <k> gtxnsa I J => .K ... </k>
-       <stack> G : XS => ({getTxnField(G, I, J)}:>TValue) : XS </stack>
-
-  rule <k> gtxnsas I => .K ... </k>
-       <stack> J : G : XS => ({getTxnField(G, I, J)}:>TValue) : XS </stack>
+  rule <k> gtxns I => pushFieldValue(getTxnField(G, I)) ... </k>
+       <stack> G : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
+
+  rule <k> txna I J => pushFieldValue(getTxnField(getCurrentTxn(), I, J)) ... </k>
+
+  rule <k> txnas I => pushFieldValue(getTxnField(getCurrentTxn(), I, J)) ... </k>
+       <stack> J : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
+  rule <k> gtxna G I J => pushFieldValue(getTxnField(G, I, J)) ... </k>
+
+  rule <k> gtxnas G I => pushFieldValue(getTxnField(G, I, J)) ... </k>
+       <stack> J : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
+  rule <k> gtxnsa I J => pushFieldValue(getTxnField(G, I, J)) ... </k>
+       <stack> G : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
+  rule <k> gtxnsas I => pushFieldValue(getTxnField(G, I, J)) ... </k>
+       <stack> J : G : XS => XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
 
   rule <k> global I => .K ... </k>
        <stack> XS => getGlobalField(I) : XS </stack>
@@ -1331,14 +1344,14 @@ Stateful TEAL Operations
     requires notBool isTValue(getAccountAddressAt(I))
 
   syntax KItem ::= "#app_local_get" TValue
-  //-------------------------------------
+  //--------------------------------------
   rule <k> #app_local_get V => .K ... </k>
        <stack> (_:Bytes) : ( _:Int) : XS => V : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires (notBool isInt(V)) orElseBool {V}:>Int >=Int 0
 
   syntax KItem ::= "#app_local_get" TValue
-  //-------------------------------------
+  //--------------------------------------
   rule <k> #app_local_get V => .K ... </k>
        <stack> (_:Bytes) : (_:Int) : XS => 0 : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
@@ -1359,7 +1372,7 @@ Stateful TEAL Operations
 
 
   syntax KItem ::= "#app_local_get_ex" TValue
-  //----------------------------------------
+  //-----------------------------------------
   rule <k> #app_local_get_ex V => .K ... </k>
        <stack> (_:Bytes) : (_:Int) : (_:Int) : XS => 1 : V : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
@@ -1384,7 +1397,7 @@ Stateful TEAL Operations
     requires notBool isTValue(getAccountAddressAt(I))
 
   syntax KItem ::= "#app_local_put" TValue TValue
-  //-------------------------------------------
+  //---------------------------------------------
   rule <k> #app_local_put ADDR APP => .K ... </k>
        <stack> (NEWVAL:TValue) : (KEY:Bytes) : (_:Int) : XS => XS </stack>
        <stacksize> S => S -Int 3 </stacksize>
@@ -1430,7 +1443,7 @@ Stateful TEAL Operations
 
 
   syntax KItem ::= "#app_local_del" TValue TValue
-  //-------------------------------------------
+  //---------------------------------------------
   rule <k> #app_local_del ADDR APP => .K ... </k>
        <stack> (KEY:Bytes) : (_:Int) : XS => XS </stack>
        <stacksize> S => S -Int 2 </stacksize>
@@ -1470,7 +1483,7 @@ Stateful TEAL Operations
        <stack> (KEY:Bytes) : _ </stack>
 
   syntax KItem ::= "#app_global_get" TValue
-  //--------------------------------------
+  //---------------------------------------
   rule <k> #app_global_get V => .K ... </k>
        <stack> (_:Bytes) : XS => V : XS </stack>
     requires (notBool isInt(V)) orElseBool {V}:>Int >=Int 0
@@ -1493,7 +1506,7 @@ Stateful TEAL Operations
     requires notBool isTValue(getForeignAppAt(I))
 
   syntax KItem ::= "#app_global_get_ex" TValue
-  //-----------------------------------------
+  //------------------------------------------
   rule <k> #app_global_get_ex V  => .K ... </k>
        <stack> (_:Bytes) : (_:Int) : XS => 1 : V : XS </stack>
     requires (notBool isInt(V)) orElseBool {V}:>Int >=Int 0
@@ -1510,7 +1523,7 @@ Stateful TEAL Operations
        <stack> (_:TValue) : (_:Bytes) : _ </stack>
 
   syntax KItem ::= "#app_global_put" TValue
-  //--------------------------------------
+  //---------------------------------------
   rule <k> #app_global_put APP => .K ... </k>
        <stack> (NEWVAL:TValue) : (KEY:Bytes) : XS => XS </stack>
        <stacksize> S => S -Int 2 </stacksize>
@@ -1541,7 +1554,7 @@ Stateful TEAL Operations
        <stack> (_:Bytes) : _ </stack>
 
   syntax KItem ::= "#app_global_del" TValue
-  //--------------------------------------
+  //---------------------------------------
   rule <k> #app_global_put APP => .K ... </k>
        <stack> (KEY:Bytes) : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
@@ -1580,7 +1593,7 @@ Stateful TEAL Operations
     requires notBool isTValue(getAccountAddressAt(I))
 
   syntax KItem ::= "#asset_holding_get" TValue
-  // ----------------------------------------
+  // -----------------------------------------
   rule <k> #asset_holding_get RET => .K ... </k>
        <stack> (_:Int) : (_:Int) : XS => 1 : RET : XS </stack>
     requires {RET}:>Int >=Int 0
@@ -1614,7 +1627,7 @@ Stateful TEAL Operations
     requires S >=Int MAX_STACK_DEPTH
 
   syntax KItem ::= "#asset_params_get" TValue
-  // ---------------------------------------
+  // ----------------------------------------
   rule <k> #asset_params_get RET => .K ... </k>
        <stack> (_:Int) : XS => 1 : RET : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
