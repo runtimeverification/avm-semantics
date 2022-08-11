@@ -1140,7 +1140,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
 
   rule <k> select => .K ... </k>
        <stack> A : B : C : XS =>
-               (#if C =/=Int 0 #then B #else A #fi) : XS
+               (#if A =/=Int 0 #then B #else C #fi) : XS
        </stack>
        <stacksize> S => S -Int 2 </stacksize>
 ```
@@ -1170,8 +1170,6 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
 
   rule <k> txnas I => .K ... </k>
        <stack> J : XS => ({getTxnField(getCurrentTxn(), I, J)}:>TValue) : XS </stack>
-       <stacksize> S => S +Int 1 </stacksize>
-    requires S <Int MAX_STACK_DEPTH
 
   rule <k> gtxna G I J => .K ... </k>
        <stack> XS => ({getTxnField(G, I, J)}:>TValue) : XS </stack>
