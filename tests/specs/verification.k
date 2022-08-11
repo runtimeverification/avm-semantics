@@ -122,4 +122,6 @@ module VERIFICATION
   rule N:Int +Int M:Int >Int M:Int => N:Int >Int 0
     requires M =/=Int 0 [simplification, concrete(M)]
 
+  rule N:Int /Int N:Int => 1 requires N =/=Int 0 [simplification]
+
 endmodule

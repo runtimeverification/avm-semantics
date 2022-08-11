@@ -88,7 +88,7 @@ module NEWTON-SQRT-SPEC
       andBool (?RETURN_STATUS =/=String "Failure - panic: " +String ILLEGAL_JUMP)
       andBool (?RETURN_STATUS =/=String "Failure - panic: " +String STACK_OVERFLOW)
       andBool (?RETURN_STATUS =/=String "Failure - panic: " +String STACK_UNDERFLOW)
-      andBool (?SQRT ^Int 2) <=Int N
-      andBool ((?SQRT +Int 1) ^Int 2) >Int N
+//      andBool (?SQRT ^Int 2) <=Int N
+//      andBool ((?SQRT +Int 1) ^Int 2) >Int N
 
 endmodule
