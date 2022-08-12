@@ -43,6 +43,19 @@ def main() -> None:
         kavm.parse_avm_simulation(args.input_file)
         return
 
+    if args.command == 'kompile':
+        INSTALL_INCLUDE = '.build/usr/lib/kavm/include/'
+        plugin_include = '.build/usr/lib/kavm/blockchain-k-plugin/include/'
+
+        kavm = KAVM.kompile(
+            definition_dir=args.directory,
+            main_file=args.main_file,
+            main_module_name=args.main_module,
+            syntax_module_name=args.syntax_module,
+            includes=[f'{INSTALL_INCLUDE}/kframework', f'{plugin_include}/kframework'],
+        )
+        return
+
     if args.command == 'run':
         kavm = KAVM(definition_dir=args.definition_dir)
         # TEAL source code is fetched from .teal files in ./tests/teal/
@@ -71,9 +84,6 @@ def main() -> None:
 
         return
 
-    if args.command == 'kompile':
-        pass
-
     else:
         assert False
 
@@ -81,6 +91,27 @@ def main() -> None:
 def create_argument_parser() -> ArgumentParser:
     parser = ArgumentParser(prog='kavm-pyk')
     command_parser = parser.add_subparsers(dest='command', required=True)
+
+    # kompile
+    run_subparser = command_parser.add_parser('kompile', help='Kompile KAVM')
+    run_subparser.add_argument(
+        '--directory', type=dir_path, help='Path to definition to use.'
+    )
+    run_subparser.add_argument(
+        'main_file', type=file_path, help='Path to the main file.'
+    )
+    run_subparser.add_argument('--main-module', type=str)
+    run_subparser.add_argument('--syntax-module', type=str)
+
+    # run
+    run_subparser = command_parser.add_parser('run', help='Run KAVM simulation')
+    run_subparser.add_argument(
+        'definition_dir', type=dir_path, help='Path to definition to use.'
+    )
+    run_subparser.add_argument(
+        'input_file', type=file_path, help='Path to AVM simulation scenario file'
+    )
+    run_subparser.add_argument('--output', type=str, help='Output mode')
 
     # teak-to-kore
     teal_to_k_subparser = command_parser.add_parser(
@@ -93,16 +124,6 @@ def create_argument_parser() -> ArgumentParser:
     teal_to_k_subparser.add_argument(
         'program_files', nargs='+', help='One of more .teal files'
     )
-
-    # run
-    run_subparser = command_parser.add_parser('run', help='Run KAVM simulation')
-    run_subparser.add_argument(
-        'definition_dir', type=dir_path, help='Path to definition to use.'
-    )
-    run_subparser.add_argument(
-        'input_file', type=file_path, help='Path to AVM simulation scenario file'
-    )
-    run_subparser.add_argument('--output', type=str, help='Output mode')
 
     # scenario-to-kore
     scenario_subparser = command_parser.add_parser(
