@@ -1,3 +1,3 @@
 #!/bin/bash
 
-kparse --sort TealPrograms --directory "${backend_dir}" --module TEAL-PARSER-SYNTAX $1
+kparse --sort TealPrograms --definition ${KAVM_DEFINITION_DIR} --module TEAL-PARSER-SYNTAX $1

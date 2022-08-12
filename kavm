@@ -111,6 +111,7 @@ run_parse() {
 
 run_krun() {
     local krun_args teal_programs
+    export KAVM_DEFINITION_DIR="${backend_dir}"/avm-execution-kompiled
     krun_args=(--directory "${backend_dir}")
     [[ -n ${depth} ]] && krun_args+=(--depth ${depth})
     ! ${profile} || krun_args+=(--profile)
