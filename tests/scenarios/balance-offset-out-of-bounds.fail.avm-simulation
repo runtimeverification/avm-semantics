@@ -1,0 +1,24 @@
+declareTealSource "./tests/teal-sources/balance-offset-out-of-bounds.teal";
+
+addAccount <address> b"1" </address> <balance> 12345 </balance>;
+addAccount <address> b"2" </address> <balance> 12345 </balance>;
+addAccount <address> b"3" </address> <balance> 12345 </balance>;
+addAccount <address> b"4" </address> <balance> 12345 </balance>;
+addApp     <appID>   1    </appID>   <address> b"1" </address> 0;
+optinApp   <appID>   1    </appID>   <address> b"1" </address>;
+
+#initTxGroup();
+
+addAppCallTx <txID>            0        </txID>
+             <sender>          b"1"     </sender>
+             <applicationID>   1        </applicationID>
+             <onCompletion>    0        </onCompletion>
+             <accounts>        
+                b"1"     
+                b"2"     
+                b"3"     
+                b"4"     
+             </accounts>
+             <applicationArgs> .TValueList </applicationArgs>;
+
+#initGlobals(); #evalTxGroup(); .AS

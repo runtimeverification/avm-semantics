@@ -678,6 +678,77 @@ Accessor functions
     requires APP =/=K APP'
 
   rule _ in_apps(<appsCreated> .Bag </appsCreated>) => false
+```
+
+### Resource referencing
+
+When referring to accounts, applications, and ASAs, certain opcodes allow not just offsets in the foreign array
+fields and addresses (in the case of accounts), application/ASA IDs (in the case of applications and ASAs).
+The purpose of `accountReference()`, `appReference()`, and `asaReference()` is to disambiguate these types of
+references and also to check that a resource is available.
+
+```k
+  syntax MaybeTValue ::= accountReference(TValue) [function, functional]
+  //--------------------------------------------------------------------
+  rule accountReference(A:TBytes ) => A requires accountAvailable(A)
+  rule accountReference(I:Int    ) => getTxnField(getCurrentTxn(), Accounts, I)
+  rule accountReference(_        ) => NoTValue  [owise]
+
+  syntax MaybeTValue ::= appReference(Int)  [function, functional]
+  //-----------------------------------------------------------------
+  rule appReference(I) => I requires applicationAvailable(I)
+  rule appReference(I) => getTxnField(getCurrentTxn(), ForeignApps, I)  [owise]
+
+  syntax MaybeTValue ::= asaReference(Int)  [function, functional]
+  //------------------------------------------------------------------
+  rule asaReference(I) => I requires assetAvailable(I)
+  rule asaReference(I) => getTxnField(getCurrentTxn(), ForeignAssets, I)  [owise]
+```
+
+### Resource Availability
+
+```k
+// TODO the associated account of a contract that was created earlier in the group should be available (v 6)
+// TODO the associated account of a contract present in the txn.ForeignApplications field should be available (v7)
+
+  syntax Bool ::= accountAvailable(TBytes) [function, functional]
+  //---------------------------------------------------------------
+
+  rule accountAvailable(A) => true
+    requires contains(getTxnField(getCurrentTxn(), Accounts), A)
+
+  rule accountAvailable(A) => true
+    requires A ==K getTxnField(getCurrentTxn(), Sender)
+
+  rule accountAvailable(A) => true
+    requires A ==K getGlobalField(CurrentApplicationAddress)
+
+  rule accountAvailable(_) => false [owise]
+
+  
+// TODO any contract that was created earlier in the same transaction group should be available (v6)
+
+  syntax Bool ::= applicationAvailable(TUInt64) [function, functional]
+  //------------------------------------------------------------------
+
+  rule applicationAvailable(A) => true
+    requires contains(getTxnField(getCurrentTxn(), ForeignApps), A)
+
+  rule applicationAvailable(A) => true
+    requires A ==K getGlobalField(CurrentApplicationID)
+
+  rule applicationAvailable(_) => false [owise]
+
+
+// TODO any asset that was created earlier in the same transaction group should be available (v6)
+
+  syntax Bool ::= assetAvailable(TUInt64) [function, functional]
+  //------------------------------------------------------------
+
+  rule assetAvailable(A) => true
+    requires contains(getTxnField(getCurrentTxn(), ForeignAssets), A)
+
+  rule assetAvailable(_) => false [owise]
 
 endmodule
 ```

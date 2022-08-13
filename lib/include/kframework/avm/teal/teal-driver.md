@@ -1302,13 +1302,17 @@ Stateful TEAL Operations
 *balance*
 
 ```k
-  rule <k> balance => .K ... </k>
-       <stack> (I:Int) : XS => getBalance({getAccountAddressAt(I)}:>TValue) : XS </stack>
-    requires isTValue(getAccountAddressAt(I))
 
-  rule <k> balance => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (I:Int) : _ </stack>
-    requires notBool isTValue(getAccountAddressAt(I))
+  syntax KItem ::= unwrapOrPanic(MaybeTValue, String)
+  // ------------------------------------------
+  rule <k> unwrapOrPanic(NoTValue, S) => panic(S) ... </k>
+  rule <k> unwrapOrPanic(V:TValue, _) => V        ... </k>
+
+  rule <k> (balance => (unwrapOrPanic(accountReference(A), TXN_ACCESS_FAILED) ~> balance)) ... </k>
+       <stack> (A:TValue) : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
+  rule <k> (A:TValue ~> balance) => pushFieldValue(getBalance(A)) ... </k>
 ```
 
 *app_opted_in*
@@ -1732,9 +1736,6 @@ Panic Behaviors due to Ill-typed Stack Arguments
 
 ### Application State Opcodes
 ```k
-  rule <k> balance => panic(ILL_TYPED_STACK) ... </k>
-       <stack> (_:Bytes) : _ </stack>
-
   rule <k> app_opted_in => panic(ILL_TYPED_STACK) ... </k>
        <stack> (APP:TValue) : (I:TValue) : _ </stack>
     requires isBytes(APP) orBool isBytes(I)

@@ -94,7 +94,7 @@ module TEAL-FIELDS
                           | "Amount"
                           | "CloseRemainderTo"
 
-  syntax TxnKeyregField ::= "votePK"
+  syntax TxnKeyregField ::= "VotePK"
                           | "SelectionPK"
                           | "VoteFirst"
                           | "VoteLast"

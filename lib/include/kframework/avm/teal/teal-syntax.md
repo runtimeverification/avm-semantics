@@ -630,7 +630,7 @@ module TEAL-UNPARSER
   rule TealField2String(Receiver)                 => "Receiver"
   rule TealField2String(Amount)                   => "Amount"
   rule TealField2String(CloseRemainderTo)         => "CloseRemainderTo"
-  rule TealField2String(votePK)                   => "votePK"
+  rule TealField2String(VotePK)                   => "VotePK"
   rule TealField2String(SelectionPK)              => "SelectionPK"
   rule TealField2String(VoteFirst)                => "VoteFirst"
   rule TealField2String(VoteLast)                 => "VoteLast"
