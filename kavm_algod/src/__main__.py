@@ -1,4 +1,5 @@
 import json
+import re
 from argparse import ArgumentParser
 import subprocess
 from typing import List
@@ -63,15 +64,11 @@ def main() -> None:
         kavm = KAVM(definition_dir=args.definition_dir)
         # TEAL source code is fetched from .teal files in ./tests/teal/
         # by scanning the test scenario "${run_file}" for "declareTealSource <path>" commands
-        kast_json = subprocess.run(
-            f'kast --output json --definition {args.definition_dir} {args.input_file} --sort AVMSimulation --module AVM-EXECUTION',
-            shell=True,
-            capture_output=True,
-        ).stdout
-        kast_term = KAst.from_dict(json.loads(kast_json)['term'])
+        raw_avm_simulation = args.input_file.read_text()
+        teal_paths = re.findall(r'declareTealSource "(.+?)";', raw_avm_simulation)
 
         teal_programs: str = ''
-        for teal_path in collect_teal_source_declarations(kast_term):
+        for teal_path in teal_paths:
             teal_programs += f'{Path(teal_path).read_text()};'
         teal_programs += '.TealPrograms'
 
