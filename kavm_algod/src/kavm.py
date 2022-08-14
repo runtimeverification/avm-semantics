@@ -32,6 +32,7 @@ class KAVM(KRun):
         md_selector: Optional[str] = None,
         hook_namespaces: Optional[List[str]] = None,
         concrete_rules_file: Optional[Path] = None,
+        verbose: bool = False,
     ) -> 'KAVM':
         command = [
             'kompile',
@@ -39,6 +40,8 @@ class KAVM(KRun):
             str(definition_dir),
             str(main_file),
         ]
+        if verbose:
+            command += ['--verbose']
         command += ['--emit-json', '--backend', 'llvm']
         command += ['--main-module', main_module_name] if main_module_name else []
         command += ['--syntax-module', syntax_module_name] if syntax_module_name else []

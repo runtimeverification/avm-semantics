@@ -21,9 +21,11 @@ KAVM_LIB         := $(BUILD_DIR)$(INSTALL_LIB)
 KAVM_INCLUDE     := $(KAVM_LIB)/include
 KAVM_SCRIPTS     := $(KAVM_LIB)/scripts
 KAVM_K_BIN       := $(KAVM_LIB)/kframework/bin
-KAVM             := kavm
+KAVM             := kavm-algod
 KAVM_LIB_ABS     := $(abspath $(KAVM_LIB))
+KAVM_DEFINITION_DIR:=$(KAVM_LIB_ABS)/avm-llvm
 export KAVM_LIB_ABS
+export KAVM_DEFINITION_DIR
 
 K_SUBMODULE := $(DEPS_DIR)/k
 K_BIN       := $(INSTALL_LIB)/kframework/bin
@@ -218,7 +220,7 @@ ifeq ($(K_BACKEND),)
   K_BACKEND := llvm
 endif
 
-KOMPILE_AVM := kavm kompile
+KOMPILE_AVM := kavm-algod kompile
 
 avm_dir           := avm-llvm
 avm_main_module   := AVM-EXECUTION

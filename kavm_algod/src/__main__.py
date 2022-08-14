@@ -53,10 +53,13 @@ def main() -> None:
             main_module_name=args.main_module,
             syntax_module_name=args.syntax_module,
             includes=[f'{INSTALL_INCLUDE}/kframework', f'{plugin_include}/kframework'],
+            verbose=args.verbose,
         )
         return
 
     if args.command == 'run':
+        if args.definition_dir is None:
+            args.definition_dir = os.environ.get('KAVM_DEFINITION_DIR')
         kavm = KAVM(definition_dir=args.definition_dir)
         # TEAL source code is fetched from .teal files in ./tests/teal/
         # by scanning the test scenario "${run_file}" for "declareTealSource <path>" commands
@@ -93,20 +96,24 @@ def create_argument_parser() -> ArgumentParser:
     command_parser = parser.add_subparsers(dest='command', required=True)
 
     # kompile
-    run_subparser = command_parser.add_parser('kompile', help='Kompile KAVM')
-    run_subparser.add_argument(
+    kompile_subparser = command_parser.add_parser('kompile', help='Kompile KAVM')
+    kompile_subparser.add_argument(
         '--directory', type=dir_path, help='Path to definition to use.'
     )
-    run_subparser.add_argument(
+    kompile_subparser.add_argument(
         'main_file', type=file_path, help='Path to the main file.'
     )
-    run_subparser.add_argument('--main-module', type=str)
-    run_subparser.add_argument('--syntax-module', type=str)
+    kompile_subparser.add_argument('--main-module', type=str)
+    kompile_subparser.add_argument('--syntax-module', type=str)
+    kompile_subparser.add_argument('--verbose', action='store_true')
 
     # run
     run_subparser = command_parser.add_parser('run', help='Run KAVM simulation')
     run_subparser.add_argument(
-        'definition_dir', type=dir_path, help='Path to definition to use.'
+        '--definition',
+        dest="definition_dir",
+        type=dir_path,
+        help='Path to definition to use.',
     )
     run_subparser.add_argument(
         'input_file', type=file_path, help='Path to AVM simulation scenario file'
