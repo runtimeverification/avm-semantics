@@ -84,7 +84,7 @@ def main() -> None:
             else:
                 print(kavm.pretty_print(output_kast_term))
 
-        return
+        return output.returncode
 
     else:
         assert False

@@ -21,7 +21,8 @@ KAVM_LIB         := $(BUILD_DIR)$(INSTALL_LIB)
 KAVM_INCLUDE     := $(KAVM_LIB)/include
 KAVM_SCRIPTS     := $(KAVM_LIB)/scripts
 KAVM_K_BIN       := $(KAVM_LIB)/kframework/bin
-KAVM             := kavm-algod
+KAVM             := kavm
+KAVM_ALGOD       := kavm-algod
 KAVM_LIB_ABS     := $(abspath $(KAVM_LIB))
 KAVM_DEFINITION_DIR:=$(KAVM_LIB_ABS)/avm-llvm
 export KAVM_LIB_ABS
@@ -325,10 +326,10 @@ all_sources := $(join $(avm_simulation_sources), $(teal_sources))
 test-avm: $(avm_simulation_sources:=.unit)
 
 tests/scenarios/%.fail.avm-simulation.unit: tests/scenarios/%.fail.avm-simulation
-	! $(KAVM) run $< --output none
+	! $(KAVM_ALGOD) run $< --output none
 
 tests/scenarios/%.avm-simulation.unit: tests/scenarios/%.avm-simulation
-	$(KAVM) run $< --output none
+	$(KAVM_ALGOD) run $< --output none
 
 ###########################
 ## AVM Symbolic Proof Tests
