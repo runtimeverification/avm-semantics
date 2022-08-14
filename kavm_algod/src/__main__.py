@@ -13,20 +13,16 @@ from pyk.kastManip import splitConfigFrom
 from .kavm import KAVM
 
 
-def collect_teal_source_declarations(avm_simulation_kast_term: KInner) -> List[Path]:
-    """Extract Teal source declarations from the simulation scenario"""
+def collect_specific_cells(kast_term: KInner, labels: List[str]) -> List[Path]:
+    """Extract a list of cells from a configuration"""
     result: List[Path] = []
 
     def label_selector(term):
-        if (
-            isinstance(term, KApply)
-            and term.label.name
-            == 'declareTealSource__AVM-INITIALIZATION_AlgorandCommand_String'
-        ):
-            result.append(Path(term.args[0].token.strip('"')))
+        if isinstance(term, KApply) and term.label.name in labels:
+            result.append(term)
         return term
 
-    top_down(label_selector, avm_simulation_kast_term)
+    top_down(label_selector, kast_term)
     return result
 
 
@@ -80,7 +76,13 @@ def main() -> None:
 
         output_kast_term = KAst.from_dict(json.loads(output.stdout)['term'])
         if args.output != 'none':
-            print(kavm.pretty_print(output_kast_term))
+            if args.extract_cells is not None:
+                for cell_term in collect_specific_cells(
+                    output_kast_term, args.extract_cells
+                ):
+                    print(kavm.pretty_print(cell_term))
+            else:
+                print(kavm.pretty_print(output_kast_term))
 
         return
 
@@ -116,6 +118,12 @@ def create_argument_parser() -> ArgumentParser:
         'input_file', type=file_path, help='Path to AVM simulation scenario file'
     )
     run_subparser.add_argument('--output', type=str, help='Output mode')
+    run_subparser.add_argument(
+        '--extract-cells',
+        nargs='+',
+        type=str,
+        help='Extract cells with specified labels from final configuration',
+    )
 
     # teak-to-kore
     teal_to_k_subparser = command_parser.add_parser(
