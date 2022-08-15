@@ -485,8 +485,8 @@ Accessor functions
          </appsOptedIn> ...
        </account>
 
-  // If the key isn't set, return 0
-  rule [[ getAppLocal(ADDR, APP, KEY) => 0 ]]
+  // If the key isn't set, return -1
+  rule [[ getAppLocal(ADDR, APP, KEY) => -1 ]]
        <account>
          <address> ADDR </address>
          <appsOptedIn>
@@ -695,12 +695,12 @@ references and also to check that a resource is available.
   rule accountReference(I:Int    ) => getTxnField(getCurrentTxn(), Accounts, I)
   rule accountReference(_        ) => NoTValue  [owise]
 
-  syntax MaybeTValue ::= appReference(Int)  [function, functional]
+  syntax MaybeTValue ::= appReference(TUInt64)  [function, functional]
   //-----------------------------------------------------------------
   rule appReference(I) => I requires applicationAvailable(I)
   rule appReference(I) => getTxnField(getCurrentTxn(), Applications, I)  [owise]
 
-  syntax MaybeTValue ::= asaReference(Int)  [function, functional]
+  syntax MaybeTValue ::= asaReference(TUInt64)  [function, functional]
   //------------------------------------------------------------------
   rule asaReference(I) => I requires assetAvailable(I)
   rule asaReference(I) => getTxnField(getCurrentTxn(), Assets, I)  [owise]

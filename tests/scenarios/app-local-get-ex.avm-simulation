@@ -1,0 +1,27 @@
+declareTealSource "./tests/teal-sources/app-local-get-ex.teal";
+
+addAccount <address> b"1" </address> <balance> 100000 </balance>;
+addApp     <appID>   2    </appID>   <address> b"1" </address> 0;
+optinApp   <appID>   2    </appID>   <address> b"1" </address>;
+addApp     <appID>   1    </appID>   <address> b"1" </address> 0;
+optinApp   <appID>   1    </appID>   <address> b"1" </address>;
+
+#initTxGroup();
+
+addAppCallTx <txID>            0           </txID>
+             <sender>          b"1"        </sender>
+             <applicationID>   1           </applicationID>
+             <onCompletion>    0           </onCompletion>
+             <accounts>        .TValueList </accounts>
+             <applicationArgs> 1           </applicationArgs>
+             <foreignApps>     .TValueList </foreignApps>;
+
+addAppCallTx <txID>            1           </txID>
+             <sender>          b"1"        </sender>
+             <applicationID>   2           </applicationID>
+             <onCompletion>    0           </onCompletion>
+             <accounts>        .TValueList </accounts>
+             <applicationArgs> 2           </applicationArgs>
+             <foreignApps>     1           </foreignApps>;
+
+#initGlobals(); #evalTxGroup(); .AS

@@ -1351,12 +1351,14 @@ Stateful TEAL Operations
 
   syntax KItem ::= "#app_local_get" MaybeTValue
   //--------------------------------------
-  rule <k> #app_local_get V => .K ... </k>
+  rule <k> #app_local_get V:TValue => .K ... </k>
        <stack> _ : _ : XS => V : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires (notBool isInt(V)) orElseBool {V}:>Int >=Int 0
 
-  rule <k> #app_local_get V => .K ... </k>
+  syntax KItem ::= "#app_local_get" MaybeTValue
+  //--------------------------------------
+  rule <k> #app_local_get V:TValue => .K ... </k>
        <stack> _ : _ : XS => 0 : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires isInt(V) andThenBool {V}:>Int <Int 0
@@ -1368,24 +1370,27 @@ Stateful TEAL Operations
 
 ```k
   rule <k> app_local_get_ex =>
-           #app_local_get_ex getAppLocal({getAccountAddressAt(I)}:>TValue, APP, KEY) ... </k>
-       <stack> (KEY:Bytes) : (APP:Int) : (I:Int) : _ </stack>
-    requires isTValue(getAccountAddressAt(I))
+           #app_local_get_ex getAppLocal({accountReference(A)}:>TValue, {appReference(APP)}:>TValue, KEY) ... </k>
+       <stack> (KEY:Bytes) : (APP:TUInt64) : (A:TValue) : _ </stack>
+    requires isTValue(accountReference(A)) andBool isTValue(appReference(APP))
 
   rule <k> app_local_get_ex => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (_:Bytes) : (_:Int) : (I:Int) : _ </stack>
-    requires notBool isTValue(getAccountAddressAt(I))
+       <stack> (_:Bytes) : (APP:TUInt64) : (A:TValue) : _ </stack>
+    requires notBool (isTValue(accountReference(A)) andBool isTValue(appReference(APP)))
 
+  rule <k> app_local_get_ex => panic(ILL_TYPED_STACK) ... </k>
+       <stack> (KEY:TValue) : (APP:TValue) : (_:TValue) : _ </stack>
+    requires isInt(KEY) orBool isBytes(APP)
 
   syntax KItem ::= "#app_local_get_ex" MaybeTValue
   //-----------------------------------------
   rule <k> #app_local_get_ex V => .K ... </k>
-       <stack> (_:Bytes) : (_:Int) : (_:Int) : XS => 1 : V : XS </stack>
+       <stack> _ : _ : _ : XS => 1 : V : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires (notBool isInt(V)) orElseBool {V}:>Int >=Int 0
 
   rule <k> #app_local_get_ex V => .K ... </k>
-       <stack> (_:Bytes) : (_:Int) : (_:Int) : XS => 0 : 0 : XS </stack>
+       <stack> _ : _ : _ : XS => 0 : 0 : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires isInt(V) andThenBool {V}:>Int <Int 0
 
@@ -1742,10 +1747,6 @@ Panic Behaviors due to Ill-typed Stack Arguments
 
 ### Application State Opcodes
 ```k
-  rule <k> app_local_get_ex => panic(ILL_TYPED_STACK) ... </k>
-       <stack> (KEY:TValue) : (APP:TValue) : (I:TValue) : _ </stack>
-    requires isInt(KEY) orBool isBytes(APP) orBool isBytes(I)
-
   rule <k> app_global_get => panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Int) : _ </stack>
 
