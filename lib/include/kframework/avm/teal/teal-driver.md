@@ -1512,22 +1512,26 @@ Stateful TEAL Operations
 
 ```k
   rule <k> app_global_get_ex =>
-           #app_global_get_ex getAppGlobal({getForeignAppAt(I)}:>TValue, KEY) ... </k>
-       <stack> (KEY:Bytes) : (I:Int) : _ </stack>
-    requires isTValue(getForeignAppAt(I))
+           #app_global_get_ex getAppGlobal({appReference(APP)}:>TValue, KEY) ... </k>
+       <stack> (KEY:Bytes) : (APP:TUInt64) : _ </stack>
+    requires isTValue(appReference(APP))
 
   rule <k> app_global_get_ex => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (_:Bytes) : (I:Int) : _ </stack>
-    requires notBool isTValue(getForeignAppAt(I))
+       <stack> (_:Bytes) : (APP:TUInt64) : _ </stack>
+    requires notBool isTValue(appReference(APP))
+
+  rule <k> app_global_get_ex => panic(ILL_TYPED_STACK) ... </k>
+       <stack> (KEY:TValue) : (I:TValue):_ </stack>
+    requires isInt(KEY) orBool isBytes(I)
 
   syntax KItem ::= "#app_global_get_ex" TValue
   //------------------------------------------
   rule <k> #app_global_get_ex V  => .K ... </k>
-       <stack> (_:Bytes) : (_:Int) : XS => 1 : V : XS </stack>
+       <stack> (_:Bytes) : (_:TUInt64) : XS => 1 : V : XS </stack>
     requires (notBool isInt(V)) orElseBool {V}:>Int >=Int 0
 
   rule <k> #app_global_get_ex V => .K ... </k>
-       <stack> (_:Bytes) : (_:Int) : XS => 0 : 0 : XS </stack>
+       <stack> (_:Bytes) : (_:TUInt64) : XS => 0 : 0 : XS </stack>
     requires isInt(V) andThenBool {V}:>Int <Int 0
 ```
 
@@ -1749,10 +1753,6 @@ Panic Behaviors due to Ill-typed Stack Arguments
 ```k
   rule <k> app_global_get => panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Int) : _ </stack>
-
-  rule <k> app_global_get_ex => panic(ILL_TYPED_STACK) ... </k>
-       <stack> (KEY:TValue) : (I:TValue):_ </stack>
-    requires isInt(KEY) orBool isBytes(I)
 
   rule <k> app_global_put => panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:TValue) : (_:Int):_ </stack>
