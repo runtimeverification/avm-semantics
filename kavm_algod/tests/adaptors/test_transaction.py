@@ -1,5 +1,5 @@
 from algosdk import account
-from algosdk.future.transaction import AssetTransferTxn, PaymentTxn, SuggestedParams
+from algosdk.future.transaction import PaymentTxn, SuggestedParams
 
 from kavm_algod.adaptors.transaction import transaction_from_k, transaction_to_k
 from kavm_algod.kavm import KAVM

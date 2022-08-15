@@ -1,30 +1,16 @@
 import json
-import re
-from argparse import ArgumentParser
-import subprocess
-from typing import List
-from pathlib import Path
 import os
+import re
+import subprocess
 import sys
+from argparse import ArgumentParser
+from pathlib import Path
 
 from pyk.cli_utils import dir_path, file_path
-from pyk.kast import KInner, KAst, KToken, KLabel, KApply, KSort, top_down
+from pyk.kast import KAst
+from pyk.kastManip import inlineCellMaps
 
-from pyk.kastManip import splitConfigFrom, inlineCellMaps
 from .kavm import KAVM
-
-
-def collect_specific_cells(kast_term: KInner, labels: List[str]) -> List[Path]:
-    """Extract a list of cells from a configuration"""
-    result: List[Path] = []
-
-    def label_selector(term):
-        if isinstance(term, KApply) and term.label.name in labels:
-            result.append(term)
-        return term
-
-    top_down(label_selector, kast_term)
-    return result
 
 
 def main() -> None:
@@ -32,25 +18,6 @@ def main() -> None:
     args = parser.parse_args()
     if not hasattr(args, 'definition_dir'):
         args.definition_dir = os.environ.get('KAVM_DEFINITION_DIR')
-
-    if args.command == 'play-around':
-        kavm = KAVM(definition_dir=args.definition_dir)
-        # print(kavm.definition.module_names)
-        # print(kavm.definition.production_for_cell_sort(KSort('TransactionCell')))
-        term = kavm.definition.empty_config(KSort('TransactionCell'))
-        print(kavm.pretty_print(term))
-        # for x in kavm.definition.productions:
-        #     print(x)
-
-    if args.command == 'teal-to-kore':
-        kavm = KAVM(definition_dir=args.definition_dir)
-        kavm.parse_teal_programs(args.program_files)
-        return
-
-    if args.command == 'scenario-to-kore':
-        kavm = KAVM(definition_dir=args.definition_dir)
-        kavm.parse_avm_simulation(args.input_file)
-        return
 
     if args.command == 'kompile':
         INSTALL_INCLUDE = '.build/usr/lib/kavm/include/'
@@ -81,24 +48,18 @@ def main() -> None:
         krun_command = f'krun --definition {kavm.definition_dir} --output json \'-cTEAL_PROGRAMS={teal_programs}\' -pTEAL_PROGRAMS=lib/scripts/parse-teal-programs.sh --parser lib/scripts/parse-avm-simulation.sh {args.input_file}'
 
         env = os.environ.copy()
-        env['KAVM_DEFITION_DIR'] = kavm.definition_dir
+        env['KAVM_DEFITION_DIR'] = str(kavm.definition_dir)
         output = subprocess.run(krun_command, shell=True, capture_output=True, env=env)
 
         try:
             output_kast_term = KAst.from_dict(json.loads(output.stdout)['term'])
         except json.JSONDecodeError:
             print(output.stderr.decode(sys.getfilesystemencoding()))
-            return output.returncode
+            exit(output.returncode)
         if args.output != 'none':
-            if args.extract_cells is not None:
-                for cell_term in collect_specific_cells(
-                    output_kast_term, args.extract_cells
-                ):
-                    print(kavm.pretty_print(cell_term))
-            else:
-                print(kavm.pretty_print(inlineCellMaps(output_kast_term)))
+            print(kavm.pretty_print(inlineCellMaps(output_kast_term)))
 
-        return output.returncode
+        exit(output.returncode)
 
     else:
         assert False
@@ -132,42 +93,6 @@ def create_argument_parser() -> ArgumentParser:
         'input_file', type=file_path, help='Path to AVM simulation scenario file'
     )
     run_subparser.add_argument('--output', type=str, help='Output mode')
-    run_subparser.add_argument(
-        '--extract-cells',
-        nargs='+',
-        type=str,
-        help='Extract cells with specified labels from final configuration',
-    )
-
-    # teak-to-kore
-    teal_to_k_subparser = command_parser.add_parser(
-        'teal-to-kore',
-        help='Parse TEAL program(s) and output the KORE term.',
-    )
-    teal_to_k_subparser.add_argument(
-        'definition_dir', type=dir_path, help='Path to definition to use.'
-    )
-    teal_to_k_subparser.add_argument(
-        'program_files', nargs='+', help='One of more .teal files'
-    )
-
-    # scenario-to-kore
-    scenario_subparser = command_parser.add_parser(
-        'scenario-to-kore',
-        help='Parse an AVM simulation scenario and output the KORE term.',
-    )
-    scenario_subparser.add_argument(
-        'definition_dir', type=dir_path, help='Path to definition to use.'
-    )
-    scenario_subparser.add_argument(
-        'input_file', type=file_path, help='Path to AVM simulation scenario file'
-    )
-
-    # play-around --- for top-level debugging
-    play_around_subparser = command_parser.add_parser('play-around')
-    play_around_subparser.add_argument(
-        '--directory', type=dir_path, help='Path to definition to use.'
-    )
 
     return parser
 

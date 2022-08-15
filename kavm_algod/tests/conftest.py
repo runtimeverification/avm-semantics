@@ -1,13 +1,13 @@
+import os
 from typing import Any, Dict, Optional
 
-import os
 import pytest
 from algosdk.future.transaction import SuggestedParams
 from algosdk.kmd import KMDClient
 from algosdk.v2client.algod import AlgodClient
 
-from kavm_algod.kavm import KAVM
 from kavm_algod.algod import KAVMClient
+from kavm_algod.kavm import KAVM
 
 from .constants import ALGOD_ADDRESS, ALGOD_TOKEN, KMD_ADDRESS, KMD_TOKEN
 

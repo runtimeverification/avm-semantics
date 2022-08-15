@@ -5,9 +5,8 @@ from algosdk.future.transaction import (
     SuggestedParams,
     Transaction,
 )
-from pyk.kast import KApply, KAst, KSort, Subst, KToken
-from pyk.kastManip import splitConfigFrom, collectFreeVars
-from pyk.prelude import intToken, stringToken
+from pyk.kast import KAst, KInner, KSort, Subst
+from pyk.kastManip import collectFreeVars, splitConfigFrom
 
 from kavm_algod.kavm import KAVM
 from kavm_algod.pyk_utils import maybeTValue, tvalueList
@@ -32,7 +31,7 @@ def txn_type_to_type_enum(txn_type: str) -> int:
         raise ValueError(f'unknown transaction type {txn_type}')
 
 
-def transaction_to_k(kavm: KAVM, txn: Transaction) -> KApply:
+def transaction_to_k(kavm: KAVM, txn: Transaction) -> KInner:
     """Convert a Transaction objet to a K cell"""
     empty_transaction_cell = kavm.definition.empty_config(KSort('TransactionCell'))
 
@@ -63,7 +62,7 @@ def transaction_to_k(kavm: KAVM, txn: Transaction) -> KApply:
             }
         )
     if txn.type == ASSETTRANSFER_TXN:
-        type_specific_subst = _asset_transfer_to_k(txn)
+        raise NotImplementedError()
     if type_specific_subst is None:
         raise ValueError(f'Transaction object {txn} is invalid')
 
@@ -86,37 +85,6 @@ def transaction_to_k(kavm: KAVM, txn: Transaction) -> KApply:
     )
 
     return empty_fields_subst.compose(empty_array_fields_subst).apply(transaction_cell)
-
-
-def _payment_to_k(kavm: KAVM, txn: PaymentTxn) -> KApply:
-    """Convert a PaymentTxn objet to a K cell"""
-    assert isinstance(txn, PaymentTxn)
-    config = KApply(
-        '<payTxFields>',
-        [
-            string_token_cell('<receiver>', bytes(txn.receiver)),
-            int_token_cell('<amount>', txn.amt),
-            string_token_cell('<closeRemainderTo>', txn.close_remainder_to),
-        ],
-    )
-    return config
-
-
-def _asset_transfer_to_k(txn: AssetTransferTxn) -> KApply:
-    """Convert an AssetTransferTxn objet to a K cell"""
-    assert isinstance(txn, AssetTransferTxn)
-    config = KApply(
-        '<assetTransferTxFields>',
-        [
-            int_token_cell('<xferAsset>', txn.index),
-            int_token_cell('<assetAmount>', txn.amount),
-            string_token_cell('<assetReceiver>', txn.receiver),
-            string_token_cell('<closeRemainderTo>', txn.close_assets_to),
-            # TODO: make sure assetASender indeed corresponds to revocation_target
-            string_token_cell('<assetASender>', txn.revocation_target),
-        ],
-    )
-    return config
 
 
 def transaction_from_k(kast_term: KAst) -> Transaction:
