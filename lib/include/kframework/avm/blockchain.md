@@ -472,7 +472,7 @@ Accessor functions
     requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
 
 
-  syntax TValue ::= getAppLocal(TValue, TValue, TValue) [function]
+  syntax MaybeTValue ::= getAppLocal(TValue, TValue, TValue) [function]
   // ---------------------------------------------------------
   rule [[ getAppLocal(ADDR, APP, KEY) => V ]]
        <account>
@@ -485,7 +485,8 @@ Accessor functions
          </appsOptedIn> ...
        </account>
 
-  rule [[ getAppLocal(ADDR, APP, KEY) => -1 ]]
+  // If the key isn't set, return 0
+  rule [[ getAppLocal(ADDR, APP, KEY) => 0 ]]
        <account>
          <address> ADDR </address>
          <appsOptedIn>
@@ -497,16 +498,16 @@ Accessor functions
        </account>
     requires notBool (KEY in_keys(M))
 
-  // if the account exists but is not opted in, return -1
-  rule [[ getAppLocal(ADDR, APP, _) => -1 ]]
+  // if the account exists but is not opted in, return NoTValue
+  rule [[ getAppLocal(ADDR, APP, _) => NoTValue ]]
        <account>
          <address> ADDR </address>
          <appsOptedIn> OA </appsOptedIn> ...
        </account>
     requires notBool (APP in_optedInApps(<appsOptedIn> OA </appsOptedIn>))
 
-  // if the account doesn't exist, return -1
-  rule [[ getAppLocal(ADDR, _, _) => -1 ]]
+  // if the account doesn't exist, return NoTValue
+  rule [[ getAppLocal(ADDR, _, _) => NoTValue ]]
        <accountsMap> AMAP  </accountsMap>
     requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
 
