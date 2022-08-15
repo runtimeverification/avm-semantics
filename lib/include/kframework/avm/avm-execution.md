@@ -202,6 +202,21 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
          ...
        </account>
     requires SENDER_BALANCE -Int AMOUNT <Int SENDER_MIN_BALANCE
+
+  rule <k> #executeTxn(@pay) => #avmPanic(TXN_ID, UNKNOWN_ADDRESS) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>     TXN_ID   </txID>
+         <sender>   SENDER   </sender>
+         <amount>   AMOUNT   </amount>
+         <receiver> RECEIVER </receiver>
+         ...
+       </transaction>
+       <accountsMap>
+         AMAP
+       </accountsMap>
+    requires notBool ( SENDER in_accounts (<accountsMap> AMAP </accountsMap>) )
+      orBool notBool ( RECEIVER in_accounts (<accountsMap> AMAP </accountsMap>) )
 ```
 
 * **Key Registration**

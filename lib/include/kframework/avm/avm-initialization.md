@@ -11,6 +11,7 @@ module AVM-INITIALIZATION
   imports AVM-CONFIGURATION
   imports AVM-TXN-DEQUE
   imports TEAL-CONSTANTS
+  imports ALGO-TXN
 ```
 
 
@@ -51,6 +52,21 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
 **TODO**: transaction IDs and group indices need be assigned differently for real blockchain transactions.
 
 #### Payment Transaction
+
+```k
+  syntax AlgorandCommand ::= "submit" TransactionCell
+  //-------------------------------------------------
+  rule <k> submit <transaction> TXN </transaction> =>
+           #pushTxnBack(<txID> getTxID(<transaction> TXN </transaction>) </txID>)
+           ...
+       </k>
+       <transactions>
+         TXNS =>
+         <transaction> TXN </transaction>
+         TXNS
+       </transactions>
+//       requires notBool (ID in_txns(<transactions> TXNS </transactions>))
+```
 
 ```k
   syntax AlgorandCommand ::= "addPaymentTx" TxIDCell SenderCell ReceiverCell AmountCell

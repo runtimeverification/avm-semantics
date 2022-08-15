@@ -186,6 +186,14 @@ module ALGO-TXN
       </txGroup>
 ```
 
+*Transaction ID Getter*
+
+```k
+  syntax Int ::= getTxID(TransactionCell) [function, functional]
+  //-------------------------------------------------------------
+  rule getTxID(<transaction> <txID> ID </txID> ... </transaction>) => ID
+```
+
 *Transaction Group Accessors*
 
 ```k

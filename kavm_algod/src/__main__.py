@@ -5,11 +5,12 @@ import subprocess
 from typing import List
 from pathlib import Path
 import os
+import sys
 
 from pyk.cli_utils import dir_path, file_path
-from pyk.kast import KInner, KAst, KToken, KLabel, KApply, top_down
+from pyk.kast import KInner, KAst, KToken, KLabel, KApply, KSort, top_down
 
-from pyk.kastManip import splitConfigFrom
+from pyk.kastManip import splitConfigFrom, inlineCellMaps
 from .kavm import KAVM
 
 
@@ -29,6 +30,17 @@ def collect_specific_cells(kast_term: KInner, labels: List[str]) -> List[Path]:
 def main() -> None:
     parser = create_argument_parser()
     args = parser.parse_args()
+    if not hasattr(args, 'definition_dir'):
+        args.definition_dir = os.environ.get('KAVM_DEFINITION_DIR')
+
+    if args.command == 'play-around':
+        kavm = KAVM(definition_dir=args.definition_dir)
+        # print(kavm.definition.module_names)
+        # print(kavm.definition.production_for_cell_sort(KSort('TransactionCell')))
+        term = kavm.definition.empty_config(KSort('TransactionCell'))
+        print(kavm.pretty_print(term))
+        # for x in kavm.definition.productions:
+        #     print(x)
 
     if args.command == 'teal-to-kore':
         kavm = KAVM(definition_dir=args.definition_dir)
@@ -55,8 +67,6 @@ def main() -> None:
         return
 
     if args.command == 'run':
-        if args.definition_dir is None:
-            args.definition_dir = os.environ.get('KAVM_DEFINITION_DIR')
         kavm = KAVM(definition_dir=args.definition_dir)
         # TEAL source code is fetched from .teal files in ./tests/teal/
         # by scanning the test scenario "${run_file}" for "declareTealSource <path>" commands
@@ -74,7 +84,11 @@ def main() -> None:
         env['KAVM_DEFITION_DIR'] = kavm.definition_dir
         output = subprocess.run(krun_command, shell=True, capture_output=True, env=env)
 
-        output_kast_term = KAst.from_dict(json.loads(output.stdout)['term'])
+        try:
+            output_kast_term = KAst.from_dict(json.loads(output.stdout)['term'])
+        except json.JSONDecodeError:
+            print(output.stderr.decode(sys.getfilesystemencoding()))
+            return output.returncode
         if args.output != 'none':
             if args.extract_cells is not None:
                 for cell_term in collect_specific_cells(
@@ -82,7 +96,7 @@ def main() -> None:
                 ):
                     print(kavm.pretty_print(cell_term))
             else:
-                print(kavm.pretty_print(output_kast_term))
+                print(kavm.pretty_print(inlineCellMaps(output_kast_term)))
 
         return output.returncode
 
@@ -147,6 +161,12 @@ def create_argument_parser() -> ArgumentParser:
     )
     scenario_subparser.add_argument(
         'input_file', type=file_path, help='Path to AVM simulation scenario file'
+    )
+
+    # play-around --- for top-level debugging
+    play_around_subparser = command_parser.add_parser('play-around')
+    play_around_subparser.add_argument(
+        '--directory', type=dir_path, help='Path to definition to use.'
     )
 
     return parser

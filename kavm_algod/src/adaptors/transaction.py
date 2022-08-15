@@ -5,49 +5,96 @@ from algosdk.future.transaction import (
     SuggestedParams,
     Transaction,
 )
-from pyk.kast import KApply, KAst
-from pyk.kastManip import splitConfigFrom
+from pyk.kast import KApply, KAst, KSort, Subst, KToken
+from pyk.kastManip import splitConfigFrom, collectFreeVars
+from pyk.prelude import intToken, stringToken
 
-from kavm_algod.pyk_utils import int_token_cell, string_token_cell
+from kavm_algod.kavm import KAVM
+from kavm_algod.pyk_utils import maybeTValue, tvalueList
 
 
-def transaction_to_k(txn: Transaction) -> KApply:
+def txn_type_to_type_enum(txn_type: str) -> int:
+    if txn_type == 'unknown':
+        return 0
+    elif txn_type == 'pay':
+        return 1
+    elif txn_type == 'keyreg':
+        return 2
+    elif txn_type == 'acfg':
+        return 3
+    elif txn_type == 'axfer':
+        return 4
+    elif txn_type == 'afrz':
+        return 5
+    elif txn_type == 'appl':
+        return 6
+    else:
+        raise ValueError(f'unknown transaction type {txn_type}')
+
+
+def transaction_to_k(kavm: KAVM, txn: Transaction) -> KApply:
     """Convert a Transaction objet to a K cell"""
-    header = KApply(
-        '<txHeader>',
-        [
-            int_token_cell('<fee>', txn.fee),
-            int_token_cell('<firstValid>', txn.first_valid_round),
-            int_token_cell('<lastValid>', txn.last_valid_round),
-            string_token_cell('<genesisHash>', txn.genesis_hash),
-            string_token_cell('<sender>', txn.sender),
-            string_token_cell('<txType>', txn.type),
+    empty_transaction_cell = kavm.definition.empty_config(KSort('TransactionCell'))
+
+    header_subst = Subst(
+        {
+            'FEE_CELL': maybeTValue(kavm, txn.fee),
+            'FIRSTVALID_CELL': maybeTValue(kavm, txn.first_valid_round),
+            'LASTVALID_CELL': maybeTValue(kavm, txn.last_valid_round),
+            'GENESISHASH_CELL': maybeTValue(kavm, txn.genesis_hash),
+            'GENESISID_CELL': maybeTValue(kavm, txn.genesis_id),
+            'SENDER_CELL': maybeTValue(kavm, txn.sender),
+            'TXTYPE_CELL': maybeTValue(kavm, txn.type),
             # TODO: convert type to type enum, an int token
-            string_token_cell('<typeEnum>', txn.type),
-            string_token_cell('<group>', txn.group),
-            string_token_cell('<genesisID>', txn.genesis_id),
-            string_token_cell('<lease>', txn.lease),
-            string_token_cell('<note>', txn.note),
-            string_token_cell('<rekeyTo>', txn.rekey_to),
-        ],
+            'TYPEENUM_CELL': maybeTValue(kavm, txn_type_to_type_enum(txn.type)),
+            'GROUP_CELL': maybeTValue(kavm, txn.group),
+            'LEASE_CELL': maybeTValue(kavm, txn.lease),
+            'NOTE_CELL': maybeTValue(kavm, txn.note),
+            'REKEYTO_CELL': maybeTValue(kavm, txn.rekey_to),
+        }
     )
-    type_specific_fields = None
+    type_specific_subst = None
     if txn.type == PAYMENT_TXN:
-        type_specific_fields = _payment_to_k(txn)
+        type_specific_subst = Subst(
+            {
+                'RECEIVER_CELL': maybeTValue(kavm, txn.receiver),
+                'AMOUNT_CELL': maybeTValue(kavm, txn.amt),
+                'CLOSEREMAINDERTO_CELL': maybeTValue(kavm, txn.close_remainder_to),
+            }
+        )
     if txn.type == ASSETTRANSFER_TXN:
-        type_specific_fields = _asset_transfer_to_k(txn)
-    if type_specific_fields is None:
+        type_specific_subst = _asset_transfer_to_k(txn)
+    if type_specific_subst is None:
         raise ValueError(f'Transaction object {txn} is invalid')
-    return KApply('<transaction>', [header, type_specific_fields])
+
+    fields_subst = (
+        Subst({'TXID_CELL': maybeTValue(kavm, 0)})
+        .compose(header_subst)
+        .compose(type_specific_subst)
+    )
+    empty_array_fields_subst = Subst(
+        {
+            'ACCOUNTS_CELL': tvalueList(kavm, []),
+            'APPLICATIONARGS_CELL': tvalueList(kavm, []),
+            'FOREIGNAPPS_CELL': tvalueList(kavm, []),
+            'FOREIGNASSETS_CELL': tvalueList(kavm, []),
+        }
+    )
+    transaction_cell = fields_subst.apply(empty_transaction_cell)
+    empty_fields_subst = Subst(
+        {k: maybeTValue(kavm, None) for k in collectFreeVars(empty_transaction_cell)}
+    )
+
+    return empty_fields_subst.compose(empty_array_fields_subst).apply(transaction_cell)
 
 
-def _payment_to_k(txn: PaymentTxn) -> KApply:
+def _payment_to_k(kavm: KAVM, txn: PaymentTxn) -> KApply:
     """Convert a PaymentTxn objet to a K cell"""
     assert isinstance(txn, PaymentTxn)
     config = KApply(
         '<payTxFields>',
         [
-            string_token_cell('<receiver>', txn.receiver),
+            string_token_cell('<receiver>', bytes(txn.receiver)),
             int_token_cell('<amount>', txn.amt),
             string_token_cell('<closeRemainderTo>', txn.close_remainder_to),
         ],
