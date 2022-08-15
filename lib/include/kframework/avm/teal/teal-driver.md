@@ -1443,20 +1443,23 @@ Stateful TEAL Operations
 *app_local_del*
 
 ```k
-  rule <k> app_local_del => #app_local_del {getAccountAddressAt(I)}:>TValue
+  rule <k> app_local_del => #app_local_del {accountReference(A)}:>TValue
                                            getGlobalField(CurrentApplicationID) ... </k>
-       <stack> (_:Bytes) : (I:Int) : _ </stack>
-    requires isTValue(getAccountAddressAt(I))
+       <stack> (_:Bytes) : (A:TValue) : _ </stack>
+    requires isTValue(accountReference(A))
 
   rule <k> app_local_del => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (_:Bytes ) : (I:Int) : _ </stack>
-    requires notBool isTValue(getAccountAddressAt(I))
+       <stack> (_:Bytes ) : (A:TValue) : _ </stack>
+    requires notBool isTValue(accountReference(A))
+
+  rule <k> app_local_del => panic(ILL_TYPED_STACK) ... </k>
+       <stack> _:TUInt64 : _ : _ </stack>
 
 
   syntax KItem ::= "#app_local_del" TValue TValue
   //---------------------------------------------
   rule <k> #app_local_del ADDR APP => .K ... </k>
-       <stack> (KEY:Bytes) : (_:Int) : XS => XS </stack>
+       <stack> (KEY:Bytes) : _ : XS => XS </stack>
        <stacksize> S => S -Int 2 </stacksize>
        <account>
          <address> ADDR </address>
@@ -1468,20 +1471,16 @@ Stateful TEAL Operations
          </appsOptedIn> ...
        </account>
 
-  // if the account exists but is not opted in, do nothing
-  rule <k> #app_local_del ADDR APP => .K ... </k>
-       <stack> (_:Bytes) : (_:Int) : XS => XS </stack>
-       <stacksize> S => S -Int 2 </stacksize>
+  // if the account exists but is not opted in, panic.
+  rule <k> #app_local_del ADDR APP => panic(TXN_ACCESS_FAILED) ... </k>
        <account>
          <address> ADDR </address>
          <appsOptedIn> OA </appsOptedIn> ...
        </account>
     requires notBool (APP in_optedInApps(<appsOptedIn> OA </appsOptedIn>))
 
-  // if the account doesn't exist, do nothing.
-  rule <k> #app_local_del ADDR _ => .K ... </k>
-       <stack> (_:Bytes) : (_:Int) : XS => XS </stack>
-       <stacksize> S => S -Int 2 </stacksize>
+  // if the account doesn't exist, panic.
+  rule <k> #app_local_del ADDR _ => panic(TXN_ACCESS_FAILED) ... </k>
        <accountsMap> AMAP  </accountsMap>
     requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
 ```
@@ -1746,10 +1745,6 @@ Panic Behaviors due to Ill-typed Stack Arguments
   rule <k> app_local_get_ex => panic(ILL_TYPED_STACK) ... </k>
        <stack> (KEY:TValue) : (APP:TValue) : (I:TValue) : _ </stack>
     requires isInt(KEY) orBool isBytes(APP) orBool isBytes(I)
-
-  rule <k> app_local_del => panic(ILL_TYPED_STACK) ... </k>
-       <stack> (KEY:TValue) : (I:TValue) : _ </stack>
-    requires isInt(KEY) orBool isBytes(I)
 
   rule <k> app_global_get => panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Int) : _ </stack>

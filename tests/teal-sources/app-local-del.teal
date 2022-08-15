@@ -1,0 +1,35 @@
+#pragma version 5
+#pragma mode stateful
+
+txn Sender
+byte "test_key"
+app_local_get
+int 0
+==
+assert
+
+txn Sender
+byte "test_key"
+byte "test_val"
+app_local_put 
+
+txn Sender
+byte "test_key"
+app_local_get
+byte "test_val"
+==
+assert
+
+txn Sender
+byte "test_key"
+app_local_del
+
+txn Sender
+byte "test_key"
+app_local_get
+int 0
+==
+assert
+
+int 1
+return
