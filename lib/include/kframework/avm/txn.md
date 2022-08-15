@@ -487,7 +487,7 @@ module ALGO-TXN
          ...
        </transaction>
     requires #isValidForTxnType(Accounts, TYPE)
-     andBool 0 <Int J andBool J <Int size(X)
+     andBool 0 <Int J andBool J <=Int size(X)
 
   rule [[ getTxnField(I, Accounts) => (A X) ]]
        <transaction>
@@ -661,43 +661,43 @@ module ALGO-TXN
        </transaction>
     requires #isValidForTxnType(FreezeAssetFrozen, TYPE)
 
-  rule [[ getTxnField(I, ForeignApps, J) => normalize(getTValueAt(J, X)) ]]
+  rule [[ getTxnField(I, Applications, J) => normalize(getTValueAt(J, X)) ]]
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
          <foreignApps> X </foreignApps>
          ...
        </transaction>
-    requires #isValidForTxnType(ForeignApps, TYPE)
+    requires #isValidForTxnType(Applications, TYPE)
      andBool 0 <=Int J andBool J <Int size(X)
 
-  rule [[ getTxnField(I, ForeignApps) => X ]]
+  rule [[ getTxnField(I, Applications) => X ]]
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
          <foreignApps> X </foreignApps>
          ...
        </transaction>
-    requires #isValidForTxnType(ForeignApps, TYPE)
+    requires #isValidForTxnType(Applications, TYPE)
 
-  rule [[ getTxnField(I, ForeignAssets, J) => normalize(getTValueAt(J, X)) ]]
+  rule [[ getTxnField(I, Assets, J) => normalize(getTValueAt(J, X)) ]]
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
          <foreignAssets> X </foreignAssets>
          ...
        </transaction>
-    requires #isValidForTxnType(ForeignAssets, TYPE)
+    requires #isValidForTxnType(Assets, TYPE)
      andBool 0 <=Int J andBool J <Int size(X)
 
-  rule [[ getTxnField(I, ForeignAssets) => X ]]
+  rule [[ getTxnField(I, Assets) => X ]]
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
          <foreignAssets> X </foreignAssets>
          ...
        </transaction>
-    requires #isValidForTxnType(ForeignAssets, TYPE)
+    requires #isValidForTxnType(Assets, TYPE)
 ```
 
 *Failure*
@@ -716,11 +716,11 @@ module ALGO-TXN
 
   syntax MaybeTValue ::= getForeignAppAt(Int) [function]
   //----------------------------------------------------
-  rule getForeignAppAt(I) => getTxnField(getCurrentTxn(), ForeignApps, I)
+  rule getForeignAppAt(I) => getTxnField(getCurrentTxn(), Applications, I)
 
   syntax MaybeTValue ::= getForeignAssetAt(Int) [function]
   //------------------------------------------------------
-  rule getForeignAssetAt(I) => getTxnField(getCurrentTxn(), ForeignAssets, I)
+  rule getForeignAssetAt(I) => getTxnField(getCurrentTxn(), Assets, I)
 ```
 
 ```k

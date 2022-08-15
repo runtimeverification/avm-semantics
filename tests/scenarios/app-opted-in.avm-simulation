@@ -1,6 +1,7 @@
-declareTealSource "./tests/teal-sources/balance-account-not-available.teal";
+declareTealSource "./tests/teal-sources/app-opted-in.teal";
 
-addAccount <address> b"1" </address> <balance> 12345 </balance>;
+addAccount <address> b"1" </address> <balance> 100000 </balance>;
+addAccount <address> b"2" </address> <balance> 100000 </balance>;
 addApp     <appID>   1    </appID>   <address> b"1" </address> 0;
 optinApp   <appID>   1    </appID>   <address> b"1" </address>;
 
@@ -10,8 +11,8 @@ addAppCallTx <txID>            0           </txID>
              <sender>          b"1"        </sender>
              <applicationID>   1           </applicationID>
              <onCompletion>    0           </onCompletion>
-             <accounts>        .TValueList </accounts>
+             <accounts>        b"2"        </accounts>
              <applicationArgs> .TValueList </applicationArgs>
-             <foreignApps>     .TValueList </foreignApps>;
+             <foreignApps>     1           </foreignApps>;
 
 #initGlobals(); #evalTxGroup(); .AS

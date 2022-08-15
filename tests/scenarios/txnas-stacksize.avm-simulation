@@ -6,11 +6,13 @@ optinApp   <appID>   1    </appID>   <address> b"1" </address>;
 
 #initTxGroup();
 
-addAppCallTx <txID>            0        </txID>
-             <sender>          b"1"     </sender>
-             <applicationID>   1        </applicationID>
-             <onCompletion>    0        </onCompletion>
-             <accounts>        b"1"     </accounts>
-             <applicationArgs> Int2Bytes(1, BE, Unsigned) </applicationArgs>;
+addAppCallTx <txID>            0           </txID>
+             <sender>          b"1"        </sender>
+             <applicationID>   1           </applicationID>
+             <onCompletion>    0           </onCompletion>
+             <accounts>        .TValueList </accounts>
+             <applicationArgs> Int2Bytes(1, BE, Unsigned) 
+             </applicationArgs>
+             <foreignApps>     .TValueList </foreignApps>;
 
 #initGlobals(); #evalTxGroup(); .AS

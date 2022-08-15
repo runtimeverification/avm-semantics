@@ -697,12 +697,12 @@ references and also to check that a resource is available.
   syntax MaybeTValue ::= appReference(Int)  [function, functional]
   //-----------------------------------------------------------------
   rule appReference(I) => I requires applicationAvailable(I)
-  rule appReference(I) => getTxnField(getCurrentTxn(), ForeignApps, I)  [owise]
+  rule appReference(I) => getTxnField(getCurrentTxn(), Applications, I)  [owise]
 
   syntax MaybeTValue ::= asaReference(Int)  [function, functional]
   //------------------------------------------------------------------
   rule asaReference(I) => I requires assetAvailable(I)
-  rule asaReference(I) => getTxnField(getCurrentTxn(), ForeignAssets, I)  [owise]
+  rule asaReference(I) => getTxnField(getCurrentTxn(), Assets, I)  [owise]
 ```
 
 ### Resource Availability
@@ -732,7 +732,7 @@ references and also to check that a resource is available.
   //------------------------------------------------------------------
 
   rule applicationAvailable(A) => true
-    requires contains(getTxnField(getCurrentTxn(), ForeignApps), A)
+    requires contains(getTxnField(getCurrentTxn(), Applications), A)
 
   rule applicationAvailable(A) => true
     requires A ==K getGlobalField(CurrentApplicationID)
@@ -746,7 +746,7 @@ references and also to check that a resource is available.
   //------------------------------------------------------------
 
   rule assetAvailable(A) => true
-    requires contains(getTxnField(getCurrentTxn(), ForeignAssets), A)
+    requires contains(getTxnField(getCurrentTxn(), Assets), A)
 
   rule assetAvailable(_) => false [owise]
 

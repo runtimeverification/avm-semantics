@@ -1302,30 +1302,29 @@ Stateful TEAL Operations
 *balance*
 
 ```k
+  rule <k> balance => .K ... </k>
+       <stack> (A:TValue) : XS => getBalance({accountReference(A)}:>TValue) : XS </stack>
+    requires isTValue(accountReference(A))
 
-  syntax KItem ::= unwrapOrPanic(MaybeTValue, String)
-  // ------------------------------------------
-  rule <k> unwrapOrPanic(NoTValue, S) => panic(S) ... </k>
-  rule <k> unwrapOrPanic(V:TValue, _) => V        ... </k>
-
-  rule <k> (balance => (unwrapOrPanic(accountReference(A), TXN_ACCESS_FAILED) ~> balance)) ... </k>
-       <stack> (A:TValue) : XS => XS </stack>
-       <stacksize> S => S -Int 1 </stacksize>
-
-  rule <k> (A:TValue ~> balance) => pushFieldValue(getBalance(A)) ... </k>
+  rule <k> balance => panic(TXN_ACCESS_FAILED) ... </k>
+       <stack> (A:TValue) : _ </stack>
+    requires notBool isTValue(accountReference(A))
 ```
 
 *app_opted_in*
 
 ```k
   rule <k> app_opted_in =>
-           #app_opted_in hasOptedInApp(APP, {getAccountAddressAt(I)}:>TValue) ... </k>
-       <stack> (APP:Int) : (I:Int) : _ </stack>
-    requires isTValue(getAccountAddressAt(I))
+           #app_opted_in hasOptedInApp({appReference(APP)}:>TValue, {accountReference(A)}:>TValue) ... </k>
+       <stack> (APP:Int) : (A:TValue) : _ </stack>
+    requires isTValue(appReference(APP)) andBool isTValue(accountReference(A))
 
   rule <k> app_opted_in  => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (_:Int) : (I:Int) : _ </stack>
-    requires notBool isTValue(getAccountAddressAt(I))
+       <stack> APP:Int : A:TValue : _:TStack </stack>
+    requires notBool (isTValue(appReference(APP)) andBool isTValue(accountReference(A)))
+
+  rule <k> app_opted_in => panic(ILL_TYPED_STACK) ... </k>
+       <stack> _:TBytes : _:TValue : _:TStack </stack>
 
   syntax KItem ::= "#app_opted_in" Bool
   //-----------------------------------
@@ -1736,10 +1735,6 @@ Panic Behaviors due to Ill-typed Stack Arguments
 
 ### Application State Opcodes
 ```k
-  rule <k> app_opted_in => panic(ILL_TYPED_STACK) ... </k>
-       <stack> (APP:TValue) : (I:TValue) : _ </stack>
-    requires isBytes(APP) orBool isBytes(I)
-
   rule <k> app_local_get => panic(ILL_TYPED_STACK) ... </k>
        <stack> (KEY:TValue) : (I:TValue) : _ </stack>
     requires isInt(KEY) orBool isBytes(I)

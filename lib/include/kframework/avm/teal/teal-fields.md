@@ -136,10 +136,12 @@ module TEAL-FIELDS
 ```k
   syntax TxnaField ::= "ApplicationArgs"
                      | "Accounts"
+                     | "Applications"
+                     | "Assets"
 
   syntax TxnaFieldExt ::= TxnaField
-                        | "ForeignApps"
-                        | "ForeignAssets"
+//                        | "Applications"
+//                        | "Assets"
 ```
 
 ```k

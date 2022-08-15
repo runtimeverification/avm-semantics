@@ -24,26 +24,29 @@ optinApp <appID> 1 </appID> <address> b"2" </address>;
 
 #initTxGroup();
 
-addAppCallTx <txID>            0        </txID>
-             <sender>          b"1"     </sender>
-             <applicationID>   1        </applicationID>
-             <onCompletion>    0        </onCompletion>
-             <accounts>        b"1"     </accounts>
-             <applicationArgs> .TValueList </applicationArgs>;
+addAppCallTx <txID>            0           </txID>
+             <sender>          b"1"        </sender>
+             <applicationID>   1           </applicationID>
+             <onCompletion>    0           </onCompletion>
+             <accounts>        .TValueList </accounts>
+             <applicationArgs> .TValueList </applicationArgs>
+             <foreignApps>     .TValueList </foreignApps>;
 
-addAppCallTx <txID>            1        </txID>
-             <sender>          b"2"     </sender>
-             <applicationID>   1        </applicationID>
-             <onCompletion>    0        </onCompletion>
-             <accounts>        b"2"     </accounts>
-             <applicationArgs> .TValueList </applicationArgs>;
+addAppCallTx <txID>            1           </txID>
+             <sender>          b"2"        </sender>
+             <applicationID>   1           </applicationID>
+             <onCompletion>    0           </onCompletion>
+             <accounts>        .TValueList </accounts>
+             <applicationArgs> .TValueList </applicationArgs>
+             <foreignApps>     .TValueList </foreignApps>;
 
-addAppCallTx <txID>            2        </txID>
-             <sender>          b"1"     </sender>
-             <applicationID>   1        </applicationID>
-             <onCompletion>    0        </onCompletion>
-             <accounts>        b"1"     </accounts>
-             <applicationArgs> .TValueList </applicationArgs>;
+addAppCallTx <txID>            2           </txID>
+             <sender>          b"1"        </sender>
+             <applicationID>   1           </applicationID>
+             <onCompletion>    0           </onCompletion>
+             <accounts>        .TValueList </accounts>
+             <applicationArgs> .TValueList </applicationArgs>
+             <foreignApps>     .TValueList </foreignApps>;
 
 #initGlobals();
 #evalTxGroup();

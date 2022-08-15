@@ -663,8 +663,8 @@ module TEAL-UNPARSER
   rule TealField2String(ClearStateProgram)        => "ClearStateProgram"
   rule TealField2String(ApplicationArgs)          => "ApplicationArgs"
   rule TealField2String(Accounts)                 => "Accounts"
-  rule TealField2String(ForeignApps)              => "ForeignApps"
-  rule TealField2String(ForeignAssets)            => "ForeignAssets"
+  rule TealField2String(Applications)             => "Applications"
+  rule TealField2String(Assets)                   => "Assets"
 
 
   syntax String ::= TValue2String(TValue)         [function]

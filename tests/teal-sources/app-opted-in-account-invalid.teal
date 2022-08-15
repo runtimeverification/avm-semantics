@@ -1,0 +1,9 @@
+#pragma version 5
+#pragma mode stateful
+
+int 5
+int 0
+app_opted_in
+
+int 1
+return
