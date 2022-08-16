@@ -48,6 +48,7 @@ module TEAL-FIELDS
                             | "AssetReserve" [klabel(AssetReserve), symbol]
                             | "AssetFreeze" [klabel(AssetFreeze), symbol]
                             | "AssetClawback" [klabel(AssetClawback), symbol]
+                            | "AssetCreator" [klabel(AssetCreator), symbol]
 ```
 
 ### `app_params_get` Fields

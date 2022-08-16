@@ -1,0 +1,55 @@
+#pragma version 5
+#pragma mode stateful
+
+txna Assets 0
+asset_params_get AssetTotal
+assert
+int 12345
+==
+assert
+
+//int 0
+//asset_params_get AssetName
+//assert
+//byte "testcoin"
+//==
+//assert
+
+//txna Assets 0
+//asset_params_get AssetUnitName
+//assert
+//byte "testcoin"
+//==
+//assert
+
+int 0
+asset_params_get AssetDecimals
+assert
+int 0
+==
+assert
+
+txna Assets 0
+asset_params_get AssetDefaultFrozen
+assert
+int 0
+==
+assert
+
+int 0
+asset_params_get AssetCreator
+assert
+txn Sender
+==
+assert
+
+txna Assets 1
+asset_params_get AssetName
+!
+assert
+int 0
+==
+assert
+
+int 1
+return

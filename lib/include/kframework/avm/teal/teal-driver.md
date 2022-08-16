@@ -1633,37 +1633,40 @@ Stateful TEAL Operations
 
 ```k
   rule <k> asset_params_get FIELD =>
-           #asset_params_get getAssetParamsField(FIELD, {getForeignAssetAt(I)}:>TValue)
+           #asset_params_get getAssetParamsField(FIELD, {asaReference(A)}:>TValue)
        ...
        </k>
-       <stack> (I:Int) : _ </stack>
+       <stack> (A:TUInt64) : _ </stack>
        <stacksize> S </stacksize>
     requires S <Int MAX_STACK_DEPTH
-     andBool isTValue(getForeignAssetAt(I))
+     andBool isTValue(asaReference(A))
 
   rule <k> asset_params_get _ => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (I:Int) : _ </stack>
+       <stack> (A:TUInt64) : _ </stack>
        <stacksize> S </stacksize>
     requires S <Int MAX_STACK_DEPTH
-     andBool (notBool isTValue(getForeignAssetAt(I)))
+     andBool (notBool isTValue(asaReference(A)))
 
   rule <k> asset_params_get _ => panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
+
+  rule <k> asset_params_get _ => panic(ILL_TYPED_STACK) ... </k>
+       <stack> (_:Bytes) : _ </stack>
 
   syntax KItem ::= "#asset_params_get" TValue
   // ----------------------------------------
   rule <k> #asset_params_get RET => .K ... </k>
        <stack> (_:Int) : XS => 1 : RET : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
-    requires {RET}:>Int >=Int 0
-     andBool S <Int MAX_STACK_DEPTH
+    requires S <Int MAX_STACK_DEPTH
+     andBool (notBool (isInt(RET)) orElseBool {RET}:>Int >=Int 0 )
 
   rule <k> #asset_params_get RET => .K ... </k>
        <stack> (_:Int) : XS => 0 : 0 : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
-    requires {RET}:>Int <Int 0
-     andBool S <Int MAX_STACK_DEPTH
+    requires S <Int MAX_STACK_DEPTH
+     andBool (isInt(RET) andThenBool {RET}:>Int <Int 0)
 ```
 
 ### Access to past transactions in the group
@@ -1765,9 +1768,6 @@ Panic Behaviors due to Ill-typed Stack Arguments
 
   rule <k> app_global_del => panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Int) : _ </stack>
-
-  rule <k> asset_params_get _ => panic(ILL_TYPED_STACK) ... </k>
-       <stack> (_:Bytes) : _ </stack>
 ```
 
 ### Signature Verification Opcode

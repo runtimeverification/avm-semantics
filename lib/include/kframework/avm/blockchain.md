@@ -448,6 +448,9 @@ Accessor functions
          </asset> ...
        </assetsCreated>
 
+  rule [[ getAssetParamsField(AssetCreator, ASSET) => V ]]
+       <assetCreator> ASSET |-> V ...</assetCreator>
+
   rule [[ getAssetParamsField(_, ASSET) => -1 ]]
       <accountsMap> AMAP </accountsMap>
     requires notBool ( ASSET in_assets(<accountsMap> AMAP </accountsMap>) )
