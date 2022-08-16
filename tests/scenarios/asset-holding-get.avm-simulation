@@ -1,0 +1,29 @@
+declareTealSource "./tests/teal-sources/asset-holding-get.teal";
+
+addAccount <address> b"1" </address> <balance> 100000 </balance>;
+addAccount <address> b"2" </address> <balance> 100000 </balance>;
+addApp     <appID>   1    </appID>   <address> b"1" </address> 0;
+optinApp   <appID>   1    </appID>   <address> b"1" </address>;
+optinApp   <appID>   1    </appID>   <address> b"2" </address>;
+
+#initTxGroup();
+
+addAssetConfigTx <txID>                0          </txID>
+                 <sender>              b"1"       </sender>
+                 <configAsset>         NoTValue   </configAsset>
+                 <configTotal>         12345      </configTotal>
+                 <configDecimals>      0          </configDecimals>
+                 <configDefaultFrozen> NoTValue   </configDefaultFrozen>
+                 <configAssetName>     "testcoin" </configAssetName>;
+
+
+addAppCallTx <txID>            1           </txID>
+             <sender>          b"1"        </sender>
+             <applicationID>   1           </applicationID>
+             <onCompletion>    0           </onCompletion>
+             <accounts>        b"2" </accounts>
+             <applicationArgs> .TValueList </applicationArgs>
+             <foreignApps>     .TValueList </foreignApps>
+             <foreignAssets>   0           </foreignAssets>;
+
+#initGlobals(); #evalTxGroup(); .AS

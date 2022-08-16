@@ -1603,23 +1603,29 @@ Stateful TEAL Operations
 ```k
   rule <k> asset_holding_get FIELD =>
            #asset_holding_get getOptInAssetField(FIELD,
-                                {getAccountAddressAt(I)}:>TValue, ASSET) ... </k>
-       <stack> (ASSET:Int) : (I:Int):_ </stack>
-    requires isTValue(getAccountAddressAt(I))
+                                {accountReference(A)}:>TValue, 
+                                {asaReference(ASSET)}:>TValue) 
+           ... 
+       </k>
+       <stack> (ASSET:TUInt64) : (A:TValue): _ </stack>
+    requires isTValue(accountReference(A)) andBool isTValue(asaReference(ASSET))
 
   rule <k> asset_holding_get _ => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (_:Int) : (I:Int) : _ </stack>
-    requires notBool isTValue(getAccountAddressAt(I))
+       <stack> (ASSET:TUInt64) : (A:TValue) : _ </stack>
+    requires notBool (isTValue(accountReference(A)) andBool isTValue(asaReference(ASSET)))
+
+  rule <k> asset_holding_get _ => panic(ILL_TYPED_STACK) ... </k>
+       <stack> _:TBytes : _ : _ </stack>
 
   syntax KItem ::= "#asset_holding_get" TValue
   // -----------------------------------------
   rule <k> #asset_holding_get RET => .K ... </k>
-       <stack> (_:Int) : (_:Int) : XS => 1 : RET : XS </stack>
+       <stack> (_:Int) : _ : XS => 1 : RET : XS </stack>
     requires {RET}:>Int >=Int 0
 
   // Return 0 if not opted in ASSET or the account is not found
   rule <k> #asset_holding_get RET => .K ... </k>
-       <stack> (_:Int) : (_:Int) : XS => 0 : 0 : XS </stack>
+       <stack> (_:Int) : _ : XS => 0 : 0 : XS </stack>
     requires {RET}:>Int <Int 0
 ```
 
@@ -1759,10 +1765,6 @@ Panic Behaviors due to Ill-typed Stack Arguments
 
   rule <k> app_global_del => panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Int) : _ </stack>
-
-  rule <k> asset_holding_get _ => panic(ILL_TYPED_STACK) ... </k>
-       <stack> (ASSET:TValue) : (I:TValue) : _ </stack>
-    requires isBytes(ASSET) orBool isBytes(I)
 
   rule <k> asset_params_get _ => panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Bytes) : _ </stack>

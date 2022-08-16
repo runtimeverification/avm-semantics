@@ -1,0 +1,9 @@
+#pragma version 5
+#pragma mode stateful
+
+txn Sender
+int 3
+asset_holding_get AssetBalance
+
+int 1
+return

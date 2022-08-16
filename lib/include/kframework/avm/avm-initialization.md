@@ -89,7 +89,8 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
 ```k
   syntax AlgorandCommand ::= "addAppCallTx" TxIDCell SenderCell ApplicationIDCell
                                             OnCompletionCell AccountsCell
-                                            ApplicationArgsCell ForeignAppsCell
+                                            ApplicationArgsCell ForeignAppsCell 
+                                            ForeignAssetsCell
   //-----------------------------------------------------------
   rule <k> addAppCallTx <txID>            ID            </txID>
                         <sender>          SENDER        </sender>
@@ -98,6 +99,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
                         <accounts>        ACCOUNTS      </accounts>
                         <applicationArgs> ARGS          </applicationArgs>
                         <foreignApps>     APPS          </foreignApps>
+                        <foreignAssets>   ASSETS        </foreignAssets>
        => #pushTxnBack(<txID> ID </txID>)
            ...
        </k>
@@ -118,6 +120,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
             <accounts>        ACCOUNTS      </accounts>
             <applicationArgs> ARGS          </applicationArgs>
             <foreignApps>     APPS          </foreignApps>
+            <foreignAssets>   ASSETS        </foreignAssets>
             ...                            // other fields will receive default values
           </appCallTxFields>
          </transaction>

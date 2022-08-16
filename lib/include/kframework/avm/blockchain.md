@@ -219,7 +219,9 @@ module ALGO-BLOCKCHAIN
       <appCreator>   .Map </appCreator>   // AppID |-> Creator's address
       <assetCreator> .Map </assetCreator> // AssetID |-> Creator's address
       <blocks>       .Map </blocks>       // Int -> Block (Unused)
-      <blockheight>  0 </blockheight>
+      <blockheight>  0    </blockheight>
+      <nextAssetId>  0    </nextAssetId>
+      <nextAppId>    0    </nextAppId>
     </blockchain>
 ```
 
