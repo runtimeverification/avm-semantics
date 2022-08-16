@@ -1,0 +1,50 @@
+#pragma version 3
+
+//******************
+
+int 1
+int 0
+
+int 0
+
+select
+
+//******************
+
+assert
+
+int 0
+int 1
+
+int 1
+
+select
+
+assert
+
+//******************
+
+int 1
+int 0
+
+int 1
+
+select
+!
+
+assert
+
+//******************
+
+int 0
+int 1
+
+int 0
+
+select
+!
+
+assert
+
+int 1
+return

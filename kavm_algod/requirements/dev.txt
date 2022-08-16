@@ -1,5 +1,14 @@
 -r base.txt
+<<<<<<< HEAD
 flake8==4.0.1
 isort==5.10.1
 mypy==0.942
 pytest==7.1.2
+=======
+autoflake==1.4
+isort==5.10.1
+mypy==0.942
+pytest==7.1.2
+black==22.6.0
+
+>>>>>>> origin

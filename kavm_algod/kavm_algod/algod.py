@@ -1,5 +1,6 @@
 import logging
 from pprint import PrettyPrinter
+<<<<<<< HEAD
 
 import msgpack
 from algosdk import encoding
@@ -7,6 +8,17 @@ from algosdk.v2client import algod
 
 
 def msgpack_decode_txn_list(enc):
+=======
+from typing import Any, Dict, List
+
+import msgpack
+from algosdk import encoding
+from algosdk.future.transaction import Transaction
+from algosdk.v2client import algod
+
+
+def msgpack_decode_txn_list(enc: bytes) -> List[Transaction]:
+>>>>>>> origin
     """
     Decode a msgpack encoded object from a string.
     Args:
@@ -36,15 +48,25 @@ class KAVMClient(algod.AlgodClient):
 
     """
 
+<<<<<<< HEAD
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.algodLogger = logging.getLogger(f"${__name__}.algodLogger")
+=======
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.algodLogger = logging.getLogger(f'${__name__}.algodLogger')
+>>>>>>> origin
         self.pretty_printer = PrettyPrinter(width=41, compact=True)
         self.set_log_level(logging.DEBUG)
 
         # Initialize KAVM here
 
+<<<<<<< HEAD
     def set_log_level(self, log_level):
+=======
+    def set_log_level(self, log_level: Any) -> None:
+>>>>>>> origin
         """
         Set log level for algod requests
         """
@@ -52,6 +74,7 @@ class KAVMClient(algod.AlgodClient):
 
     def algod_request(
         self,
+<<<<<<< HEAD
         method,
         requrl,
         params=None,
@@ -59,11 +82,21 @@ class KAVMClient(algod.AlgodClient):
         headers=None,
         response_format="Json",
     ):
+=======
+        method: str,
+        requrl: str,
+        params: List[str] = None,
+        data: bytes = None,
+        headers: List[str] = None,
+        response_format: str = 'Json',
+    ) -> Dict[str, Any]:
+>>>>>>> origin
         """
         Log requests made to algod, but execute local actions instead
 
         Need to override this method, and the more specific methods using it can remain the same.
         """
+<<<<<<< HEAD
         txn_msg = ""
         if data is not None:
             txns = map(lambda t: t.dictify()["txn"], msgpack_decode_txn_list(data))
@@ -105,3 +138,47 @@ class KAVMClient(algod.AlgodClient):
             return dict({"txId": -1})
         else:
             raise NotImplementedError(f"Endpoint not implemented: {requrl}")
+=======
+        txn_msg = ''
+
+        if data is not None:
+            txns = map(lambda t: t.dictify()['txn'], msgpack_decode_txn_list(data))
+            txn_msg = self.pretty_printer.pformat(list(txns))
+        algod_debug_log_msg = f'{method} {requrl} {txn_msg}'
+        self.algodLogger.debug(algod_debug_log_msg)
+
+        if method == 'GET':
+            return self._handle_get_requests(requrl)
+        elif method == 'POST':
+            return self._handle_post_requests(requrl)
+        else:
+            raise NotImplementedError(f'{method} {requrl}')
+
+    def _handle_get_requests(self, requrl: str) -> Dict[str, Any]:
+        """
+        Handle GET requests to algod with PyTeal_eval
+        """
+        if requrl == '/transactions':
+            return dict({'txId': -1})
+        elif requrl == '/transactions/params':
+            return {
+                'consensus-version': 31,
+                'fee': 1000,
+                'genesis-id': 'pyteal-eval',
+                'genesis-hash': 'pyteal-evalpyteal-evalpyteal-evalpyteal-eval',
+                'last-round': 1,
+                'min-fee': 1000,
+            }
+        else:
+            raise NotImplementedError(f'Endpoint not implemented: {requrl}')
+        raise NotImplementedError(requrl.split())
+
+    def _handle_post_requests(self, requrl: str) -> Dict[str, Any]:
+        """
+        Handle POST requests to algod with PyTeal_eval
+        """
+        if requrl == '/transactions':
+            return dict({'txId': -1})
+        else:
+            raise NotImplementedError(f'Endpoint not implemented: {requrl}')
+>>>>>>> origin

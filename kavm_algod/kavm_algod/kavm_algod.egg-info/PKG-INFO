@@ -1,0 +1,4 @@
+Metadata-Version: 2.1
+Name: kavm-algod
+Version: 0.0.1
+Requires-Python: <3.10,>=3.9.*

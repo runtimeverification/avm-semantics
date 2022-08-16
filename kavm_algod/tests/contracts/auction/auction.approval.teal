@@ -1,0 +1,175 @@
+#pragma version 6
+txn ApplicationID
+int 0
+==
+bnz main_l8
+txna ApplicationArgs 0
+byte "create_asset"
+==
+bnz main_l7
+txna ApplicationArgs 0
+byte "bid"
+==
+bnz main_l6
+txna ApplicationArgs 0
+byte "redeem"
+==
+bnz main_l5
+err
+main_l5:
+callsub redeem_3
+b main_l9
+main_l6:
+callsub bid_2
+b main_l9
+main_l7:
+callsub createasset_1
+b main_l9
+main_l8:
+callsub init_0
+main_l9:
+int 0
+return
+
+// init
+init_0:
+int 1
+return
+
+// create_asset
+createasset_1:
+txn NumAppArgs
+int 3
+==
+assert
+itxn_begin
+int acfg
+itxn_field TypeEnum
+int 1
+itxn_field ConfigAssetTotal
+int 0
+itxn_field ConfigAssetDecimals
+byte "assets"
+itxn_field ConfigAssetUnitName
+byte "my_asset"
+itxn_field ConfigAssetName
+itxn_submit
+byte "start_time"
+txna ApplicationArgs 1
+btoi
+app_global_put
+byte "end_time"
+txna ApplicationArgs 2
+btoi
+app_global_put
+byte "asset_id"
+itxn CreatedAssetID
+app_global_put
+byte "highest_bidder"
+txn Sender
+app_global_put
+byte "highest_bid"
+int 0
+app_global_put
+int 1
+return
+
+// bid
+bid_2:
+txn NumAppArgs
+int 1
+==
+assert
+global GroupSize
+int 2
+==
+assert
+txn GroupIndex
+int 0
+==
+assert
+gtxn 1 TypeEnum
+int pay
+==
+assert
+gtxn 1 Receiver
+global CurrentApplicationAddress
+==
+assert
+gtxn 1 Amount
+byte "highest_bid"
+app_global_get
+>
+assert
+global LatestTimestamp
+byte "end_time"
+app_global_get
+<=
+assert
+itxn_begin
+int pay
+itxn_field TypeEnum
+byte "highest_bid"
+app_global_get
+itxn_field Amount
+byte "highest_bidder"
+app_global_get
+itxn_field Receiver
+itxn_submit
+byte "highest_bidder"
+txn Sender
+app_global_put
+byte "highest_bid"
+gtxn 1 Amount
+app_global_put
+int 1
+return
+
+// redeem
+redeem_3:
+txn NumAppArgs
+int 1
+==
+assert
+global GroupSize
+int 2
+==
+assert
+txn GroupIndex
+int 1
+==
+assert
+gtxn 0 TypeEnum
+int axfer
+==
+assert
+gtxn 0 AssetReceiver
+txn Sender
+==
+assert
+gtxn 0 AssetAmount
+int 0
+==
+assert
+gtxn 0 Sender
+txn Sender
+==
+assert
+byte "highest_bidder"
+app_global_get
+txn Sender
+==
+assert
+itxn_begin
+int axfer
+itxn_field TypeEnum
+int 1
+itxn_field AssetAmount
+txn Sender
+itxn_field AssetReceiver
+byte "asset_id"
+app_global_get
+itxn_field XferAsset
+itxn_submit
+int 1
+return

@@ -1,0 +1,2 @@
+[console_scripts]
+kavm-algod = kavm_algod.__main__:main
