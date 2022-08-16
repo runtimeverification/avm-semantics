@@ -13,6 +13,7 @@ addAppCallTx <txID>            0           </txID>
              <accounts>        .TValueList </accounts>
              <applicationArgs> Int2Bytes(1, BE, Unsigned) 
              </applicationArgs>
-             <foreignApps>     .TValueList </foreignApps>;
+             <foreignApps>     .TValueList </foreignApps>
+             <foreignAssets>   .TValueList </foreignAssets>;
 
 #initGlobals(); #evalTxGroup(); .AS

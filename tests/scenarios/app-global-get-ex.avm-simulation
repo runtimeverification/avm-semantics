@@ -14,7 +14,8 @@ addAppCallTx <txID>            0           </txID>
              <onCompletion>    0           </onCompletion>
              <accounts>        .TValueList </accounts>
              <applicationArgs> 1           </applicationArgs>
-             <foreignApps>     .TValueList </foreignApps>;
+             <foreignApps>     .TValueList </foreignApps>
+             <foreignAssets>   .TValueList </foreignAssets>;
 
 addAppCallTx <txID>            1           </txID>
              <sender>          b"1"        </sender>
@@ -22,6 +23,7 @@ addAppCallTx <txID>            1           </txID>
              <onCompletion>    0           </onCompletion>
              <accounts>        .TValueList </accounts>
              <applicationArgs> 2           </applicationArgs>
-             <foreignApps>     1           </foreignApps>;
+             <foreignApps>     1           </foreignApps>
+             <foreignAssets>   .TValueList </foreignAssets>;
 
 #initGlobals(); #evalTxGroup(); .AS

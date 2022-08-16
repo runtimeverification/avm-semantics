@@ -13,6 +13,7 @@ addAppCallTx <txID>            0           </txID>
              <onCompletion>    0           </onCompletion>
              <accounts>        b"2"        </accounts>
              <applicationArgs> .TValueList </applicationArgs>
-             <foreignApps>     1           </foreignApps>;
+             <foreignApps>     1           </foreignApps>
+             <foreignAssets>   .TValueList </foreignAssets>;
 
 #initGlobals(); #evalTxGroup(); .AS
