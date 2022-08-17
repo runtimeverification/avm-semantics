@@ -172,13 +172,13 @@ module TEAL-OPCODES
 #### Constant Loading Operations
 
 ```k
-  syntax OpCode ::= "intcblock" TUInt64 TValueList
+  syntax OpCode ::= "intcblock" TUInt64 TValueNeList
                   | "intc" Int // Int Constant Index
                   | "intc_0"
                   | "intc_1"
                   | "intc_2"
                   | "intc_3"
-                  | "bytecblock" TUInt64 TValuePairList
+                  | "bytecblock" TUInt64 TValuePairNeList
                   | "bytec" Int // Byte Constant Index
                   | "bytec_0"
                   | "bytec_1"
@@ -500,14 +500,14 @@ module TEAL-UNPARSER
   rule unparseTEAL(extract_uint16)                => "extract_uint16"
   rule unparseTEAL(extract_uint32)                => "extract_uint32"
   rule unparseTEAL(extract_uint64)                => "extract_uint64"
-  rule unparseTEAL(intcblock Size IntConsts)      => "intcblock" +&+ Int2String(Size:Int) +&+ TValueList2String(IntConsts:TValueList)
+  rule unparseTEAL(intcblock Size IntConsts)      => "intcblock" +&+ Int2String(Size:Int) +&+ TValueList2String(IntConsts:TValueNeList)
   rule unparseTEAL(intc Idx)                      => "intc" +&+ Int2String(Idx:Int)
   rule unparseTEAL(intc_0)                        => "intc_0"
   rule unparseTEAL(intc_1)                        => "intc_1"
   rule unparseTEAL(intc_2)                        => "intc_2"
   rule unparseTEAL(intc_3)                        => "intc_3"
   rule unparseTEAL(pushint I:Int)                 => "pushint" +&+ Int2String(I)
-  rule unparseTEAL(bytecblock Size ByteConsts)    => "bytecblock" +&+ Int2String(Size:Int) +&+ TValuePairList2String(ByteConsts:TValuePairList)
+  rule unparseTEAL(bytecblock Size ByteConsts)    => "bytecblock" +&+ Int2String(Size:Int) +&+ TValuePairList2String(ByteConsts:TValuePairNeList)
   rule unparseTEAL(bytec Idx)                     => "bytec" +&+ Int2String(Idx:Int)
   rule unparseTEAL(bytec_0)                       => "bytec_0"
   rule unparseTEAL(bytec_1)                       => "bytec_1"
@@ -677,12 +677,12 @@ module TEAL-UNPARSER
   rule TValue2String(TA:TAddressLiteral) => TealAddress2String(TA)
   rule TValuePair2String((TV, TV2))      => "( " +String TValue2String(TV) +String ", " +String  TValue2String(TV2) +String " )"
 
-  syntax String ::= TValueList2String(TValueList)         [function]
-                  | TValuePairList2String(TValuePairList) [function]
+  syntax String ::= TValueList2String(TValueNeList)         [function]
+                  | TValuePairList2String(TValuePairList)   [function]
   // ---------------------------------------------------------------
-  rule TValueList2String(TV:TValue TVL:TValueList)             => TValue2String(TV) +&+ TValueList2String(TVL)
+  rule TValueList2String(TV:TValue TVL:TValueNeList)           => TValue2String(TV) +&+ TValueList2String(TVL)
   rule TValueList2String(TV:TValue)                            => TValue2String(TV)
-  rule TValuePairList2String(TV:TValuePair TVL:TValuePairList) => TValuePair2String(TV) +&+ TValuePairList2String(TVL)
+  rule TValuePairList2String(TV:TValuePair TVL:TValuePairNeList) => TValuePair2String(TV) +&+ TValuePairList2String(TVL)
   rule TValuePairList2String(TV:TValuePair)                    => TValuePair2String(TV)
 
   syntax String ::= IntToken2String(TUInt64Token) [function, hook(STRING.token2string)]

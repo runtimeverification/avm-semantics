@@ -1,4 +1,4 @@
-declareTealSource "./tests/teal-sources/stack-ill-typed.teal";
+declareTealSource "./tests/teal-sources/txnas-stacksize.teal";
 
 addAccount <address> b"1" </address> <balance> 10000 </balance>;
 addApp     <appID>   1    </appID>   <address> b"1" </address> 0;
@@ -11,6 +11,6 @@ addAppCallTx <txID>            0        </txID>
              <applicationID>   1        </applicationID>
              <onCompletion>    0        </onCompletion>
              <accounts>        b"1"     </accounts>
-             <applicationArgs> .TValueList </applicationArgs>;
+             <applicationArgs> Int2Bytes(1, BE, Unsigned) </applicationArgs>;
 
 #initGlobals(); #evalTxGroup(); .AS

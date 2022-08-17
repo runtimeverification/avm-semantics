@@ -53,18 +53,20 @@ There are only two types in TEAL:
     ```
 
 TEAL TValue Representation
--------------------------
+--------------------------
 
 The `TValue` sort represents all possible TEAL values.
 
 ```k
   syntax TValue ::= TUInt64 | TBytes
-  syntax TValueList ::= TValue | TValue TValueList
-  syntax MaybeTValue ::= "NoTValue" [klabel(NoTValue), symbol] | TValueList
+  syntax TValueNeList ::= TValue | TValue TValueNeList
+  syntax TValueList ::= ".TValueList" | TValueNeList
+  syntax MaybeTValue ::= "NoTValue" [klabel(NoTValue), symbol] | TValue
 
   syntax TValuePair ::= "(" TValue "," TValue ")"
-  syntax TValuePairList ::= TValuePair | TValuePair TValuePairList
-  syntax MaybeTValuePair ::= "NoTValuePair" | TValuePairList
+  syntax TValuePairNeList ::= TValuePair | TValuePair TValuePairNeList
+  syntax TValuePairList ::= ".TValuePairList" | TValuePairNeList
+  syntax MaybeTValuePair ::= "NoTValuePair" | TValuePair
 ```
 
 ```k
@@ -189,36 +191,37 @@ We also have a hook just for checking whether an address is valid.
 We expose several functions for working with lists.
 
 ```k
-  syntax TValue ::= getTValueAt(Int, TValueList) [function]
-  //-------------------------------------------------------
+  syntax TValue ::= getTValueAt(Int, TValueNeList) [function]
+  //---------------------------------------------------------
   rule getTValueAt(I, _ VL) => getTValueAt(I -Int 1, VL)
     requires I >Int 0
   rule getTValueAt(0, V _) => V
   rule getTValueAt(0, V  ) => V
 
-  syntax Int ::= size(MaybeTValue) [function]
-  // ----------------------------------------
-  rule size(_ VL:TValueList) => 1 +Int size(VL)
+  syntax Int ::= size(TValueList) [function]
+  // ---------------------------------------
+  rule size(_ VL:TValueNeList) => 1 +Int size(VL)
   rule size(_:TValue       ) => 1
-  rule size(NoTValue       ) => 0
+  rule size(.TValueList    ) => 0
 
-  syntax TValueList ::= reverse(TValueList) [function]
-  // -------------------------------------------------
+  syntax TValueNeList ::= reverse(TValueNeList) [function]
+  // -----------------------------------------------------
   rule reverse(V:TValue VL) => append(V, reverse(VL))
   rule reverse(V:TValue   ) => V
 
-  syntax TValueList ::= append(TValue, TValueList) [function]
-  // -------------------------------------------------------
+  syntax TValueNeList ::= append(TValue, TValueList) [function]
+  // ----------------------------------------------------------
   rule append(V, V':TValue VL) => V' append(V, VL)
   rule append(V, V':TValue   ) => V' V
+  rule append(V, .TValueList ) => V
 
   syntax TValuePairList ::= reverse(TValuePairList) [function]
   // ---------------------------------------------------------
   rule reverse(V:TValuePair VL) => append(V, reverse(VL))
   rule reverse(V:TValuePair   ) => V
 
-  syntax TValuePairList ::= append(TValuePair, TValuePairList) [function]
-  // -------------------------------------------------------------------
+  syntax TValuePairNeList ::= append(TValuePair, TValuePairList) [function]
+  // ----------------------------------------------------------------------
   rule append(V, V':TValuePair VL) => V' append(V, VL)
   rule append(V, V':TValuePair   ) => V' V
 ```
@@ -232,6 +235,19 @@ our internal K representation:
   rule normalize(V:TUInt64) => V
   rule normalize(V:TBytes) => normalizeB(V)
 ```
+
+### Boolean conversions
+
+```k
+  syntax Bool ::= int2Bool(Int) [function, functional]
+  rule int2Bool(0) => false
+  rule int2Bool(A) => true requires A =/=Int 0
+
+  syntax Int ::= bool2Int(Bool)  [function, functional, smtlib(bool2Int)]
+  rule bool2Int(true ) => 1
+  rule bool2Int(false) => 0
+```
+
 
 ```k
 endmodule
