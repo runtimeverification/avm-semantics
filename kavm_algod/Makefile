@@ -50,7 +50,7 @@ test-integration: $(VENV_DEV)
 
 # Checks
 
-check-code-style: check-isort check-autoflake check-black
+check-code-style: check-isort check-autoflake check-black check-mypy
 
 isort: $(VENV_DEV)
 	$(ACTIVATE_DEV) && isort --profile black .
@@ -59,10 +59,10 @@ check-isort: $(VENV_DEV)
 	$(ACTIVATE_DEV) && isort --profile black --check .
 
 autoflake: $(VENV_DEV)
-	$(ACTIVATE_DEV) && autoflake --in-place --remove-all-unused-imports --recursive kavm_algod tests
+	$(ACTIVATE_DEV) && autoflake --in-place --remove-all-unused-imports --recursive src tests
 
 check-autoflake: $(VENV_DEV)
-	$(ACTIVATE_DEV) && autoflake --remove-all-unused-imports --recursive --check kavm_algod tests
+	$(ACTIVATE_DEV) && autoflake --remove-all-unused-imports --recursive --check src tests
 
 check-mypy: $(VENV_DEV)
 	$(ACTIVATE_DEV) && mypy .

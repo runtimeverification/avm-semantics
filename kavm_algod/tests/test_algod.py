@@ -3,6 +3,11 @@ from algosdk.future import transaction
 from algosdk.future.transaction import PaymentTxn, SuggestedParams
 
 from kavm_algod.algod import KAVMClient
+from .constants import ALGOD_ADDRESS, ALGOD_TOKEN
+
+
+def test_kalgod_init():
+    _ = KAVMClient(ALGOD_ADDRESS, ALGOD_TOKEN)
 
 
 def test_send_transactions(

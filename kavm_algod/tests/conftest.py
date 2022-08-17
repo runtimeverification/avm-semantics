@@ -56,12 +56,6 @@ def kalgod() -> KAVMClient:
 
 
 @pytest.fixture
-def kavm() -> KAVM:
-    """KAVM"""
-    return KAVM(definition_dir=os.environ.get('KAVM_DEFINITION_DIR'))
-
-
-@pytest.fixture
 def suggested_params() -> SuggestedParams:
     """Dummy transaction parameters"""
     return SuggestedParams(

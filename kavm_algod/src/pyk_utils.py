@@ -1,6 +1,7 @@
+from base64 import b64encode
 from typing import List, Optional, Union
 
-from pyk.kast import KApply, KInner
+from pyk.kast import KApply, KInner, KToken, KSort
 from pyk.prelude import intToken, stringToken
 
 from kavm_algod.kavm import KAVM
@@ -14,6 +15,8 @@ def maybeTValue(kavm: KAVM, value: Optional[Union[str, int]]) -> KInner:
         return intToken(value)
     elif type(value) is str:
         return stringToken(value)
+    elif type(value) is bytes:
+        return stringToken(b64encode(value).decode('utf8'))
     else:
         raise TypeError()
 

@@ -5,7 +5,8 @@ from algosdk.future.transaction import (
     SuggestedParams,
     Transaction,
 )
-from pyk.kast import KAst, KInner, KSort, Subst
+from algosdk.encoding import decode_address
+from pyk.kast import KAst, KInner, KSort, Subst, KToken
 from pyk.kastManip import collectFreeVars, splitConfigFrom
 
 from kavm_algod.kavm import KAVM
@@ -31,7 +32,7 @@ def txn_type_to_type_enum(txn_type: str) -> int:
         raise ValueError(f'unknown transaction type {txn_type}')
 
 
-def transaction_to_k(kavm: KAVM, txn: Transaction) -> KInner:
+def transaction_to_k(kavm: KAVM, txn: Transaction, txid: str) -> KInner:
     """Convert a Transaction objet to a K cell"""
     empty_transaction_cell = kavm.definition.empty_config(KSort('TransactionCell'))
 
@@ -42,9 +43,9 @@ def transaction_to_k(kavm: KAVM, txn: Transaction) -> KInner:
             'LASTVALID_CELL': maybeTValue(kavm, txn.last_valid_round),
             'GENESISHASH_CELL': maybeTValue(kavm, txn.genesis_hash),
             'GENESISID_CELL': maybeTValue(kavm, txn.genesis_id),
-            'SENDER_CELL': maybeTValue(kavm, txn.sender),
+            'SENDER_CELL': maybeTValue(kavm, txn.sender.strip("'")),
+            # 'SENDER_CELL': KToken(decode_address(txn.sender), KSort('Bytes')),
             'TXTYPE_CELL': maybeTValue(kavm, txn.type),
-            # TODO: convert type to type enum, an int token
             'TYPEENUM_CELL': maybeTValue(kavm, txn_type_to_type_enum(txn.type)),
             'GROUP_CELL': maybeTValue(kavm, txn.group),
             'LEASE_CELL': maybeTValue(kavm, txn.lease),
@@ -56,7 +57,8 @@ def transaction_to_k(kavm: KAVM, txn: Transaction) -> KInner:
     if txn.type == PAYMENT_TXN:
         type_specific_subst = Subst(
             {
-                'RECEIVER_CELL': maybeTValue(kavm, txn.receiver),
+                'RECEIVER_CELL': maybeTValue(kavm, txn.receiver.strip("'")),
+                # 'RECEIVER_CELL': KToken(decode_address(txn.receiver), KSort('Bytes')),
                 'AMOUNT_CELL': maybeTValue(kavm, txn.amt),
                 'CLOSEREMAINDERTO_CELL': maybeTValue(kavm, txn.close_remainder_to),
             }
@@ -67,7 +69,7 @@ def transaction_to_k(kavm: KAVM, txn: Transaction) -> KInner:
         raise ValueError(f'Transaction object {txn} is invalid')
 
     fields_subst = (
-        Subst({'TXID_CELL': maybeTValue(kavm, 0)})
+        Subst({'TXID_CELL': maybeTValue(kavm, txid)})
         .compose(header_subst)
         .compose(type_specific_subst)
     )

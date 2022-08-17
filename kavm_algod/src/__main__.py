@@ -35,31 +35,30 @@ def main() -> None:
 
     if args.command == 'run':
         kavm = KAVM(definition_dir=args.definition_dir)
-        # TEAL source code is fetched from .teal files in ./tests/teal/
-        # by scanning the test scenario "${run_file}" for "declareTealSource <path>" commands
-        raw_avm_simulation = args.input_file.read_text()
-        teal_paths = re.findall(r'declareTealSource "(.+?)";', raw_avm_simulation)
 
-        teal_programs: str = ''
-        for teal_path in teal_paths:
-            teal_programs += f'{Path(teal_path).read_text()};'
-        teal_programs += '.TealPrograms'
-
-        krun_command = f'krun --definition {kavm.definition_dir} --output json \'-cTEAL_PROGRAMS={teal_programs}\' -pTEAL_PROGRAMS=lib/scripts/parse-teal-programs.sh --parser lib/scripts/parse-avm-simulation.sh {args.input_file}'
-
-        env = os.environ.copy()
-        env['KAVM_DEFITION_DIR'] = str(kavm.definition_dir)
-        output = subprocess.run(krun_command, shell=True, capture_output=True, env=env)
-
-        try:
-            output_kast_term = KAst.from_dict(json.loads(output.stdout)['term'])
-        except json.JSONDecodeError:
-            print(output.stderr.decode(sys.getfilesystemencoding()))
-            exit(output.returncode)
+        (krun_return_code, output) = kavm.run(args.input_file)
         if args.output != 'none':
-            print(kavm.pretty_print(inlineCellMaps(output_kast_term)))
+            if isinstance(output, KAst):
+                print(kavm.pretty_print(output))
+            else:
+                print(output)
+        exit(krun_return_code)
 
-        exit(output.returncode)
+    if args.command == 'llvm-krun':
+        kavm = KAVM(definition_dir=args.definition_dir)
+
+        parse_command = f'kavm kast {args.input_file} kore'
+        output = subprocess.run(parse_command, shell=True, capture_output=True)
+
+        avm_simulation_kore_term = output.stdout.decode('utf-8')
+
+        (krun_return_code, output) = kavm.krun_kore(avm_simulation_kore_term)
+        if args.output != 'none':
+            if isinstance(output, KAst):
+                print(kavm.pretty_print(output))
+            else:
+                print(output)
+        exit(krun_return_code)
 
     else:
         assert False
@@ -83,6 +82,19 @@ def create_argument_parser() -> ArgumentParser:
 
     # run
     run_subparser = command_parser.add_parser('run', help='Run KAVM simulation')
+    run_subparser.add_argument(
+        '--definition',
+        dest="definition_dir",
+        type=dir_path,
+        help='Path to definition to use.',
+    )
+    run_subparser.add_argument(
+        'input_file', type=file_path, help='Path to AVM simulation scenario file'
+    )
+    run_subparser.add_argument('--output', type=str, help='Output mode')
+
+    # llvm-krun
+    run_subparser = command_parser.add_parser('llvm-krun', help='Run KAVM simulation')
     run_subparser.add_argument(
         '--definition',
         dest="definition_dir",

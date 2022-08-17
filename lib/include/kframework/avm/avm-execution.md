@@ -25,8 +25,6 @@ The model has a number of top-level rules that will control the configuration in
 A sequence of `AlgorandCommand`s will be supplied as `$PGM` to `krun`.
 
 ```k
-  syntax AVMSimulation ::= ".AS"
-                         | AlgorandCommand ";" AVMSimulation
   // -------------------------------------------------------
 
   rule <k> .AS                  => .        ... </k>
@@ -208,7 +206,7 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
        <transaction>
          <txID>     TXN_ID   </txID>
          <sender>   SENDER   </sender>
-         <amount>   AMOUNT   </amount>
+         <amount>   _AMOUNT   </amount>
          <receiver> RECEIVER </receiver>
          ...
        </transaction>
