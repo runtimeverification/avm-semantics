@@ -8,19 +8,19 @@ int 12345
 ==
 assert
 
-//int 0
-//asset_params_get AssetName
-//assert
-//byte "testcoin"
-//==
-//assert
+int 0
+asset_params_get AssetName
+assert
+byte "testcoin"
+==
+assert
 
-//txna Assets 0
-//asset_params_get AssetUnitName
-//assert
-//byte "testcoin"
-//==
-//assert
+txna Assets 0
+asset_params_get AssetUnitName
+assert
+byte "testcoin"
+==
+assert
 
 int 0
 asset_params_get AssetDecimals

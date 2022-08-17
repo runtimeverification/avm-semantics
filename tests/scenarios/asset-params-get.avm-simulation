@@ -12,7 +12,7 @@ addAssetConfigTx <txID>                0          </txID>
                  <configTotal>         12345      </configTotal>
                  <configDecimals>      0          </configDecimals>
                  <configDefaultFrozen> 0          </configDefaultFrozen>
-                 <configAssetName>     "testcoin" </configAssetName>;
+                 <configAssetName>     b"testcoin" </configAssetName>;
 
 
 addAppCallTx <txID>            1           </txID>

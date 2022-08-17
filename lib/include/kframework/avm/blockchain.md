@@ -477,7 +477,7 @@ Accessor functions
     requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
 
 
-  syntax MaybeTValue ::= getAppLocal(TValue, TValue, TValue) [function]
+  syntax MaybeTValue ::= getAppLocal(TValue, TValue, TValue) [function, functional]
   // ---------------------------------------------------------
   rule [[ getAppLocal(ADDR, APP, KEY) => V ]]
        <account>
@@ -503,19 +503,8 @@ Accessor functions
        </account>
     requires notBool (KEY in_keys(M))
 
-  // if the account exists but is not opted in, return NoTValue
-  rule [[ getAppLocal(ADDR, APP, _) => NoTValue ]]
-       <account>
-         <address> ADDR </address>
-         <appsOptedIn> OA </appsOptedIn> ...
-       </account>
-    requires notBool (APP in_optedInApps(<appsOptedIn> OA </appsOptedIn>))
-
-  // if the account doesn't exist, return NoTValue
-  rule [[ getAppLocal(ADDR, _, _) => NoTValue ]]
-       <accountsMap> AMAP  </accountsMap>
-    requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
-
+  // if the account exists but is not opted in, or does not exist, return NoTValue
+  rule getAppLocal(_, _, _) => NoTValue [owise]
 
   syntax TValue ::= getAppGlobal(TValue, TValue) [function]
   // ---------------------------------------------------
