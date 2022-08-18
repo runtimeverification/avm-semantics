@@ -1,0 +1,33 @@
+declareTealSource "./tests/teal-sources/min-balance-optin-asset.teal";
+
+addAccount <address> b"1" </address> <balance> 100000 </balance>;
+addAccount <address> b"2" </address> <balance> 100000 </balance>;
+addApp     <appID>   1    </appID>   <address> b"2" </address> 0;
+optinApp   <appID>   1    </appID>   <address> b"2" </address>;
+
+#initTxGroup();
+
+addAssetConfigTx <txID>                0          </txID>
+                 <sender>              b"2"       </sender>
+                 <configAsset>         NoTValue   </configAsset>
+                 <configTotal>         12345      </configTotal>
+                 <configDecimals>      0          </configDecimals>
+                 <configDefaultFrozen> 0          </configDefaultFrozen>
+                 <configAssetName>     b"testcoin" </configAssetName>;
+
+addAssetTransferTx <txID>          1    </txID>
+                   <sender>        b"1" </sender>
+                   <xferAsset>     0    </xferAsset>
+                   <assetAmount>   0    </assetAmount>
+                   <assetReceiver> b"1" </assetReceiver>;
+
+addAppCallTx <txID>            2           </txID>
+             <sender>          b"2"        </sender>
+             <applicationID>   1           </applicationID>
+             <onCompletion>    0           </onCompletion>
+             <accounts>        b"1"        </accounts>
+             <applicationArgs> .TValueList </applicationArgs>
+             <foreignApps>     .TValueList </foreignApps>
+             <foreignAssets>   .TValueList </foreignAssets>;
+
+#initGlobals(); #evalTxGroup(); .AS

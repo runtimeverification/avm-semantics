@@ -211,11 +211,17 @@ WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM
 ```
 
 ```k
-  syntax AlgorandCommand ::= "addApp" AppIDCell AddressCell Int
+  syntax AlgorandCommand ::= "addApp" AppIDCell AddressCell GlobalIntsCell GlobalBytesCell LocalIntsCell
+                                      LocalBytesCell ExtraPagesCell Int
   //-----------------------------------------------------------
 
   rule <k> addApp <appID>       APP_ID            </appID>
                   <address>     CREATOR           </address>
+                  <globalInts>  GLOBAL_INTS       </globalInts>
+                  <globalBytes> GLOBAL_BYTES      </globalBytes>
+                  <localInts>   LOCAL_INTS        </localInts>
+                  <localBytes>  LOCAL_BYTES       </localBytes>
+                  <extraPages>  EXTRA_PAGES       </extraPages>
                   PGM_IDX
        => .K ... </k>
        <tealPrograms> TEAL_PGMS_LIST </tealPrograms>
@@ -227,10 +233,20 @@ WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM
              <app>
                <appID>           APP_ID </appID>
                <approvalPgm>     getTealByIndex(TEAL_PGMS_LIST, PGM_IDX) </approvalPgm>
+               <globalInts>      GLOBAL_INTS       </globalInts>
+               <globalBytes>     GLOBAL_BYTES      </globalBytes>
+               <localInts>       LOCAL_INTS        </localInts>
+               <localBytes>      LOCAL_BYTES       </localBytes>
+               <extraPages>      EXTRA_PAGES       </extraPages>
                ...
              </app>
              APPS
            </appsCreated>
+           <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                  +Int ((1 +Int EXTRA_PAGES) *Int 100000) 
+                                  +Int ((25000 +Int 3500) *Int GLOBAL_INTS)
+                                  +Int ((25000 +Int 25000) *Int GLOBAL_BYTES)
+           </minBalance>
            ...
          </account>
          ACCOUNTS
@@ -296,21 +312,60 @@ The asset initialization rule must be used *after* initializing accounts.
              <group>       TXN_ID </group> // for testing, we make these the same as sequential TxIDs
              ...                           // other fields will receive default values
            </txHeader>
-          <assetConfigTxFields>
-            <configAsset> ASSET_ID </configAsset>           // the asset ID
-            <assetParams>
-              <configTotal>         TOTAL    </configTotal>
-              <configDecimals>      DECIMALS </configDecimals>
-              <configDefaultFrozen> FROZEN   </configDefaultFrozen>
-              <configUnitName>      NAME     </configUnitName>
-              <configAssetName>     NAME     </configAssetName>
-              ...
-            </assetParams>
-          </assetConfigTxFields>
+           <assetConfigTxFields>
+             <configAsset> ASSET_ID </configAsset>           // the asset ID
+             <assetParams>
+               <configTotal>         TOTAL    </configTotal>
+               <configDecimals>      DECIMALS </configDecimals>
+               <configDefaultFrozen> FROZEN   </configDefaultFrozen>
+               <configUnitName>      NAME     </configUnitName>
+               <configAssetName>     NAME     </configAssetName>
+               ...
+             </assetParams>
+           </assetConfigTxFields>
          </transaction>
          TXNS
        </transactions>
        requires notBool (TXN_ID in_txns(<transactions> TXNS </transactions>))
+```
+
+### Asset transfer
+
+```k
+  syntax AlgorandCommand ::= "addAssetTransferTx" TxIDCell SenderCell XferAssetCell AssetAmountCell
+                                                  AssetReceiverCell
+  //-----------------------------------------------------------------------------------------------
+
+  rule <k> addAssetTransferTx <txID>          TXN_ID    </txID>
+                              <sender>        SENDER   </sender>
+                              <xferAsset>     ASSET_ID </xferAsset>
+                              <assetAmount>   AMOUNT   </assetAmount>
+                              <assetReceiver> RECEIVER </assetReceiver>
+           => #pushTxnBack(<txID> TXN_ID </txID>)
+           ...
+       </k>
+       <transactions>
+         TXNS =>
+         <transaction>
+           <txID> TXN_ID </txID>
+           <txHeader>
+             <sender>      SENDER </sender>
+             <txType>      "axfer" </txType>
+             <typeEnum>    @ axfer </typeEnum>
+             <group>       TXN_ID </group> // for testing, we make these the same as sequential TxIDs
+             ...                           // other fields will receive default values
+           </txHeader>
+           <assetTransferTxFields>
+             <xferAsset>     ASSET_ID </xferAsset>
+             <assetAmount>   AMOUNT   </assetAmount>
+             <assetReceiver> RECEIVER </assetReceiver>
+             ...
+           </assetTransferTxFields>
+         </transaction>
+         TXNS
+       </transactions>
+       requires notBool (TXN_ID in_txns(<transactions> TXNS </transactions>))
+
 ```
 
 ### Teal Programs Declaration

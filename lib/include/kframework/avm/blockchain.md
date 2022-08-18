@@ -112,6 +112,7 @@ module APPLICATIONS
           <localInts>     NoTValue </localInts>
           <localBytes>    NoTValue </localBytes>
         </localState>
+        <extraPages>      0        </extraPages>
       </app>
     </appsCreated>
 ```
@@ -231,25 +232,35 @@ Accessor functions
 ### Account State Accessors
 
 ```k
-  syntax Int ::= getBalance(TValue) [function]
-  // ----------------------------------------
-  rule [[ getBalance(ADDR) => V ]]
+  syntax MaybeTValue ::= getAccountParamsField(AccountParamsField, TValue)  [function, functional]
+  //--------------------------------------------------------------------------------------
+  rule [[ getAccountParamsField(AcctBalance, ADDR) => BAL ]]
        <account>
          <address> ADDR </address>
-         <balance> V </balance>
+         <balance> BAL </balance>
          ...
        </account>
 
-  rule [[ getBalance(ADDR) => 0 ]]
-       <accountsMap> AMAP </accountsMap>
-    requires notBool ( ADDR in_accounts (<accountsMap> AMAP </accountsMap>) )
+  rule [[ getAccountParamsField(AcctMinBalance, ADDR) => MIN_BAL ]]
+       <account>
+         <address> ADDR </address>
+         <minBalance> MIN_BAL </minBalance>
+         ...
+       </account>
+
+  rule [[ getAccountParamsField(AcctAuthAddr, ADDR) => KEY ]]
+       <account>
+         <address> ADDR </address>
+         <key> KEY </key>
+         ...
+       </account>
+
+  rule getAccountParamsField(_, _) => NoTValue  [owise]
 
   //TODO: In all accessors below, handle the case when NoTValue is returned
 
   syntax Int ::= getAccountField(AccountField, TValue) [function]
   // -----------------------------------------------------------
-  rule getAccountField(Amount, ADDR) => getBalance(ADDR)
-
   rule [[ getAccountField(Round, ADDR) => V ]]
        <account>
          <address> ADDR </address>
@@ -299,9 +310,7 @@ Accessor functions
          </assetsOptedIn> ...
        </account>
 
-  rule [[ hasOptedInAsset(ASSET, _) => false ]]
-       <accountsMap> AMAP </accountsMap>
-    requires notBool (ASSET in_assets(<accountsMap> AMAP </accountsMap>))
+  rule hasOptedInAsset(_, _) => false [owise]
 
   syntax TValue ::= getOptInAssetField(AssetHoldingField, TValue, TValue) [function]
   // ----------------------------------------------------------------------------

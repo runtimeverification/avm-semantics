@@ -1,0 +1,19 @@
+declareTealSource "./tests/teal-sources/min-balance-default.teal";
+
+addAccount <address> b"1" </address> <balance> 100000 </balance>;
+addAccount <address> b"2" </address> <balance> 100000 </balance>;
+addApp     <appID>   1    </appID>   <address> b"1" </address> 0;
+optinApp   <appID>   1    </appID>   <address> b"1" </address>;
+
+#initTxGroup();
+
+addAppCallTx <txID>            0           </txID>
+             <sender>          b"1"        </sender>
+             <applicationID>   1           </applicationID>
+             <onCompletion>    0           </onCompletion>
+             <accounts>        b"2"        </accounts>
+             <applicationArgs> .TValueList </applicationArgs>
+             <foreignApps>     .TValueList </foreignApps>
+             <foreignAssets>   .TValueList </foreignAssets>;
+
+#initGlobals(); #evalTxGroup(); .AS

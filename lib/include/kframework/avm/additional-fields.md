@@ -18,8 +18,7 @@ module ADDITIONAL-FIELDS
 ### `Account` Fields
 
 ```k
-  syntax AccountField ::= "Amount"
-                        | "Round"
+  syntax AccountField ::= "Round"
                         | "PendingRewards"
                         | "Rewards"
                         | "Status"

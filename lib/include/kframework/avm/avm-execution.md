@@ -214,6 +214,9 @@ Not supported.
 ```
 
 * **Asset Configuration**
+
+Create asset
+
 ```k
   rule <k> #executeTxn(@acfg) => . ...</k>
        <currentTx> TXN_ID </currentTx>
@@ -265,12 +268,15 @@ Not supported.
            </optInAsset>
            ASSETS_OPTED_IN
          </assetsOptedIn>
+         <minBalance> MIN_BALANCE => MIN_BALANCE +Int 100000 </minBalance>
          ...
        </account>
        <assetCreator> .Map => (ASSET_ID |-> SENDER) ...</assetCreator>
     requires notBool (assetCreated(ASSET_ID))
      andBool notBool (hasOptedInAsset(ASSET_ID, SENDER))
 ```
+
+TODO modify asset
 
 * **Asset Transfer**
 
@@ -396,6 +402,7 @@ Asset opt-in goes through if:
            </optInAsset>
            ASSETS_OPTED_IN
          </assetsOptedIn>
+         <minBalance> MIN_BALANCE => MIN_BALANCE +Int 100000 </minBalance>
          ...
        </account>
     requires assetCreated(ASSET_ID)
@@ -413,8 +420,30 @@ Not supported.
 ```
 
 * **Application Call**
+
+Normal call
+
 ```k
   rule <k> #executeTxn(@appl) => #evalTeal() ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID   </txID>
+         <applicationID> _:TValue </applicationID>
+         <onCompletion> @ NoOp </onCompletion>
+         ...
+       </transaction>
+```
+
+App create
+
+```k
+  rule <k> #executeTxn(@appl) => #evalTeal() ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID   </txID>
+         <applicationID> NoTValue </applicationID>
+         ...
+       </transaction>
 ```
 
 * **Layer-2 transactions**

@@ -1302,13 +1302,39 @@ Stateful TEAL Operations
 *balance*
 
 ```k
-  rule <k> balance => .K ... </k>
-       <stack> (A:TValue) : XS => getBalance({accountReference(A)}:>TValue) : XS </stack>
+  rule <k> balance => #balance getAccountParamsField(AcctBalance, {accountReference(A)}:>TValue) ... </k>
+       <stack> (A:TValue) : _ </stack>
     requires isTValue(accountReference(A))
 
   rule <k> balance => panic(TXN_ACCESS_FAILED) ... </k>
        <stack> (A:TValue) : _ </stack>
     requires notBool isTValue(accountReference(A))
+
+  syntax KItem ::= "#balance" MaybeTValue
+  
+  rule <k> #balance BAL:TUInt64 => . ...</k>
+       <stack> _ : XS => BAL : XS </stack>
+      
+  rule <k> #balance _ => panic(TXN_ACCESS_FAILED) </k>  [owise]
+```
+
+*min_balance*
+
+```k
+  rule <k> min_balance => #min_balance getAccountParamsField(AcctMinBalance, {accountReference(A)}:>TValue) ... </k>
+       <stack> (A:TValue) : _ </stack>
+    requires isTValue(accountReference(A))
+
+  rule <k> min_balance => panic(TXN_ACCESS_FAILED) ... </k>
+       <stack> (A:TValue) : _ </stack>
+    requires notBool isTValue(accountReference(A))
+
+  syntax KItem ::= "#min_balance" MaybeTValue
+  
+  rule <k> #min_balance MIN_BAL:TUInt64 => . ...</k>
+       <stack> _ : XS => MIN_BAL : XS </stack>
+      
+  rule <k> #min_balance _ => panic(TXN_ACCESS_FAILED) </k>  [owise]
 ```
 
 *app_opted_in*

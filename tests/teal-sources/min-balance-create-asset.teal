@@ -1,0 +1,18 @@
+#pragma version 5
+#pragma mode stateful
+
+txna Accounts 1
+min_balance
+
+// Default min balance
+int 100000
+
+// Additional min balance for creating asset
+int 100000
++
+
+==
+assert
+
+int 1
+return
