@@ -1,0 +1,10 @@
+#pragma version 5
+#pragma mode stateful
+
+int 12345
+
+// Load dummy address
+int 1234567890
+itob
+
+balance

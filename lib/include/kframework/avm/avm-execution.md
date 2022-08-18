@@ -215,8 +215,61 @@ Not supported.
 
 * **Asset Configuration**
 ```k
-  rule <k> #executeTxn(@acfg) => #avmPanic(TXN_ID, UNSUPPORTED_TXN_TYPE) ... </k>
+  rule <k> #executeTxn(@acfg) => . ...</k>
        <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>                TXN_ID         </txID>
+         <sender>              SENDER         </sender>
+         <configAsset>         NoTValue       </configAsset>
+         <configTotal>         TOTAL          </configTotal>
+         <configDecimals>      DECIMALS       </configDecimals>
+         <configDefaultFrozen> DEFAULT_FROZEN </configDefaultFrozen>
+         <configUnitName>      UNIT_NAME      </configUnitName>
+         <configAssetName>     NAME           </configAssetName>
+         <configAssetURL>      ASSET_URL      </configAssetURL>
+         <configMetaDataHash>  METADATA_HASH  </configMetaDataHash>
+         <configManagerAddr>   MANAGER_ADDR   </configManagerAddr>
+         <configReserveAddr>   RESERVE_ADDR   </configReserveAddr>
+         <configFreezeAddr>    FREEZE_ADDR    </configFreezeAddr>
+         <configClawbackAddr>  CLAWB_ADDR     </configClawbackAddr>
+         ...
+       </transaction>
+
+       <nextAssetId> ASSET_ID => ASSET_ID +Int 1 </nextAssetId>
+       <account>
+         <address> SENDER </address>
+         <assetsCreated>
+           ASSETS =>
+           <asset>
+             <assetID>            ASSET_ID       </assetID>
+             <assetName>          NAME           </assetName>
+             <assetUnitName>      UNIT_NAME      </assetUnitName>
+             <assetTotal>         TOTAL          </assetTotal>
+             <assetDecimals>      DECIMALS       </assetDecimals>
+             <assetDefaultFrozen> DEFAULT_FROZEN </assetDefaultFrozen>
+             <assetURL>           ASSET_URL      </assetURL>
+             <assetMetaDataHash>  METADATA_HASH  </assetMetaDataHash>
+             <assetManagerAddr>   MANAGER_ADDR   </assetManagerAddr>
+             <assetReserveAddr>   RESERVE_ADDR   </assetReserveAddr>
+             <assetFreezeAddr>    FREEZE_ADDR    </assetFreezeAddr>
+             <assetClawbackAddr>  CLAWB_ADDR     </assetClawbackAddr>
+           </asset>
+           ASSETS
+         </assetsCreated>
+         <assetsOptedIn>
+           ASSETS_OPTED_IN =>
+           <optInAsset>
+             <optInAssetID>      ASSET_ID       </optInAssetID>
+             <optInAssetBalance> TOTAL          </optInAssetBalance>
+             <optInAssetFrozen>  DEFAULT_FROZEN </optInAssetFrozen>
+           </optInAsset>
+           ASSETS_OPTED_IN
+         </assetsOptedIn>
+         ...
+       </account>
+       <assetCreator> .Map => (ASSET_ID |-> SENDER) ...</assetCreator>
+    requires notBool (assetCreated(ASSET_ID))
+     andBool notBool (hasOptedInAsset(ASSET_ID, SENDER))
 ```
 
 * **Asset Transfer**
@@ -227,6 +280,7 @@ Asset transfer goes through if:
 - sender's holdings are not frozen
 
 ```k
+
   rule <k> #executeTxn(@axfer) => .K ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>

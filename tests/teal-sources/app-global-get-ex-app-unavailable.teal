@@ -1,0 +1,9 @@
+#pragma version 5
+#pragma mode stateful
+
+int 2
+byte "test_key"
+app_global_get_ex
+
+int 1
+return

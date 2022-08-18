@@ -1,0 +1,22 @@
+#pragma version 5
+#pragma mode stateful
+
+txn Sender
+txna Assets 0
+asset_holding_get AssetBalance
+assert
+int 12345
+==
+assert
+
+txna Accounts 1
+txna Assets 0
+asset_holding_get AssetBalance
+!
+assert
+int 0
+==
+assert
+
+int 1
+return
