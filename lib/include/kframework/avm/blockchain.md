@@ -99,10 +99,8 @@ module APPLICATIONS
     <appsCreated>
       <app multiplicity="*" type="Map">
         <appID>           NoTValue </appID>
-        <approvalPgm>     #pragma mode stateful
-                          int 1
-        </approvalPgm>
-        <clearStatePgm>   NoTValue </clearStatePgm>
+        <approvalPgm>     #pragma mode stateful int 1 </approvalPgm>
+        <clearStatePgm>   #pragma mode stateful int 1 </clearStatePgm>
         <globalState>
           <globalInts>    NoTValue </globalInts>
           <globalBytes>   NoTValue </globalBytes>

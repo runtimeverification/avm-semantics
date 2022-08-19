@@ -91,15 +91,27 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
                                             OnCompletionCell AccountsCell
                                             ApplicationArgsCell ForeignAppsCell 
                                             ForeignAssetsCell
+                                            GlobalNuiCell GlobalNbsCell
+                                            LocalNuiCell LocalNbsCell
+                                            ExtraProgramPagesCell
+                                            "<approvalPgmIdx>" Int "</approvalPgmIdx>"
+                                            "<clearStatePgmIdx>" Int "</clearStatePgmIdx>"
   //-----------------------------------------------------------
-  rule <k> addAppCallTx <txID>            ID            </txID>
-                        <sender>          SENDER        </sender>
-                        <applicationID>   APP_ID        </applicationID>
-                        <onCompletion>    ON_COMPLETION </onCompletion>
-                        <accounts>        ACCOUNTS      </accounts>
-                        <applicationArgs> ARGS          </applicationArgs>
-                        <foreignApps>     APPS          </foreignApps>
-                        <foreignAssets>   ASSETS        </foreignAssets>
+  rule <k> addAppCallTx <txID>             ID              </txID>
+                        <sender>           SENDER          </sender>
+                        <applicationID>    APP_ID          </applicationID>
+                        <onCompletion>     ON_COMPLETION   </onCompletion>
+                        <accounts>         ACCOUNTS        </accounts>
+                        <applicationArgs>  ARGS            </applicationArgs>
+                        <foreignApps>      APPS            </foreignApps>
+                        <foreignAssets>    ASSETS          </foreignAssets>
+                        <globalNui>        GLOBAL_INTS     </globalNui>
+                        <globalNbs>        GLOBAL_BYTES     </globalNbs>
+                        <localNui>        LOCAL_INTS     </localNui>
+                        <localNbs>        LOCAL_BYTES     </localNbs>
+                        <extraProgramPages> EXTRA_PAGES   </extraProgramPages>
+                        <approvalPgmIdx>   APPROVAL_IDX    </approvalPgmIdx>
+                        <clearStatePgmIdx> CLEAR_STATE_IDX </clearStatePgmIdx>
        => #pushTxnBack(<txID> ID </txID>)
            ...
        </k>
@@ -121,11 +133,19 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
             <applicationArgs> ARGS          </applicationArgs>
             <foreignApps>     APPS          </foreignApps>
             <foreignAssets>   ASSETS        </foreignAssets>
+            <globalNui>        GLOBAL_INTS     </globalNui>
+            <globalNbs>        GLOBAL_BYTES     </globalNbs>
+            <localNui>        LOCAL_INTS     </localNui>
+            <localNbs>        LOCAL_BYTES     </localNbs>
+            <extraProgramPages> EXTRA_PAGES   </extraProgramPages>
+            <approvalProgram> getTealByIndex(TEAL_PGMS_LIST, APPROVAL_IDX) </approvalProgram>
+            <clearStateProgram> getTealByIndex(TEAL_PGMS_LIST, CLEAR_STATE_IDX) </clearStateProgram>
             ...                            // other fields will receive default values
           </appCallTxFields>
          </transaction>
          TXNS
        </transactions>
+       <tealPrograms> TEAL_PGMS_LIST </tealPrograms>
        requires notBool (ID in_txns(<transactions> TXNS </transactions>))
 
 
@@ -211,76 +231,76 @@ WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM
 ```
 
 ```k
-  syntax AlgorandCommand ::= "addApp" AppIDCell AddressCell GlobalIntsCell GlobalBytesCell LocalIntsCell
-                                      LocalBytesCell ExtraPagesCell Int
+//  syntax AlgorandCommand ::= "addApp" AppIDCell AddressCell GlobalIntsCell GlobalBytesCell LocalIntsCell
+//                                      LocalBytesCell ExtraPagesCell Int
   //-----------------------------------------------------------
 
-  rule <k> addApp <appID>       APP_ID            </appID>
-                  <address>     CREATOR           </address>
-                  <globalInts>  GLOBAL_INTS       </globalInts>
-                  <globalBytes> GLOBAL_BYTES      </globalBytes>
-                  <localInts>   LOCAL_INTS        </localInts>
-                  <localBytes>  LOCAL_BYTES       </localBytes>
-                  <extraPages>  EXTRA_PAGES       </extraPages>
-                  PGM_IDX
-       => .K ... </k>
-       <tealPrograms> TEAL_PGMS_LIST </tealPrograms>
-       <accountsMap>
-         <account>
-           <address>     CREATOR </address>
-           <appsCreated>
-             APPS =>
-             <app>
-               <appID>           APP_ID </appID>
-               <approvalPgm>     getTealByIndex(TEAL_PGMS_LIST, PGM_IDX) </approvalPgm>
-               <globalInts>      GLOBAL_INTS       </globalInts>
-               <globalBytes>     GLOBAL_BYTES      </globalBytes>
-               <localInts>       LOCAL_INTS        </localInts>
-               <localBytes>      LOCAL_BYTES       </localBytes>
-               <extraPages>      EXTRA_PAGES       </extraPages>
-               ...
-             </app>
-             APPS
-           </appsCreated>
-           <minBalance> MIN_BALANCE => MIN_BALANCE 
-                                  +Int ((1 +Int EXTRA_PAGES) *Int 100000) 
-                                  +Int ((25000 +Int 3500) *Int GLOBAL_INTS)
-                                  +Int ((25000 +Int 25000) *Int GLOBAL_BYTES)
-           </minBalance>
-           ...
-         </account>
-         ACCOUNTS
-       </accountsMap>
-       <appCreator> M => M[APP_ID <- CREATOR] </appCreator>
-      requires notBool (APP_ID in_apps(<accountsMap> ACCOUNTS </accountsMap>))
-       andBool notBool (APP_ID in_apps(<appsCreated> APPS     </appsCreated>))
+//  rule <k> addApp <appID>       APP_ID            </appID>
+//                  <address>     CREATOR           </address>
+//                  <globalInts>  GLOBAL_INTS       </globalInts>
+//                  <globalBytes> GLOBAL_BYTES      </globalBytes>
+//                  <localInts>   LOCAL_INTS        </localInts>
+//                  <localBytes>  LOCAL_BYTES       </localBytes>
+//                  <extraPages>  EXTRA_PAGES       </extraPages>
+//                  PGM_IDX
+//       => .K ... </k>
+//       <tealPrograms> TEAL_PGMS_LIST </tealPrograms>
+//       <accountsMap>
+//         <account>
+//           <address>     CREATOR </address>
+//           <appsCreated>
+//             APPS =>
+//             <app>
+//               <appID>           APP_ID </appID>
+//               <approvalPgm>     getTealByIndex(TEAL_PGMS_LIST, PGM_IDX) </approvalPgm>
+//               <globalInts>      GLOBAL_INTS       </globalInts>
+//               <globalBytes>     GLOBAL_BYTES      </globalBytes>
+//               <localInts>       LOCAL_INTS        </localInts>
+//               <localBytes>      LOCAL_BYTES       </localBytes>
+//               <extraPages>      EXTRA_PAGES       </extraPages>
+//               ...
+//             </app>
+//             APPS
+//           </appsCreated>
+//           <minBalance> MIN_BALANCE => MIN_BALANCE 
+//                                  +Int ((1 +Int EXTRA_PAGES) *Int 100000) 
+//                                  +Int ((25000 +Int 3500) *Int GLOBAL_INTS)
+//                                  +Int ((25000 +Int 25000) *Int GLOBAL_BYTES)
+//           </minBalance>
+//           ...
+//         </account>
+//         ACCOUNTS
+//       </accountsMap>
+//       <appCreator> M => M[APP_ID <- CREATOR] </appCreator>
+//      requires notBool (APP_ID in_apps(<accountsMap> ACCOUNTS </accountsMap>))
+//       andBool notBool (APP_ID in_apps(<appsCreated> APPS     </appsCreated>))
 ```
 
 Accounts can opt into apps to allocate local state for them:
 
 ```k
-  syntax AlgorandCommand ::= "optinApp" AppIDCell AddressCell
+//  syntax AlgorandCommand ::= "optinApp" AppIDCell AddressCell
   //---------------------------------------------------------
-  rule <k> optinApp <appID>       APP_ID  </appID>
-                    <address>     USER    </address>
-       => .K ... </k>
-       <accountsMap>
-         <account>
-           <address>     USER </address>
-           <appsOptedIn>
-             OPTED_IN_APPS =>
-             <optInApp>
-               <optInAppID> APP_ID </optInAppID>
-               <localStorage> .Map </localStorage>
-             </optInApp>
-             OPTED_IN_APPS
-           </appsOptedIn>
-           ...
-         </account>
-         ...
-       </accountsMap>
-      requires appCreated(APP_ID)
-       andBool notBool hasOptedInApp(APP_ID, USER)
+//  rule <k> optinApp <appID>       APP_ID  </appID>
+//                    <address>     USER    </address>
+//       => .K ... </k>
+//       <accountsMap>
+//         <account>
+//           <address>     USER </address>
+//           <appsOptedIn>
+//             OPTED_IN_APPS =>
+//             <optInApp>
+//               <optInAppID> APP_ID </optInAppID>
+//               <localStorage> .Map </localStorage>
+//             </optInApp>
+//             OPTED_IN_APPS
+//           </appsOptedIn>
+//           ...
+//         </account>
+//         ...
+//       </accountsMap>
+//      requires appCreated(APP_ID)
+//       andBool notBool hasOptedInApp(APP_ID, USER)
 ```
 
 #### Assets Initialization

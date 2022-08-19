@@ -119,6 +119,96 @@ TODO: augment the configuration in `modules/common/txn.md` to support signed tra
 For now, we do not check signatures *here*, hence this operation is noop.
 We check logic signatures in an ad-hoc way for payments and asset transfers at a later step.
 
+#### Post-evaluation operations
+
+Clear local state
+
+```k
+  syntax AlgorandCommand ::= #clearState( TValue, TValue )
+  //------------------------------------------------------
+
+  rule <k> #clearState(APP_ID, ADDR) => . ...</k>
+       <account>
+         <address> ADDR </address>
+         <appsOptedIn>
+           (<optInApp>
+             <optInAppID> APP_ID </optInAppID>
+             <localStorage> _ </localStorage>
+           </optInApp>) => .Bag
+           ...
+         </appsOptedIn>
+         ...
+       </account>
+
+```
+
+Update application programs
+
+TODO does avm let you change the amount of local and global storage?
+
+```k
+  syntax AlgorandCommand ::= #updatePrograms( TValue, KItem, KItem )
+  //------------------------------------------------------
+
+  rule <k> #updatePrograms(APP_ID, APPROVAL_PGM, CLEAR_STATE_PGM) => . ...</k>
+       <app>
+         <appID> APP_ID </appID>
+         <approvalPgm> _ => APPROVAL_PGM </approvalPgm>
+         <clearStatePgm> _ => CLEAR_STATE_PGM </clearStatePgm>
+         ...
+       </app>
+```
+
+Delete application
+
+```k
+  syntax AlgorandCommand ::= #deleteApplication( TValue )
+  //------------------------------------------------------
+
+//  rule <k> #deleteApplication(APP_ID) => #optOutAll(APP_ID) ...</k>
+  rule <k> #deleteApplication(APP_ID) => . ...</k>
+       <appsCreated>
+         ((<app>
+           <appID> APP_ID </appID>
+           ...
+         </app>) => .Bag) ...
+       </appsCreated>
+
+//  syntax AlgorandCommand ::= #optOutAll(TValue)
+
+// rule <k> #optOutAll( APP_ID ) => . ...</k>
+//      <accountsMap> AMAP => #optOutAllAux(<accountsMap> .Bag </accountsMap>, <accountsMap> AMAP </accountsMap>, APP_ID) </accountsMap>
+
+//  syntax Bag ::= #optOutAllAux( AccountsMapCell, AccountsMapCell, TValue ) [function, functional]
+  //-----------------------------------------------------
+
+//  rule #optOutAllAux(_, _, _) => .Bag
+
+//  rule #optOutAllAux(
+//            (.Bag => ACCOUNT) _,
+//            ((<account>
+//              <appsOptedIn> OPTED_IN_APPS </appsOptedIn>
+//            </account>) #as ACCOUNT => .Bag) _, APP_ID
+//       )
+//    requires notBool (APP_ID in_optedInApps(<appsOptedIn> OPTED_IN_APPS </appsOptedIn>))
+//
+//  rule #optOutAllAux(
+//            _,
+//            <account>
+//              <optInApp>
+//                <optInAppID> APP_ID </optInAppID>
+//                ...
+//              </optInApp> => .Bag
+//              ...
+//            </account>
+//            _, APP_ID
+//       )
+//
+//  rule #optOutAllAux(RET, .Bag, _) => RET
+
+```
+
+
 #### (Optional) Eval TEAL
 
 There are two types of TEAL programs:
@@ -133,16 +223,16 @@ We do not consider the special case of contract creation (deployment) here, it w
 TODO: address contact creation.
 
 ```k
-  syntax AlgorandCommand ::= #evalTeal()
+  syntax AlgorandCommand ::= #evalTeal( TealInputPgm )
 
-  rule <k> #evalTeal() => #cleanUp() ~> APPROVAL_PGM ~> #startExecution() ... </k>
+  rule <k> #evalTeal( PGM ) => #cleanUp() ~> PGM ~> #startExecution() ... </k>
        <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
        <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
        <currentTx>           TXN_ID                            </currentTx>
        <currentApplicationID> _ => APP_ID                    </currentApplicationID>
        <app>
          <appID>       APP_ID       </appID>
-         <approvalPgm> APPROVAL_PGM </approvalPgm>
+         <approvalPgm> PGM </approvalPgm>
          ...
        </app>
    requires APP_ID ==K getTxnField(TXN_ID, ApplicationID)
@@ -421,29 +511,225 @@ Not supported.
 
 * **Application Call**
 
-Normal call
-
-```k
-  rule <k> #executeTxn(@appl) => #evalTeal() ... </k>
-       <currentTx> TXN_ID </currentTx>
-       <transaction>
-         <txID>          TXN_ID   </txID>
-         <applicationID> _:TValue </applicationID>
-         <onCompletion> @ NoOp </onCompletion>
-         ...
-       </transaction>
-```
-
 App create
 
 ```k
-  rule <k> #executeTxn(@appl) => #evalTeal() ... </k>
+  rule <k> #executeTxn(@appl) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>               TXN_ID             </txID>
+         <sender>             SENDER             </sender>
+         <applicationID>      NoTValue => APP_ID </applicationID>
+         <approvalProgram>    APPROVAL_PGM       </approvalProgram>
+         <clearStateProgram>  CLEAR_STATE_PGM    </clearStateProgram>
+         <globalNui>          GLOBAL_INTS        </globalNui>
+         <globalNbs>          GLOBAL_BYTES       </globalNbs>
+         <localNui>           LOCAL_INTS         </localNui>
+         <localNbs>           LOCAL_BYTES        </localNbs>
+         <extraProgramPages>   EXTRA_PAGES        </extraProgramPages>
+         ...
+       </transaction>
+       <account>
+         <address> SENDER </address>
+         <appsCreated>
+           APPS =>
+           <app>
+             <appID>         APP_ID          </appID>
+             <approvalPgm>   APPROVAL_PGM    </approvalPgm>
+             <clearStatePgm> CLEAR_STATE_PGM </clearStatePgm>
+             <globalInts>    GLOBAL_INTS     </globalInts>
+             <globalBytes>   GLOBAL_BYTES    </globalBytes>
+             <localInts>     LOCAL_INTS      </localInts>
+             <localBytes>    LOCAL_BYTES     </localBytes>
+             <extraPages>    EXTRA_PAGES     </extraPages>
+             ...
+           </app>
+           APPS
+         </appsCreated>
+         ...
+       </account>
+       <nextAppId> APP_ID => APP_ID +Int 1 </nextAppId>
+```
+
+NoOp
+
+```k
+  rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID   </txID>
-         <applicationID> NoTValue </applicationID>
+         <applicationID> APP_ID:TValue </applicationID>
+         <onCompletion> @ NoOp </onCompletion>
          ...
        </transaction>
+       <app>
+         <appID> APP_ID </appID>
+         <approvalPgm> APPROVAL_PGM </approvalPgm>
+         ...
+       </app>
+```
+
+OptIn
+
+```k
+
+// Case 1: user different from app creator is opting in
+
+  rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID   </txID>
+         <sender>        SENDER   </sender>
+         <applicationID> APP_ID </applicationID>
+         <onCompletion> @ OptIn </onCompletion>
+         ...
+       </transaction>
+       <account>
+         <address> SENDER </address>
+         <appsOptedIn>
+           OPTED_IN_APPS =>
+           <optInApp>
+             <optInAppID> APP_ID </optInAppID>
+             <localStorage> .Map </localStorage>
+           </optInApp>
+           OPTED_IN_APPS
+         </appsOptedIn>
+         ...
+       </account>
+       <app>
+         <appID> APP_ID </appID>
+         <approvalPgm> APPROVAL_PGM </approvalPgm>
+         ...
+       </app>
+     requires notBool hasOptedInApp(APP_ID, SENDER)
+
+// Case 2: app creator is opting in to their own app
+
+  rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID   </txID>
+         <sender>        SENDER   </sender>
+         <applicationID> APP_ID </applicationID>
+         <onCompletion> @ OptIn </onCompletion>
+         ...
+       </transaction>
+       <account>
+         <address> SENDER </address>
+         <app>
+           <appID> APP_ID </appID>
+           <approvalPgm> APPROVAL_PGM </approvalPgm>
+           ...
+         </app>
+         <appsOptedIn>
+           OPTED_IN_APPS =>
+           <optInApp>
+             <optInAppID> APP_ID </optInAppID>
+             <localStorage> .Map </localStorage>
+           </optInApp>
+           OPTED_IN_APPS
+         </appsOptedIn>
+         ...
+       </account>
+     requires notBool hasOptedInApp(APP_ID, SENDER)
+```
+
+CloseOut
+
+```k
+  rule <k>
+         #executeTxn(@appl) => 
+              #evalTeal(APPROVAL_PGM) 
+           ~> #clearState(APP_ID, SENDER)
+         ... 
+       </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID   </txID>
+         <applicationID> APP_ID:TValue </applicationID>
+         <sender>        SENDER   </sender>
+         <onCompletion> @ CloseOut </onCompletion>
+         ...
+       </transaction>
+       <app>
+         <appID> APP_ID </appID>
+         <approvalPgm> APPROVAL_PGM </approvalPgm>
+         ...
+       </app>
+```
+
+ClearState
+
+TODO make sure `#clearState` runs even when a panic is generated
+
+```k
+  rule <k>
+         #executeTxn(@appl) => 
+              #evalTeal(CLEAR_STATE_PGM) 
+           ~> #clearState(APP_ID, SENDER)
+         ... 
+       </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID   </txID>
+         <applicationID> APP_ID:TValue </applicationID>
+         <sender>        SENDER   </sender>
+         <onCompletion> @ ClearState </onCompletion>
+         ...
+       </transaction>
+       <app>
+         <appID> APP_ID </appID>
+         <clearStatePgm> CLEAR_STATE_PGM </clearStatePgm>
+         ...
+       </app>
+```
+
+UpdateApplication
+
+```k
+  rule <k>
+         #executeTxn(@appl) => 
+              #evalTeal(APPROVAL_PGM) 
+           ~> #updatePrograms(APP_ID, NEW_APPROVAL_PGM, NEW_CLEAR_STATE_PGM)
+         ... 
+       </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID   </txID>
+         <applicationID> APP_ID:TValue </applicationID>
+         <onCompletion> @ UpdateApplication </onCompletion>
+         <approvalProgram>    NEW_APPROVAL_PGM       </approvalProgram>
+         <clearStateProgram>  NEW_CLEAR_STATE_PGM    </clearStateProgram>
+         ...
+       </transaction>
+       <app>
+         <appID> APP_ID </appID>
+         <approvalPgm> APPROVAL_PGM </approvalPgm>
+         ...
+       </app>
+```
+
+DeleteApplication
+
+```k
+  rule <k>
+         #executeTxn(@appl) => 
+              #evalTeal(APPROVAL_PGM) 
+           ~> #deleteApplication(APP_ID)
+         ... 
+       </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID   </txID>
+         <applicationID> APP_ID:TValue </applicationID>
+         <onCompletion> @ DeleteApplication </onCompletion>
+         ...
+       </transaction>
+       <app>
+         <appID> APP_ID </appID>
+         <approvalPgm> APPROVAL_PGM </approvalPgm>
+         ...
+       </app>
 ```
 
 * **Layer-2 transactions**
