@@ -1,12 +1,12 @@
 declareTealSource "./tests/teal-sources/min-balance-optin-asset.teal";
+declareTealSource "./tests/teal-sources/clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 100000 </balance>;
 addAccount <address> b"2" </address> <balance> 100000 </balance>;
-addApp     <appID>   1    </appID>   <address> b"2" </address> 0;
-optinApp   <appID>   1    </appID>   <address> b"2" </address>;
 
 #initTxGroup();
 
+// Create asset from b"2"
 addAssetConfigTx <txID>                0          </txID>
                  <sender>              b"2"       </sender>
                  <configAsset>         NoTValue   </configAsset>
@@ -15,19 +15,45 @@ addAssetConfigTx <txID>                0          </txID>
                  <configDefaultFrozen> 0          </configDefaultFrozen>
                  <configAssetName>     b"testcoin" </configAssetName>;
 
-addAssetTransferTx <txID>          1    </txID>
+// Add app and opt in b"2"
+addAppCallTx <txID> 1 </txID>
+             <sender>            b"2"        </sender>
+             <applicationID>     NoTValue    </applicationID>
+             <onCompletion>      @ OptIn     </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   .TValueList </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
+
+// Opt b"1" into asset
+addAssetTransferTx <txID>          2    </txID>
                    <sender>        b"1" </sender>
                    <xferAsset>     0    </xferAsset>
                    <assetAmount>   0    </assetAmount>
                    <assetReceiver> b"1" </assetReceiver>;
 
-addAppCallTx <txID>            2           </txID>
-             <sender>          b"2"        </sender>
-             <applicationID>   1           </applicationID>
-             <onCompletion>    0           </onCompletion>
-             <accounts>        b"1"        </accounts>
-             <applicationArgs> .TValueList </applicationArgs>
-             <foreignApps>     .TValueList </foreignApps>
-             <foreignAssets>   .TValueList </foreignAssets>;
+// Call main code from b"1"
+addAppCallTx <txID> 3 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     0           </applicationID>
+             <onCompletion>      @ NoOp      </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   .TValueList </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 #initGlobals(); #evalTxGroup(); .AS

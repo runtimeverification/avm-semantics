@@ -1,6 +1,11 @@
 #pragma version 5
 #pragma mode stateful
 
+txn OnCompletion
+int OptIn
+==
+bnz accept
+
 txn Sender
 txna Assets 0
 asset_holding_get AssetBalance
@@ -18,5 +23,6 @@ int 0
 ==
 assert
 
+accept:
 int 1
 return

@@ -531,6 +531,11 @@ App create
        </transaction>
        <account>
          <address> SENDER </address>
+         <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                +Int ((1 +Int EXTRA_PAGES) *Int 100000) 
+                                +Int ((25000 +Int 3500) *Int GLOBAL_INTS)
+                                +Int ((25000 +Int 25000) *Int GLOBAL_BYTES)
+         </minBalance>
          <appsCreated>
            APPS =>
            <app>
@@ -594,11 +599,18 @@ OptIn
            </optInApp>
            OPTED_IN_APPS
          </appsOptedIn>
+         <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                +Int 100000 
+                                +Int ((25000 +Int 3500) *Int LOCAL_INTS)
+                                +Int ((25000 +Int 25000) *Int LOCAL_BYTES)
+         </minBalance>
          ...
        </account>
        <app>
          <appID> APP_ID </appID>
          <approvalPgm> APPROVAL_PGM </approvalPgm>
+         <localInts>     LOCAL_INTS      </localInts>
+         <localBytes>    LOCAL_BYTES     </localBytes>
          ...
        </app>
      requires notBool hasOptedInApp(APP_ID, SENDER)
@@ -616,11 +628,16 @@ OptIn
        </transaction>
        <account>
          <address> SENDER </address>
-         <app>
-           <appID> APP_ID </appID>
-           <approvalPgm> APPROVAL_PGM </approvalPgm>
+         <appsCreated>
+           <app>
+             <appID> APP_ID </appID>
+             <approvalPgm> APPROVAL_PGM </approvalPgm>
+             <localInts>     LOCAL_INTS      </localInts>
+             <localBytes>    LOCAL_BYTES     </localBytes>
+             ...
+           </app>
            ...
-         </app>
+         </appsCreated>
          <appsOptedIn>
            OPTED_IN_APPS =>
            <optInApp>
@@ -629,10 +646,59 @@ OptIn
            </optInApp>
            OPTED_IN_APPS
          </appsOptedIn>
+         <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                +Int 100000 
+                                +Int ((25000 +Int 3500) *Int LOCAL_INTS)
+                                +Int ((25000 +Int 25000) *Int LOCAL_BYTES)
+         </minBalance>
          ...
        </account>
      requires notBool hasOptedInApp(APP_ID, SENDER)
+
+// Case 3: needed because of bug?
+
+  rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID   </txID>
+         <sender>        SENDER   </sender>
+         <applicationID> APP_ID </applicationID>
+         <onCompletion> @ OptIn </onCompletion>
+         ...
+       </transaction>
+         <accountsMap>
+         <account>
+           <address> SENDER </address>
+           <appsCreated>
+             <app>
+               <appID> APP_ID </appID>
+               <approvalPgm> APPROVAL_PGM </approvalPgm>
+               <localInts>     LOCAL_INTS      </localInts>
+               <localBytes>    LOCAL_BYTES     </localBytes>
+               ...
+             </app>
+             ...
+           </appsCreated>
+           <appsOptedIn>
+             OPTED_IN_APPS =>
+             <optInApp>
+               <optInAppID> APP_ID </optInAppID>
+               <localStorage> .Map </localStorage>
+             </optInApp>
+             OPTED_IN_APPS
+           </appsOptedIn>
+           <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                  +Int 100000 
+                                  +Int ((25000 +Int 3500) *Int LOCAL_INTS)
+                                  +Int ((25000 +Int 25000) *Int LOCAL_BYTES)
+           </minBalance>
+           ...
+         </account>
+       </accountsMap>
+     requires notBool hasOptedInApp(APP_ID, SENDER)
+
 ```
+
 
 CloseOut
 

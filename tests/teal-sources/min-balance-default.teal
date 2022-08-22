@@ -1,11 +1,18 @@
 #pragma version 5
 #pragma mode stateful
 
-txna Accounts 1
+txn OnCompletion
+int OptIn
+==
+bnz accept
+
+txn Sender
 min_balance
 int 100000
 ==
 assert
+
+accept:
 
 int 1
 return

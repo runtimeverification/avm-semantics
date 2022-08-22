@@ -9,12 +9,27 @@ bnz accept
 txn Sender
 min_balance
 
-// Default min balance
+// Default min-balance
 int 100000
 
-// Min balance for opting into asset
+// Cost per page
 int 100000
++
 
+int 25000
+int 3500
++
+// Num local ints
+int 4
+*
++
+
+int 25000
+int 25000
++
+// Num local byte slices
+int 5
+*
 +
 
 ==
