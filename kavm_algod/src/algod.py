@@ -145,7 +145,7 @@ class KAVMClient(algod.AlgodClient):
 
             accounts = []
             for address in known_addresses:
-                accounts.append(self.kavm.account(address))
+                accounts.append(self.kavm.account(address, 1_000_000))
 
             # print(
             #     self.kavm.pretty_print(

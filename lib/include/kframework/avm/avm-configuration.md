@@ -18,7 +18,7 @@ module AVM-CONFIGURATION
 
   configuration
     <kavm>
-      <k> .AS:AVMSimulation </k>
+      <k> $PGM:AVMSimulation </k>
       <returncode exit=""> 4 </returncode> // the simulator exit code
       <returnstatus>                       // the exit status message
         "Failure - AVM is stuck"
@@ -68,9 +68,8 @@ module AVM-CONFIGURATION
 
   // Top-level control of the semantics.
   // Defined in `avm-execution.md`
-  syntax AVMSimulation ::= ".AS" [klabel(.AS), symbol]
-                         | AlgorandCommand ";" AVMSimulation
-  syntax AlgorandCommand
+  syntax AVMSimulation
+  syntax AlgorandComman
 
   // Control of transaction evaluation
   // Defined in `avm-execution.md`

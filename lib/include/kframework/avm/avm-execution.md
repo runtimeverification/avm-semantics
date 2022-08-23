@@ -25,6 +25,8 @@ The model has a number of top-level rules that will control the configuration in
 A sequence of `AlgorandCommand`s will be supplied as `$PGM` to `krun`.
 
 ```k
+  syntax AVMSimulation ::= ".AS"
+                         | AlgorandCommand ";" AVMSimulation
   // -------------------------------------------------------
 
   rule <k> .AS                  => .        ... </k>

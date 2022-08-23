@@ -5,7 +5,7 @@ from subprocess import CalledProcessError
 import subprocess
 import os
 import json
-from typing import Any, Callable, Dict, Final, List, Optional, Union
+from typing import Any, Callable, Dict, Final, List, Optional, Union, Iterable
 import re
 import tempfile
 
@@ -13,7 +13,7 @@ from pyk.kast import KAst, KInner, KSort, Subst, KApply, KLabel, KToken
 from pyk.kastManip import inlineCellMaps, collectFreeVars
 from pyk.cli_utils import run_process
 from pyk.ktool import KRun, paren
-from pyk.prelude import intToken, stringToken, build_assoc, buildCons
+from pyk.prelude import intToken, stringToken, build_assoc, buildCons, Sorts
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -73,7 +73,8 @@ class KAVM(KRun):
     @property
     def _empty_config(self) -> KInner:
         """Return the KAST term for the empty top-level KavmCell"""
-        return self.definition.empty_config(KSort('KavmCell'))
+        # return self.definition.empty_config(KSort('KavmCell'))
+        return self.definition.empty_config(KSort('GeneratedTopCell'))
 
     @property
     def current_config(self) -> KInner:
@@ -165,22 +166,59 @@ class KAVM(KRun):
                     'GLOBALROUND_CELL': intToken(6),
                     'LATESTTIMESTAMP_CELL': intToken(50),
                     'CURRENTAPPLICATIONID_CELL': intToken(0),
-                    'CURRENTAPPLICATIONADDRESS_CELL': KToken('0', KSort('Bytes')),
+                    'CURRENTAPPLICATIONADDRESS_CELL': KToken('b""', KSort('Bytes')),
                     'APPCREATOR_CELL': KApply('.Map'),
                     'ASSETCREATOR_CELL': KApply('.Map'),
                     'EFFECTS_CELL': KApply('.List'),
                     'BLOCKS_CELL': KApply('.Map'),
                     'BLOCKHEIGHT_CELL': intToken(0),
                     'TEALPROGRAMS_CELL': KApply('.TealPrograms'),
-                    'K_CELL': KApply('.AS'),
-                    # 'DEQUE_CELL': buildCons(
-                    #     KApply('.Set'), KLabel('ListItem'), [intToken(0), intToken(1)]
+                    # 'K_CELL': buildCons(
+                    #     KToken(
+                    #         '.AS_AVM-EXECUTION-SYNTAX_AVMSimulation',
+                    #         KSort('AVMSimulation'),
+                    #     ),
+                    #     KLabel(
+                    #         '_;__AVM-EXECUTION-SYNTAX_AVMSimulation_AlgorandCommand_AVMSimulation',
+                    #         KSort('AVMSimulation'),
+                    #     ),
+                    #     [
+                    #         # KLabel(
+                    #         #     '#initTxGroup()_AVM-INITIALIZATION_AlgorandCommand',
+                    #         #     KSort('AlgorandCommand'),
+                    #         # ),
+                    #         # KToken('#initGlobals()', KSort('AlgorandCommand')),
+                    #         # KToken('#evalTxGroup()', KSort('AlgorandCommand')),
+                    #         KToken('#evalTx()', KSort('AlgorandCommand')),
+                    #         # KToken(
+                    #         #     '.AS_AVM-EXECUTION-SYNTAX_AVMSimulation',
+                    #         #     KSort('AVMSimulation'),
+                    #         # ),
+                    #     ],
                     # ),
-                    # 'DEQUEINDEXSET_CELL': buildCons(
-                    #     KApply('.List'), KLabel('SetItem'), [intToken(0), intToken(1)]
-                    # ),
-                    'DEQUE_CELL': KApply('.List'),
-                    'DEQUEINDEXSET_CELL': KApply('.Set'),
+                    'K_CELL': KApply(
+                        '#evalTxGroup()_AVM-EXECUTION_AlgorandCommand',
+                    ),
+                    'DEQUE_CELL': buildCons(
+                        KApply('.List'),
+                        KLabel('_List_'),
+                        [
+                            KApply(KLabel('ListItem'), intToken(0)),
+                            KApply(KLabel('ListItem'), intToken(1)),
+                        ],
+                    ),
+                    # 'DEQUE_CELL': KApply('.List'),
+                    'DEQUEINDEXSET_CELL': buildCons(
+                        KApply('.Set'),
+                        KLabel('_Set_', KSort('Set')),
+                        [
+                            KApply('SetItem', intToken(0)),
+                            KApply('SetItem', intToken(1)),
+                        ],
+                    ),
+                    # 'DEQUEINDEXSET_CELL': KApply('.Set'),
+                    # 'DEQUEINDEXSET_CELL': KToken('.Set', KSort('Set')),
+                    'GENERATEDCOUNTER_CELL': intToken(0),
                 }
             )
         ).apply(config)
@@ -198,24 +236,35 @@ class KAVM(KRun):
     #     ), f'Cannot run from current configuration due to unbound variables {freeVars}'
 
     def run_term(self, configuration: KInner) -> (int, Union[KAst, str]):
+        # print(self.definition.modules)
+        # print(self.definition.production_for_klabel('List'))
+        # print(self.definition.syntax_productions)
+
+        # assert False
+
         freeVars = collectFreeVars(configuration)
         assert (
             len(freeVars) == 0
         ), f'Cannot run from current configuration due to unbound variables {freeVars}'
-        with tempfile.NamedTemporaryFile('r+t') as tmp_file:
-            # tmp_kore_file.write(self.kast_to_kore(configuration).text)
-            print(
+        with tempfile.NamedTemporaryFile(
+            'w+t', delete=False
+        ) as tmp_kast_json_file, tempfile.NamedTemporaryFile(
+            'w+t', delete=False
+        ) as tmp_kore_file:
+            tmp_kast_json_file.write(
                 json.dumps(
                     {'format': 'KAST', 'version': 2, 'term': configuration.to_dict()}
                 )
             )
 
-            assert False
-            tmp_file.write(
-                {'format': 'KAST', 'version': 2, 'term': configuration.to_dict()}
+            kore_term = self.kast(
+                input_file=tmp_kast_json_file.name,
+                module='AVM-EXECUTION',
+                sort=KSort('GeneratedTopCell'),
             )
+            tmp_kore_file.write(kore_term)
 
-            krun_command = f'krun --definition {self.definition_dir} --output json --term --parser cat {tmp_file.name}'
+            krun_command = f'krun --definition {self.definition_dir} --output json --term --parser cat {tmp_kore_file.name}'
 
             env = os.environ.copy()
             env['KAVM_DEFITION_DIR'] = str(self.definition_dir)
@@ -260,3 +309,24 @@ class KAVM(KRun):
             )
 
         return (output.returncode, inlineCellMaps(output_kast_term))
+
+    def kast(
+        self,
+        input_file: Path,
+        input: str = 'json',
+        output: str = 'kore',
+        module: str = 'AVM-EXECUTION',
+        sort: KSort = Sorts.K,
+        args: Iterable[str] = (),
+    ) -> str:
+        kast_command = ['kast', '--definition', str(self.definition_dir)]
+        kast_command += ['--input', input, '--output', output]
+        kast_command += ['--module', module]
+        kast_command += ['--sort', sort.name]
+        kast_command += [str(input_file)]
+        command_env = os.environ.copy()
+        command_env['KAVM_DEFITION_DIR'] = str(self.definition_dir)
+        proc_result = run_process(kast_command, env=command_env, logger=_LOGGER)
+        if proc_result.returncode != 0:
+            raise RuntimeError(f'Calling kast failed: {kast_command}')
+        return proc_result.stdout
