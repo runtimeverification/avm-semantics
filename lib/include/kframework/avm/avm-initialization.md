@@ -40,7 +40,9 @@ The transaction is initialized first.
          <transactions>
            _ => .Bag
           </transactions>
+          <savedState> _ => (<blockchain> BLOCKCHAIN_STATE </blockchain>) </savedState>
        </txGroup>
+       <blockchain> BLOCKCHAIN_STATE </blockchain>
 ```
 
 ### Transactions
@@ -309,7 +311,10 @@ The asset initialization rule must be used *after* initializing accounts.
 
 ```k
   syntax AlgorandCommand ::= "addAssetConfigTx" TxIDCell SenderCell ConfigAssetCell ConfigTotalCell
-                                                ConfigDecimalsCell ConfigDefaultFrozenCell ConfigAssetNameCell
+                                                ConfigDecimalsCell ConfigDefaultFrozenCell ConfigUnitNameCell
+                                                ConfigAssetNameCell ConfigAssetURLCell ConfigMetaDataHashCell
+                                                ConfigManagerAddrCell ConfigReserveAddrCell
+                                                ConfigFreezeAddrCell ConfigClawbackAddrCell
   //-----------------------------------------------------------
   rule <k> addAssetConfigTx <txID>                TXN_ID   </txID>
                             <sender>              SENDER   </sender>
@@ -317,7 +322,14 @@ The asset initialization rule must be used *after* initializing accounts.
                             <configTotal>         TOTAL    </configTotal>
                             <configDecimals>      DECIMALS </configDecimals>
                             <configDefaultFrozen> FROZEN   </configDefaultFrozen>
+                            <configUnitName>      UNIT_NAME     </configUnitName>
                             <configAssetName>     NAME     </configAssetName>
+                            <configAssetURL>      ASSET_URL </configAssetURL>
+                            <configMetaDataHash>  METADATA_HASH </configMetaDataHash>
+                            <configManagerAddr>   MGR_ADDR </configManagerAddr>
+                            <configReserveAddr>   RES_ADDR </configReserveAddr>
+                            <configFreezeAddr>    FRZ_ADDR </configFreezeAddr>
+                            <configClawbackAddr>  CLB_ADDR </configClawbackAddr>
        => #pushTxnBack(<txID> TXN_ID </txID>)
            ...
        </k>
@@ -338,9 +350,14 @@ The asset initialization rule must be used *after* initializing accounts.
                <configTotal>         TOTAL    </configTotal>
                <configDecimals>      DECIMALS </configDecimals>
                <configDefaultFrozen> FROZEN   </configDefaultFrozen>
-               <configUnitName>      NAME     </configUnitName>
+               <configUnitName>      UNIT_NAME     </configUnitName>
                <configAssetName>     NAME     </configAssetName>
-               ...
+               <configAssetURL>      ASSET_URL </configAssetURL>
+               <configManagerAddr>   MGR_ADDR   </configManagerAddr>
+               <configMetaDataHash>  METADATA_HASH </configMetaDataHash>
+               <configReserveAddr>   RES_ADDR </configReserveAddr>
+               <configFreezeAddr>    FRZ_ADDR </configFreezeAddr>
+               <configClawbackAddr>  CLB_ADDR </configClawbackAddr>
              </assetParams>
            </assetConfigTxFields>
          </transaction>
@@ -353,14 +370,16 @@ The asset initialization rule must be used *after* initializing accounts.
 
 ```k
   syntax AlgorandCommand ::= "addAssetTransferTx" TxIDCell SenderCell XferAssetCell AssetAmountCell
-                                                  AssetReceiverCell
+                                                  AssetASenderCell AssetReceiverCell AssetCloseToCell
   //-----------------------------------------------------------------------------------------------
 
   rule <k> addAssetTransferTx <txID>          TXN_ID    </txID>
                               <sender>        SENDER   </sender>
                               <xferAsset>     ASSET_ID </xferAsset>
                               <assetAmount>   AMOUNT   </assetAmount>
+                              <assetASender>   CLAWBACK_FROM   </assetASender>
                               <assetReceiver> RECEIVER </assetReceiver>
+                              <assetCloseTo>  CLOSE_TO </assetCloseTo>
            => #pushTxnBack(<txID> TXN_ID </txID>)
            ...
        </k>
@@ -378,7 +397,9 @@ The asset initialization rule must be used *after* initializing accounts.
            <assetTransferTxFields>
              <xferAsset>     ASSET_ID </xferAsset>
              <assetAmount>   AMOUNT   </assetAmount>
+             <assetASender>   CLAWBACK_FROM   </assetASender>
              <assetReceiver> RECEIVER </assetReceiver>
+             <assetCloseTo>  CLOSE_TO </assetCloseTo>
              ...
            </assetTransferTxFields>
          </transaction>

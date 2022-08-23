@@ -123,6 +123,8 @@ We check logic signatures in an ad-hoc way for payments and asset transfers at a
 
 Clear local state
 
+case 1: clear state from own created app
+
 ```k
   syntax AlgorandCommand ::= #clearState( TValue, TValue )
   //------------------------------------------------------
@@ -137,14 +139,51 @@ Clear local state
            </optInApp>) => .Bag
            ...
          </appsOptedIn>
+         <appsCreated>
+           <appID> APP_ID </appID>
+           <localInts>     LOCAL_INTS      </localInts>
+           <localBytes>    LOCAL_BYTES     </localBytes>
+           ...
+         </appsCreated>
+         <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                -Int (100000 
+                                +Int ((25000 +Int 3500) *Int LOCAL_INTS)
+                                +Int ((25000 +Int 25000) *Int LOCAL_BYTES))
+         </minBalance>
          ...
        </account>
+```
+
+case 1: clear state from other's created app
+
+```k
+  rule <k> #clearState(APP_ID, ADDR) => . ...</k>
+       <account>
+         <address> ADDR </address>
+         <appsOptedIn>
+           (<optInApp>
+             <optInAppID> APP_ID </optInAppID>
+             <localStorage> _ </localStorage>
+           </optInApp>) => .Bag
+           ...
+         </appsOptedIn>
+         <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                -Int (100000 
+                                +Int ((25000 +Int 3500) *Int LOCAL_INTS)
+                                +Int ((25000 +Int 25000) *Int LOCAL_BYTES))
+         </minBalance>
+         ...
+       </account>
+       <appsCreated>
+         <appID> APP_ID </appID>
+         <localInts>     LOCAL_INTS      </localInts>
+         <localBytes>    LOCAL_BYTES     </localBytes>
+         ...
+       </appsCreated>
 
 ```
 
 Update application programs
-
-TODO does avm let you change the amount of local and global storage?
 
 ```k
   syntax AlgorandCommand ::= #updatePrograms( TValue, KItem, KItem )
@@ -165,47 +204,54 @@ Delete application
   syntax AlgorandCommand ::= #deleteApplication( TValue )
   //------------------------------------------------------
 
-//  rule <k> #deleteApplication(APP_ID) => #optOutAll(APP_ID) ...</k>
   rule <k> #deleteApplication(APP_ID) => . ...</k>
-       <appsCreated>
-         ((<app>
-           <appID> APP_ID </appID>
+       <account>
+         <appsCreated>
+           ((<app>
+             <appID> APP_ID </appID>
+             <globalInts>    GLOBAL_INTS     </globalInts>
+             <globalBytes>   GLOBAL_BYTES    </globalBytes>
+             <extraPages>    EXTRA_PAGES     </extraPages>
+             ...
+           </app>) => .Bag) ...
+         </appsCreated>
+         <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                -Int (((1 +Int EXTRA_PAGES) *Int 100000) 
+                                +Int ((25000 +Int 3500) *Int GLOBAL_INTS)
+                                +Int ((25000 +Int 25000) *Int GLOBAL_BYTES))
+         </minBalance>
+         ...
+       </account>
+```
+
+Close asset account to
+
+```k
+  syntax AlgorandCommand ::= #closeTo(TValue, TValue, TValue)
+  //-------------------------------------------------
+  rule <k> #closeTo(ASSET_ID, FROM, CLOSE_TO) => . ...</k>
+       <account>
+         <address> FROM </address>
+         <assetsOptedIn>
+           (<optInAsset>
+             <optInAssetID> ASSET_ID </optInAssetID>
+             <optInAssetBalance> BALANCE </optInAssetBalance>
+             ...
+           </optInAsset>) => .Bag
            ...
-         </app>) => .Bag) ...
-       </appsCreated>
-
-//  syntax AlgorandCommand ::= #optOutAll(TValue)
-
-// rule <k> #optOutAll( APP_ID ) => . ...</k>
-//      <accountsMap> AMAP => #optOutAllAux(<accountsMap> .Bag </accountsMap>, <accountsMap> AMAP </accountsMap>, APP_ID) </accountsMap>
-
-//  syntax Bag ::= #optOutAllAux( AccountsMapCell, AccountsMapCell, TValue ) [function, functional]
-  //-----------------------------------------------------
-
-//  rule #optOutAllAux(_, _, _) => .Bag
-
-//  rule #optOutAllAux(
-//            (.Bag => ACCOUNT) _,
-//            ((<account>
-//              <appsOptedIn> OPTED_IN_APPS </appsOptedIn>
-//            </account>) #as ACCOUNT => .Bag) _, APP_ID
-//       )
-//    requires notBool (APP_ID in_optedInApps(<appsOptedIn> OPTED_IN_APPS </appsOptedIn>))
-//
-//  rule #optOutAllAux(
-//            _,
-//            <account>
-//              <optInApp>
-//                <optInAppID> APP_ID </optInAppID>
-//                ...
-//              </optInApp> => .Bag
-//              ...
-//            </account>
-//            _, APP_ID
-//       )
-//
-//  rule #optOutAllAux(RET, .Bag, _) => RET
-
+         </assetsOptedIn>
+         <minBalance> MIN_BALANCE => MIN_BALANCE -Int 100000 </minBalance>
+         ...
+       </account>
+       <account>
+         <address> CLOSE_TO </address>
+         <optInAsset>
+           <optInAssetID> ASSET_ID </optInAssetID>
+           <optInAssetBalance> PREV_BALANCE => PREV_BALANCE +Int BALANCE </optInAssetBalance>
+           ...
+         </optInAsset>
+           ...
+       </account>
 ```
 
 
@@ -362,11 +408,103 @@ Create asset
          ...
        </account>
        <assetCreator> .Map => (ASSET_ID |-> SENDER) ...</assetCreator>
-    requires notBool (assetCreated(ASSET_ID))
-     andBool notBool (hasOptedInAsset(ASSET_ID, SENDER))
 ```
 
-TODO modify asset
+Modify asset
+
+```k
+  rule <k> #executeTxn(@acfg) => . ...</k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>                TXN_ID          </txID>
+         <sender>              SENDER          </sender>
+         <configAsset>         ASSET_ID:TValue        </configAsset>
+         <configManagerAddr>   MANAGER_ADDR    </configManagerAddr>
+         <configReserveAddr>   RESERVE_ADDR    </configReserveAddr>
+         <configFreezeAddr>    FREEZE_ADDR     </configFreezeAddr>
+         <configClawbackAddr>  CLAWB_ADDR      </configClawbackAddr>
+         ...
+       </transaction>
+       <asset>
+         <assetID>            ASSET_ID               </assetID>
+         <assetName>          _                      </assetName>
+         <assetUnitName>      _                      </assetUnitName>
+         <assetTotal>         _                      </assetTotal>
+         <assetDecimals>      _                      </assetDecimals>
+         <assetDefaultFrozen> _                      </assetDefaultFrozen>
+         <assetURL>           _                      </assetURL>
+         <assetMetaDataHash>  _                      </assetMetaDataHash>
+         <assetManagerAddr>   SENDER => MANAGER_ADDR </assetManagerAddr>
+         <assetReserveAddr>   _ => RESERVE_ADDR      </assetReserveAddr>
+         <assetFreezeAddr>    _ => FREEZE_ADDR       </assetFreezeAddr>
+         <assetClawbackAddr>  _ => CLAWB_ADDR        </assetClawbackAddr>
+       </asset>
+    requires isTValue(MANAGER_ADDR) 
+      orBool isTValue(RESERVE_ADDR) 
+      orBool isTValue(FREEZE_ADDR) 
+      orBool isTValue(CLAWB_ADDR)
+```
+
+Destroy asset
+
+"A Destroy Transaction is issued to remove an asset from the Algorand ledger. To destroy an existing asset on
+Algorand, the original creator must be in possession of all units of the asset and the manager must send and
+therefore authorize the transaction."
+
+"This transaction differentiates itself from an Asset Creation transaction in that it contains an asset ID
+(caid) pointing to the asset to be destroyed. It differentiates itself from an Asset Reconfiguration
+transaction by the lack of any asset parameters.""
+
+```k
+  rule <k> #executeTxn(@acfg) => . ...</k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>                TXN_ID          </txID>
+         <sender>              SENDER          </sender>
+         <configAsset>         ASSET_ID:TValue        </configAsset>
+         <configManagerAddr>   NoTValue    </configManagerAddr>
+         <configReserveAddr>   NoTValue    </configReserveAddr>
+         <configFreezeAddr>    NoTValue     </configFreezeAddr>
+         <configClawbackAddr>  NoTValue      </configClawbackAddr>
+         ...
+       </transaction>
+       <account>
+         <address> CREATOR </address>
+         <assetsCreated>
+           (<asset>
+             <assetID>            ASSET_ID               </assetID>
+             <assetManagerAddr>   SENDER </assetManagerAddr>
+             <assetTotal>         BALANCE </assetTotal>
+             ...
+           </asset>) => .Bag
+           ...
+         </assetsCreated>
+         <assetsOptedIn>
+           (<optInAsset>
+             <optInAssetID> ASSET_ID </optInAssetID>
+             <optInAssetBalance> BALANCE </optInAssetBalance>
+             ...
+           </optInAsset>) => .Bag
+           ...
+         </assetsOptedIn>
+         <minBalance> MIN_BALANCE => MIN_BALANCE -Int 100000 </minBalance>
+         ...
+       </account>
+       <assetCreator> (ASSET_ID |-> CREATOR) => .Map ...</assetCreator>
+```
+
+Modify/delete asset no permission case
+
+TODO split into other cases?
+  - user or asset doesn't exist
+  - sender not manager of the asset
+  - Original creator doesn't have all the funds when trying to delete
+  - Maybe more?
+
+```k
+  rule <k> #executeTxn(@acfg) => #avmPanic(TXN_ID, ASSET_NO_PERMISSION) ...</k>
+       <currentTx> TXN_ID </currentTx> [owise]
+```
 
 * **Asset Transfer**
 
@@ -385,6 +523,7 @@ Asset transfer goes through if:
          <xferAsset>     ASSET_ID </xferAsset>
          <assetReceiver> RECEIVER </assetReceiver>
          <assetAmount>   AMOUNT   </assetAmount>
+         <assetCloseTo>  NoTValue </assetCloseTo>
          ...
        </transaction>
        <account>
@@ -426,6 +565,7 @@ Asset transfer with a non-zero amount fails if:
          <txID>          TXN_ID   </txID>
          <sender>        SENDER   </sender>
          <xferAsset>     ASSET_ID </xferAsset>
+         <assetCloseTo>  NoTValue </assetCloseTo>
          ...
        </transaction>
        <account>
@@ -477,6 +617,7 @@ Asset opt-in goes through if:
          <xferAsset>     ASSET_ID </xferAsset>
          <assetReceiver> SENDER   </assetReceiver>
          <assetAmount>   AMOUNT   </assetAmount>
+         <assetCloseTo>  NoTValue </assetCloseTo>
          ...
        </transaction>
        <account>
@@ -498,6 +639,48 @@ Asset opt-in goes through if:
     requires assetCreated(ASSET_ID)
      andBool notBool hasOptedInAsset(ASSET_ID, SENDER)
      andBool AMOUNT ==Int 0
+```
+
+**Asset opt-out** is a special case of asset transfer: a transfer with the AssetCloseTo field set.
+
+```k
+  rule <k> #executeTxn(@axfer) => #closeTo(ASSET_ID, SENDER, CLOSE_TO) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID   </txID>
+         <sender>        SENDER   </sender>
+         <xferAsset>     ASSET_ID </xferAsset>
+         <assetReceiver> RECEIVER </assetReceiver>
+         <assetAmount>   AMOUNT   </assetAmount>
+         <assetCloseTo>  CLOSE_TO:TValue </assetCloseTo>
+         ...
+       </transaction>
+       <account>
+         <address> SENDER </address>
+         <optInAsset>
+           <optInAssetID>      ASSET_ID       </optInAssetID>
+           <optInAssetBalance> SENDER_BALANCE
+                            => SENDER_BALANCE -Int AMOUNT
+           </optInAssetBalance>
+           ...
+         </optInAsset>
+         ...
+       </account>
+       <account>
+         <address> RECEIVER </address>
+         <optInAsset>
+           <optInAssetID>      ASSET_ID       </optInAssetID>
+           <optInAssetBalance> RECEIVER_BALANCE
+                            => RECEIVER_BALANCE +Int AMOUNT
+           </optInAssetBalance>
+           ...
+         </optInAsset>
+         ...
+       </account>
+    requires hasOptedInAsset(ASSET_ID, SENDER)
+     andBool SENDER_BALANCE -Int AMOUNT >=Int 0
+     andBool (getOptInAssetField(AssetFrozen, SENDER, ASSET_ID) ==K 0)
+     andBool hasOptedInAsset(ASSET_ID, RECEIVER)
 ```
 
 * **Asset Freeze**

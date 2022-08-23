@@ -1,27 +1,47 @@
-declareTealSource "./tests/teal-sources/min-balance-create-asset.teal";
+declareTealSource "./tests/teal-sources/min-balance-asset-opt-out.teal";
+declareTealSource "./tests/teal-sources/clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 100000 </balance>;
 addAccount <address> b"2" </address> <balance> 100000 </balance>;
 
 #initTxGroup();
 
-addAssetConfigTx <txID>                0          </txID>
-                 <sender>              b"2"       </sender>
-                 <configAsset>         NoTValue   </configAsset>
-                 <configTotal>         12345      </configTotal>
-                 <configDecimals>      0          </configDecimals>
-                 <configDefaultFrozen> 0          </configDefaultFrozen>
-                 <configUnitName>     b"testcoins" </configUnitName>
-                 <configAssetName>     b"testcoin" </configAssetName>
+// Add asset
+addAssetConfigTx <txID> 0 </txID>
+                 <sender>              b"1"   </sender>
+                 <configAsset>         NoTValue </configAsset>
+                 <configTotal>         500    </configTotal>
+                 <configDecimals>      0 </configDecimals>
+                 <configDefaultFrozen> 0   </configDefaultFrozen>
+                 <configUnitName>      "testcoins"     </configUnitName>
+                 <configAssetName>     "testcoin"     </configAssetName>
                  <configAssetURL>      NoTValue </configAssetURL>
                  <configMetaDataHash>  NoTValue </configMetaDataHash>
-                 <configManagerAddr>   b"2" </configManagerAddr>
+                 <configManagerAddr>   b"1" </configManagerAddr>
                  <configReserveAddr>   NoTValue </configReserveAddr>
                  <configFreezeAddr>    NoTValue </configFreezeAddr>
                  <configClawbackAddr>  NoTValue </configClawbackAddr>;
 
-// Add app from b"1"
-addAppCallTx <txID> 1 </txID>
+// Opt b"2" in to asset
+addAssetTransferTx <txID> 1 </txID>
+                   <sender>        b"2"   </sender>
+                   <xferAsset>     0 </xferAsset>
+                   <assetAmount>   0   </assetAmount>
+                   <assetASender>  NoTValue </assetASender>
+                   <assetReceiver> b"2" </assetReceiver>
+                   <assetCloseTo>  NoTValue </assetCloseTo>;
+
+// Opt b"2" out of asset
+addAssetTransferTx <txID> 2 </txID>
+                   <sender>        b"2"   </sender>
+                   <xferAsset>     0 </xferAsset>
+                   <assetAmount>   0   </assetAmount>
+                   <assetASender>  NoTValue </assetASender>
+                   <assetReceiver> b"2" </assetReceiver>
+                   <assetCloseTo>  b"1" </assetCloseTo>;
+
+// Create app 0
+addAppCallTx <txID> 3 </txID>
              <sender>            b"1"        </sender>
              <applicationID>     NoTValue    </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
@@ -36,9 +56,9 @@ addAppCallTx <txID> 1 </txID>
              <extraProgramPages> 0           </extraProgramPages>
              <approvalPgmIdx>    0           </approvalPgmIdx>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
-             
-// Call app from b"2"
-addAppCallTx <txID> 2 </txID>
+
+// Call test code
+addAppCallTx <txID> 4 </txID>
              <sender>            b"2"        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
