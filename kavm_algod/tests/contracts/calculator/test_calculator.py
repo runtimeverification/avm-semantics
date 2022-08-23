@@ -9,7 +9,7 @@ from algosdk.future.transaction import (
     OnComplete,
     PaymentTxn,
 )
-from algosdk.v2client import AlgodClient
+from algosdk.v2client.algod import AlgodClient
 
 approval_program_src = '''
 #pragma version 4
