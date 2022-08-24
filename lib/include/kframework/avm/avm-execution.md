@@ -254,6 +254,24 @@ Close asset account to
        </account>
 ```
 
+Add asset to account
+
+```k
+  syntax AlgorandCommand ::= #giveAsset(TValue, TValue, TValue)
+  //-------------------------------------------------------------------
+  rule <k> #giveAsset(ASSET_ID, ACCOUNT, AMOUNT) => . ...</k>
+       <account>
+         <address> ACCOUNT </address>
+         <optInAsset>
+           <optInAssetID> ASSET_ID </optInAssetID>
+           <optInAssetBalance> BALANCE => BALANCE +Int AMOUNT </optInAssetBalance>
+           <optInAssetFrozen> 0 </optInAssetFrozen>
+         </optInAsset>
+         ...
+       </account>
+       requires (BALANCE +Int AMOUNT) >=Int 0
+```
+
 
 #### (Optional) Eval TEAL
 
@@ -515,7 +533,11 @@ Asset transfer goes through if:
 
 ```k
 
-  rule <k> #executeTxn(@axfer) => .K ... </k>
+  rule <k> #executeTxn(@axfer) => 
+                #giveAsset(ASSET_ID, SENDER, 0 -Int AMOUNT) 
+             ~> #giveAsset(ASSET_ID, RECEIVER, AMOUNT) 
+           ... 
+       </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID   </txID>
@@ -526,32 +548,7 @@ Asset transfer goes through if:
          <assetCloseTo>  NoTValue </assetCloseTo>
          ...
        </transaction>
-       <account>
-         <address> SENDER </address>
-         <optInAsset>
-           <optInAssetID>      ASSET_ID       </optInAssetID>
-           <optInAssetBalance> SENDER_BALANCE
-                            => SENDER_BALANCE -Int AMOUNT
-           </optInAssetBalance>
-           ...
-         </optInAsset>
-         ...
-       </account>
-       <account>
-         <address> RECEIVER </address>
-         <optInAsset>
-           <optInAssetID>      ASSET_ID       </optInAssetID>
-           <optInAssetBalance> RECEIVER_BALANCE
-                            => RECEIVER_BALANCE +Int AMOUNT
-           </optInAssetBalance>
-           ...
-         </optInAsset>
-         ...
-       </account>
     requires hasOptedInAsset(ASSET_ID, SENDER)
-     andBool SENDER_BALANCE -Int AMOUNT >=Int 0
-     andBool (getOptInAssetField(AssetFrozen, SENDER, ASSET_ID) ==K 0)
-     andBool hasOptedInAsset(ASSET_ID, RECEIVER)
 ```
 
 Asset transfer with a non-zero amount fails if:
@@ -616,7 +613,7 @@ Asset opt-in goes through if:
          <sender>        SENDER   </sender>
          <xferAsset>     ASSET_ID </xferAsset>
          <assetReceiver> SENDER   </assetReceiver>
-         <assetAmount>   AMOUNT   </assetAmount>
+         <assetAmount>   0        </assetAmount>
          <assetCloseTo>  NoTValue </assetCloseTo>
          ...
        </transaction>
@@ -638,13 +635,17 @@ Asset opt-in goes through if:
        </account>
     requires assetCreated(ASSET_ID)
      andBool notBool hasOptedInAsset(ASSET_ID, SENDER)
-     andBool AMOUNT ==Int 0
 ```
 
 **Asset opt-out** is a special case of asset transfer: a transfer with the AssetCloseTo field set.
 
 ```k
-  rule <k> #executeTxn(@axfer) => #closeTo(ASSET_ID, SENDER, CLOSE_TO) ... </k>
+  rule <k> #executeTxn(@axfer) => 
+                #giveAsset(ASSET_ID, SENDER, 0 -Int AMOUNT) 
+             ~> #giveAsset(ASSET_ID, RECEIVER, AMOUNT) 
+             ~> #closeTo(ASSET_ID, SENDER, CLOSE_TO)
+           ... 
+       </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID   </txID>
@@ -655,32 +656,6 @@ Asset opt-in goes through if:
          <assetCloseTo>  CLOSE_TO:TValue </assetCloseTo>
          ...
        </transaction>
-       <account>
-         <address> SENDER </address>
-         <optInAsset>
-           <optInAssetID>      ASSET_ID       </optInAssetID>
-           <optInAssetBalance> SENDER_BALANCE
-                            => SENDER_BALANCE -Int AMOUNT
-           </optInAssetBalance>
-           ...
-         </optInAsset>
-         ...
-       </account>
-       <account>
-         <address> RECEIVER </address>
-         <optInAsset>
-           <optInAssetID>      ASSET_ID       </optInAssetID>
-           <optInAssetBalance> RECEIVER_BALANCE
-                            => RECEIVER_BALANCE +Int AMOUNT
-           </optInAssetBalance>
-           ...
-         </optInAsset>
-         ...
-       </account>
-    requires hasOptedInAsset(ASSET_ID, SENDER)
-     andBool SENDER_BALANCE -Int AMOUNT >=Int 0
-     andBool (getOptInAssetField(AssetFrozen, SENDER, ASSET_ID) ==K 0)
-     andBool hasOptedInAsset(ASSET_ID, RECEIVER)
 ```
 
 * **Asset Freeze**
