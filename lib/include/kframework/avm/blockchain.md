@@ -6,6 +6,7 @@ requires "avm/teal/teal-constants.md"
 requires "avm/teal/teal-fields.md"
 requires "avm/additional-fields.md"
 requires "avm/txn.md"
+requires "constants.md"
 ```
 
 Global Field State Representation
@@ -16,6 +17,7 @@ module GLOBALS
   imports TEAL-CONSTANTS
   imports TEAL-FIELDS
   imports ALGO-TXN
+  imports AVM-CONSTANTS
 ```
 
 *Global Accessors*
@@ -23,9 +25,9 @@ module GLOBALS
 ```k
   syntax TValue ::= getGlobalField(GlobalField) [function]
   // ----------------------------------------------------
-  rule getGlobalField(MinTxnFee)       => 1000
-  rule getGlobalField(MinBalance)      => 100000
-  rule getGlobalField(MaxTxnLife)      => 1000
+  rule getGlobalField(MinTxnFee)       => PARAM_MIN_TXN_FEE
+  rule getGlobalField(MinBalance)      => PARAM_MIN_BALANCE
+  rule getGlobalField(MaxTxnLife)      => PARAM_MAX_TXN_LIFE
   rule getGlobalField(ZeroAddress)     => DecodeAddressString("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ")
   rule getGlobalField(LogicSigVersion) => 2
 ```
@@ -201,14 +203,14 @@ module ALGO-BLOCKCHAIN
     <blockchain>
       <accountsMap>
         <account multiplicity="*" type="Map">
-          <address>    .Bytes  </address>
-          <balance>    0       </balance>
-          <minBalance> 100000  </minBalance> // the default min balance is 0.1 Algo
-          <round>      0       </round>
-          <preRewards> 0       </preRewards>
-          <rewards>    0       </rewards>
-          <status>     0       </status>
-          <key>        .Bytes  </key>
+          <address>    .Bytes             </address>
+          <balance>    0                  </balance>
+          <minBalance> PARAM_MIN_BALANCE  </minBalance> // the default min balance is 0.1 Algo
+          <round>      0                  </round>
+          <preRewards> 0                  </preRewards>
+          <rewards>    0                  </rewards>
+          <status>     0                  </status>
+          <key>        .Bytes             </key>
           <appsCreated/>
           <appsOptedIn/>
           <assetsCreated/>

@@ -1,5 +1,6 @@
 ```k
 requires "avm/blockchain.md"
+requires "avm/constants.md"
 requires "avm/txn.md"
 requires "avm/teal/teal-syntax.md"
 requires "avm/teal/teal-driver.md"
@@ -11,6 +12,7 @@ module AVM-EXECUTION-SYNTAX
   imports INT
   imports LIST
   imports BYTES
+  imports AVM-CONSTANTS
   imports ALGO-BLOCKCHAIN
   imports ALGO-TXN
   imports AVM-CONFIGURATION
@@ -146,9 +148,11 @@ case 1: clear state from own created app
            ...
          </appsCreated>
          <minBalance> MIN_BALANCE => MIN_BALANCE 
-                                -Int (100000 
-                                +Int ((25000 +Int 3500) *Int LOCAL_INTS)
-                                +Int ((25000 +Int 25000) *Int LOCAL_BYTES))
+                                -Int (PARAM_APP_OPTIN_FLAT 
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
+                                  *Int LOCAL_INTS)
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE) 
+                                  *Int LOCAL_BYTES))
          </minBalance>
          ...
        </account>
@@ -168,9 +172,11 @@ case 1: clear state from other's created app
            ...
          </appsOptedIn>
          <minBalance> MIN_BALANCE => MIN_BALANCE 
-                                -Int (100000 
-                                +Int ((25000 +Int 3500) *Int LOCAL_INTS)
-                                +Int ((25000 +Int 25000) *Int LOCAL_BYTES))
+                                -Int (PARAM_APP_OPTIN_FLAT 
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
+                                  *Int LOCAL_INTS)
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE) 
+                                  *Int LOCAL_BYTES))
          </minBalance>
          ...
        </account>
@@ -216,9 +222,11 @@ Delete application
            </app>) => .Bag) ...
          </appsCreated>
          <minBalance> MIN_BALANCE => MIN_BALANCE 
-                                -Int (((1 +Int EXTRA_PAGES) *Int 100000) 
-                                +Int ((25000 +Int 3500) *Int GLOBAL_INTS)
-                                +Int ((25000 +Int 25000) *Int GLOBAL_BYTES))
+                                -Int (((1 +Int EXTRA_PAGES) *Int PARAM_APP_PAGE_FLAT) 
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
+                                  *Int GLOBAL_INTS)
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE) 
+                                  *Int GLOBAL_BYTES))
          </minBalance>
          ...
        </account>
@@ -240,7 +248,7 @@ Close asset account to
            </optInAsset>) => .Bag
            ...
          </assetsOptedIn>
-         <minBalance> MIN_BALANCE => MIN_BALANCE -Int 100000 </minBalance>
+         <minBalance> MIN_BALANCE => MIN_BALANCE -Int PARAM_BYTES_MIN_BALANCE </minBalance>
          ...
        </account>
        <account>
@@ -422,7 +430,7 @@ Create asset
            </optInAsset>
            ASSETS_OPTED_IN
          </assetsOptedIn>
-         <minBalance> MIN_BALANCE => MIN_BALANCE +Int 100000 </minBalance>
+         <minBalance> MIN_BALANCE => MIN_BALANCE +Int PARAM_MIN_BALANCE </minBalance>
          ...
        </account>
        <assetCreator> .Map => (ASSET_ID |-> SENDER) ...</assetCreator>
@@ -505,7 +513,7 @@ transaction by the lack of any asset parameters.""
            </optInAsset>) => .Bag
            ...
          </assetsOptedIn>
-         <minBalance> MIN_BALANCE => MIN_BALANCE -Int 100000 </minBalance>
+         <minBalance> MIN_BALANCE => MIN_BALANCE -Int PARAM_MIN_BALANCE </minBalance>
          ...
        </account>
        <assetCreator> (ASSET_ID |-> CREATOR) => .Map ...</assetCreator>
@@ -630,7 +638,7 @@ Asset opt-in goes through if:
            </optInAsset>
            ASSETS_OPTED_IN
          </assetsOptedIn>
-         <minBalance> MIN_BALANCE => MIN_BALANCE +Int 100000 </minBalance>
+         <minBalance> MIN_BALANCE => MIN_BALANCE +Int PARAM_MIN_BALANCE </minBalance>
          ...
        </account>
     requires assetCreated(ASSET_ID)
@@ -690,9 +698,11 @@ App create
        <account>
          <address> SENDER </address>
          <minBalance> MIN_BALANCE => MIN_BALANCE 
-                                +Int ((1 +Int EXTRA_PAGES) *Int 100000) 
-                                +Int ((25000 +Int 3500) *Int GLOBAL_INTS)
-                                +Int ((25000 +Int 25000) *Int GLOBAL_BYTES)
+                                +Int ((1 +Int EXTRA_PAGES) *Int PARAM_APP_PAGE_FLAT) 
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
+                                  *Int GLOBAL_INTS)
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE)
+                                  *Int GLOBAL_BYTES)
          </minBalance>
          <appsCreated>
            APPS =>
@@ -758,9 +768,11 @@ OptIn
            OPTED_IN_APPS
          </appsOptedIn>
          <minBalance> MIN_BALANCE => MIN_BALANCE 
-                                +Int 100000 
-                                +Int ((25000 +Int 3500) *Int LOCAL_INTS)
-                                +Int ((25000 +Int 25000) *Int LOCAL_BYTES)
+                                +Int PARAM_APP_OPTIN_FLAT
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE)
+                                      *Int LOCAL_INTS)
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE)
+                                      *Int LOCAL_BYTES)
          </minBalance>
          ...
        </account>
@@ -805,9 +817,11 @@ OptIn
            OPTED_IN_APPS
          </appsOptedIn>
          <minBalance> MIN_BALANCE => MIN_BALANCE 
-                                +Int 100000 
-                                +Int ((25000 +Int 3500) *Int LOCAL_INTS)
-                                +Int ((25000 +Int 25000) *Int LOCAL_BYTES)
+                                +Int PARAM_APP_OPTIN_FLAT 
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
+                                  *Int LOCAL_INTS)
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE) 
+                                  *Int LOCAL_BYTES)
          </minBalance>
          ...
        </account>
@@ -846,9 +860,11 @@ OptIn
              OPTED_IN_APPS
            </appsOptedIn>
            <minBalance> MIN_BALANCE => MIN_BALANCE 
-                                  +Int 100000 
-                                  +Int ((25000 +Int 3500) *Int LOCAL_INTS)
-                                  +Int ((25000 +Int 25000) *Int LOCAL_BYTES)
+                                  +Int PARAM_APP_OPTIN_FLAT 
+                                  +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
+                                    *Int LOCAL_INTS)
+                                  +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE) 
+                                    *Int LOCAL_BYTES)
            </minBalance>
            ...
          </account>
