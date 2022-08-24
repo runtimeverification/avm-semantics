@@ -13,12 +13,12 @@ addAssetConfigTx <txID>                0          </txID>
                  <configDefaultFrozen> NoTValue   </configDefaultFrozen>
                  <configUnitName>     "testcoins" </configUnitName>
                  <configAssetName>     "testcoin" </configAssetName>
-                 <configAssetURL>      NoTValue </configAssetURL>
-                 <configMetaDataHash>  NoTValue </configMetaDataHash>
-                 <configManagerAddr>   b"1"     </configManagerAddr>
-                 <configReserveAddr>   NoTValue </configReserveAddr>
-                 <configFreezeAddr>    NoTValue </configFreezeAddr>
-                 <configClawbackAddr>  NoTValue </configClawbackAddr>;
+                 <configAssetURL>      NoTValue   </configAssetURL>
+                 <configMetaDataHash>  NoTValue   </configMetaDataHash>
+                 <configManagerAddr>   b"1"       </configManagerAddr>
+                 <configReserveAddr>   NoTValue   </configReserveAddr>
+                 <configFreezeAddr>    NoTValue   </configFreezeAddr>
+                 <configClawbackAddr>  NoTValue   </configClawbackAddr>;
 
 // Add app
 addAppCallTx <txID> 1 </txID>

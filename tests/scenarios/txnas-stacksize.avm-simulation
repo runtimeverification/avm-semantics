@@ -9,9 +9,11 @@ addAccount <address> b"1" </address> <balance> 10000 </balance>;
 addAppCallTx <txID> 0 </txID>
              <sender>            b"1"        </sender>
              <applicationID>     NoTValue    </applicationID>
-             <onCompletion>      @ NoOp     </onCompletion>
+             <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
-             <applicationArgs> Int2Bytes(1, BE, Unsigned) </applicationArgs>
+             <applicationArgs> 
+                                 Int2Bytes(1, BE, Unsigned) 
+             </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
              <globalNui>         0           </globalNui>

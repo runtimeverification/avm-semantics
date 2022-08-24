@@ -40,7 +40,6 @@ The transaction is initialized first.
          <transactions>
            _ => .Bag
           </transactions>
-          <savedState> _ => (<blockchain> BLOCKCHAIN_STATE </blockchain>) </savedState>
        </txGroup>
        <blockchain> BLOCKCHAIN_STATE </blockchain>
 ```
@@ -99,21 +98,21 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
                                             "<approvalPgmIdx>" Int "</approvalPgmIdx>"
                                             "<clearStatePgmIdx>" Int "</clearStatePgmIdx>"
   //-----------------------------------------------------------
-  rule <k> addAppCallTx <txID>             ID              </txID>
-                        <sender>           SENDER          </sender>
-                        <applicationID>    APP_ID          </applicationID>
-                        <onCompletion>     ON_COMPLETION   </onCompletion>
-                        <accounts>         ACCOUNTS        </accounts>
-                        <applicationArgs>  ARGS            </applicationArgs>
-                        <foreignApps>      APPS            </foreignApps>
-                        <foreignAssets>    ASSETS          </foreignAssets>
-                        <globalNui>        GLOBAL_INTS     </globalNui>
-                        <globalNbs>        GLOBAL_BYTES     </globalNbs>
-                        <localNui>        LOCAL_INTS     </localNui>
-                        <localNbs>        LOCAL_BYTES     </localNbs>
-                        <extraProgramPages> EXTRA_PAGES   </extraProgramPages>
-                        <approvalPgmIdx>   APPROVAL_IDX    </approvalPgmIdx>
-                        <clearStatePgmIdx> CLEAR_STATE_IDX </clearStatePgmIdx>
+  rule <k> addAppCallTx <txID>              ID              </txID>
+                        <sender>            SENDER          </sender>
+                        <applicationID>     APP_ID          </applicationID>
+                        <onCompletion>      ON_COMPLETION   </onCompletion>
+                        <accounts>          ACCOUNTS        </accounts>
+                        <applicationArgs>   ARGS            </applicationArgs>
+                        <foreignApps>       APPS            </foreignApps>
+                        <foreignAssets>     ASSETS          </foreignAssets>
+                        <globalNui>         GLOBAL_INTS     </globalNui>
+                        <globalNbs>         GLOBAL_BYTES    </globalNbs>
+                        <localNui>          LOCAL_INTS      </localNui>
+                        <localNbs>          LOCAL_BYTES     </localNbs>
+                        <extraProgramPages> EXTRA_PAGES     </extraProgramPages>
+                        <approvalPgmIdx>    APPROVAL_IDX    </approvalPgmIdx>
+                        <clearStatePgmIdx>  CLEAR_STATE_IDX </clearStatePgmIdx>
        => #pushTxnBack(<txID> ID </txID>)
            ...
        </k>
@@ -122,25 +121,25 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
          <transaction>
            <txID> ID </txID>
            <txHeader>
-             <sender>      SENDER </sender>
-             <txType>      "appl" </txType>
-             <typeEnum>    @ appl </typeEnum>
-             <group>       ID     </group> // for testing, we make these the same as sequential TxIDs
+             <sender>   SENDER </sender>
+             <txType>   "appl" </txType>
+             <typeEnum> @ appl </typeEnum>
+             <group>    ID     </group> // for testing, we make these the same as sequential TxIDs
              ...                           // other fields will receive default values
            </txHeader>
           <appCallTxFields>
-            <applicationID>   APP_ID        </applicationID>
-            <onCompletion>    ON_COMPLETION </onCompletion>
-            <accounts>        ACCOUNTS      </accounts>
-            <applicationArgs> ARGS          </applicationArgs>
-            <foreignApps>     APPS          </foreignApps>
-            <foreignAssets>   ASSETS        </foreignAssets>
-            <globalNui>        GLOBAL_INTS     </globalNui>
-            <globalNbs>        GLOBAL_BYTES     </globalNbs>
-            <localNui>        LOCAL_INTS     </localNui>
-            <localNbs>        LOCAL_BYTES     </localNbs>
+            <applicationID>     APP_ID        </applicationID>
+            <onCompletion>      ON_COMPLETION </onCompletion>
+            <accounts>          ACCOUNTS      </accounts>
+            <applicationArgs>   ARGS          </applicationArgs>
+            <foreignApps>       APPS          </foreignApps>
+            <foreignAssets>     ASSETS        </foreignAssets>
+            <globalNui>         GLOBAL_INTS   </globalNui>
+            <globalNbs>         GLOBAL_BYTES  </globalNbs>
+            <localNui>          LOCAL_INTS    </localNui>
+            <localNbs>          LOCAL_BYTES   </localNbs>
             <extraProgramPages> EXTRA_PAGES   </extraProgramPages>
-            <approvalProgram> getTealByIndex(TEAL_PGMS_LIST, APPROVAL_IDX) </approvalProgram>
+            <approvalProgram>   getTealByIndex(TEAL_PGMS_LIST, APPROVAL_IDX) </approvalProgram>
             <clearStateProgram> getTealByIndex(TEAL_PGMS_LIST, CLEAR_STATE_IDX) </clearStateProgram>
             ...                            // other fields will receive default values
           </appCallTxFields>
@@ -243,20 +242,20 @@ The asset initialization rule must be used *after* initializing accounts.
                                                 ConfigManagerAddrCell ConfigReserveAddrCell
                                                 ConfigFreezeAddrCell ConfigClawbackAddrCell
   //-----------------------------------------------------------
-  rule <k> addAssetConfigTx <txID>                TXN_ID   </txID>
-                            <sender>              SENDER   </sender>
-                            <configAsset>         ASSET_ID </configAsset>
-                            <configTotal>         TOTAL    </configTotal>
-                            <configDecimals>      DECIMALS </configDecimals>
-                            <configDefaultFrozen> FROZEN   </configDefaultFrozen>
+  rule <k> addAssetConfigTx <txID>                TXN_ID        </txID>
+                            <sender>              SENDER        </sender>
+                            <configAsset>         ASSET_ID      </configAsset>
+                            <configTotal>         TOTAL         </configTotal>
+                            <configDecimals>      DECIMALS      </configDecimals>
+                            <configDefaultFrozen> FROZEN        </configDefaultFrozen>
                             <configUnitName>      UNIT_NAME     </configUnitName>
-                            <configAssetName>     NAME     </configAssetName>
-                            <configAssetURL>      ASSET_URL </configAssetURL>
+                            <configAssetName>     NAME          </configAssetName>
+                            <configAssetURL>      ASSET_URL     </configAssetURL>
                             <configMetaDataHash>  METADATA_HASH </configMetaDataHash>
-                            <configManagerAddr>   MGR_ADDR </configManagerAddr>
-                            <configReserveAddr>   RES_ADDR </configReserveAddr>
-                            <configFreezeAddr>    FRZ_ADDR </configFreezeAddr>
-                            <configClawbackAddr>  CLB_ADDR </configClawbackAddr>
+                            <configManagerAddr>   MGR_ADDR      </configManagerAddr>
+                            <configReserveAddr>   RES_ADDR      </configReserveAddr>
+                            <configFreezeAddr>    FRZ_ADDR      </configFreezeAddr>
+                            <configClawbackAddr>  CLB_ADDR      </configClawbackAddr>
        => #pushTxnBack(<txID> TXN_ID </txID>)
            ...
        </k>
@@ -274,17 +273,17 @@ The asset initialization rule must be used *after* initializing accounts.
            <assetConfigTxFields>
              <configAsset> ASSET_ID </configAsset>           // the asset ID
              <assetParams>
-               <configTotal>         TOTAL    </configTotal>
-               <configDecimals>      DECIMALS </configDecimals>
-               <configDefaultFrozen> FROZEN   </configDefaultFrozen>
+               <configTotal>         TOTAL         </configTotal>
+               <configDecimals>      DECIMALS      </configDecimals>
+               <configDefaultFrozen> FROZEN        </configDefaultFrozen>
                <configUnitName>      UNIT_NAME     </configUnitName>
-               <configAssetName>     NAME     </configAssetName>
-               <configAssetURL>      ASSET_URL </configAssetURL>
-               <configManagerAddr>   MGR_ADDR   </configManagerAddr>
+               <configAssetName>     NAME          </configAssetName>
+               <configAssetURL>      ASSET_URL     </configAssetURL>
+               <configManagerAddr>   MGR_ADDR      </configManagerAddr>
                <configMetaDataHash>  METADATA_HASH </configMetaDataHash>
-               <configReserveAddr>   RES_ADDR </configReserveAddr>
-               <configFreezeAddr>    FRZ_ADDR </configFreezeAddr>
-               <configClawbackAddr>  CLB_ADDR </configClawbackAddr>
+               <configReserveAddr>   RES_ADDR      </configReserveAddr>
+               <configFreezeAddr>    FRZ_ADDR      </configFreezeAddr>
+               <configClawbackAddr>  CLB_ADDR      </configClawbackAddr>
              </assetParams>
            </assetConfigTxFields>
          </transaction>
@@ -300,13 +299,13 @@ The asset initialization rule must be used *after* initializing accounts.
                                                   AssetASenderCell AssetReceiverCell AssetCloseToCell
   //-----------------------------------------------------------------------------------------------
 
-  rule <k> addAssetTransferTx <txID>          TXN_ID    </txID>
-                              <sender>        SENDER   </sender>
-                              <xferAsset>     ASSET_ID </xferAsset>
-                              <assetAmount>   AMOUNT   </assetAmount>
-                              <assetASender>   CLAWBACK_FROM   </assetASender>
-                              <assetReceiver> RECEIVER </assetReceiver>
-                              <assetCloseTo>  CLOSE_TO </assetCloseTo>
+  rule <k> addAssetTransferTx <txID>          TXN_ID        </txID>
+                              <sender>        SENDER        </sender>
+                              <xferAsset>     ASSET_ID      </xferAsset>
+                              <assetAmount>   AMOUNT        </assetAmount>
+                              <assetASender>  CLAWBACK_FROM </assetASender>
+                              <assetReceiver> RECEIVER      </assetReceiver>
+                              <assetCloseTo>  CLOSE_TO      </assetCloseTo>
            => #pushTxnBack(<txID> TXN_ID </txID>)
            ...
        </k>
@@ -315,18 +314,18 @@ The asset initialization rule must be used *after* initializing accounts.
          <transaction>
            <txID> TXN_ID </txID>
            <txHeader>
-             <sender>      SENDER </sender>
-             <txType>      "axfer" </txType>
-             <typeEnum>    @ axfer </typeEnum>
-             <group>       TXN_ID </group> // for testing, we make these the same as sequential TxIDs
-             ...                           // other fields will receive default values
+             <sender>   SENDER  </sender>
+             <txType>   "axfer" </txType>
+             <typeEnum> @ axfer </typeEnum>
+             <group>    TXN_ID  </group> // for testing, we make these the same as sequential TxIDs
+             ...                         // other fields will receive default values
            </txHeader>
            <assetTransferTxFields>
-             <xferAsset>     ASSET_ID </xferAsset>
-             <assetAmount>   AMOUNT   </assetAmount>
-             <assetASender>   CLAWBACK_FROM   </assetASender>
-             <assetReceiver> RECEIVER </assetReceiver>
-             <assetCloseTo>  CLOSE_TO </assetCloseTo>
+             <xferAsset>     ASSET_ID      </xferAsset>
+             <assetAmount>   AMOUNT        </assetAmount>
+             <assetASender>  CLAWBACK_FROM </assetASender>
+             <assetReceiver> RECEIVER      </assetReceiver>
+             <assetCloseTo>  CLOSE_TO      </assetCloseTo>
              ...
            </assetTransferTxFields>
          </transaction>

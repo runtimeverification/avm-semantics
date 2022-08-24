@@ -29,7 +29,7 @@ addAppCallTx <txID> 1 </txID>
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   2           </applicationArgs>
-             <foreignApps>       0 </foreignApps>
+             <foreignApps>       0           </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
              <globalNui>         0           </globalNui>
              <globalNbs>         0           </globalNbs>

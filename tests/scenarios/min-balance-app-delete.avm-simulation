@@ -10,7 +10,7 @@ addAccount <address> b"2" </address> <balance> 100000 </balance>;
 addAppCallTx <txID> 0 </txID>
              <sender>            b"1"        </sender>
              <applicationID>     NoTValue    </applicationID>
-             <onCompletion>      @ OptIn      </onCompletion>
+             <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
@@ -42,36 +42,36 @@ addAppCallTx <txID> 1 </txID>
 
 // Delete app 1
 addAppCallTx <txID> 2 </txID>
-             <sender>            b"2"        </sender>
-             <applicationID>     1    </applicationID>
-             <onCompletion>      @ DeleteApplication      </onCompletion>
-             <accounts>          .TValueList </accounts>
-             <applicationArgs>   .TValueList </applicationArgs>
-             <foreignApps>       .TValueList </foreignApps>
-             <foreignAssets>     .TValueList </foreignAssets>
-             <globalNui>         NoTValue           </globalNui>
-             <globalNbs>         NoTValue           </globalNbs>
-             <localNui>          NoTValue           </localNui>
-             <localNbs>          NoTValue           </localNbs>
-             <extraProgramPages> 0                  </extraProgramPages>
-             <approvalPgmIdx>    0                  </approvalPgmIdx>
-             <clearStatePgmIdx>  0                  </clearStatePgmIdx>;
+             <sender>            b"2"                </sender>
+             <applicationID>     1                   </applicationID>
+             <onCompletion>      @ DeleteApplication </onCompletion>
+             <accounts>          .TValueList         </accounts>
+             <applicationArgs>   .TValueList         </applicationArgs>
+             <foreignApps>       .TValueList         </foreignApps>
+             <foreignAssets>     .TValueList         </foreignAssets>
+             <globalNui>         NoTValue            </globalNui>
+             <globalNbs>         NoTValue            </globalNbs>
+             <localNui>          NoTValue            </localNui>
+             <localNbs>          NoTValue            </localNbs>
+             <extraProgramPages> 0                   </extraProgramPages>
+             <approvalPgmIdx>    0                   </approvalPgmIdx>
+             <clearStatePgmIdx>  0                   </clearStatePgmIdx>;
 
 // Call app 0 from b"2" to check min balance
 addAppCallTx <txID> 3 </txID>
-             <sender>            b"2"        </sender>
-             <applicationID>     0    </applicationID>
-             <onCompletion>      @ DeleteApplication      </onCompletion>
-             <accounts>          .TValueList </accounts>
-             <applicationArgs>   .TValueList </applicationArgs>
-             <foreignApps>       .TValueList </foreignApps>
-             <foreignAssets>     .TValueList </foreignAssets>
-             <globalNui>         NoTValue           </globalNui>
-             <globalNbs>         NoTValue           </globalNbs>
-             <localNui>          NoTValue           </localNui>
-             <localNbs>          NoTValue           </localNbs>
-             <extraProgramPages> 0                  </extraProgramPages>
-             <approvalPgmIdx>    0                  </approvalPgmIdx>
-             <clearStatePgmIdx>  0                  </clearStatePgmIdx>;
+             <sender>            b"2"                </sender>
+             <applicationID>     0                   </applicationID>
+             <onCompletion>      @ DeleteApplication </onCompletion>
+             <accounts>          .TValueList         </accounts>
+             <applicationArgs>   .TValueList         </applicationArgs>
+             <foreignApps>       .TValueList         </foreignApps>
+             <foreignAssets>     .TValueList         </foreignAssets>
+             <globalNui>         NoTValue            </globalNui>
+             <globalNbs>         NoTValue            </globalNbs>
+             <localNui>          NoTValue            </localNui>
+             <localNbs>          NoTValue            </localNbs>
+             <extraProgramPages> 0                   </extraProgramPages>
+             <approvalPgmIdx>    0                   </approvalPgmIdx>
+             <clearStatePgmIdx>  0                   </clearStatePgmIdx>;
 
 #initGlobals(); #evalTxGroup(); .AS

@@ -5,20 +5,20 @@ addAccount <address> b"1" </address> <balance> 100000 </balance>;
 
 #initTxGroup();
 
-addAssetConfigTx <txID>                0          </txID>
-                 <sender>              b"1"       </sender>
-                 <configAsset>         NoTValue   </configAsset>
-                 <configTotal>         12345      </configTotal>
-                 <configDecimals>      0          </configDecimals>
-                 <configDefaultFrozen> 0          </configDefaultFrozen>
-                 <configUnitName>     b"testcoins" </configUnitName>
-                 <configAssetName>     b"testcoin" </configAssetName>
-                 <configAssetURL>      NoTValue </configAssetURL>
-                 <configMetaDataHash>  NoTValue </configMetaDataHash>
-                 <configManagerAddr>   b"1" </configManagerAddr>
-                 <configReserveAddr>   NoTValue </configReserveAddr>
-                 <configFreezeAddr>    NoTValue </configFreezeAddr>
-                 <configClawbackAddr>  NoTValue </configClawbackAddr>;
+addAssetConfigTx <txID>                0            </txID>
+                 <sender>              b"1"         </sender>
+                 <configAsset>         NoTValue     </configAsset>
+                 <configTotal>         12345        </configTotal>
+                 <configDecimals>      0            </configDecimals>
+                 <configDefaultFrozen> 0            </configDefaultFrozen>
+                 <configUnitName>      b"testcoins" </configUnitName>
+                 <configAssetName>     b"testcoin"  </configAssetName>
+                 <configAssetURL>      NoTValue     </configAssetURL>
+                 <configMetaDataHash>  NoTValue     </configMetaDataHash>
+                 <configManagerAddr>   b"1"         </configManagerAddr>
+                 <configReserveAddr>   NoTValue     </configReserveAddr>
+                 <configFreezeAddr>    NoTValue     </configFreezeAddr>
+                 <configClawbackAddr>  NoTValue     </configClawbackAddr>;
 
 // Add app
 addAppCallTx <txID> 1 </txID>

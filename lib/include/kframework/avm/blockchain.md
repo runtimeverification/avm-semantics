@@ -106,7 +106,7 @@ module APPLICATIONS
         <globalState>
           <globalInts>    NoTValue </globalInts>
           <globalBytes>   NoTValue </globalBytes>
-          <globalStorage> .Map    </globalStorage>
+          <globalStorage> .Map     </globalStorage>
         </globalState>
         <localState>
           <localInts>     NoTValue </localInts>
@@ -233,7 +233,7 @@ Accessor functions
 
 ```k
   syntax MaybeTValue ::= getAccountParamsField(AccountParamsField, TValue)  [function, functional]
-  //--------------------------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
   rule [[ getAccountParamsField(AcctBalance, ADDR) => BAL ]]
        <account>
          <address> ADDR </address>

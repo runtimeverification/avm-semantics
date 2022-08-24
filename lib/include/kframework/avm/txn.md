@@ -187,8 +187,6 @@ module ALGO-TXN
             <assetFreezeTxFields/>
           </transaction>
         </transactions>
-        // State of the blockchain before this transaction group was executed
-        <savedState> . </savedState>
       </txGroup>
 ```
 

@@ -7,20 +7,20 @@ addAccount <address> b"2" </address> <balance> 100000 </balance>;
 #initTxGroup();
 
 // Create asset from b"2"
-addAssetConfigTx <txID>                0          </txID>
-                 <sender>              b"2"       </sender>
-                 <configAsset>         NoTValue   </configAsset>
-                 <configTotal>         12345      </configTotal>
-                 <configDecimals>      0          </configDecimals>
-                 <configDefaultFrozen> 0          </configDefaultFrozen>
-                 <configUnitName>     b"testcoins" </configUnitName>
-                 <configAssetName>     b"testcoin" </configAssetName>
-                 <configAssetURL>      NoTValue </configAssetURL>
-                 <configMetaDataHash>  NoTValue </configMetaDataHash>
-                 <configManagerAddr>   b"2" </configManagerAddr>
-                 <configReserveAddr>   NoTValue </configReserveAddr>
-                 <configFreezeAddr>    NoTValue </configFreezeAddr>
-                 <configClawbackAddr>  NoTValue </configClawbackAddr>;
+addAssetConfigTx <txID>                0            </txID>
+                 <sender>              b"2"         </sender>
+                 <configAsset>         NoTValue     </configAsset>
+                 <configTotal>         12345        </configTotal>
+                 <configDecimals>      0            </configDecimals>
+                 <configDefaultFrozen> 0            </configDefaultFrozen>
+                 <configUnitName>      b"testcoins" </configUnitName>
+                 <configAssetName>     b"testcoin"  </configAssetName>
+                 <configAssetURL>      NoTValue     </configAssetURL>
+                 <configMetaDataHash>  NoTValue     </configMetaDataHash>
+                 <configManagerAddr>   b"2"         </configManagerAddr>
+                 <configReserveAddr>   NoTValue     </configReserveAddr>
+                 <configFreezeAddr>    NoTValue     </configFreezeAddr>
+                 <configClawbackAddr>  NoTValue     </configClawbackAddr>;
 
 // Add app and opt in b"2"
 addAppCallTx <txID> 1 </txID>
@@ -40,12 +40,12 @@ addAppCallTx <txID> 1 </txID>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 // Opt b"1" into asset
-addAssetTransferTx <txID>          2    </txID>
-                   <sender>        b"1" </sender>
-                   <xferAsset>     0    </xferAsset>
-                   <assetAmount>   0    </assetAmount>
-                   <assetASender>  NoTValue   </assetASender>
-                   <assetReceiver> b"1" </assetReceiver>
+addAssetTransferTx <txID>          2        </txID>
+                   <sender>        b"1"     </sender>
+                   <xferAsset>     0        </xferAsset>
+                   <assetAmount>   0        </assetAmount>
+                   <assetASender>  NoTValue </assetASender>
+                   <assetReceiver> b"1"     </assetReceiver>
                    <assetCloseTo>  NoTValue </assetCloseTo>;
 
 // Call main code from b"1"

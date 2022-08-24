@@ -193,7 +193,7 @@ Update application programs
 
 ```k
   syntax AlgorandCommand ::= #updatePrograms( TValue, KItem, KItem )
-  //------------------------------------------------------
+  //----------------------------------------------------------------
 
   rule <k> #updatePrograms(APP_ID, APPROVAL_PGM, CLEAR_STATE_PGM) => . ...</k>
        <app>
@@ -236,7 +236,7 @@ Close asset account to
 
 ```k
   syntax AlgorandCommand ::= #closeTo(TValue, TValue, TValue)
-  //-------------------------------------------------
+  //---------------------------------------------------------
   rule <k> #closeTo(ASSET_ID, FROM, CLOSE_TO) => . ...</k>
        <account>
          <address> FROM </address>
@@ -248,7 +248,7 @@ Close asset account to
            </optInAsset>) => .Bag
            ...
          </assetsOptedIn>
-         <minBalance> MIN_BALANCE => MIN_BALANCE -Int PARAM_BYTES_MIN_BALANCE </minBalance>
+         <minBalance> MIN_BALANCE => MIN_BALANCE -Int PARAM_MIN_BALANCE </minBalance>
          ...
        </account>
        <account>
@@ -266,7 +266,7 @@ Add asset to account
 
 ```k
   syntax AlgorandCommand ::= #giveAsset(TValue, TValue, TValue)
-  //-------------------------------------------------------------------
+  //-----------------------------------------------------------
   rule <k> #giveAsset(ASSET_ID, ACCOUNT, AMOUNT) => . ...</k>
        <account>
          <address> ACCOUNT </address>
@@ -301,10 +301,10 @@ TODO: address contact creation.
        <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
        <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
        <currentTx>           TXN_ID                            </currentTx>
-       <currentApplicationID> _ => APP_ID                    </currentApplicationID>
+       <currentApplicationID> _ => APP_ID                      </currentApplicationID>
        <app>
-         <appID>       APP_ID       </appID>
-         <approvalPgm> PGM </approvalPgm>
+         <appID>       APP_ID </appID>
+         <approvalPgm> PGM    </approvalPgm>
          ...
        </app>
    requires APP_ID ==K getTxnField(TXN_ID, ApplicationID)
@@ -444,7 +444,7 @@ Modify asset
        <transaction>
          <txID>                TXN_ID          </txID>
          <sender>              SENDER          </sender>
-         <configAsset>         ASSET_ID:TValue        </configAsset>
+         <configAsset>         ASSET_ID:TValue </configAsset>
          <configManagerAddr>   MANAGER_ADDR    </configManagerAddr>
          <configReserveAddr>   RESERVE_ADDR    </configReserveAddr>
          <configFreezeAddr>    FREEZE_ADDR     </configFreezeAddr>
@@ -453,13 +453,6 @@ Modify asset
        </transaction>
        <asset>
          <assetID>            ASSET_ID               </assetID>
-         <assetName>          _                      </assetName>
-         <assetUnitName>      _                      </assetUnitName>
-         <assetTotal>         _                      </assetTotal>
-         <assetDecimals>      _                      </assetDecimals>
-         <assetDefaultFrozen> _                      </assetDefaultFrozen>
-         <assetURL>           _                      </assetURL>
-         <assetMetaDataHash>  _                      </assetMetaDataHash>
          <assetManagerAddr>   SENDER => MANAGER_ADDR </assetManagerAddr>
          <assetReserveAddr>   _ => RESERVE_ADDR      </assetReserveAddr>
          <assetFreezeAddr>    _ => FREEZE_ADDR       </assetFreezeAddr>
@@ -487,28 +480,28 @@ transaction by the lack of any asset parameters.""
        <transaction>
          <txID>                TXN_ID          </txID>
          <sender>              SENDER          </sender>
-         <configAsset>         ASSET_ID:TValue        </configAsset>
-         <configManagerAddr>   NoTValue    </configManagerAddr>
-         <configReserveAddr>   NoTValue    </configReserveAddr>
-         <configFreezeAddr>    NoTValue     </configFreezeAddr>
-         <configClawbackAddr>  NoTValue      </configClawbackAddr>
+         <configAsset>         ASSET_ID:TValue </configAsset>
+         <configManagerAddr>   NoTValue        </configManagerAddr>
+         <configReserveAddr>   NoTValue        </configReserveAddr>
+         <configFreezeAddr>    NoTValue        </configFreezeAddr>
+         <configClawbackAddr>  NoTValue        </configClawbackAddr>
          ...
        </transaction>
        <account>
          <address> CREATOR </address>
          <assetsCreated>
            (<asset>
-             <assetID>            ASSET_ID               </assetID>
-             <assetManagerAddr>   SENDER </assetManagerAddr>
-             <assetTotal>         BALANCE </assetTotal>
+             <assetID>            ASSET_ID </assetID>
+             <assetManagerAddr>   SENDER   </assetManagerAddr>
+             <assetTotal>         BALANCE  </assetTotal>
              ...
            </asset>) => .Bag
            ...
          </assetsCreated>
          <assetsOptedIn>
            (<optInAsset>
-             <optInAssetID> ASSET_ID </optInAssetID>
-             <optInAssetBalance> BALANCE </optInAssetBalance>
+             <optInAssetID>      ASSET_ID </optInAssetID>
+             <optInAssetBalance> BALANCE  </optInAssetBalance>
              ...
            </optInAsset>) => .Bag
            ...
@@ -656,11 +649,11 @@ Asset opt-in goes through if:
        </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
-         <txID>          TXN_ID   </txID>
-         <sender>        SENDER   </sender>
-         <xferAsset>     ASSET_ID </xferAsset>
-         <assetReceiver> RECEIVER </assetReceiver>
-         <assetAmount>   AMOUNT   </assetAmount>
+         <txID>          TXN_ID          </txID>
+         <sender>        SENDER          </sender>
+         <xferAsset>     ASSET_ID        </xferAsset>
+         <assetReceiver> RECEIVER        </assetReceiver>
+         <assetAmount>   AMOUNT          </assetAmount>
          <assetCloseTo>  CLOSE_TO:TValue </assetCloseTo>
          ...
        </transaction>
@@ -683,16 +676,16 @@ App create
   rule <k> #executeTxn(@appl) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
-         <txID>               TXN_ID             </txID>
-         <sender>             SENDER             </sender>
-         <applicationID>      NoTValue => APP_ID </applicationID>
-         <approvalProgram>    APPROVAL_PGM       </approvalProgram>
-         <clearStateProgram>  CLEAR_STATE_PGM    </clearStateProgram>
-         <globalNui>          GLOBAL_INTS        </globalNui>
-         <globalNbs>          GLOBAL_BYTES       </globalNbs>
-         <localNui>           LOCAL_INTS         </localNui>
-         <localNbs>           LOCAL_BYTES        </localNbs>
-         <extraProgramPages>   EXTRA_PAGES        </extraProgramPages>
+         <txID>              TXN_ID             </txID>
+         <sender>            SENDER             </sender>
+         <applicationID>     NoTValue => APP_ID </applicationID>
+         <approvalProgram>   APPROVAL_PGM       </approvalProgram>
+         <clearStateProgram> CLEAR_STATE_PGM    </clearStateProgram>
+         <globalNui>         GLOBAL_INTS        </globalNui>
+         <globalNbs>         GLOBAL_BYTES       </globalNbs>
+         <localNui>          LOCAL_INTS         </localNui>
+         <localNbs>          LOCAL_BYTES        </localNbs>
+         <extraProgramPages> EXTRA_PAGES        </extraProgramPages>
          ...
        </transaction>
        <account>
@@ -730,13 +723,13 @@ NoOp
   rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
-         <txID>          TXN_ID   </txID>
+         <txID>          TXN_ID        </txID>
          <applicationID> APP_ID:TValue </applicationID>
-         <onCompletion> @ NoOp </onCompletion>
+         <onCompletion>  @ NoOp        </onCompletion>
          ...
        </transaction>
        <app>
-         <appID> APP_ID </appID>
+         <appID>       APP_ID       </appID>
          <approvalPgm> APPROVAL_PGM </approvalPgm>
          ...
        </app>
@@ -751,10 +744,10 @@ OptIn
   rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
-         <txID>          TXN_ID   </txID>
-         <sender>        SENDER   </sender>
-         <applicationID> APP_ID </applicationID>
-         <onCompletion> @ OptIn </onCompletion>
+         <txID>          TXN_ID  </txID>
+         <sender>        SENDER  </sender>
+         <applicationID> APP_ID  </applicationID>
+         <onCompletion>  @ OptIn </onCompletion>
          ...
        </transaction>
        <account>
@@ -762,8 +755,8 @@ OptIn
          <appsOptedIn>
            OPTED_IN_APPS =>
            <optInApp>
-             <optInAppID> APP_ID </optInAppID>
-             <localStorage> .Map </localStorage>
+             <optInAppID>   APP_ID </optInAppID>
+             <localStorage> .Map   </localStorage>
            </optInApp>
            OPTED_IN_APPS
          </appsOptedIn>
@@ -779,8 +772,8 @@ OptIn
        <app>
          <appID> APP_ID </appID>
          <approvalPgm> APPROVAL_PGM </approvalPgm>
-         <localInts>     LOCAL_INTS      </localInts>
-         <localBytes>    LOCAL_BYTES     </localBytes>
+         <localInts>   LOCAL_INTS   </localInts>
+         <localBytes>  LOCAL_BYTES  </localBytes>
          ...
        </app>
      requires notBool hasOptedInApp(APP_ID, SENDER)
@@ -790,20 +783,20 @@ OptIn
   rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
-         <txID>          TXN_ID   </txID>
-         <sender>        SENDER   </sender>
-         <applicationID> APP_ID </applicationID>
-         <onCompletion> @ OptIn </onCompletion>
+         <txID>          TXN_ID  </txID>
+         <sender>        SENDER  </sender>
+         <applicationID> APP_ID  </applicationID>
+         <onCompletion>  @ OptIn </onCompletion>
          ...
        </transaction>
        <account>
          <address> SENDER </address>
          <appsCreated>
            <app>
-             <appID> APP_ID </appID>
+             <appID>       APP_ID       </appID>
              <approvalPgm> APPROVAL_PGM </approvalPgm>
-             <localInts>     LOCAL_INTS      </localInts>
-             <localBytes>    LOCAL_BYTES     </localBytes>
+             <localInts>   LOCAL_INTS   </localInts>
+             <localBytes>  LOCAL_BYTES  </localBytes>
              ...
            </app>
            ...
@@ -832,10 +825,10 @@ OptIn
   rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
-         <txID>          TXN_ID   </txID>
-         <sender>        SENDER   </sender>
-         <applicationID> APP_ID </applicationID>
-         <onCompletion> @ OptIn </onCompletion>
+         <txID>          TXN_ID  </txID>
+         <sender>        SENDER  </sender>
+         <applicationID> APP_ID  </applicationID>
+         <onCompletion>  @ OptIn </onCompletion>
          ...
        </transaction>
          <accountsMap>
@@ -843,10 +836,10 @@ OptIn
            <address> SENDER </address>
            <appsCreated>
              <app>
-               <appID> APP_ID </appID>
+               <appID>       APP_ID       </appID>
                <approvalPgm> APPROVAL_PGM </approvalPgm>
-               <localInts>     LOCAL_INTS      </localInts>
-               <localBytes>    LOCAL_BYTES     </localBytes>
+               <localInts>   LOCAL_INTS   </localInts>
+               <localBytes>  LOCAL_BYTES  </localBytes>
                ...
              </app>
              ...
@@ -854,8 +847,8 @@ OptIn
            <appsOptedIn>
              OPTED_IN_APPS =>
              <optInApp>
-               <optInAppID> APP_ID </optInAppID>
-               <localStorage> .Map </localStorage>
+               <optInAppID>   APP_ID </optInAppID>
+               <localStorage> .Map   </localStorage>
              </optInApp>
              OPTED_IN_APPS
            </appsOptedIn>
@@ -885,14 +878,14 @@ CloseOut
        </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
-         <txID>          TXN_ID   </txID>
+         <txID>          TXN_ID        </txID>
          <applicationID> APP_ID:TValue </applicationID>
-         <sender>        SENDER   </sender>
-         <onCompletion> @ CloseOut </onCompletion>
+         <sender>        SENDER        </sender>
+         <onCompletion>  @ CloseOut    </onCompletion>
          ...
        </transaction>
        <app>
-         <appID> APP_ID </appID>
+         <appID>       APP_ID       </appID>
          <approvalPgm> APPROVAL_PGM </approvalPgm>
          ...
        </app>
@@ -911,14 +904,14 @@ TODO make sure `#clearState` runs even when a panic is generated
        </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
-         <txID>          TXN_ID   </txID>
+         <txID>          TXN_ID        </txID>
          <applicationID> APP_ID:TValue </applicationID>
-         <sender>        SENDER   </sender>
-         <onCompletion> @ ClearState </onCompletion>
+         <sender>        SENDER        </sender>
+         <onCompletion> @ ClearState   </onCompletion>
          ...
        </transaction>
        <app>
-         <appID> APP_ID </appID>
+         <appID>         APP_ID          </appID>
          <clearStatePgm> CLEAR_STATE_PGM </clearStatePgm>
          ...
        </app>
@@ -935,15 +928,15 @@ UpdateApplication
        </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
-         <txID>          TXN_ID   </txID>
-         <applicationID> APP_ID:TValue </applicationID>
-         <onCompletion> @ UpdateApplication </onCompletion>
-         <approvalProgram>    NEW_APPROVAL_PGM       </approvalProgram>
-         <clearStateProgram>  NEW_CLEAR_STATE_PGM    </clearStateProgram>
+         <txID>              TXN_ID              </txID>
+         <applicationID>     APP_ID:TValue       </applicationID>
+         <onCompletion>      @ UpdateApplication </onCompletion>
+         <approvalProgram>   NEW_APPROVAL_PGM    </approvalProgram>
+         <clearStateProgram> NEW_CLEAR_STATE_PGM </clearStateProgram>
          ...
        </transaction>
        <app>
-         <appID> APP_ID </appID>
+         <appID>       APP_ID       </appID>
          <approvalPgm> APPROVAL_PGM </approvalPgm>
          ...
        </app>
@@ -960,13 +953,13 @@ DeleteApplication
        </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
-         <txID>          TXN_ID   </txID>
-         <applicationID> APP_ID:TValue </applicationID>
-         <onCompletion> @ DeleteApplication </onCompletion>
+         <txID>          TXN_ID              </txID>
+         <applicationID> APP_ID:TValue       </applicationID>
+         <onCompletion>  @ DeleteApplication </onCompletion>
          ...
        </transaction>
        <app>
-         <appID> APP_ID </appID>
+         <appID>       APP_ID       </appID>
          <approvalPgm> APPROVAL_PGM </approvalPgm>
          ...
        </app>

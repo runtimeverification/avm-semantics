@@ -24,37 +24,37 @@ addAppCallTx <txID> 0 </txID>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 // Opt in b"2"
-addAppCallTx <txID> 1 </txID>
-             <sender> b"2" </sender>
-             <applicationID> 0 </applicationID>
-             <onCompletion> @ OptIn </onCompletion>
-             <accounts> .TValueList </accounts>
-             <applicationArgs> .TValueList </applicationArgs>
-             <foreignApps> .TValueList </foreignApps>
-             <foreignAssets> .TValueList </foreignAssets>
-             <globalNui> NoTValue </globalNui>
-             <globalNbs> NoTValue </globalNbs>
-             <localNui> NoTValue </localNui>
-             <localNbs> NoTValue </localNbs>
-             <extraProgramPages> 0 </extraProgramPages>
-             <approvalPgmIdx> 0 </approvalPgmIdx>
-             <clearStatePgmIdx> 0 </clearStatePgmIdx>;
+addAppCallTx <txID>              1           </txID>
+             <sender>            b"2"        </sender>
+             <applicationID>     0           </applicationID>
+             <onCompletion>      @ OptIn     </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   .TValueList </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         NoTValue    </globalNui>
+             <globalNbs>         NoTValue    </globalNbs>
+             <localNui>          NoTValue    </localNui>
+             <localNbs>          NoTValue    </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  0           </clearStatePgmIdx>;
 
-addPaymentTx <txID>     2       </txID>
-             <sender>   b"1" </sender>
-             <receiver> b"2" </receiver>
+addPaymentTx <txID>     2     </txID>
+             <sender>   b"1"  </sender>
+             <receiver> b"2"  </receiver>
              <amount>   50000 </amount>;
 
 addPaymentTx <txID>     3       </txID>
-             <sender>   b"2" </sender>
-             <receiver> b"1" </receiver>
-             <amount>   50005 </amount>;
+             <sender>   b"2"    </sender>
+             <receiver> b"1"    </receiver>
+             <amount>   50005   </amount>;
 
-addAppCallTx <txID> 4 </txID>
-             <sender> b"1" </sender>
-             <applicationID> 0 </applicationID>
-             <onCompletion> @ NoOp </onCompletion>
-             <accounts> b"2" </accounts>
+addAppCallTx <txID>              4           </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     0           </applicationID>
+             <onCompletion>      @ NoOp      </onCompletion>
+             <accounts>          b"2"        </accounts>
              <applicationArgs>
                  Int2Bytes(39, BE, Unsigned)
                  Int2Bytes(100, BE, Unsigned)
@@ -65,15 +65,15 @@ addAppCallTx <txID> 4 </txID>
                  Int2Bytes(4, BE, Unsigned)
                  Int2Bytes(50, BE, Unsigned)
              </applicationArgs>
-             <foreignApps> .TValueList </foreignApps>
-             <foreignAssets> .TValueList </foreignAssets>
-             <globalNui> NoTValue </globalNui>
-             <globalNbs> NoTValue </globalNbs>
-             <localNui> NoTValue </localNui>
-             <localNbs> NoTValue </localNbs>
-             <extraProgramPages> 0 </extraProgramPages>
-             <approvalPgmIdx> 0 </approvalPgmIdx>
-             <clearStatePgmIdx> 0 </clearStatePgmIdx>;
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         NoTValue    </globalNui>
+             <globalNbs>         NoTValue    </globalNbs>
+             <localNui>          NoTValue    </localNui>
+             <localNbs>          NoTValue    </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  0           </clearStatePgmIdx>;
 
 #initGlobals();
 #evalTxGroup();
