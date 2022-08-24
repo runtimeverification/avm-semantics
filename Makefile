@@ -381,9 +381,7 @@ PYK_ACTIVATE = . $(KAVM_PYK_DIR)/venv-prod/bin/activate
 kavm-pyk-venv-clean:
 	rm -rf $(KAVM_PYK_DIR)/venv-dev
 	rm -rf $(KAVM_PYK_DIR)/venv-prod
-	rm -rf $(KEVM_LIB)/kframework/lib/python3.8
-	rm -rf $(KEVM_LIB)/kframework/local/lib/python3.10
-	rm -rf $(K_SUBMODULE)/pyk/build
+
 
 kavm-pyk-venv:
 	$(MAKE) -C $(KAVM_PYK_DIR) venv-prod
@@ -401,7 +399,7 @@ module-imports-graph: module-imports-graph-dot
 module-imports-graph-dot: kavm-pyk-venv
 	$(PYK_ACTIVATE) && pyk graph-imports $(KAVM_LIB)/$(avm_kompiled)
 
-clean: clean-avm clean-kavm
+clean: clean-avm clean-kavm kavm-pyk-venv-clean
 
 distclean: clean
 	rm -rf $(BUILD_DIR)
