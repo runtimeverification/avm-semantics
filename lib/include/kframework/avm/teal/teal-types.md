@@ -204,6 +204,13 @@ We expose several functions for working with lists.
   rule size(_:TValue       ) => 1
   rule size(.TValueList    ) => 0
 
+  syntax Bool ::= contains(TValueList, TValue) [function, functional]
+  // ----------------------------------------------------------------
+  rule contains(V1:TValue  _:TValueNeList, V1:TValue) => true
+  rule contains(V1:TValue VL:TValueNeList, V2:TValue) => contains(VL, V2) requires V1 =/=K V2
+  rule contains(V1:TValue                , V2:TValue) => V1 ==K V2
+  rule contains(              .TValueList,  _:TValue) => false 
+
   syntax TValueNeList ::= reverse(TValueNeList) [function]
   // -----------------------------------------------------
   rule reverse(V:TValue VL) => append(V, reverse(VL))

@@ -1303,25 +1303,28 @@ Stateful TEAL Operations
 
 ```k
   rule <k> balance => .K ... </k>
-       <stack> (I:Int) : XS => getBalance({getAccountAddressAt(I)}:>TValue) : XS </stack>
-    requires isTValue(getAccountAddressAt(I))
+       <stack> (A:TValue) : XS => getBalance({accountReference(A)}:>TValue) : XS </stack>
+    requires isTValue(accountReference(A))
 
   rule <k> balance => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (I:Int) : _ </stack>
-    requires notBool isTValue(getAccountAddressAt(I))
+       <stack> (A:TValue) : _ </stack>
+    requires notBool isTValue(accountReference(A))
 ```
 
 *app_opted_in*
 
 ```k
   rule <k> app_opted_in =>
-           #app_opted_in hasOptedInApp(APP, {getAccountAddressAt(I)}:>TValue) ... </k>
-       <stack> (APP:Int) : (I:Int) : _ </stack>
-    requires isTValue(getAccountAddressAt(I))
+           #app_opted_in hasOptedInApp({appReference(APP)}:>TValue, {accountReference(A)}:>TValue) ... </k>
+       <stack> (APP:Int) : (A:TValue) : _ </stack>
+    requires isTValue(appReference(APP)) andBool isTValue(accountReference(A))
 
   rule <k> app_opted_in  => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (_:Int) : (I:Int) : _ </stack>
-    requires notBool isTValue(getAccountAddressAt(I))
+       <stack> APP:Int : A:TValue : _:TStack </stack>
+    requires notBool (isTValue(appReference(APP)) andBool isTValue(accountReference(A)))
+
+  rule <k> app_opted_in => panic(ILL_TYPED_STACK) ... </k>
+       <stack> _:TBytes : _:TValue : _:TStack </stack>
 
   syntax KItem ::= "#app_opted_in" Bool
   //-----------------------------------
@@ -1334,72 +1337,85 @@ Stateful TEAL Operations
 
 ```k
   rule <k> app_local_get =>
-           #app_local_get getAppLocal({getAccountAddressAt(I)}:>TValue
+           #app_local_get getAppLocal({accountReference(A)}:>TValue
                                      , getGlobalField(CurrentApplicationID), KEY) ... </k>
-       <stack> (KEY:Bytes) : (I:Int) : _ </stack>
-    requires isTValue(getAccountAddressAt(I))
+       <stack> (KEY:Bytes) : (A:TValue) : _ </stack>
+    requires isTValue(accountReference(A))
 
   rule <k> app_local_get => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (_:Bytes) : (I:Int) : _ </stack>
-    requires notBool isTValue(getAccountAddressAt(I))
+       <stack> (_:Bytes) : (A:TValue) : _ </stack>
+    requires notBool isTValue(accountReference(A))
 
-  syntax KItem ::= "#app_local_get" TValue
+  rule <k> app_local_get => panic(ILL_TYPED_STACK) ... </k>
+       <stack> _:TUInt64 : _ : _ </stack>
+
+  syntax KItem ::= "#app_local_get" MaybeTValue
   //--------------------------------------
-  rule <k> #app_local_get V => .K ... </k>
-       <stack> (_:Bytes) : ( _:Int) : XS => V : XS </stack>
+  rule <k> #app_local_get V:TValue => .K ... </k>
+       <stack> _ : _ : XS => V : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires (notBool isInt(V)) orElseBool {V}:>Int >=Int 0
 
-  syntax KItem ::= "#app_local_get" TValue
+  syntax KItem ::= "#app_local_get" MaybeTValue
   //--------------------------------------
-  rule <k> #app_local_get V => .K ... </k>
-       <stack> (_:Bytes) : (_:Int) : XS => 0 : XS </stack>
+  rule <k> #app_local_get V:TValue => .K ... </k>
+       <stack> _ : _ : XS => 0 : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires isInt(V) andThenBool {V}:>Int <Int 0
+
+  rule <k> #app_local_get NoTValue => panic(TXN_ACCESS_FAILED) ... </k>
 ```
 
 *app_local_get_ex*
 
 ```k
   rule <k> app_local_get_ex =>
-           #app_local_get_ex getAppLocal({getAccountAddressAt(I)}:>TValue, APP, KEY) ... </k>
-       <stack> (KEY:Bytes) : (APP:Int) : (I:Int) : _ </stack>
-    requires isTValue(getAccountAddressAt(I))
+           #app_local_get_ex getAppLocal({accountReference(A)}:>TValue, {appReference(APP)}:>TValue, KEY) ... </k>
+       <stack> (KEY:Bytes) : (APP:TUInt64) : (A:TValue) : _ </stack>
+    requires isTValue(accountReference(A)) andBool isTValue(appReference(APP))
 
   rule <k> app_local_get_ex => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (_:Bytes) : (_:Int) : (I:Int) : _ </stack>
-    requires notBool isTValue(getAccountAddressAt(I))
+       <stack> (_:Bytes) : (APP:TUInt64) : (A:TValue) : _ </stack>
+    requires notBool (isTValue(accountReference(A)) andBool isTValue(appReference(APP)))
 
+  rule <k> app_local_get_ex => panic(ILL_TYPED_STACK) ... </k>
+       <stack> (KEY:TValue) : (APP:TValue) : (_:TValue) : _ </stack>
+    requires isInt(KEY) orBool isBytes(APP)
 
-  syntax KItem ::= "#app_local_get_ex" TValue
+  syntax KItem ::= "#app_local_get_ex" MaybeTValue
   //-----------------------------------------
   rule <k> #app_local_get_ex V => .K ... </k>
-       <stack> (_:Bytes) : (_:Int) : (_:Int) : XS => 1 : V : XS </stack>
+       <stack> _ : _ : _ : XS => 1 : V : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires (notBool isInt(V)) orElseBool {V}:>Int >=Int 0
 
   rule <k> #app_local_get_ex V => .K ... </k>
-       <stack> (_:Bytes) : (_:Int) : (_:Int) : XS => 0 : 0 : XS </stack>
+       <stack> _ : _ : _ : XS => 0 : 0 : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires isInt(V) andThenBool {V}:>Int <Int 0
+
+  rule <k> #app_local_get_ex NoTValue => panic(TXN_ACCESS_FAILED) ... </k>
 ```
 
 *app_local_put*
 
 ```k
-  rule <k> app_local_put => #app_local_put {getAccountAddressAt(I)}:>TValue
+  rule <k> app_local_put => #app_local_put {accountReference(A)}:>TValue
                                            getGlobalField(CurrentApplicationID) ... </k>
-       <stack> (_:TValue) : (_:Bytes) : (I:Int) : _ </stack>
-    requires isTValue(getAccountAddressAt(I))
+       <stack> (_:TValue) : (_:Bytes) : (A:TValue) : _ </stack>
+    requires isTValue(accountReference(A))
 
   rule <k> app_local_put => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (_:TValue) : (_:Bytes) : (I:Int) : _ </stack>
-    requires notBool isTValue(getAccountAddressAt(I))
+       <stack> (_:TValue) : (_:Bytes) : (A:TValue) : _ </stack>
+    requires notBool isTValue(accountReference(A))
+
+  rule <k> app_local_put => panic(ILL_TYPED_STACK) ...  </k>
+       <stack> _:TValue : _:TUInt64 : _:TValue : _ </stack>
 
   syntax KItem ::= "#app_local_put" TValue TValue
   //---------------------------------------------
   rule <k> #app_local_put ADDR APP => .K ... </k>
-       <stack> (NEWVAL:TValue) : (KEY:Bytes) : (_:Int) : XS => XS </stack>
+       <stack> (NEWVAL:TValue) : (KEY:Bytes) : _ : XS => XS </stack>
        <stacksize> S => S -Int 3 </stacksize>
        <account>
          <address> ADDR </address>
@@ -1411,9 +1427,9 @@ Stateful TEAL Operations
          </appsOptedIn> ...
        </account>
 
-  // if the account exists but is not opted in, do nothing
-  rule <k> #app_local_put ADDR APP => .K ... </k>
-       <stack> (_:TValue) : (_:Bytes) : (_:Int) : XS => XS </stack>
+  // if the account exists but is not opted in, panic
+  rule <k> #app_local_put ADDR APP => panic(TXN_ACCESS_FAILED) ... </k>
+       <stack> _ : _ : _ : XS => XS </stack>
        <stacksize> S => S -Int 3 </stacksize>
        <account>
          <address> ADDR </address>
@@ -1421,9 +1437,9 @@ Stateful TEAL Operations
        </account>
     requires notBool (APP in_optedInApps(<appsOptedIn> OA </appsOptedIn>))
 
-  // if the account doesn't exist, do nothing
-  rule <k> #app_local_put ADDR _ => .K ... </k>
-       <stack> (_:TValue) : (_:Bytes) : (_:Int) : XS => XS </stack>
+  // if the account doesn't exist, panic
+  rule <k> #app_local_put ADDR _ => panic(TXN_ACCESS_FAILED) ... </k>
+       <stack> _ : _ : _ : XS => XS </stack>
        <stacksize> S => S -Int 3 </stacksize>
        <accountsMap> AMAP  </accountsMap>
     requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
@@ -1432,20 +1448,23 @@ Stateful TEAL Operations
 *app_local_del*
 
 ```k
-  rule <k> app_local_del => #app_local_del {getAccountAddressAt(I)}:>TValue
+  rule <k> app_local_del => #app_local_del {accountReference(A)}:>TValue
                                            getGlobalField(CurrentApplicationID) ... </k>
-       <stack> (_:Bytes) : (I:Int) : _ </stack>
-    requires isTValue(getAccountAddressAt(I))
+       <stack> (_:Bytes) : (A:TValue) : _ </stack>
+    requires isTValue(accountReference(A))
 
   rule <k> app_local_del => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (_:Bytes ) : (I:Int) : _ </stack>
-    requires notBool isTValue(getAccountAddressAt(I))
+       <stack> (_:Bytes ) : (A:TValue) : _ </stack>
+    requires notBool isTValue(accountReference(A))
+
+  rule <k> app_local_del => panic(ILL_TYPED_STACK) ... </k>
+       <stack> _:TUInt64 : _ : _ </stack>
 
 
   syntax KItem ::= "#app_local_del" TValue TValue
   //---------------------------------------------
   rule <k> #app_local_del ADDR APP => .K ... </k>
-       <stack> (KEY:Bytes) : (_:Int) : XS => XS </stack>
+       <stack> (KEY:Bytes) : _ : XS => XS </stack>
        <stacksize> S => S -Int 2 </stacksize>
        <account>
          <address> ADDR </address>
@@ -1457,20 +1476,16 @@ Stateful TEAL Operations
          </appsOptedIn> ...
        </account>
 
-  // if the account exists but is not opted in, do nothing
-  rule <k> #app_local_del ADDR APP => .K ... </k>
-       <stack> (_:Bytes) : (_:Int) : XS => XS </stack>
-       <stacksize> S => S -Int 2 </stacksize>
+  // if the account exists but is not opted in, panic.
+  rule <k> #app_local_del ADDR APP => panic(TXN_ACCESS_FAILED) ... </k>
        <account>
          <address> ADDR </address>
          <appsOptedIn> OA </appsOptedIn> ...
        </account>
     requires notBool (APP in_optedInApps(<appsOptedIn> OA </appsOptedIn>))
 
-  // if the account doesn't exist, do nothing.
-  rule <k> #app_local_del ADDR _ => .K ... </k>
-       <stack> (_:Bytes) : (_:Int) : XS => XS </stack>
-       <stacksize> S => S -Int 2 </stacksize>
+  // if the account doesn't exist, panic.
+  rule <k> #app_local_del ADDR _ => panic(TXN_ACCESS_FAILED) ... </k>
        <accountsMap> AMAP  </accountsMap>
     requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
 ```
@@ -1497,22 +1512,26 @@ Stateful TEAL Operations
 
 ```k
   rule <k> app_global_get_ex =>
-           #app_global_get_ex getAppGlobal({getForeignAppAt(I)}:>TValue, KEY) ... </k>
-       <stack> (KEY:Bytes) : (I:Int) : _ </stack>
-    requires isTValue(getForeignAppAt(I))
+           #app_global_get_ex getAppGlobal({appReference(APP)}:>TValue, KEY) ... </k>
+       <stack> (KEY:Bytes) : (APP:TUInt64) : _ </stack>
+    requires isTValue(appReference(APP))
 
   rule <k> app_global_get_ex => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (_:Bytes) : (I:Int) : _ </stack>
-    requires notBool isTValue(getForeignAppAt(I))
+       <stack> (_:Bytes) : (APP:TUInt64) : _ </stack>
+    requires notBool isTValue(appReference(APP))
+
+  rule <k> app_global_get_ex => panic(ILL_TYPED_STACK) ... </k>
+       <stack> (KEY:TValue) : (I:TValue):_ </stack>
+    requires isInt(KEY) orBool isBytes(I)
 
   syntax KItem ::= "#app_global_get_ex" TValue
   //------------------------------------------
   rule <k> #app_global_get_ex V  => .K ... </k>
-       <stack> (_:Bytes) : (_:Int) : XS => 1 : V : XS </stack>
+       <stack> (_:Bytes) : (_:TUInt64) : XS => 1 : V : XS </stack>
     requires (notBool isInt(V)) orElseBool {V}:>Int >=Int 0
 
   rule <k> #app_global_get_ex V => .K ... </k>
-       <stack> (_:Bytes) : (_:Int) : XS => 0 : 0 : XS </stack>
+       <stack> (_:Bytes) : (_:TUInt64) : XS => 0 : 0 : XS </stack>
     requires isInt(V) andThenBool {V}:>Int <Int 0
 ```
 
@@ -1584,23 +1603,29 @@ Stateful TEAL Operations
 ```k
   rule <k> asset_holding_get FIELD =>
            #asset_holding_get getOptInAssetField(FIELD,
-                                {getAccountAddressAt(I)}:>TValue, ASSET) ... </k>
-       <stack> (ASSET:Int) : (I:Int):_ </stack>
-    requires isTValue(getAccountAddressAt(I))
+                                {accountReference(A)}:>TValue, 
+                                {asaReference(ASSET)}:>TValue) 
+           ... 
+       </k>
+       <stack> (ASSET:TUInt64) : (A:TValue): _ </stack>
+    requires isTValue(accountReference(A)) andBool isTValue(asaReference(ASSET))
 
   rule <k> asset_holding_get _ => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (_:Int) : (I:Int) : _ </stack>
-    requires notBool isTValue(getAccountAddressAt(I))
+       <stack> (ASSET:TUInt64) : (A:TValue) : _ </stack>
+    requires notBool (isTValue(accountReference(A)) andBool isTValue(asaReference(ASSET)))
+
+  rule <k> asset_holding_get _ => panic(ILL_TYPED_STACK) ... </k>
+       <stack> _:TBytes : _ : _ </stack>
 
   syntax KItem ::= "#asset_holding_get" TValue
   // -----------------------------------------
   rule <k> #asset_holding_get RET => .K ... </k>
-       <stack> (_:Int) : (_:Int) : XS => 1 : RET : XS </stack>
+       <stack> (_:Int) : _ : XS => 1 : RET : XS </stack>
     requires {RET}:>Int >=Int 0
 
   // Return 0 if not opted in ASSET or the account is not found
   rule <k> #asset_holding_get RET => .K ... </k>
-       <stack> (_:Int) : (_:Int) : XS => 0 : 0 : XS </stack>
+       <stack> (_:Int) : _ : XS => 0 : 0 : XS </stack>
     requires {RET}:>Int <Int 0
 ```
 
@@ -1608,37 +1633,40 @@ Stateful TEAL Operations
 
 ```k
   rule <k> asset_params_get FIELD =>
-           #asset_params_get getAssetParamsField(FIELD, {getForeignAssetAt(I)}:>TValue)
+           #asset_params_get getAssetParamsField(FIELD, {asaReference(A)}:>TValue)
        ...
        </k>
-       <stack> (I:Int) : _ </stack>
+       <stack> (A:TUInt64) : _ </stack>
        <stacksize> S </stacksize>
     requires S <Int MAX_STACK_DEPTH
-     andBool isTValue(getForeignAssetAt(I))
+     andBool isTValue(asaReference(A))
 
   rule <k> asset_params_get _ => panic(TXN_ACCESS_FAILED) ... </k>
-       <stack> (I:Int) : _ </stack>
+       <stack> (A:TUInt64) : _ </stack>
        <stacksize> S </stacksize>
     requires S <Int MAX_STACK_DEPTH
-     andBool (notBool isTValue(getForeignAssetAt(I)))
+     andBool (notBool isTValue(asaReference(A)))
 
   rule <k> asset_params_get _ => panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
+
+  rule <k> asset_params_get _ => panic(ILL_TYPED_STACK) ... </k>
+       <stack> (_:Bytes) : _ </stack>
 
   syntax KItem ::= "#asset_params_get" TValue
   // ----------------------------------------
   rule <k> #asset_params_get RET => .K ... </k>
        <stack> (_:Int) : XS => 1 : RET : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
-    requires {RET}:>Int >=Int 0
-     andBool S <Int MAX_STACK_DEPTH
+    requires S <Int MAX_STACK_DEPTH
+     andBool (notBool (isInt(RET)) orElseBool {RET}:>Int >=Int 0 )
 
   rule <k> #asset_params_get RET => .K ... </k>
        <stack> (_:Int) : XS => 0 : 0 : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
-    requires {RET}:>Int <Int 0
-     andBool S <Int MAX_STACK_DEPTH
+    requires S <Int MAX_STACK_DEPTH
+     andBool (isInt(RET) andThenBool {RET}:>Int <Int 0)
 ```
 
 ### Access to past transactions in the group
@@ -1732,48 +1760,14 @@ Panic Behaviors due to Ill-typed Stack Arguments
 
 ### Application State Opcodes
 ```k
-  rule <k> balance => panic(ILL_TYPED_STACK) ... </k>
-       <stack> (_:Bytes) : _ </stack>
-
-  rule <k> app_opted_in => panic(ILL_TYPED_STACK) ... </k>
-       <stack> (APP:TValue) : (I:TValue) : _ </stack>
-    requires isBytes(APP) orBool isBytes(I)
-
-  rule <k> app_local_get => panic(ILL_TYPED_STACK) ... </k>
-       <stack> (KEY:TValue) : (I:TValue) : _ </stack>
-    requires isInt(KEY) orBool isBytes(I)
-
-  rule <k> app_local_get_ex => panic(ILL_TYPED_STACK) ... </k>
-       <stack> (KEY:TValue) : (APP:TValue) : (I:TValue) : _ </stack>
-    requires isInt(KEY) orBool isBytes(APP) orBool isBytes(I)
-
-  rule <k> app_local_put => panic(ILL_TYPED_STACK) ...  </k>
-       <stack> (_:TValue) : (KEY:TValue) : (I:TValue) : _ </stack>
-    requires isInt(KEY) orBool isBytes(I)
-
-  rule <k> app_local_del => panic(ILL_TYPED_STACK) ... </k>
-       <stack> (KEY:TValue) : (I:TValue) : _ </stack>
-    requires isInt(KEY) orBool isBytes(I)
-
   rule <k> app_global_get => panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Int) : _ </stack>
-
-  rule <k> app_global_get_ex => panic(ILL_TYPED_STACK) ... </k>
-       <stack> (KEY:TValue) : (I:TValue):_ </stack>
-    requires isInt(KEY) orBool isBytes(I)
 
   rule <k> app_global_put => panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:TValue) : (_:Int):_ </stack>
 
   rule <k> app_global_del => panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Int) : _ </stack>
-
-  rule <k> asset_holding_get _ => panic(ILL_TYPED_STACK) ... </k>
-       <stack> (ASSET:TValue) : (I:TValue) : _ </stack>
-    requires isBytes(ASSET) orBool isBytes(I)
-
-  rule <k> asset_params_get _ => panic(ILL_TYPED_STACK) ... </k>
-       <stack> (_:Bytes) : _ </stack>
 ```
 
 ### Signature Verification Opcode

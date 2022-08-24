@@ -1,0 +1,17 @@
+#pragma version 5
+#pragma mode stateful
+
+txna Accounts 1
+txna Applications 0
+app_opted_in
+!
+assert
+
+txna Accounts 0
+txna Applications 0
+
+app_opted_in
+assert
+
+int 1
+return

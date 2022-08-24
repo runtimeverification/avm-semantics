@@ -1,0 +1,9 @@
+#pragma version 5
+#pragma mode stateful
+
+byte "fake_address"
+byte "test_key"
+app_local_get
+
+int 1
+return

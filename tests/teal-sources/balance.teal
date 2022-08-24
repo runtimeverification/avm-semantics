@@ -1,0 +1,20 @@
+#pragma version 5
+#pragma mode stateful
+
+int 12345
+
+txn Sender
+balance
+==
+assert
+
+int 54321
+
+txn Sender
+balance
+==
+!
+assert
+
+int 1
+return

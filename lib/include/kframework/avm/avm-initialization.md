@@ -105,7 +105,8 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
 ```k
   syntax AlgorandCommand ::= "addAppCallTx" TxIDCell SenderCell ApplicationIDCell
                                             OnCompletionCell AccountsCell
-                                            ApplicationArgsCell
+                                            ApplicationArgsCell ForeignAppsCell 
+                                            ForeignAssetsCell
   //-----------------------------------------------------------
   rule <k> addAppCallTx <txID>            ID            </txID>
                         <sender>          SENDER        </sender>
@@ -113,6 +114,8 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
                         <onCompletion>    ON_COMPLETION </onCompletion>
                         <accounts>        ACCOUNTS      </accounts>
                         <applicationArgs> ARGS          </applicationArgs>
+                        <foreignApps>     APPS          </foreignApps>
+                        <foreignAssets>   ASSETS        </foreignAssets>
        => #pushTxnBack(<txID> ID </txID>)
            ...
        </k>
@@ -132,6 +135,8 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
             <onCompletion>    ON_COMPLETION </onCompletion>
             <accounts>        ACCOUNTS      </accounts>
             <applicationArgs> ARGS          </applicationArgs>
+            <foreignApps>     APPS          </foreignApps>
+            <foreignAssets>   ASSETS        </foreignAssets>
             ...                            // other fields will receive default values
           </appCallTxFields>
          </transaction>
@@ -281,6 +286,48 @@ Accounts can opt into apps to allocate local state for them:
 #### Assets Initialization
 
 The asset initialization rule must be used *after* initializing accounts.
+
+```k
+  syntax AlgorandCommand ::= "addAssetConfigTx" TxIDCell SenderCell ConfigAssetCell ConfigTotalCell
+                                                ConfigDecimalsCell ConfigDefaultFrozenCell ConfigAssetNameCell
+  //-----------------------------------------------------------
+  rule <k> addAssetConfigTx <txID>                TXN_ID   </txID>
+                            <sender>              SENDER   </sender>
+                            <configAsset>         ASSET_ID </configAsset>
+                            <configTotal>         TOTAL    </configTotal>
+                            <configDecimals>      DECIMALS </configDecimals>
+                            <configDefaultFrozen> FROZEN   </configDefaultFrozen>
+                            <configAssetName>     NAME     </configAssetName>
+       => #pushTxnBack(<txID> TXN_ID </txID>)
+           ...
+       </k>
+       <transactions>
+         TXNS =>
+         <transaction>
+           <txID> TXN_ID </txID>
+           <txHeader>
+             <sender>      SENDER </sender>
+             <txType>      "acfg" </txType>
+             <typeEnum>    @ acfg </typeEnum>
+             <group>       TXN_ID </group> // for testing, we make these the same as sequential TxIDs
+             ...                           // other fields will receive default values
+           </txHeader>
+          <assetConfigTxFields>
+            <configAsset> ASSET_ID </configAsset>           // the asset ID
+            <assetParams>
+              <configTotal>         TOTAL    </configTotal>
+              <configDecimals>      DECIMALS </configDecimals>
+              <configDefaultFrozen> FROZEN   </configDefaultFrozen>
+              <configUnitName>      NAME     </configUnitName>
+              <configAssetName>     NAME     </configAssetName>
+              ...
+            </assetParams>
+          </assetConfigTxFields>
+         </transaction>
+         TXNS
+       </transactions>
+       requires notBool (TXN_ID in_txns(<transactions> TXNS </transactions>))
+```
 
 ### Teal Programs Declaration
 

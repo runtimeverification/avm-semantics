@@ -1,8 +1,10 @@
-declareTealSource "./tests/teal-sources/arithmetic-ill-typed.teal";
+declareTealSource "./tests/teal-sources/app-local-get-ex-app-unavailable.teal";
 
-addAccount <address> b"1" </address> <balance> 10000 </balance>;
+addAccount <address> b"1" </address> <balance> 100000 </balance>;
 addApp     <appID>   1    </appID>   <address> b"1" </address> 0;
 optinApp   <appID>   1    </appID>   <address> b"1" </address>;
+addApp     <appID>   2    </appID>   <address> b"1" </address> 0;
+optinApp   <appID>   2    </appID>   <address> b"1" </address>;
 
 #initTxGroup();
 

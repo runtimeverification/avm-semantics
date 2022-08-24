@@ -21,12 +21,10 @@ addPaymentTx <txID>     1       </txID>
              <amount>   50005 </amount>;
 
 addAppCallTx <txID>            2        </txID>
-             <sender>          b"1" </sender>
+             <sender>          b"1"     </sender>
              <applicationID>   1        </applicationID>
              <onCompletion>    0        </onCompletion>
-             <accounts>        b"1"
-                               b"2"
-             </accounts>
+             <accounts>        b"2"     </accounts>
              <applicationArgs>
                  Int2Bytes(39, BE, Unsigned)
                  Int2Bytes(100, BE, Unsigned)
@@ -36,7 +34,9 @@ addAppCallTx <txID>            2        </txID>
                  normalize("USD")
                  Int2Bytes(4, BE, Unsigned)
                  Int2Bytes(50, BE, Unsigned)
-             </applicationArgs>;
+             </applicationArgs>
+             <foreignApps>   .TValueList </foreignApps>
+             <foreignAssets> .TValueList </foreignAssets>;
 
 #initGlobals();
 #evalTxGroup();

@@ -69,7 +69,7 @@ module AVM-CONFIGURATION
   // Top-level control of the semantics.
   // Defined in `avm-execution.md`
   syntax AVMSimulation
-  syntax AlgorandComman
+  syntax AlgorandCommand
 
   // Control of transaction evaluation
   // Defined in `avm-execution.md`
@@ -88,7 +88,7 @@ These panic behaviors indicate that internal assumptions of the semantics were v
   //------------------------------------------------
   rule TXN_DEQUE_ERROR => "attempt to push a duplicate or missing transaction into deque"
 
-  syntax AlgorandComman ::= #internalPanic(InternalPanic)
+  syntax AlgorandCommand ::= #internalPanic(InternalPanic)
   //----------------------------------------------------------
   rule <k> #internalPanic(S) ~> _ => .K </k>
        <returncode> 4 => 3 </returncode>
@@ -114,7 +114,7 @@ These are AVM-specific panic behaviors, caused by issues like depleted balances,
   rule ASSET_NOT_OPT_IN        => "either sender or receiver have not opted into asset"
   rule UNKNOWN_ADDRESS         => "address is not in the <accountsMap>"
 
-  syntax AlgorandComman ::= #avmPanic(Int, AvmPanic)
+  syntax AlgorandCommand ::= #avmPanic(Int, AvmPanic)
   //-------------------------------------------
   rule <k> #avmPanic(TXN_ID, S) ~> _ => .K </k>
        <returncode> 4 => 3 </returncode>

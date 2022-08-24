@@ -1,0 +1,16 @@
+#pragma version 5
+#pragma mode stateful
+
+int 1
+int 0
+app_opted_in
+!
+assert
+
+int 0
+int 0
+app_opted_in
+assert
+
+int 1
+return
