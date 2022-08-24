@@ -15,7 +15,8 @@ from pyk.kastManip import minimize_term
 from pyk.prelude import stringToken, intToken
 
 from kavm_algod.kavm import KAVM
-from kavm_algod.adaptors.transaction import transaction_to_k
+from kavm_algod.adaptors.transaction import KAVMTransaction
+from kavm_algod.adaptors.account import KAVMAccount
 
 
 def msgpack_decode_txn_list(enc: bytes) -> List[Transaction]:
@@ -52,6 +53,8 @@ class KAVMClient(algod.AlgodClient):
         self.algodLogger = logging.getLogger(f'${__name__}.algodLogger')
         self.pretty_printer = PrettyPrinter(width=41, compact=True)
         self.set_log_level(logging.DEBUG)
+
+        self.accounts: Dict[str, KAVMAccount] = {}
 
         # Initialize KAVM, fetching the K definition dir from the environment
         try:
@@ -113,71 +116,47 @@ class KAVMClient(algod.AlgodClient):
         """
         Handle POST requests to algod with KAVM
         """
+        # handle transaction group submission
+        # TODO: separate into a function
         if requrl == '/transactions':
+            # decode signed transactions from binary into py-algorand-sdk objects
             txns = list(
                 map(lambda t: t.dictify()['txn'], msgpack_decode_txn_list(data))
             )
             txn_msg = self.pretty_printer.pformat(txns)
             algod_debug_log_msg = f'POST {requrl} {txn_msg}'
-            # self.algodLogger.debug(algod_debug_log_msg)
-            avm_simulation_term_str = ''
+            # log decoded transaction as submitted
+            self.algodLogger.debug(algod_debug_log_msg)
 
+            # we'll need tpo keep track pf all addresses the transactions mention to
+            # make KAVM aware of them
             known_addresses = set()
-
-            txns_cells = []
+            # kavm_txns will hold the KAst terms of the transactions
+            kavm_txns = []
+            # TODO: make txid more smart than just the counter
             for txid, signed_txn in enumerate(msgpack_decode_txn_list(data)):
-                # txid = signed_txn.transaction.get_txid()
                 known_addresses.add(signed_txn.transaction.sender)
                 known_addresses.add(signed_txn.transaction.receiver)
-                kavm_txn = transaction_to_k(self.kavm, signed_txn.transaction, txid)
-                # kavm_submit_txn = KApply('submit', [kavm_txn])
-                # # self.algodLogger.debug(self.kavm.pretty_print(kavm_submit_txn))
-                # avm_simulation_term = KApply(
-                #     '_;__', [kavm_submit_txn, avm_simulation_term]
-                # )
-                # kavm_submit_txn_str = f'submit {self.kavm.pretty_print(kavm_txn)};'
-                # avm_simulation_term_str += kavm_submit_txn_str
-                txns_cells.append(kavm_txn)
+                kavm_txns.append(
+                    KAVMTransaction(self.kavm, signed_txn.transaction, txid)
+                )
 
-            # avm_simulation_term_str += '#initGlobals();'
-            # avm_simulation_term_str += '#evalTxGroup();'
-            # avm_simulation_term_str += '.AS'
+            # construct account cells from the discovered addresses
+            # TODO: don't fund them here! they must be explicitly funded from a faucet
+            accounts = [KAVMAccount(address, 1_000_000) for address in known_addresses]
 
-            accounts = []
-            for address in known_addresses:
-                accounts.append(self.kavm.account(address, 1_000_000))
-
-            # print(
-            #     self.kavm.pretty_print(
-            #         self.kavm.simulation_config(accounts, txns_cells)
-            #     )
-            # )
+            # construct the KAVM configuration and run it via krun
             (krun_return_code, output) = self.kavm.run_term(
-                self.kavm.simulation_config(accounts, txns_cells)
+                self.kavm.simulation_config(accounts, kavm_txns)
             )
             if isinstance(output, KAst):
                 self.algodLogger.debug(self.kavm.pretty_print(output))
+                # TODO: set the new current configuration KAVM
             else:
                 self.algodLogger.debug(output)
-            exit(krun_return_code)
+                exit(krun_return_code)
 
-        #         avm_simulation_term_str = (
-        #             f'addAccount <address> b"{address}" </address> <balance> 1500000 </balance>;'
-        #             "" + avm_simulation_term_str
-        #         )
+            return {'txId': -1}
 
-        #     with tempfile.NamedTemporaryFile('w+t') as tmp_file:
-        #         tmp_file.write(avm_simulation_term_str)
-        #         tmp_file.seek(0)
-
-        #         self.kavm.run_with_current_config()
-        #         # (krun_return_code, output) = self.kavm.run(Path(tmp_file.name))
-        #         # if isinstance(output, KAst):
-        #         #     self.algodLogger.debug(self.kavm.pretty_print(output))
-        #         # else:
-        #         #     self.algodLogger.debug(output)
-        #         # exit(krun_return_code)
-
-        #     return dict({'txId': -1})
         else:
             raise NotImplementedError(f'Endpoint not implemented: {requrl}')

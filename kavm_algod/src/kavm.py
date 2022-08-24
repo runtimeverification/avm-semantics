@@ -12,8 +12,12 @@ import tempfile
 from pyk.kast import KAst, KInner, KSort, Subst, KApply, KLabel, KToken
 from pyk.kastManip import inlineCellMaps, collectFreeVars
 from pyk.cli_utils import run_process
-from pyk.ktool import KRun, paren
+from pyk.ktool import KRun
+from pyk.ktool.kprint import paren
 from pyk.prelude import intToken, stringToken, build_assoc, buildCons, Sorts
+
+from kavm_algod.adaptors.account import KAVMAccount
+from kavm_algod.adaptors.transaction import KAVMTransaction
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -72,8 +76,7 @@ class KAVM(KRun):
 
     @property
     def _empty_config(self) -> KInner:
-        """Return the KAST term for the empty top-level KavmCell"""
-        # return self.definition.empty_config(KSort('KavmCell'))
+        """Return the KAST term for the empty generated top cell"""
         return self.definition.empty_config(KSort('GeneratedTopCell'))
 
     @property
@@ -85,52 +88,33 @@ class KAVM(KRun):
     def current_config(self, new_config: KInner) -> None:
         self._current_config = new_config
 
-    def account(self, address: str, balance: int = 0) -> KInner:
-        """
-        Create an Algorand account cell.
-        """
-        from kavm_algod.pyk_utils import maybeTValue
-
-        account_subcells_subst = Subst(
-            {
-                # 'ADDRESS_CELL': stringToken(address.strip("'")),
-                # 'ADDRESS_CELL': KToken(address.strip('"'), KSort('Bytes')),
-                # 'ADDRESS_CELL': KToken(address, KSort('Bytes')),
-                'ADDRESS_CELL': maybeTValue(self, address),
-                'BALANCE_CELL': intToken(balance),
-                'MINBALANCE_CELL': intToken(100000),
-                'ROUND_CELL': intToken(0),
-                'PREREWARDS_CELL': intToken(0),
-                'REWARDS_CELL': intToken(0),
-                'STATUS_CELL': intToken(0),
-                'KEY_CELL': maybeTValue(self, address),
-                'APPSCREATED_CELL': KApply('.AppCellMap'),
-                'APPSOPTEDIN_CELL': KApply('.OptInAppCellMap'),
-                'ASSETSCREATED_CELL': KApply('.AssetCellMap'),
-                'ASSETSOPTEDIN_CELL': KApply('.OptInAssetCellMap'),
-            }
-        )
-        account_cell = account_subcells_subst.apply(
-            self.definition.empty_config(KSort('AccountCell'))
-        )
-        return account_cell
-
     @staticmethod
-    def accounts(accts: List[KInner]) -> KInner:
+    def accounts_cell(accts: List[KAVMAccount]) -> KInner:
         """Concatenate several accounts"""
-        return build_assoc(KApply('.AccountCellMap'), KLabel('_AccountCellMap_'), accts)
+        return build_assoc(
+            KApply('.AccountCellMap'),
+            KLabel('_AccountCellMap_'),
+            [acc.account_cell for acc in accts],
+        )
 
     @staticmethod
-    def transactions(txns: List[KInner]) -> KInner:
+    def transactions_cell(txns: List[KInner]) -> KInner:
         """Concatenate several transactions"""
         return build_assoc(
-            KApply('.TransactionCellMap'), KLabel('_TransactionCellMap_'), txns
+            KApply('.TransactionCellMap'),
+            KLabel('_TransactionCellMap_'),
+            [txn.transaction_cell for txn in txns],
         )
 
     def simulation_config(
-        self, accounts: List[KInner], transactions: List[KInner]
+        self,
+        accounts: List[KAVMAccount],
+        transactions: List[KAVMTransaction],
     ) -> KInner:
-        """Create a configuration to be passed to krun with --term"""
+        """
+        Create a configuration to be passed to krun with --term
+        """
+        txids = [txn.txid for txn in transactions]
         teal_cell_subst = Subst(
             {
                 'PC_CELL': intToken(0),
@@ -148,24 +132,22 @@ class KAVM(KRun):
             }
         )
 
-        # ['RETURNCODE_CELL', 'RETURNSTATUS_CELL', 'GROUPSIZE_CELL', 'GLOBALROUND_CELL', 'LATESTTIMESTAMP_CELL', 'CURRENTAPPLICATIONID_CELL', 'CURRENTAPPLICATIONADDRESS_CELL',
-
-        # , 'EFFECTS_CELL']
-
         config = self._empty_config
         return teal_cell_subst.compose(
             Subst(
                 {
-                    'ACCOUNTSMAP_CELL': KAVM.accounts(accounts),
-                    'TRANSACTIONS_CELL': KAVM.transactions(transactions),
-                    'GROUPSIZE_CELL': intToken(2),  # TODO: revise
+                    'ACCOUNTSMAP_CELL': KAVM.accounts_cell(accounts),
+                    'TRANSACTIONS_CELL': KAVM.transactions_cell(transactions),
+                    'GROUPSIZE_CELL': intToken(len(transactions)),
                     'TXGROUPID_CELL': intToken(0),  # TODO: revise
-                    'CURRENTTX_CELL': intToken(0),  # TODO: revise
+                    # set the current TX to the first submitted txn
+                    # TODO: the txn id must in fact be a str token, but we need to first change this in KAVM
+                    'CURRENTTX_CELL': intToken(transactions[0].txid),
                     'RETURNCODE_CELL': intToken(4),
                     'RETURNSTATUS_CELL': stringToken('Failure - program is stuck'),
                     'GLOBALROUND_CELL': intToken(6),
                     'LATESTTIMESTAMP_CELL': intToken(50),
-                    'CURRENTAPPLICATIONID_CELL': intToken(0),
+                    'CURRENTAPPLICATIONID_CELL': intToken(-1),
                     'CURRENTAPPLICATIONADDRESS_CELL': KToken('b""', KSort('Bytes')),
                     'APPCREATOR_CELL': KApply('.Map'),
                     'ASSETCREATOR_CELL': KApply('.Map'),
@@ -173,75 +155,38 @@ class KAVM(KRun):
                     'BLOCKS_CELL': KApply('.Map'),
                     'BLOCKHEIGHT_CELL': intToken(0),
                     'TEALPROGRAMS_CELL': KApply('.TealPrograms'),
-                    # 'K_CELL': buildCons(
-                    #     KToken(
-                    #         '.AS_AVM-EXECUTION-SYNTAX_AVMSimulation',
-                    #         KSort('AVMSimulation'),
-                    #     ),
-                    #     KLabel(
-                    #         '_;__AVM-EXECUTION-SYNTAX_AVMSimulation_AlgorandCommand_AVMSimulation',
-                    #         KSort('AVMSimulation'),
-                    #     ),
-                    #     [
-                    #         # KLabel(
-                    #         #     '#initTxGroup()_AVM-INITIALIZATION_AlgorandCommand',
-                    #         #     KSort('AlgorandCommand'),
-                    #         # ),
-                    #         # KToken('#initGlobals()', KSort('AlgorandCommand')),
-                    #         # KToken('#evalTxGroup()', KSort('AlgorandCommand')),
-                    #         KToken('#evalTx()', KSort('AlgorandCommand')),
-                    #         # KToken(
-                    #         #     '.AS_AVM-EXECUTION-SYNTAX_AVMSimulation',
-                    #         #     KSort('AVMSimulation'),
-                    #         # ),
-                    #     ],
-                    # ),
                     'K_CELL': KApply(
                         '#evalTxGroup()_AVM-EXECUTION_AlgorandCommand',
                     ),
                     'DEQUE_CELL': buildCons(
                         KApply('.List'),
                         KLabel('_List_'),
-                        [
-                            KApply(KLabel('ListItem'), intToken(0)),
-                            KApply(KLabel('ListItem'), intToken(1)),
-                        ],
+                        [KApply(KLabel('ListItem'), intToken(x)) for x in txids],
                     ),
-                    # 'DEQUE_CELL': KApply('.List'),
                     'DEQUEINDEXSET_CELL': buildCons(
                         KApply('.Set'),
                         KLabel('_Set_', KSort('Set')),
-                        [
-                            KApply('SetItem', intToken(0)),
-                            KApply('SetItem', intToken(1)),
-                        ],
+                        [KApply(KLabel('SetItem'), intToken(x)) for x in txids],
                     ),
-                    # 'DEQUEINDEXSET_CELL': KApply('.Set'),
-                    # 'DEQUEINDEXSET_CELL': KToken('.Set', KSort('Set')),
                     'GENERATEDCOUNTER_CELL': intToken(0),
+                    'NEXTAPPID_CELL': intToken(0),
+                    'NEXTASSETID_CELL': intToken(0),
                 }
             )
         ).apply(config)
 
-    # def run_with_current_config(self) -> (int, Union[KAst, str]):
-    #     """
-    #     Run the AVM simulation from the configuration specified by self.current_config.
+    def run_with_current_config(self) -> (int, Union[KAst, str]):
+        """
+        Run the AVM simulation from the configuration specified by self.current_config.
 
-    #     If successful, put the resulting configuration as the new current config.
-    #     """
-
-    #     freeVars = collectFreeVars(self.current_config)
-    #     assert (
-    #         len(freeVars) == 0
-    #     ), f'Cannot run from current configuration due to unbound variables {freeVars}'
+        If successful, put the resulting configuration as the new current config.
+        """
+        raise NotImplementedError()
 
     def run_term(self, configuration: KInner) -> (int, Union[KAst, str]):
-        # print(self.definition.modules)
-        # print(self.definition.production_for_klabel('List'))
-        # print(self.definition.syntax_productions)
-
-        # assert False
-
+        """
+        Execute krun --term, passing the supplied configuration as a KORE term
+        """
         freeVars = collectFreeVars(configuration)
         assert (
             len(freeVars) == 0

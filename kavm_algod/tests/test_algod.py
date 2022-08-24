@@ -10,9 +10,7 @@ def test_kalgod_init():
     _ = KAVMClient(ALGOD_ADDRESS, ALGOD_TOKEN)
 
 
-def test_send_transactions(
-    kalgod: KAVMClient, suggested_params: SuggestedParams
-) -> None:
+def test_send_payments(kalgod: KAVMClient, suggested_params: SuggestedParams) -> None:
 
     # generate accounts
     private_key_sender, sender = account.generate_account()
@@ -20,9 +18,10 @@ def test_send_transactions(
 
     # create a transactions
     sp = suggested_params
-    amount = 10000
-    txn1 = PaymentTxn(sender, sp, receiver, amount)
-    txn2 = PaymentTxn(sender, sp, receiver, amount)
+    amount1 = 111
+    amount2 = 222
+    txn1 = PaymentTxn(sender, sp, receiver, amount1)
+    txn2 = PaymentTxn(receiver, sp, sender, amount2)
 
     # get group id and assign it to transactions
     gid = transaction.calculate_group_id([txn1, txn2])
