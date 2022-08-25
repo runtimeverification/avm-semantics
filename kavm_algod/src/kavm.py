@@ -7,16 +7,29 @@ import sys
 import tempfile
 from pathlib import Path
 from subprocess import CalledProcessError
-from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Final,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 from kavm_algod.adaptors.account import KAVMAccount
 from kavm_algod.adaptors.transaction import KAVMTransaction
 from pyk.cli_utils import run_process
 from pyk.kast import KApply, KAst, KInner, KLabel, KSort, KToken, Subst
-from pyk.kastManip import collectFreeVars, inlineCellMaps
+from pyk.kastManip import collectFreeVars, inlineCellMaps, splitConfigFrom
 from pyk.ktool import KRun
 from pyk.ktool.kprint import paren
 from pyk.prelude import Sorts, build_assoc, buildCons, intToken, stringToken
+
+from kavm_algod import constants
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -26,25 +39,31 @@ def add_include_arg(includes: List[str]) -> List[Any]:
 
 
 class KAVM(KRun):
+    """
+    Interact with the K semantics of AVM: evaluate Algorand transaction groups
+    """
+
     def __init__(
         self,
         definition_dir: Path,
         use_directory: Any = None,
-        faucet: Optional[KAVMAccount] = None,
+        faucet_address: Optional[str] = None,
     ) -> None:
         super().__init__(definition_dir, use_directory=use_directory)
         KAVM._patch_symbol_table(self.symbol_table)
-        self._current_config = self._empty_config
-        self._faucet = faucet
+        self._current_config = self._initial_config()
         self._accounts: Dict[str, KAVMAccount] = {}
+        if faucet_address is not None:
+            self._faucet = KAVMAccount(faucet_address, constants.FAUCET_ALGO_SUPPLY)
+            self._accounts[faucet_address] = self._faucet
+
+    @property
+    def accounts(self) -> Dict[str, KAVMAccount]:
+        return self._accounts
 
     @property
     def faucet(self) -> KAVMAccount:
         return self._faucet
-
-    @faucet.setter
-    def faucet(self, faucet: KAVMAccount) -> None:
-        self._faucet = faucet
 
     @staticmethod
     def kompile(
@@ -94,12 +113,12 @@ class KAVM(KRun):
         return self.definition.empty_config(KSort('GeneratedTopCell'))
 
     @property
-    def current_config(self) -> KInner:
+    def current_config(self) -> KAst:
         """Return the current configuration KAST term"""
         return self._current_config
 
     @current_config.setter
-    def current_config(self, new_config: KInner) -> None:
+    def current_config(self, new_config: KAst) -> None:
         self._current_config = new_config
 
     @staticmethod
@@ -120,15 +139,46 @@ class KAVM(KRun):
             [txn.transaction_cell for txn in txns],
         )
 
-    def simulation_config(
-        self,
-        accounts: List[KAVMAccount],
-        transactions: List[KAVMTransaction],
-    ) -> KInner:
+    def eval_transactions(
+        self, txns: List[KAVMTransaction], new_addresses: Set[str] = set()
+    ) -> Any:
         """
-        Create a configuration to be passed to krun with --term
+        Evaluate a transaction group
+
+        Parameters
+        ----------
+        txns
+            transaction group
+        new_accounts
+            Algorand addresses discovered while pre-precessing the transactions in the KAVMClinet class
+
+        Embed the group into the current configuration, and trigger its evaluation
+
+        If the group is accepted, put resulting configuration as the new current, and roll back if regected.
         """
-        txids = [txn.txid for txn in transactions]
+
+        pre_state = self.current_config
+
+        # start tracking any newly discovered addresses with empty accounts
+        for addr in new_addresses.difference(self.accounts.keys()):
+            self.accounts[addr] = KAVMAccount(addr)
+
+        self.current_config = self.simulation_config(txns)
+
+        # construct the KAVM configuration and run it via krun
+        (krun_return_code, output) = self._run_with_current_config()
+        if isinstance(output, KAst) and krun_return_code == 0:
+            # Finilize successful evaluation: self._current_config and self._accounts
+            self.current_config = output
+            # TODO: update self.accounts
+            return {'txId': txns[0].txid}
+        else:
+            exit(krun_return_code)
+
+    def _initial_config(self) -> KAst:
+        """
+        Create the initial configuration term with cells containing defaults
+        """
         teal_cell_subst = Subst(
             {
                 'PC_CELL': intToken(0),
@@ -150,13 +200,12 @@ class KAVM(KRun):
         return teal_cell_subst.compose(
             Subst(
                 {
-                    'ACCOUNTSMAP_CELL': KAVM.accounts_cell(accounts),
-                    'TRANSACTIONS_CELL': KAVM.transactions_cell(transactions),
-                    'GROUPSIZE_CELL': intToken(len(transactions)),
+                    'ACCOUNTSMAP_CELL': KAVM.accounts_cell([]),
+                    'TRANSACTIONS_CELL': KAVM.transactions_cell([]),
+                    'GROUPSIZE_CELL': intToken(0),
                     'TXGROUPID_CELL': intToken(0),  # TODO: revise
-                    # set the current TX to the first submitted txn
-                    # TODO: the txn id must in fact be a str token, but we need to first change this in KAVM
-                    'CURRENTTX_CELL': intToken(transactions[0].txid),
+                    # TODO: CURRENTTX_CELL should be of sort String in the semantics
+                    'CURRENTTX_CELL': intToken(0),
                     'RETURNCODE_CELL': intToken(4),
                     'RETURNSTATUS_CELL': stringToken('Failure - program is stuck'),
                     'GLOBALROUND_CELL': intToken(6),
@@ -170,17 +219,17 @@ class KAVM(KRun):
                     'BLOCKHEIGHT_CELL': intToken(0),
                     'TEALPROGRAMS_CELL': KApply('.TealPrograms'),
                     'K_CELL': KApply(
-                        '#evalTxGroup()_AVM-EXECUTION_AlgorandCommand',
+                        '.AS_AVM-EXECUTION-SYNTAX_AVMSimulation',
                     ),
                     'DEQUE_CELL': buildCons(
                         KApply('.List'),
                         KLabel('_List_'),
-                        [KApply(KLabel('ListItem'), intToken(x)) for x in txids],
+                        [],
                     ),
                     'DEQUEINDEXSET_CELL': buildCons(
                         KApply('.Set'),
                         KLabel('_Set_', KSort('Set')),
-                        [KApply(KLabel('SetItem'), intToken(x)) for x in txids],
+                        [],
                     ),
                     'GENERATEDCOUNTER_CELL': intToken(0),
                     'NEXTAPPID_CELL': intToken(0),
@@ -189,7 +238,47 @@ class KAVM(KRun):
             )
         ).apply(config)
 
-    def run_with_current_config(self) -> Tuple[int, Union[KAst, str]]:
+    def simulation_config(
+        self,
+        transactions: List[KAVMTransaction],
+    ) -> KAst:
+        """
+        Create a configuration to be passed to krun with --term
+        """
+        txids = [txn.txid for txn in transactions]
+
+        (current_symbolic_config, current_subst) = splitConfigFrom(self.current_config)
+
+        txns_and_accounts_subst = Subst(
+            {
+                'ACCOUNTSMAP_CELL': KAVM.accounts_cell(list(self.accounts.values())),
+                'TRANSACTIONS_CELL': KAVM.transactions_cell(transactions),
+                'GROUPSIZE_CELL': intToken(len(transactions)),
+                'TXGROUPID_CELL': intToken(0),  # TODO: revise
+                'CURRENTTX_CELL': intToken(transactions[0].txid),
+                'K_CELL': KApply(
+                    '#evalTxGroup()_AVM-EXECUTION_AlgorandCommand',
+                ),
+                'DEQUE_CELL': buildCons(
+                    KApply('.List'),
+                    KLabel('_List_'),
+                    [KApply(KLabel('ListItem'), intToken(x)) for x in txids],
+                ),
+                'DEQUEINDEXSET_CELL': buildCons(
+                    KApply('.Set'),
+                    KLabel('_Set_', KSort('Set')),
+                    [KApply(KLabel('SetItem'), intToken(x)) for x in txids],
+                ),
+            }
+        )
+
+        return (
+            Subst(current_subst)
+            .compose(txns_and_accounts_subst)
+            .apply(current_symbolic_config)
+        )
+
+    def _run_with_current_config(self) -> Tuple[int, Union[KAst, str]]:
         """
         Run the AVM simulation from the configuration specified by self.current_config.
 
@@ -197,7 +286,7 @@ class KAVM(KRun):
         """
         return self.run_term(self.current_config)
 
-    def run_term(self, configuration: KInner) -> Tuple[int, Union[KAst, str]]:
+    def run_term(self, configuration: KAst) -> Tuple[int, Union[KAst, str]]:
         """
         Execute krun --term, passing the supplied configuration as a KORE term
         """

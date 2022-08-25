@@ -5,7 +5,6 @@ from algosdk import account
 from algosdk.future.transaction import SuggestedParams
 from algosdk.kmd import KMDClient
 from algosdk.v2client.algod import AlgodClient
-from kavm_algod.adaptors.account import KAVMAccount
 from kavm_algod.algod import KAVMClient
 
 from .constants import ALGOD_ADDRESS, ALGOD_TOKEN, KMD_ADDRESS, KMD_TOKEN
@@ -47,29 +46,22 @@ def faucet(algod: AlgodClient, kmd: KMDClient) -> Dict[str, Optional[Any]]:
 
 
 @pytest.fixture
-def kalgod() -> KAVMClient:
-    """Dummy KAVMAlgodClient"""
-    algod_token = 'ktealktealktealkteal'
-    algod_address = 'http://kteal:8080'
-
-    faucet_private_key, faucet_address = account.generate_account()
-
-    return KAVMClient(
-        algod_token,
-        algod_address,
-    )
-
-
-@pytest.fixture
-def kalgod_faucet(kalgod: KAVMClient) -> Dict[str, Optional[Any]]:
+def kalgod_faucet() -> Dict[str, Optional[Any]]:
     """
     Faucet address and private key of the active KAVM
     """
 
     faucet_private_key, faucet_address = account.generate_account()
-
-    kalgod.kavm.faucet = KAVMAccount(address=faucet_address, balance=1_000_000_000_000)
     return {'address': faucet_address, 'private_key': faucet_private_key}
+
+
+@pytest.fixture
+def kalgod(kalgod_faucet: Dict[str, Optional[Any]]) -> KAVMClient:
+    """Dummy KAVMAlgodClient"""
+    algod_token = 'ktealktealktealkteal'
+    algod_address = 'http://kteal:8080'
+
+    return KAVMClient(algod_token, algod_address, kalgod_faucet['address'])
 
 
 @pytest.fixture

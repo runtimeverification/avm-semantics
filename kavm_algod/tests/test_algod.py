@@ -9,7 +9,7 @@ from .constants import ALGOD_ADDRESS, ALGOD_TOKEN
 
 
 def test_kalgod_init() -> None:
-    _ = KAVMClient(ALGOD_ADDRESS, ALGOD_TOKEN)
+    _ = KAVMClient(ALGOD_ADDRESS, ALGOD_TOKEN, None)
 
 
 def test_faucet(
