@@ -100,7 +100,7 @@ module APPLICATIONS
   configuration
     <appsCreated>
       <app multiplicity="*" type="Map">
-        <appID>           NoTValue </appID>
+        <appID>           0        </appID>
         <approvalPgm>     #pragma mode stateful int 1 </approvalPgm>
         <clearStatePgm>   #pragma mode stateful int 1 </clearStatePgm>
         <globalState>
@@ -221,8 +221,8 @@ module ALGO-BLOCKCHAIN
       <assetCreator> .Map </assetCreator> // AssetID |-> Creator's address
       <blocks>       .Map </blocks>       // Int -> Block (Unused)
       <blockheight>  0    </blockheight>
-      <nextAssetId>  0    </nextAssetId>
-      <nextAppId>    0    </nextAppId>
+      <nextAssetID>  1    </nextAssetID>
+      <nextAppID>    1    </nextAppID>
     </blockchain>
 ```
 

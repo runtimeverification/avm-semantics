@@ -5,7 +5,7 @@ addAccount <address> b"1" </address> <balance> 100000 </balance>;
 
 #initTxGroup();
 
-// Add app 0
+// Add app 1
 addAppCallTx <txID> 0 </txID>
              <sender>            b"1"        </sender>
              <applicationID>     NoTValue    </applicationID>
@@ -22,7 +22,7 @@ addAppCallTx <txID> 0 </txID>
              <approvalPgmIdx>    1           </approvalPgmIdx>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
-// Add app 1
+// Add app 2
 addAppCallTx <txID> 1 </txID>
              <sender>            b"1"        </sender>
              <applicationID>     NoTValue    </applicationID>

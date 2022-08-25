@@ -280,6 +280,42 @@ Add asset to account
        requires (BALANCE +Int AMOUNT) >=Int 0
 ```
 
+Assign app ID
+
+Performed after the first execution of an application. There are two cases because the user can possibly opt
+in to the app during creation, in which case they opt into app 0, and this entry also has to be changed to the
+correct app ID.
+
+```k
+  syntax AlgorandCommand ::= #assignAppID()
+  rule <k> #assignAppID() => . ...</k>
+       <account>
+         <app>
+           <appID> 0 => APP_ID </appID>
+           ...
+         </app>
+         <optInApp>
+           <optInAppID> 0 => APP_ID </optInAppID>
+           ...
+         </optInApp>
+         ...
+       </account>
+       <nextAppID> APP_ID => APP_ID +Int 1 </nextAppID>
+       <appCreator> ((0 => APP_ID) |-> _) ... </appCreator>
+
+  rule <k> #assignAppID() => . ...</k>
+       <account>
+         <app>
+           <appID> 0 => APP_ID </appID>
+           ...
+         </app>
+         <appsOptedIn> OA </appsOptedIn>
+         ...
+       </account>
+       <nextAppID> APP_ID => APP_ID +Int 1 </nextAppID>
+       <appCreator> ((0 => APP_ID) |-> _) ... </appCreator>
+    requires notBool (0 in_optedInApps(<appsOptedIn> OA </appsOptedIn>))
+```
 
 #### (Optional) Eval TEAL
 
@@ -400,7 +436,7 @@ Create asset
          ...
        </transaction>
 
-       <nextAssetId> ASSET_ID => ASSET_ID +Int 1 </nextAssetId>
+       <nextAssetID> ASSET_ID => ASSET_ID +Int 1 </nextAssetID>
        <account>
          <address> SENDER </address>
          <assetsCreated>
@@ -457,6 +493,7 @@ Modify asset
          <assetReserveAddr>   _ => RESERVE_ADDR      </assetReserveAddr>
          <assetFreezeAddr>    _ => FREEZE_ADDR       </assetFreezeAddr>
          <assetClawbackAddr>  _ => CLAWB_ADDR        </assetClawbackAddr>
+         ...
        </asset>
     requires isTValue(MANAGER_ADDR) 
       orBool isTValue(RESERVE_ADDR) 
@@ -673,12 +710,12 @@ Not supported.
 App create
 
 ```k
-  rule <k> #executeTxn(@appl) ... </k>
+  rule <k> #executeTxn(@appl) => (#executeTxn(@appl) ~> #assignAppID()) ...</k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>              TXN_ID             </txID>
          <sender>            SENDER             </sender>
-         <applicationID>     NoTValue => APP_ID </applicationID>
+         <applicationID>     NoTValue => 0      </applicationID>
          <approvalProgram>   APPROVAL_PGM       </approvalProgram>
          <clearStateProgram> CLEAR_STATE_PGM    </clearStateProgram>
          <globalNui>         GLOBAL_INTS        </globalNui>
@@ -700,7 +737,7 @@ App create
          <appsCreated>
            APPS =>
            <app>
-             <appID>         APP_ID          </appID>
+             <appID>         0               </appID>
              <approvalPgm>   APPROVAL_PGM    </approvalPgm>
              <clearStatePgm> CLEAR_STATE_PGM </clearStatePgm>
              <globalInts>    GLOBAL_INTS     </globalInts>
@@ -714,7 +751,8 @@ App create
          </appsCreated>
          ...
        </account>
-       <nextAppId> APP_ID => APP_ID +Int 1 </nextAppId>
+       <appCreator> .Map => (0 |-> SENDER) ... </appCreator>
+    requires notBool(0 in_apps(<appsCreated> APPS </appsCreated>))
 ```
 
 NoOp
@@ -724,7 +762,7 @@ NoOp
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID        </txID>
-         <applicationID> APP_ID:TValue </applicationID>
+         <applicationID> APP_ID:Int    </applicationID>
          <onCompletion>  @ NoOp        </onCompletion>
          ...
        </transaction>
@@ -879,7 +917,7 @@ CloseOut
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID        </txID>
-         <applicationID> APP_ID:TValue </applicationID>
+         <applicationID> APP_ID:Int    </applicationID>
          <sender>        SENDER        </sender>
          <onCompletion>  @ CloseOut    </onCompletion>
          ...
@@ -905,7 +943,7 @@ TODO make sure `#clearState` runs even when a panic is generated
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID        </txID>
-         <applicationID> APP_ID:TValue </applicationID>
+         <applicationID> APP_ID:Int    </applicationID>
          <sender>        SENDER        </sender>
          <onCompletion> @ ClearState   </onCompletion>
          ...
@@ -929,7 +967,7 @@ UpdateApplication
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>              TXN_ID              </txID>
-         <applicationID>     APP_ID:TValue       </applicationID>
+         <applicationID>     APP_ID:Int          </applicationID>
          <onCompletion>      @ UpdateApplication </onCompletion>
          <approvalProgram>   NEW_APPROVAL_PGM    </approvalProgram>
          <clearStateProgram> NEW_CLEAR_STATE_PGM </clearStateProgram>
@@ -954,7 +992,7 @@ DeleteApplication
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID              </txID>
-         <applicationID> APP_ID:TValue       </applicationID>
+         <applicationID> APP_ID:Int          </applicationID>
          <onCompletion>  @ DeleteApplication </onCompletion>
          ...
        </transaction>
@@ -963,6 +1001,7 @@ DeleteApplication
          <approvalPgm> APPROVAL_PGM </approvalPgm>
          ...
        </app>
+       <appCreator> (APP_ID |-> _) => .Map ... </appCreator>
 ```
 
 * **Layer-2 transactions**

@@ -6,7 +6,7 @@ addAccount <address> b"2" </address> <balance> 100000 </balance>;
 
 #initTxGroup();
 
-// Add app and opt in b"1"
+// Add app 1 and opt in b"1"
 addAppCallTx <txID> 0 </txID>
              <sender>            b"1"        </sender>
              <applicationID>     NoTValue    </applicationID>
@@ -23,10 +23,10 @@ addAppCallTx <txID> 0 </txID>
              <approvalPgmIdx>    0           </approvalPgmIdx>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
-// Call from b"2"
+// Call app 1 from b"2"
 addAppCallTx <txID> 1 </txID>
              <sender>            b"2"        </sender>
-             <applicationID>     0           </applicationID>
+             <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>

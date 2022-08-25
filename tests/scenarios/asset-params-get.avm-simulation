@@ -28,7 +28,7 @@ addAppCallTx <txID> 1 </txID>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
-             <foreignAssets>     0 1         </foreignAssets>
+             <foreignAssets>     1 2         </foreignAssets>
              <globalNui>         0           </globalNui>
              <globalNbs>         0           </globalNbs>
              <localNui>          0           </localNui>

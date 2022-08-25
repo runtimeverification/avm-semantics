@@ -21,7 +21,7 @@ addAssetConfigTx <txID>                0           </txID>
                  <configFreezeAddr>    NoTValue    </configFreezeAddr>
                  <configClawbackAddr>  NoTValue    </configClawbackAddr>;
 
-// Add app 0 and opt in b"1"
+// Add app 1 and opt in b"1"
 addAppCallTx <txID> 1 </txID>
              <sender>            b"1"        </sender>
              <applicationID>     NoTValue    </applicationID>
@@ -41,7 +41,7 @@ addAppCallTx <txID> 1 </txID>
 // opt in b"2"
 addAppCallTx <txID> 2 </txID>
              <sender>            b"2"        </sender>
-             <applicationID>     0           </applicationID>
+             <applicationID>     1           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
@@ -58,12 +58,12 @@ addAppCallTx <txID> 2 </txID>
 // Call main app code
 addAppCallTx <txID> 3 </txID>
              <sender>            b"1"        </sender>
-             <applicationID>     0           </applicationID>
+             <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          b"2"        </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
-             <foreignAssets>     0           </foreignAssets>
+             <foreignAssets>     1           </foreignAssets>
              <globalNui>         0           </globalNui>
              <globalNbs>         0           </globalNbs>
              <localNui>          0           </localNui>

@@ -41,7 +41,7 @@ addAppCallTx <txID> 1 </txID>
 // Call app from b"2"
 addAppCallTx <txID> 2 </txID>
              <sender>            b"2"        </sender>
-             <applicationID>     0           </applicationID>
+             <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>

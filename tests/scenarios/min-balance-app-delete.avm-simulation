@@ -6,7 +6,7 @@ addAccount <address> b"2" </address> <balance> 100000 </balance>;
 
 #initTxGroup();
 
-// Add app 0 from b"1" and opt in
+// Add app 1 from b"1" and opt in
 addAppCallTx <txID> 0 </txID>
              <sender>            b"1"        </sender>
              <applicationID>     NoTValue    </applicationID>
@@ -23,7 +23,7 @@ addAppCallTx <txID> 0 </txID>
              <approvalPgmIdx>    0           </approvalPgmIdx>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
-// Add app 1 (trivial) from b"2"
+// Add app 2 (trivial) from b"2"
 addAppCallTx <txID> 1 </txID>
              <sender>            b"2"        </sender>
              <applicationID>     NoTValue    </applicationID>
@@ -40,10 +40,10 @@ addAppCallTx <txID> 1 </txID>
              <approvalPgmIdx>    1           </approvalPgmIdx>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
-// Delete app 1
+// Delete app 2
 addAppCallTx <txID> 2 </txID>
              <sender>            b"2"                </sender>
-             <applicationID>     1                   </applicationID>
+             <applicationID>     2                   </applicationID>
              <onCompletion>      @ DeleteApplication </onCompletion>
              <accounts>          .TValueList         </accounts>
              <applicationArgs>   .TValueList         </applicationArgs>
@@ -57,10 +57,10 @@ addAppCallTx <txID> 2 </txID>
              <approvalPgmIdx>    0                   </approvalPgmIdx>
              <clearStatePgmIdx>  0                   </clearStatePgmIdx>;
 
-// Call app 0 from b"2" to check min balance
+// Call app 1 from b"2" to check min balance
 addAppCallTx <txID> 3 </txID>
              <sender>            b"2"                </sender>
-             <applicationID>     0                   </applicationID>
+             <applicationID>     1                   </applicationID>
              <onCompletion>      @ DeleteApplication </onCompletion>
              <accounts>          .TValueList         </accounts>
              <applicationArgs>   .TValueList         </applicationArgs>

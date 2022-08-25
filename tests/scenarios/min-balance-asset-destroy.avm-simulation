@@ -25,7 +25,7 @@ addAssetConfigTx <txID> 0 </txID>
 // Destroy asset
 addAssetConfigTx <txID> 1 </txID>
                  <sender>              b"1"     </sender>
-                 <configAsset>         0        </configAsset>
+                 <configAsset>         1        </configAsset>
                  <configTotal>         NoTValue </configTotal>
                  <configDecimals>      NoTValue </configDecimals>
                  <configDefaultFrozen> NoTValue </configDefaultFrozen>
@@ -38,7 +38,7 @@ addAssetConfigTx <txID> 1 </txID>
                  <configFreezeAddr>    NoTValue </configFreezeAddr>
                  <configClawbackAddr>  NoTValue </configClawbackAddr>;
 
-// Create app 0
+// Create app 1
 addAppCallTx <txID> 2 </txID>
              <sender>            b"2"        </sender>
              <applicationID>     NoTValue    </applicationID>
@@ -58,7 +58,7 @@ addAppCallTx <txID> 2 </txID>
 // Call test code
 addAppCallTx <txID> 3 </txID>
              <sender>            b"1"        </sender>
-             <applicationID>     0           </applicationID>
+             <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>

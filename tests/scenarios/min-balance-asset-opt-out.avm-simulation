@@ -25,7 +25,7 @@ addAssetConfigTx <txID> 0 </txID>
 // Opt b"2" in to asset
 addAssetTransferTx <txID> 1 </txID>
                    <sender>        b"2"     </sender>
-                   <xferAsset>     0        </xferAsset>
+                   <xferAsset>     1        </xferAsset>
                    <assetAmount>   0        </assetAmount>
                    <assetASender>  NoTValue </assetASender>
                    <assetReceiver> b"2"     </assetReceiver>
@@ -34,13 +34,13 @@ addAssetTransferTx <txID> 1 </txID>
 // Opt b"2" out of asset
 addAssetTransferTx <txID> 2 </txID>
                    <sender>        b"2"     </sender>
-                   <xferAsset>     0        </xferAsset>
+                   <xferAsset>     1        </xferAsset>
                    <assetAmount>   0        </assetAmount>
                    <assetASender>  NoTValue </assetASender>
                    <assetReceiver> b"2"     </assetReceiver>
                    <assetCloseTo>  b"1"     </assetCloseTo>;
 
-// Create app 0
+// Create app 1
 addAppCallTx <txID> 3 </txID>
              <sender>            b"1"        </sender>
              <applicationID>     NoTValue    </applicationID>
@@ -60,7 +60,7 @@ addAppCallTx <txID> 3 </txID>
 // Call test code
 addAppCallTx <txID> 4 </txID>
              <sender>            b"2"        </sender>
-             <applicationID>     0           </applicationID>
+             <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>

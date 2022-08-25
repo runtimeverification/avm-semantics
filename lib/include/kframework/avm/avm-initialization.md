@@ -41,7 +41,6 @@ The transaction is initialized first.
            _ => .Bag
           </transactions>
        </txGroup>
-       <blockchain> BLOCKCHAIN_STATE </blockchain>
 ```
 
 ### Transactions
@@ -139,7 +138,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
             <localNui>          LOCAL_INTS    </localNui>
             <localNbs>          LOCAL_BYTES   </localNbs>
             <extraProgramPages> EXTRA_PAGES   </extraProgramPages>
-            <approvalProgram>   getTealByIndex(TEAL_PGMS_LIST, APPROVAL_IDX) </approvalProgram>
+            <approvalProgram>   getTealByIndex(TEAL_PGMS_LIST, APPROVAL_IDX)    </approvalProgram>
             <clearStateProgram> getTealByIndex(TEAL_PGMS_LIST, CLEAR_STATE_IDX) </clearStateProgram>
             ...                            // other fields will receive default values
           </appCallTxFields>
