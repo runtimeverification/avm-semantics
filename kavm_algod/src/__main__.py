@@ -1,14 +1,8 @@
-import json
 import os
-import re
-import subprocess
-import sys
 from argparse import ArgumentParser
-from pathlib import Path
 
 from pyk.cli_utils import dir_path, file_path
 from pyk.kast import KAst
-from pyk.kastManip import inlineCellMaps
 
 from .kavm import KAVM
 
@@ -37,22 +31,6 @@ def main() -> None:
         kavm = KAVM(definition_dir=args.definition_dir)
 
         (krun_return_code, output) = kavm.run(args.input_file)
-        if args.output != 'none':
-            if isinstance(output, KAst):
-                print(kavm.pretty_print(output))
-            else:
-                print(output)
-        exit(krun_return_code)
-
-    if args.command == 'llvm-krun':
-        kavm = KAVM(definition_dir=args.definition_dir)
-
-        parse_command = f'kavm kast {args.input_file} kore'
-        output = subprocess.run(parse_command, shell=True, capture_output=True)
-
-        avm_simulation_kore_term = output.stdout.decode('utf-8')
-
-        (krun_return_code, output) = kavm.krun_kore(avm_simulation_kore_term)
         if args.output != 'none':
             if isinstance(output, KAst):
                 print(kavm.pretty_print(output))

@@ -1,22 +1,17 @@
-import os
-import json
 import logging
-import tempfile
-from pathlib import Path
+import os
 from pprint import PrettyPrinter
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import msgpack
 from algosdk import encoding
 from algosdk.future.transaction import Transaction
 from algosdk.v2client import algod
-from pyk.kast import KApply, KSort, KLabel, KAst
-from pyk.kastManip import minimize_term
-from pyk.prelude import stringToken, intToken
-
-from kavm_algod.kavm import KAVM
+from kavm_algod.adaptors.account import KAVMAccount, get_account
 from kavm_algod.adaptors.transaction import KAVMTransaction
-from kavm_algod.adaptors.account import KAVMAccount
+from kavm_algod.kavm import KAVM
+from pyk.kast import KAst
+from pyk.kastManip import splitConfigFrom
 
 
 def msgpack_decode_txn_list(enc: bytes) -> List[Transaction]:
@@ -76,7 +71,7 @@ class KAVMClient(algod.AlgodClient):
         method: str,
         requrl: str,
         params: List[str] = None,
-        data: bytes = None,
+        data: Optional[bytes] = None,
         headers: List[str] = None,
         response_format: str = 'Json',
     ) -> Dict[str, Any]:
@@ -97,28 +92,43 @@ class KAVMClient(algod.AlgodClient):
         """
         Handle GET requests to algod with KAVM
         """
-        if requrl == '/transactions':
-            return dict({'txId': -1})
-        elif requrl == '/transactions/params':
-            return {
-                'consensus-version': 31,
-                'fee': 1000,
-                'genesis-id': 'pyteal-eval',
-                'genesis-hash': 'pyteal-evalpyteal-evalpyteal-evalpyteal-eval',
-                'last-round': 1,
-                'min-fee': 1000,
-            }
-        else:
-            raise NotImplementedError(f'Endpoint not implemented: {requrl}')
-        raise NotImplementedError(requrl.split())
+        _, endpoint, *params = requrl.split('/')
 
-    def _handle_post_requests(self, requrl: str, data: bytes) -> Dict[str, Any]:
+        if endpoint == 'transactions':
+            if len(params) == 0:
+                return dict({'txId': -1})
+            if params[0] == 'params':
+                return {
+                    'consensus-version': 31,
+                    'fee': 1000,
+                    'genesis-id': 'pyteal-eval',
+                    'genesis-hash': 'pyteal-evalpyteal-evalpyteal-evalpyteal-eval',
+                    'last-round': 1,
+                    'min-fee': 1000,
+                }
+            else:
+                raise NotImplementedError(f'Endpoint not implemented: {requrl}')
+        elif endpoint == 'accounts':
+            (config, subst) = splitConfigFrom(self.kavm.current_config)
+            address = params[0]
+            return KAVMAccount.from_account_cell(
+                get_account(address, subst['ACCOUNTSMAP_CELL'])
+            ).dictify()
+
+        else:
+            self.algodLogger.debug(requrl.split('/'))
+            raise NotImplementedError(f'Endpoint not implemented: {requrl}')
+
+    def _handle_post_requests(
+        self, requrl: str, data: Optional[bytes]
+    ) -> Dict[str, Any]:
         """
         Handle POST requests to algod with KAVM
         """
         # handle transaction group submission
         # TODO: separate into a function
         if requrl == '/transactions':
+            assert data is not None, 'attempt to submit an empty transaction group!'
             # decode signed transactions from binary into py-algorand-sdk objects
             txns = list(
                 map(lambda t: t.dictify()['txn'], msgpack_decode_txn_list(data))
@@ -130,6 +140,7 @@ class KAVMClient(algod.AlgodClient):
 
             # we'll need tpo keep track pf all addresses the transactions mention to
             # make KAVM aware of them
+            # TODO: probably need to store them in the KAVM instance
             known_addresses = set()
             # kavm_txns will hold the KAst terms of the transactions
             kavm_txns = []
@@ -142,18 +153,30 @@ class KAVMClient(algod.AlgodClient):
                 )
 
             # construct account cells from the discovered addresses
-            # TODO: don't fund them here! they must be explicitly funded from a faucet
-            accounts = [KAVMAccount(address, 1_000_000) for address in known_addresses]
+            accounts = {address: KAVMAccount(address) for address in known_addresses}
+            # TODO: handle faucet in a less ad-hoc way, in the KAVM class
+            if self.kavm.faucet.address in accounts.keys():
+                accounts[self.kavm.faucet.address] = KAVMAccount(
+                    self.kavm.faucet.address, 1_000_000_000
+                )
+
+            # print(
+            #     self.kavm.pretty_print(
+            #         self.kavm.simulation_config(accounts.values(), kavm_txns)
+            #     )
+            # )
+            # assert False
 
             # construct the KAVM configuration and run it via krun
             (krun_return_code, output) = self.kavm.run_term(
-                self.kavm.simulation_config(accounts, kavm_txns)
+                self.kavm.simulation_config(accounts.values(), kavm_txns)
             )
-            if isinstance(output, KAst):
-                self.algodLogger.debug(self.kavm.pretty_print(output))
-                # TODO: set the new current configuration KAVM
+            if isinstance(output, KAst) and krun_return_code == 0:
+                # commit the new configuration
+                self.kavm.current_config = output
             else:
-                self.algodLogger.debug(output)
+                # something went wrong: show the last configuration as a pretty term
+                self.algodLogger.critical(self.kavm.pretty_print(output))
                 exit(krun_return_code)
 
             return {'txId': -1}

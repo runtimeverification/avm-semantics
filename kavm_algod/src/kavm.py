@@ -1,23 +1,22 @@
+import json
 import logging
+import os
+import re
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from subprocess import CalledProcessError
-import subprocess
-import os
-import json
-from typing import Any, Callable, Dict, Final, List, Optional, Union, Iterable
-import re
-import tempfile
-
-from pyk.kast import KAst, KInner, KSort, Subst, KApply, KLabel, KToken
-from pyk.kastManip import inlineCellMaps, collectFreeVars
-from pyk.cli_utils import run_process
-from pyk.ktool import KRun
-from pyk.ktool.kprint import paren
-from pyk.prelude import intToken, stringToken, build_assoc, buildCons, Sorts
+from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Tuple, Union
 
 from kavm_algod.adaptors.account import KAVMAccount
 from kavm_algod.adaptors.transaction import KAVMTransaction
+from pyk.cli_utils import run_process
+from pyk.kast import KApply, KAst, KInner, KLabel, KSort, KToken, Subst
+from pyk.kastManip import collectFreeVars, inlineCellMaps
+from pyk.ktool import KRun
+from pyk.ktool.kprint import paren
+from pyk.prelude import Sorts, build_assoc, buildCons, intToken, stringToken
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -27,10 +26,25 @@ def add_include_arg(includes: List[str]) -> List[Any]:
 
 
 class KAVM(KRun):
-    def __init__(self, definition_dir: Path, use_directory: Any = None) -> None:
+    def __init__(
+        self,
+        definition_dir: Path,
+        use_directory: Any = None,
+        faucet: Optional[KAVMAccount] = None,
+    ) -> None:
         super().__init__(definition_dir, use_directory=use_directory)
         KAVM._patch_symbol_table(self.symbol_table)
         self._current_config = self._empty_config
+        self._faucet = faucet
+        self._accounts: Dict[str, KAVMAccount] = {}
+
+    @property
+    def faucet(self) -> KAVMAccount:
+        return self._faucet
+
+    @faucet.setter
+    def faucet(self, faucet: KAVMAccount) -> None:
+        self._faucet = faucet
 
     @staticmethod
     def kompile(
@@ -61,7 +75,7 @@ class KAVM(KRun):
         )
         command += add_include_arg(includes)
         try:
-            run_process(command, _LOGGER)
+            run_process(command, logger=_LOGGER)
         except CalledProcessError as err:
             sys.stderr.write(f'\nkompile stdout:\n{err.stdout}\n')
             sys.stderr.write(f'\nkompile stderr:\n{err.stderr}\n')
@@ -98,7 +112,7 @@ class KAVM(KRun):
         )
 
     @staticmethod
-    def transactions_cell(txns: List[KInner]) -> KInner:
+    def transactions_cell(txns: List[KAVMTransaction]) -> KInner:
         """Concatenate several transactions"""
         return build_assoc(
             KApply('.TransactionCellMap'),
@@ -175,15 +189,15 @@ class KAVM(KRun):
             )
         ).apply(config)
 
-    def run_with_current_config(self) -> (int, Union[KAst, str]):
+    def run_with_current_config(self) -> Tuple[int, Union[KAst, str]]:
         """
         Run the AVM simulation from the configuration specified by self.current_config.
 
         If successful, put the resulting configuration as the new current config.
         """
-        raise NotImplementedError()
+        return self.run_term(self.current_config)
 
-    def run_term(self, configuration: KInner) -> (int, Union[KAst, str]):
+    def run_term(self, configuration: KInner) -> Tuple[int, Union[KAst, str]]:
         """
         Execute krun --term, passing the supplied configuration as a KORE term
         """
@@ -203,7 +217,7 @@ class KAVM(KRun):
             )
 
             kore_term = self.kast(
-                input_file=tmp_kast_json_file.name,
+                input_file=Path(tmp_kast_json_file.name),
                 module='AVM-EXECUTION',
                 sort=KSort('GeneratedTopCell'),
             )
@@ -227,7 +241,7 @@ class KAVM(KRun):
 
             return (output.returncode, inlineCellMaps(output_kast_term))
 
-    def run(self, input_file: Path) -> (int, Union[KAst, str]):
+    def run_legacy(self, input_file: Path) -> Tuple[int, Union[KAst, str]]:
         """Run an AVM simulaion scenario with krun"""
 
         raw_avm_simulation = input_file.read_text()

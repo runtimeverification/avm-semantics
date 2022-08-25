@@ -7,11 +7,9 @@ from algosdk.future.transaction import (
     SuggestedParams,
     Transaction,
 )
-from algosdk.encoding import decode_address
-from pyk.kast import KAst, KInner, KSort, Subst, KToken
-from pyk.kastManip import collectFreeVars, splitConfigFrom
-
 from kavm_algod.pyk_utils import maybeTValue, tvalueList
+from pyk.kast import KAst, KInner, KSort, Subst
+from pyk.kastManip import collectFreeVars, splitConfigFrom
 
 
 class KAVMTransaction:
@@ -31,11 +29,11 @@ class KAVMTransaction:
         self._txid = txid
 
     @property
-    def txid(self):
+    def txid(self) -> str:
         return self._txid
 
     @property
-    def transaction_cell(self):
+    def transaction_cell(self) -> KInner:
         return self._transaction_cell
 
     @staticmethod
