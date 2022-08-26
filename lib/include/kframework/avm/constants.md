@@ -61,7 +61,7 @@ Minimum transaction fee (MinTxnFee)
   rule PARAM_MIN_TXN_FEE => 1000
 ```
 
-Maximum transaction life (MinTxnFee)
+Maximum transaction life (MaxTxnLife)
 
 ```k
   rule PARAM_MAX_TXN_LIFE => 1000

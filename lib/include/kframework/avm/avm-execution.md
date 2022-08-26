@@ -198,8 +198,8 @@ Update application programs
   rule <k> #updatePrograms(APP_ID, APPROVAL_PGM, CLEAR_STATE_PGM) => . ...</k>
        <app>
          <appID> APP_ID </appID>
-         <approvalPgm> _ => APPROVAL_PGM </approvalPgm>
-         <clearStatePgm> _ => CLEAR_STATE_PGM </clearStatePgm>
+         <approvalPgmSrc> _ => APPROVAL_PGM </approvalPgmSrc>
+         <clearStatePgmSrc> _ => CLEAR_STATE_PGM </clearStatePgmSrc>
          ...
        </app>
 ```
@@ -339,8 +339,8 @@ TODO: address contact creation.
        <currentTx>           TXN_ID                            </currentTx>
        <currentApplicationID> _ => APP_ID                      </currentApplicationID>
        <app>
-         <appID>       APP_ID </appID>
-         <approvalPgm> PGM    </approvalPgm>
+         <appID>          APP_ID </appID>
+         <approvalPgmSrc> PGM    </approvalPgmSrc>
          ...
        </app>
    requires APP_ID ==K getTxnField(TXN_ID, ApplicationID)
@@ -713,16 +713,18 @@ App create
   rule <k> #executeTxn(@appl) => (#executeTxn(@appl) ~> #assignAppID()) ...</k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
-         <txID>              TXN_ID             </txID>
-         <sender>            SENDER             </sender>
-         <applicationID>     NoTValue => 0      </applicationID>
-         <approvalProgram>   APPROVAL_PGM       </approvalProgram>
-         <clearStateProgram> CLEAR_STATE_PGM    </clearStateProgram>
-         <globalNui>         GLOBAL_INTS        </globalNui>
-         <globalNbs>         GLOBAL_BYTES       </globalNbs>
-         <localNui>          LOCAL_INTS         </localNui>
-         <localNbs>          LOCAL_BYTES        </localNbs>
-         <extraProgramPages> EXTRA_PAGES        </extraProgramPages>
+         <txID>                 TXN_ID              </txID>
+         <sender>               SENDER              </sender>
+         <applicationID>        NoTValue => 0       </applicationID>
+         <approvalProgramSrc>   APPROVAL_PGM_SRC    </approvalProgramSrc>
+         <clearStateProgramSrc> CLEAR_STATE_PGM_SRC </clearStateProgramSrc>
+         <approvalProgram>      APPROVAL_PGM        </approvalProgram>
+         <clearStateProgram>    CLEAR_STATE_PGM     </clearStateProgram>
+         <globalNui>            GLOBAL_INTS         </globalNui>
+         <globalNbs>            GLOBAL_BYTES        </globalNbs>
+         <localNui>             LOCAL_INTS          </localNui>
+         <localNbs>             LOCAL_BYTES         </localNbs>
+         <extraProgramPages>    EXTRA_PAGES         </extraProgramPages>
          ...
        </transaction>
        <account>
@@ -737,14 +739,16 @@ App create
          <appsCreated>
            APPS =>
            <app>
-             <appID>         0               </appID>
-             <approvalPgm>   APPROVAL_PGM    </approvalPgm>
-             <clearStatePgm> CLEAR_STATE_PGM </clearStatePgm>
-             <globalInts>    GLOBAL_INTS     </globalInts>
-             <globalBytes>   GLOBAL_BYTES    </globalBytes>
-             <localInts>     LOCAL_INTS      </localInts>
-             <localBytes>    LOCAL_BYTES     </localBytes>
-             <extraPages>    EXTRA_PAGES     </extraPages>
+             <appID>            0                   </appID>
+             <approvalPgmSrc>   APPROVAL_PGM_SRC    </approvalPgmSrc>
+             <clearStatePgmSrc> CLEAR_STATE_PGM_SRC </clearStatePgmSrc>
+             <approvalPgm>      APPROVAL_PGM        </approvalPgm>
+             <clearStatePgm>    CLEAR_STATE_PGM     </clearStatePgm>
+             <globalInts>       GLOBAL_INTS         </globalInts>
+             <globalBytes>      GLOBAL_BYTES        </globalBytes>
+             <localInts>        LOCAL_INTS          </localInts>
+             <localBytes>       LOCAL_BYTES         </localBytes>
+             <extraPages>       EXTRA_PAGES         </extraPages>
              ...
            </app>
            APPS
@@ -767,8 +771,8 @@ NoOp
          ...
        </transaction>
        <app>
-         <appID>       APP_ID       </appID>
-         <approvalPgm> APPROVAL_PGM </approvalPgm>
+         <appID>          APP_ID       </appID>
+         <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
          ...
        </app>
 ```
@@ -808,10 +812,10 @@ OptIn
          ...
        </account>
        <app>
-         <appID> APP_ID </appID>
-         <approvalPgm> APPROVAL_PGM </approvalPgm>
-         <localInts>   LOCAL_INTS   </localInts>
-         <localBytes>  LOCAL_BYTES  </localBytes>
+         <appID>          APP_ID       </appID>
+         <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
+         <localInts>      LOCAL_INTS   </localInts>
+         <localBytes>     LOCAL_BYTES  </localBytes>
          ...
        </app>
      requires notBool hasOptedInApp(APP_ID, SENDER)
@@ -831,10 +835,10 @@ OptIn
          <address> SENDER </address>
          <appsCreated>
            <app>
-             <appID>       APP_ID       </appID>
-             <approvalPgm> APPROVAL_PGM </approvalPgm>
-             <localInts>   LOCAL_INTS   </localInts>
-             <localBytes>  LOCAL_BYTES  </localBytes>
+             <appID>          APP_ID       </appID>
+             <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
+             <localInts>      LOCAL_INTS   </localInts>
+             <localBytes>     LOCAL_BYTES  </localBytes>
              ...
            </app>
            ...
@@ -874,10 +878,10 @@ OptIn
            <address> SENDER </address>
            <appsCreated>
              <app>
-               <appID>       APP_ID       </appID>
-               <approvalPgm> APPROVAL_PGM </approvalPgm>
-               <localInts>   LOCAL_INTS   </localInts>
-               <localBytes>  LOCAL_BYTES  </localBytes>
+               <appID>          APP_ID       </appID>
+               <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
+               <localInts>      LOCAL_INTS   </localInts>
+               <localBytes>     LOCAL_BYTES  </localBytes>
                ...
              </app>
              ...
@@ -923,8 +927,8 @@ CloseOut
          ...
        </transaction>
        <app>
-         <appID>       APP_ID       </appID>
-         <approvalPgm> APPROVAL_PGM </approvalPgm>
+         <appID>          APP_ID       </appID>
+         <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
          ...
        </app>
 ```
@@ -949,8 +953,8 @@ TODO make sure `#clearState` runs even when a panic is generated
          ...
        </transaction>
        <app>
-         <appID>         APP_ID          </appID>
-         <clearStatePgm> CLEAR_STATE_PGM </clearStatePgm>
+         <appID>            APP_ID          </appID>
+         <clearStatePgmSrc> CLEAR_STATE_PGM </clearStatePgmSrc>
          ...
        </app>
 ```
@@ -966,16 +970,16 @@ UpdateApplication
        </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
-         <txID>              TXN_ID              </txID>
-         <applicationID>     APP_ID:Int          </applicationID>
-         <onCompletion>      @ UpdateApplication </onCompletion>
-         <approvalProgram>   NEW_APPROVAL_PGM    </approvalProgram>
-         <clearStateProgram> NEW_CLEAR_STATE_PGM </clearStateProgram>
+         <txID>                 TXN_ID              </txID>
+         <applicationID>        APP_ID:Int          </applicationID>
+         <onCompletion>         @ UpdateApplication </onCompletion>
+         <approvalProgramSrc>   NEW_APPROVAL_PGM    </approvalProgramSrc>
+         <clearStateProgramSrc> NEW_CLEAR_STATE_PGM </clearStateProgramSrc>
          ...
        </transaction>
        <app>
-         <appID>       APP_ID       </appID>
-         <approvalPgm> APPROVAL_PGM </approvalPgm>
+         <appID>          APP_ID       </appID>
+         <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
          ...
        </app>
 ```
@@ -997,8 +1001,8 @@ DeleteApplication
          ...
        </transaction>
        <app>
-         <appID>       APP_ID       </appID>
-         <approvalPgm> APPROVAL_PGM </approvalPgm>
+         <appID>          APP_ID       </appID>
+         <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
          ...
        </app>
        <appCreator> (APP_ID |-> _) => .Map ... </appCreator>

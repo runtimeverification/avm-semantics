@@ -101,8 +101,10 @@ module APPLICATIONS
     <appsCreated>
       <app multiplicity="*" type="Map">
         <appID>           0        </appID>
-        <approvalPgm>     #pragma mode stateful int 1 </approvalPgm>
-        <clearStatePgm>   #pragma mode stateful int 1 </clearStatePgm>
+        <approvalPgmSrc>     #pragma mode stateful int 1 </approvalPgmSrc>
+        <clearStatePgmSrc>   #pragma mode stateful int 1 </clearStatePgmSrc>
+        <approvalPgm>     .Bytes   </approvalPgm>
+        <clearStatePgm>   .Bytes   </clearStatePgm>
         <globalState>
           <globalInts>    NoTValue </globalInts>
           <globalBytes>   NoTValue </globalBytes>
@@ -298,7 +300,7 @@ Accessor functions
 ### Asset State Accessors
 
 ```k
-  syntax Bool ::= hasOptedInAsset(TValue, TValue) [function]
+  syntax Bool ::= hasOptedInAsset(TValue, TValue) [function, functional]
   // -----------------------------------------------------
   rule [[ hasOptedInAsset(ASSET, ADDR) => true ]]
        <account>

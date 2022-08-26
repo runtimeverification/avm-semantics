@@ -126,22 +126,22 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
              <group>    ID     </group> // for testing, we make these the same as sequential TxIDs
              ...                           // other fields will receive default values
            </txHeader>
-          <appCallTxFields>
-            <applicationID>     APP_ID        </applicationID>
-            <onCompletion>      ON_COMPLETION </onCompletion>
-            <accounts>          ACCOUNTS      </accounts>
-            <applicationArgs>   ARGS          </applicationArgs>
-            <foreignApps>       APPS          </foreignApps>
-            <foreignAssets>     ASSETS        </foreignAssets>
-            <globalNui>         GLOBAL_INTS   </globalNui>
-            <globalNbs>         GLOBAL_BYTES  </globalNbs>
-            <localNui>          LOCAL_INTS    </localNui>
-            <localNbs>          LOCAL_BYTES   </localNbs>
-            <extraProgramPages> EXTRA_PAGES   </extraProgramPages>
-            <approvalProgram>   getTealByIndex(TEAL_PGMS_LIST, APPROVAL_IDX)    </approvalProgram>
-            <clearStateProgram> getTealByIndex(TEAL_PGMS_LIST, CLEAR_STATE_IDX) </clearStateProgram>
-            ...                            // other fields will receive default values
-          </appCallTxFields>
+           <appCallTxFields>
+             <applicationID>        APP_ID        </applicationID>
+             <onCompletion>         ON_COMPLETION </onCompletion>
+             <accounts>             ACCOUNTS      </accounts>
+             <applicationArgs>      ARGS          </applicationArgs>
+             <foreignApps>          APPS          </foreignApps>
+             <foreignAssets>        ASSETS        </foreignAssets>
+             <globalNui>            GLOBAL_INTS   </globalNui>
+             <globalNbs>            GLOBAL_BYTES  </globalNbs>
+             <localNui>             LOCAL_INTS    </localNui>
+             <localNbs>             LOCAL_BYTES   </localNbs>
+             <extraProgramPages>    EXTRA_PAGES   </extraProgramPages>
+             <approvalProgramSrc>   getTealByIndex(TEAL_PGMS_LIST, APPROVAL_IDX)    </approvalProgramSrc>
+             <clearStateProgramSrc> getTealByIndex(TEAL_PGMS_LIST, CLEAR_STATE_IDX) </clearStateProgramSrc>
+             ...                            // other fields will receive default values
+           </appCallTxFields>
          </transaction>
          TXNS
        </transactions>

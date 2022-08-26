@@ -202,7 +202,6 @@ avm_files    :=                            \
                 avm/avm-initialization.md  \
                 avm/avm-limits.md          \
                 avm/avm-txn-deque.md       \
-                avm/teal/teal-assembler.md \
                 avm/teal/teal-constants.md \
                 avm/teal/teal-driver.md    \
                 avm/teal/teal-execution.md \
