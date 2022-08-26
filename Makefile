@@ -101,9 +101,14 @@ else
     SEMANTICS_BUILD_TYPE := Debug
 endif
 
+
+ifneq ($(SKIP_HASKELL),)
+    K_DEPS_SKIP_HASKELL := -Dhaskell.backend.skip
+endif
+
 k-deps: $(K_JAR)
 	cd $(K_SUBMODULE)                                                                                                                                                                            \
-	    && mvn --batch-mode package -DskipTests -Dllvm.backend.prefix=$(INSTALL_LIB)/kframework -Dllvm.backend.destdir=$(CURDIR)/$(BUILD_DIR) -Dproject.build.type=$(K_BUILD_TYPE) $(K_MVN_ARGS) \
+	    && mvn --batch-mode package -DskipTests $(K_DEPS_SKIP_HASKELL) -Dllvm.backend.prefix=$(INSTALL_LIB)/kframework -Dllvm.backend.destdir=$(CURDIR)/$(BUILD_DIR) -Dproject.build.type=$(K_BUILD_TYPE) $(K_MVN_ARGS) \
 	    && DESTDIR=$(CURDIR)/$(BUILD_DIR) PREFIX=$(INSTALL_LIB)/kframework package/package
 
 # Building
