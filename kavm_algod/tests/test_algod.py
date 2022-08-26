@@ -3,6 +3,7 @@ from typing import Any
 from algosdk import account
 from algosdk.future import transaction
 from algosdk.future.transaction import PaymentTxn, SuggestedParams
+
 from kavm_algod.algod import KAVMClient
 
 from .constants import ALGOD_ADDRESS, ALGOD_TOKEN

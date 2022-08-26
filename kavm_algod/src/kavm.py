@@ -18,18 +18,19 @@ from typing import (
     Set,
     Tuple,
     Union,
+    cast,
 )
 
-from kavm_algod.adaptors.account import KAVMAccount
-from kavm_algod.adaptors.transaction import KAVMTransaction
 from pyk.cli_utils import run_process
 from pyk.kast import KApply, KAst, KInner, KLabel, KSort, KToken, Subst
-from pyk.kastManip import collectFreeVars, inlineCellMaps, splitConfigFrom
+from pyk.kastManip import free_vars, inline_cell_maps, split_config_from
 from pyk.ktool import KRun
 from pyk.ktool.kprint import paren
-from pyk.prelude import Sorts, build_assoc, buildCons, intToken, stringToken
+from pyk.prelude import Sorts, build_assoc, build_cons, intToken, stringToken
 
 from kavm_algod import constants
+from kavm_algod.adaptors.account import KAVMAccount
+from kavm_algod.adaptors.transaction import KAVMTransaction
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -221,12 +222,12 @@ class KAVM(KRun):
                     'K_CELL': KApply(
                         '.AS_AVM-EXECUTION-SYNTAX_AVMSimulation',
                     ),
-                    'DEQUE_CELL': buildCons(
+                    'DEQUE_CELL': build_cons(
                         KApply('.List'),
                         KLabel('_List_'),
                         [],
                     ),
-                    'DEQUEINDEXSET_CELL': buildCons(
+                    'DEQUEINDEXSET_CELL': build_cons(
                         KApply('.Set'),
                         KLabel('_Set_', KSort('Set')),
                         [],
@@ -247,7 +248,9 @@ class KAVM(KRun):
         """
         txids = [txn.txid for txn in transactions]
 
-        (current_symbolic_config, current_subst) = splitConfigFrom(self.current_config)
+        (current_symbolic_config, current_subst) = split_config_from(
+            self.current_config
+        )
 
         txns_and_accounts_subst = Subst(
             {
@@ -259,12 +262,12 @@ class KAVM(KRun):
                 'K_CELL': KApply(
                     '#evalTxGroup()_AVM-EXECUTION_AlgorandCommand',
                 ),
-                'DEQUE_CELL': buildCons(
+                'DEQUE_CELL': build_cons(
                     KApply('.List'),
                     KLabel('_List_'),
                     [KApply(KLabel('ListItem'), intToken(x)) for x in txids],
                 ),
-                'DEQUEINDEXSET_CELL': buildCons(
+                'DEQUEINDEXSET_CELL': build_cons(
                     KApply('.Set'),
                     KLabel('_Set_', KSort('Set')),
                     [KApply(KLabel('SetItem'), intToken(x)) for x in txids],
@@ -290,7 +293,7 @@ class KAVM(KRun):
         """
         Execute krun --term, passing the supplied configuration as a KORE term
         """
-        freeVars = collectFreeVars(configuration)
+        freeVars = free_vars(cast(KInner, configuration))
         assert (
             len(freeVars) == 0
         ), f'Cannot run from current configuration due to unbound variables {freeVars}'
@@ -328,7 +331,7 @@ class KAVM(KRun):
                     output.stderr.decode(sys.getfilesystemencoding()),
                 )
 
-            return (output.returncode, inlineCellMaps(output_kast_term))
+            return (output.returncode, inline_cell_maps(output_kast_term))
 
     def run_legacy(self, input_file: Path) -> Tuple[int, Union[KAst, str]]:
         """Run an AVM simulaion scenario with krun"""
@@ -356,7 +359,7 @@ class KAVM(KRun):
                 output.stderr.decode(sys.getfilesystemencoding()),
             )
 
-        return (output.returncode, inlineCellMaps(output_kast_term))
+        return (output.returncode, inline_cell_maps(output_kast_term))
 
     def kast(
         self,

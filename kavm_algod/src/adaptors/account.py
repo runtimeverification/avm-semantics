@@ -1,10 +1,11 @@
 from typing import Dict, List, Optional, Union
 
+from pyk.kast import KApply, KInner, Subst
+from pyk.kastManip import flatten_label, split_config_from
+from pyk.prelude import intToken, stringToken
+
 from kavm_algod.constants import MIN_BALANCE
 from kavm_algod.pyk_utils import maybeTValue
-from pyk.kast import KApply, KInner, Subst
-from pyk.kastManip import flatten_label, splitConfigFrom
-from pyk.prelude import intToken, stringToken
 
 
 class KAVMAccount:
@@ -82,7 +83,7 @@ class KAVMAccount:
         Parse a KAVMAccount instance from a Kast term
         """
 
-        (_, subst) = splitConfigFrom(term)
+        (_, subst) = split_config_from(term)
         return KAVMAccount(
             address=subst['ADDRESS_CELL'].token,
             balance=int(subst['BALANCE_CELL'].token),
@@ -117,7 +118,9 @@ class KAVMAccount:
 
 
 def get_account(address: str, accountsMapCell: KInner) -> Optional[KInner]:
-    (symbolic_account_cell_term, _) = splitConfigFrom(KAVMAccount(address).account_cell)
+    (symbolic_account_cell_term, _) = split_config_from(
+        KAVMAccount(address).account_cell
+    )
     account_pattern = Subst({'ADDRESS_CELL': stringToken(address)}).apply(
         symbolic_account_cell_term
     )

@@ -7,10 +7,11 @@ import msgpack
 from algosdk import encoding
 from algosdk.future.transaction import Transaction
 from algosdk.v2client import algod
+from pyk.kastManip import split_config_from
+
 from kavm_algod.adaptors.account import KAVMAccount, get_account
 from kavm_algod.adaptors.transaction import KAVMTransaction
 from kavm_algod.kavm import KAVM
-from pyk.kastManip import splitConfigFrom
 
 
 def msgpack_decode_txn_list(enc: bytes) -> List[Transaction]:
@@ -111,7 +112,7 @@ class KAVMClient(algod.AlgodClient):
             else:
                 raise NotImplementedError(f'Endpoint not implemented: {requrl}')
         elif endpoint == 'accounts':
-            (config, subst) = splitConfigFrom(self.kavm.current_config)
+            (config, subst) = split_config_from(self.kavm.current_config)
             address = params[0]
             return KAVMAccount.from_account_cell(
                 get_account(address, subst['ACCOUNTSMAP_CELL'])

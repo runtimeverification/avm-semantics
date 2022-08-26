@@ -7,9 +7,10 @@ from algosdk.future.transaction import (
     SuggestedParams,
     Transaction,
 )
-from kavm_algod.pyk_utils import maybeTValue, tvalueList
 from pyk.kast import KAst, KInner, KSort, Subst
-from pyk.kastManip import collectFreeVars, splitConfigFrom
+from pyk.kastManip import free_vars, split_config_from
+
+from kavm_algod.pyk_utils import maybeTValue, tvalueList
 
 
 class KAVMTransaction:
@@ -86,7 +87,7 @@ class KAVMTransaction:
         )
         transaction_cell = fields_subst.apply(empty_transaction_cell)
         empty_fields_subst = Subst(
-            {k: maybeTValue(None) for k in collectFreeVars(empty_transaction_cell)}
+            {k: maybeTValue(None) for k in free_vars(empty_transaction_cell)}
         )
 
         return empty_fields_subst.compose(empty_array_fields_subst).apply(
@@ -119,7 +120,7 @@ def transaction_from_k(kast_term: KAst) -> Transaction:
 
     Raise ValueError if the transaction is marformed
     """
-    (_, txHeaderCells) = splitConfigFrom(kast_term)
+    (_, txHeaderCells) = split_config_from(kast_term)
 
     sp = SuggestedParams(
         int(txHeaderCells['FEE_CELL'].token),
@@ -132,7 +133,7 @@ def transaction_from_k(kast_term: KAst) -> Transaction:
     txnType = txHeaderCells['TXTYPE_CELL'].token.strip('"')
     result = None
     if txnType == PAYMENT_TXN:
-        (_, payTxCells) = splitConfigFrom(kast_term)
+        (_, payTxCells) = split_config_from(kast_term)
         result = PaymentTxn(
             sender=txHeaderCells['SENDER_CELL'].token.strip('"'),
             sp=sp,
@@ -140,7 +141,7 @@ def transaction_from_k(kast_term: KAst) -> Transaction:
             amt=int(payTxCells['AMOUNT_CELL'].token),
         )
     elif txnType == ASSETTRANSFER_TXN:
-        (_, assetTransferTxCells) = splitConfigFrom(kast_term)
+        (_, assetTransferTxCells) = split_config_from(kast_term)
         result = AssetTransferTxn(
             sender=txHeaderCells['SENDER_CELL'].token.strip('"'),
             sp=sp,
