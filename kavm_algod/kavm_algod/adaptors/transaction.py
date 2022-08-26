@@ -6,7 +6,7 @@ from algosdk.future.transaction import (
     Transaction,
 )
 from pyk.kast import KApply, KAst
-from pyk.kastManip import splitConfigFrom
+from pyk.kastManip import split_config_from
 
 from kavm_algod.pyk_utils import int_token_cell, string_token_cell
 
@@ -78,7 +78,7 @@ def transaction_from_k(kast_term: KAst) -> Transaction:
 
     Raise ValueError if the transaction is marformed
     """
-    (_, txHeaderCells) = splitConfigFrom(kast_term)
+    (_, txHeaderCells) = split_config_from(kast_term)
 
     sp = SuggestedParams(
         int(txHeaderCells['FEE_CELL'].token),
@@ -91,7 +91,7 @@ def transaction_from_k(kast_term: KAst) -> Transaction:
     txnType = txHeaderCells['TXTYPE_CELL'].token.strip('"')
     result = None
     if txnType == PAYMENT_TXN:
-        (_, payTxCells) = splitConfigFrom(kast_term)
+        (_, payTxCells) = split_config_from(kast_term)
         result = PaymentTxn(
             sender=txHeaderCells['SENDER_CELL'].token.strip('"'),
             sp=sp,
@@ -99,7 +99,7 @@ def transaction_from_k(kast_term: KAst) -> Transaction:
             amt=int(payTxCells['AMOUNT_CELL'].token),
         )
     elif txnType == ASSETTRANSFER_TXN:
-        (_, assetTransferTxCells) = splitConfigFrom(kast_term)
+        (_, assetTransferTxCells) = split_config_from(kast_term)
         result = AssetTransferTxn(
             sender=txHeaderCells['SENDER_CELL'].token.strip('"'),
             sp=sp,
