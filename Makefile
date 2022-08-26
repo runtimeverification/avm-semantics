@@ -226,7 +226,7 @@ ifeq ($(K_BACKEND),)
   K_BACKEND := llvm
 endif
 
-KOMPILE_AVM := kavm-algod kompile
+KOMPILE_AVM := $(KAVM) kompile
 
 avm_dir           := avm-llvm
 avm_main_module   := AVM-EXECUTION
@@ -331,10 +331,10 @@ all_sources := $(join $(avm_simulation_sources), $(teal_sources))
 test-avm: $(avm_simulation_sources:=.unit)
 
 tests/scenarios/%.fail.avm-simulation.unit: tests/scenarios/%.fail.avm-simulation
-	! $(KAVM_ALGOD) run $< --output none
+	! $(KAVM) run $< --output none
 
 tests/scenarios/%.avm-simulation.unit: tests/scenarios/%.avm-simulation
-	$(KAVM_ALGOD) run $< --output none
+	$(KAVM) run $< --output none
 
 ###########################
 ## AVM Symbolic Proof Tests
