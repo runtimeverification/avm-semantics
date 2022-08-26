@@ -261,8 +261,10 @@ Accessor functions
 
   //TODO: In all accessors below, handle the case when NoTValue is returned
 
-  syntax Int ::= getAccountField(AccountField, TValue) [function]
+  syntax MaybeTValue ::= getAccountField(AccountField, TValue) [function]
   // -----------------------------------------------------------
+  rule getAccountField(Amount, ADDR) => getAccountParamsField(AcctBalance, ADDR)
+
   rule [[ getAccountField(Round, ADDR) => V ]]
        <account>
          <address> ADDR </address>
