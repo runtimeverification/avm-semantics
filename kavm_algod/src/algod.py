@@ -109,6 +109,11 @@ class KAVMClient(algod.AlgodClient):
                     'last-round': 1,
                     'min-fee': 1000,
                 }
+            elif params[0] == 'pending':
+                # PendingTransactionResponse https://github.com/algorand/go-algorand/blob/87867c9381260dc4efb5a42abaeb9e038b1c10af/daemon/algod/api/algod.oas2.json#L2600
+                # fow now we return return any transction as confirmed
+                # TODO: track accepted transctions in a set
+                return {'confirmed-round': 1}
             else:
                 raise NotImplementedError(f'Endpoint not implemented: {requrl}')
         elif endpoint == 'accounts':
