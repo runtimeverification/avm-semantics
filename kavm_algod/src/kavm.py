@@ -52,11 +52,15 @@ class KAVM(KRun):
     ) -> None:
         super().__init__(definition_dir, use_directory=use_directory)
         KAVM._patch_symbol_table(self.symbol_table)
-        self._current_config = self._initial_config()
         self._accounts: Dict[str, KAVMAccount] = {}
         if faucet_address is not None:
             self._faucet = KAVMAccount(faucet_address, constants.FAUCET_ALGO_SUPPLY)
+            # TODO: possible bug in pyk, if a Map cell only contains one item,
+            #       split_config_from will recurse into the Map cell and substitute
+            #       the item's cells with vars. Is that intended?
+            self._accounts['dummy'] = KAVMAccount('dummy')
             self._accounts[faucet_address] = self._faucet
+        self._current_config = self._initial_config()
 
     @property
     def accounts(self) -> Dict[str, KAVMAccount]:
@@ -172,7 +176,7 @@ class KAVM(KRun):
             # Finilize successful evaluation: self._current_config and self._accounts
             self.current_config = output
             # TODO: update self.accounts
-            return {'txId': txns[0].txid}
+            return {'txId': f'{txns[0].txid}'}
         else:
             exit(krun_return_code)
 
@@ -201,7 +205,10 @@ class KAVM(KRun):
         return teal_cell_subst.compose(
             Subst(
                 {
-                    'ACCOUNTSMAP_CELL': KAVM.accounts_cell([]),
+                    'ACCOUNTSMAP_CELL': KAVM.accounts_cell(
+                        list(self.accounts.values())
+                    ),
+                    # 'ACCOUNTSMAP_CELL': KAVM.accounts_cell([]),
                     'TRANSACTIONS_CELL': KAVM.transactions_cell([]),
                     'GROUPSIZE_CELL': intToken(0),
                     'TXGROUPID_CELL': intToken(0),  # TODO: revise

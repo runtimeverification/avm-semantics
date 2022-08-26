@@ -40,13 +40,18 @@ $(VENV_PROD_DIR): $(VENV_PROD)
 
 # Tests
 
-test: test-unit
+test: test-unit test-integration
 
 test-unit: $(VENV_DEV)
-	$(ACTIVATE_DEV) && python -m pytest --ignore=tests/contracts
+	$(ACTIVATE_DEV) && python -m pytest --ignore=tests/algod_integration
 
-test-integration: $(VENV_DEV)
-	$(ACTIVATE_DEV) && python -m pytest tests/contracts
+test-integration: test-integration-algod test-integration-kalgod
+
+test-integration-algod: $(VENV_DEV)
+	$(ACTIVATE_DEV) && python -m pytest --backend=algod tests/algod_integration
+
+test-integration-kalgod:
+	$(ACTIVATE_DEV) && python -m pytest --backend=kalgod tests/algod_integration
 
 # Checks
 

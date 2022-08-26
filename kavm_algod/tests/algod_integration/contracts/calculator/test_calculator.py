@@ -1,6 +1,7 @@
 from base64 import b64decode
 from typing import Dict
 
+import pytest
 from algosdk import account
 from algosdk.future import transaction
 from algosdk.future.transaction import (
@@ -106,6 +107,10 @@ def create_calculator_app(algod: AlgodClient, faucet: Dict[str, str]) -> int:
     return created_app_id
 
 
+@pytest.mark.skipif(
+    "config.getoption('--backend') == 'kalgod'",
+    reason='kalgod does not yet support ApplicationCallTxn',
+)
 def test_call_calculator(algod: AlgodClient, faucet: Dict[str, str]) -> None:
     # create app
     app_id = create_calculator_app(algod, faucet)

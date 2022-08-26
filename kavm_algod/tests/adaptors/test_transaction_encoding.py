@@ -1,6 +1,6 @@
 import pytest
 from algosdk import account
-from algosdk.future.transaction import PaymentTxn, KeyregTxn, SuggestedParams
+from algosdk.future.transaction import PaymentTxn, SuggestedParams
 
 from kavm_algod.adaptors.transaction import KAVMTransaction, transaction_from_k
 from kavm_algod.kavm import KAVM

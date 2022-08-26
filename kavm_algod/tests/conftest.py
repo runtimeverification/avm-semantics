@@ -11,6 +11,41 @@ from kavm_algod.algod import KAVMClient
 from .constants import ALGOD_ADDRESS, ALGOD_TOKEN, KMD_ADDRESS, KMD_TOKEN
 
 
+@pytest.fixture(autouse=True)
+def integration_tests_config(request: Any) -> Any:
+    return request.config
+
+
+# inspred by http://www.nakedape.cc/python/pytest-dynamic-fixtures.html
+def pytest_addoption(parser: Any) -> None:
+    """
+    Command line option for the AVM implementation: kavm or algod
+    """
+    parser.addoption(
+        '--backend',
+        action='store',
+        default='algod',
+        choices=['kalgod', 'algod'],
+        help='AVM implementaion to run tests against',
+    )
+
+
+@pytest.fixture
+def client(request: Any) -> AlgodClient:
+    if request.config.getoption('--backend') == 'algod':
+        return request.getfixturevalue('algod')
+    else:
+        return request.getfixturevalue('kalgod')
+
+
+@pytest.fixture
+def faucet(request: Any) -> Dict[str, str]:
+    if request.config.getoption('--backend') == 'algod':
+        return request.getfixturevalue('algod_faucet')
+    else:
+        return request.getfixturevalue('kalgod_faucet')
+
+
 @pytest.fixture
 def algod() -> AlgodClient:
     """AlgodClient connected to an Algorand Sandbox"""
@@ -24,7 +59,7 @@ def kmd() -> KMDClient:
 
 
 @pytest.fixture
-def faucet(algod: AlgodClient, kmd: KMDClient) -> Dict[str, Optional[Any]]:
+def algod_faucet(algod: AlgodClient, kmd: KMDClient) -> Dict[str, Optional[Any]]:
     """
     Faucet address and private key of the active Algorand Sandbox
     """
