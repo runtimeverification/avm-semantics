@@ -146,15 +146,16 @@ class KAVMClient(algod.AlgodClient):
             # log decoded transaction as submitted
             self.algodLogger.debug(algod_debug_log_msg)
 
-            # we'll need tpo keep track pf all addresses the transactions mention to
+            # we'll need tpo keep track of all addresses the transactions mention to
             # make KAVM aware of the new ones
             known_addresses = set()
             # kavm_txns will hold the KAst terms of the transactions
             kavm_txns = []
             # TODO: make txid more smart than just the counter
-            for txid, signed_txn in enumerate(msgpack_decode_txn_list(data)):
+            for txid_offset, signed_txn in enumerate(msgpack_decode_txn_list(data)):
                 known_addresses.add(signed_txn.transaction.sender)
                 known_addresses.add(signed_txn.transaction.receiver)
+                txid = self.kavm.next_valid_txid + txid_offset
                 kavm_txns.append(
                     KAVMTransaction(self.kavm, signed_txn.transaction, txid)
                 )

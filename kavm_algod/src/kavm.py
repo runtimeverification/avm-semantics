@@ -53,6 +53,7 @@ class KAVM(KRun):
         super().__init__(definition_dir, use_directory=use_directory)
         KAVM._patch_symbol_table(self.symbol_table)
         self._accounts: Dict[str, KAVMAccount] = {}
+        self._committed_txn_ids: List[int] = []
         if faucet_address is not None:
             self._faucet = KAVMAccount(faucet_address, constants.FAUCET_ALGO_SUPPLY)
             # TODO: possible bug in pyk, if a Map cell only contains one item,
@@ -69,6 +70,11 @@ class KAVM(KRun):
     @property
     def faucet(self) -> KAVMAccount:
         return self._faucet
+
+    @property
+    def next_valid_txid(self) -> int:
+        """Return a txid consequative to the last commited one"""
+        return self._committed_txn_ids[-1] if len(self._committed_txn_ids) > 0 else 0
 
     @staticmethod
     def kompile(
@@ -138,11 +144,19 @@ class KAVM(KRun):
     @staticmethod
     def transactions_cell(txns: List[KAVMTransaction]) -> KInner:
         """Concatenate several transactions"""
-        return build_assoc(
-            KApply('.TransactionCellMap'),
-            KLabel('_TransactionCellMap_'),
-            [txn.transaction_cell for txn in txns],
-        )
+        if len(txns) > 1:
+            return build_assoc(
+                KApply('.TransactionCellMap'),
+                KLabel('_TransactionCellMap_'),
+                [txn.transaction_cell for txn in txns],
+            )
+        elif len(txns) == 1:
+            return KApply(
+                '_TransactionCellMap_',
+                args=[txns[0].transaction_cell, KApply('.TransactionCellMap')],
+            )
+        else:
+            return KApply('.TransactionCellMap')
 
     def eval_transactions(
         self, txns: List[KAVMTransaction], new_addresses: Set[str] = set()
@@ -175,6 +189,9 @@ class KAVM(KRun):
         if isinstance(output, KAst) and krun_return_code == 0:
             # Finilize successful evaluation: self._current_config and self._accounts
             self.current_config = output
+            # save committed txn ids into a sorterd list
+            # TODO: ids must be strings, but that needs changing in KAVM
+            self._committed_txn_ids += sorted([txn.txid for txn in txns])
             # TODO: update self.accounts
             return {'txId': f'{txns[0].txid}'}
         else:
@@ -252,12 +269,16 @@ class KAVM(KRun):
     ) -> KAst:
         """
         Create a configuration to be passed to krun with --term
+
+        The configuratiuon is constructed from self._init_cofig() by substituting
+        TRANSACTIONS_CELL for transactions and ACCOUNTSMAP_CELL for self.accounts.values()
         """
         txids = [txn.txid for txn in transactions]
 
         (current_symbolic_config, current_subst) = split_config_from(
-            self.current_config
+            self._initial_config()
         )
+        # print(self.pretty_print(current_symbolic_config))
 
         txns_and_accounts_subst = Subst(
             {
@@ -322,7 +343,7 @@ class KAVM(KRun):
             )
             tmp_kore_file.write(kore_term)
 
-            krun_command = f'krun --definition {self.definition_dir} --output json --term --parser cat {tmp_kore_file.name}'
+            krun_command = f'krun --no-expand-macros --definition {self.definition_dir} --output json --term --parser cat {tmp_kore_file.name}'
 
             env = os.environ.copy()
             env['KAVM_DEFITION_DIR'] = str(self.definition_dir)
@@ -384,7 +405,10 @@ class KAVM(KRun):
         kast_command += [str(input_file)]
         command_env = os.environ.copy()
         command_env['KAVM_DEFITION_DIR'] = str(self.definition_dir)
-        proc_result = run_process(kast_command, env=command_env, logger=_LOGGER)
-        if proc_result.returncode != 0:
-            raise RuntimeError(f'Calling kast failed: {kast_command}')
+        try:
+            proc_result = run_process(kast_command, env=command_env, logger=_LOGGER)
+        except CalledProcessError:
+            raise RuntimeError(f'Calling kast failed: {" ".join(kast_command)}')
+        # if proc_result.returncode != 0:
+        #     raise RuntimeError(f'Calling kast failed: {" ".join(kast_command)}')
         return proc_result.stdout
