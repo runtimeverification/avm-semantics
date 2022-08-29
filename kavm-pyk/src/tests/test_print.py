@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from pyk.kast import KApply, KVariable
 
-from ..teal_to_k import KAVM
+from kavm_pyk.teal_to_k import KAVM
 
 
 def _strip_path_suffix(path1: Path, path2: Path) -> Path:
@@ -27,7 +27,7 @@ def _strip_path_suffix(path1: Path, path2: Path) -> Path:
 
 
 TEST_DIR: Final = Path(__file__).parent
-REL_TEST_DIR: Final = Path('kavm_pyk/src/kavm_pyk/tests')
+REL_TEST_DIR: Final = Path('kavm-pyk/src/tests')
 ROOT_DIR = _strip_path_suffix(TEST_DIR, REL_TEST_DIR)
 KOMPILED_DIR = ROOT_DIR / '.build/usr/lib/kavm/avm-llvm/avm-execution-kompiled'
 

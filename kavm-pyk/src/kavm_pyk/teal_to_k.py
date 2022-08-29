@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, Mapping
 
 from pyk.cli_utils import check_dir_path, check_file_path
 from pyk.kast import KDefinition, KFlatModule
-from pyk.ktool import KPrint, paren
+from pyk.ktool.kprint import KPrint, paren
 
 
 class KAVM(KPrint):

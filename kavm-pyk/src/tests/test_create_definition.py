@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from ..teal_to_k import create_definition
+from kavm_pyk.teal_to_k import create_definition
 
 
 class CreateDefinitionTest(TestCase):

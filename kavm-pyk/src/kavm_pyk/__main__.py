@@ -14,7 +14,7 @@ def main() -> None:
         print(res)
 
     else:
-        assert False
+        raise AssertionError()
 
 
 def create_argument_parser() -> ArgumentParser:
