@@ -29,7 +29,7 @@ show_column_numbers = "True"
 exclude = "(venv-dev|venv-prod)"
 
 [tool.black]
-exclude = "(venv-dev)"
+exclude = "(venv-dev|venv-prod)"
 target_version = ["py38"]
 line-length = 88
 skip-string-normalization="True"

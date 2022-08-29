@@ -1,0 +1,9 @@
+#pragma version 5
+#pragma mode stateful
+
+byte "fake_account"
+global CurrentApplicationID
+app_opted_in
+
+int 1
+return

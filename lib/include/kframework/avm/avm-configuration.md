@@ -39,7 +39,7 @@ module AVM-CONFIGURATION
 
       // The execution context of the current transaction.
       <currentTxnExecution>
-        // Globas are mostly immutable during the group execution,
+        // Globals are mostly immutable during the group execution,
         // besides the application-related fields: CurrentApplicationID, CreatorID
         // and CurrentApplicationAddress
         <globals/>
@@ -69,7 +69,7 @@ module AVM-CONFIGURATION
   // Top-level control of the semantics.
   // Defined in `avm-execution.md`
   syntax AVMSimulation
-  syntax AlgorandComman
+  syntax AlgorandCommand
 
   // Control of transaction evaluation
   // Defined in `avm-execution.md`
@@ -88,7 +88,7 @@ These panic behaviors indicate that internal assumptions of the semantics were v
   //------------------------------------------------
   rule TXN_DEQUE_ERROR => "attempt to push a duplicate or missing transaction into deque"
 
-  syntax AlgorandComman ::= #internalPanic(InternalPanic)
+  syntax AlgorandCommand ::= #internalPanic(InternalPanic)
   //----------------------------------------------------------
   rule <k> #internalPanic(S) ~> _ => .K </k>
        <returncode> 4 => 3 </returncode>
@@ -106,13 +106,15 @@ These are AVM-specific panic behaviors, caused by issues like depleted balances,
   syntax AvmPanic ::= "UNSUPPORTED_TXN_TYPE"    [macro]
   syntax AvmPanic ::= "ASSET_FROZEN_FOR_SENDER" [macro]
   syntax AvmPanic ::= "ASSET_NOT_OPT_IN"        [macro]
+  syntax AvmPanic ::= "ASSET_NO_PERMISSION"     [macro]
   //------------------------------------------------
   rule MIN_BALANCE_VIOLATION   => "sender account's balance falls below its allowed minimum balance"
   rule UNSUPPORTED_TXN_TYPE    => "attempt to execute an unsupported transaction type"
   rule ASSET_FROZEN_FOR_SENDER => "attempt to send frozen asset holdings"
   rule ASSET_NOT_OPT_IN        => "either sender or receiver have not opted into asset"
+  rule ASSET_NO_PERMISSION     => "sender does not have permission to modify asset"
 
-  syntax AlgorandComman ::= #avmPanic(Int, AvmPanic)
+  syntax AlgorandCommand ::= #avmPanic(Int, AvmPanic)
   //-------------------------------------------
   rule <k> #avmPanic(TXN_ID, S) ~> _ => .K </k>
        <returncode> 4 => 3 </returncode>

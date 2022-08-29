@@ -195,6 +195,7 @@ avm_files    :=                            \
                 avm/additional-fields.md   \
                 avm/args.md                \
                 avm/blockchain.md          \
+                avm/constants.md           \
                 avm/txn.md                 \
                 avm/avm-configuration.md   \
                 avm/avm-execution.md       \
@@ -345,7 +346,7 @@ tests/specs/verification-kompiled/timestamp: tests/specs/verification.k
 #######
 ## kavm
 #######
-test-kavm: test-kavm-parse test-kavm-kast
+test-kavm: test-kavm-parse test-kavm-kast module-imports-graph
 
 ## * kavm parse
 test-kavm-parse: test-kavm-parse-avm-scenario test-kavm-parse-teal
@@ -373,6 +374,22 @@ test-kavm-kast-teal: $(teal_sources:=.kavm-kast.unit)
 tests/teal-sources/%.teal.kavm-kast.unit: tests/teal-sources/%.teal
 	$(KAVM) kast $< none
 
+## * kavm_pyk
+
+KAVM_PYK_DIR = ./kavm_algod
+PYK_ACTIVATE = . $(KAVM_PYK_DIR)/venv-prod/bin/activate
+
+kavm-pyk-venv-clean:
+	rm -rf $(KAVM_PYK_DIR)/venv-dev
+	rm -rf $(KAVM_PYK_DIR)/venv-prod
+
+
+kavm-pyk-venv:
+	$(MAKE) -C $(KAVM_PYK_DIR) venv-prod
+
+kavm-pyk-venv-dev:
+	$(MAKE) -C $(KAVM_PYK_DIR)
+
 # Utils
 # -----
 
@@ -380,10 +397,10 @@ tests/teal-sources/%.teal.kavm-kast.unit: tests/teal-sources/%.teal
 module-imports-graph: module-imports-graph-dot
 	dot -Tsvg $(KAVM_LIB)/$(avm_kompiled)/import-graph -o module-imports-graph.svg
 
-module-imports-graph-dot:
-	kpyk $(KAVM_LIB)/$(avm_kompiled) graph-imports
+module-imports-graph-dot: kavm-pyk-venv
+	$(PYK_ACTIVATE) && pyk graph-imports $(KAVM_LIB)/$(avm_kompiled)
 
-clean: clean-avm clean-kavm
+clean: clean-avm clean-kavm kavm-pyk-venv-clean
 
 distclean: clean
 	rm -rf $(BUILD_DIR)

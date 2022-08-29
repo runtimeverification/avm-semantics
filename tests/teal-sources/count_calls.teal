@@ -38,6 +38,8 @@ bnz handle_deleteapp
 // Unexpected OnCompletion value. Should be unreachable.
 err
 
+handle_optin:
+// Handle OptIn
 handle_noop:
 // Increment the global calls counter
 byte "TimesCalled"
@@ -56,9 +58,6 @@ int 1
 +
 app_local_put
 b accept
-
-handle_optin:
-// Handle OptIn
 
 handle_closeout:
 // Handle CloseOut

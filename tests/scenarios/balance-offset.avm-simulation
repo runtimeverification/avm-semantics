@@ -1,0 +1,25 @@
+declareTealSource "./tests/teal-sources/balance-offset.teal";
+declareTealSource "./tests/teal-sources/clear-basic.teal";
+
+addAccount <address> b"1" </address> <balance> 12345 </balance>;
+
+#initTxGroup();
+
+// Add app and opt in b"1"
+addAppCallTx <txID> 0 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     NoTValue    </applicationID>
+             <onCompletion>      @ NoOp      </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   .TValueList </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
+
+#initGlobals(); #evalTxGroup(); .AS

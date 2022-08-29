@@ -48,6 +48,7 @@ module TEAL-FIELDS
                             | "AssetReserve" [klabel(AssetReserve), symbol]
                             | "AssetFreeze" [klabel(AssetFreeze), symbol]
                             | "AssetClawback" [klabel(AssetClawback), symbol]
+                            | "AssetCreator" [klabel(AssetCreator), symbol]
 ```
 
 ### `app_params_get` Fields
@@ -94,7 +95,7 @@ module TEAL-FIELDS
                           | "Amount"
                           | "CloseRemainderTo"
 
-  syntax TxnKeyregField ::= "votePK"
+  syntax TxnKeyregField ::= "VotePK"
                           | "SelectionPK"
                           | "VoteFirst"
                           | "VoteLast"
@@ -136,10 +137,20 @@ module TEAL-FIELDS
 ```k
   syntax TxnaField ::= "ApplicationArgs"
                      | "Accounts"
+                     | "Applications"
+                     | "Assets"
 
   syntax TxnaFieldExt ::= TxnaField
-                        | "ForeignApps"
-                        | "ForeignAssets"
+//                        | "Applications"
+//                        | "Assets"
+```
+
+### `acct_params` fields
+
+```k
+  syntax AccountParamsField ::= "AcctBalance"
+                              | "AcctMinBalance"
+                              | "AcctAuthAddr"
 ```
 
 ```k

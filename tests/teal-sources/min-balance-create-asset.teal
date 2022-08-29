@@ -1,0 +1,25 @@
+#pragma version 5
+#pragma mode stateful
+
+txn OnCompletion
+int OptIn
+==
+bnz accept
+
+txn Sender
+min_balance
+
+// Default min balance
+int 100000
+
+// Additional min balance for creating asset
+int 100000
++
+
+==
+assert
+
+accept:
+
+int 1
+return

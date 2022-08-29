@@ -1,0 +1,28 @@
+#pragma version 5
+#pragma mode stateful
+
+txn OnCompletion
+int OptIn
+==
+bnz accept
+
+txn Sender
+txna Assets 0
+asset_holding_get AssetBalance
+assert
+int 12345
+==
+assert
+
+txna Accounts 1
+txna Assets 0
+asset_holding_get AssetBalance
+!
+assert
+int 0
+==
+assert
+
+accept:
+int 1
+return

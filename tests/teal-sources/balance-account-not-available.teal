@@ -1,0 +1,9 @@
+#pragma version 5
+#pragma mode stateful
+
+// Load dummy address
+byte "2"
+balance
+
+int 1
+return

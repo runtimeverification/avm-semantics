@@ -1,0 +1,10 @@
+#pragma version 5
+#pragma mode stateful
+
+txna Accounts 1
+byte "test_key"
+byte "test_value"
+app_local_put
+
+int 1
+return
