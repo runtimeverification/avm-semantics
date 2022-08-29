@@ -80,7 +80,8 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
           <localNui> NoTValue </localNui>
           <localNbs> NoTValue </localNbs>
         </localStateSchema>
-        <extraProgramPages> 0 </extraProgramPages>
+        <extraProgramPages> 0    </extraProgramPages>
+        <txScratch>         .Map </txScratch>
       </appCallTxFields>
 ```
 

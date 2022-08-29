@@ -218,6 +218,19 @@ teal, failure means undoing changes made to the state (for more details, see
        <returnstatus> _ => "Failure - singleton stack with byte array type" </returnstatus>
 ```
 
+```k
+  syntax KItem ::= #saveScratch()
+  //-----------------------------
+  rule <k> #saveScratch() => . ...</k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID> TXN_ID </txID>
+         <txScratch> _ => SCRATCH </txScratch>
+         ...
+       </transaction>
+       <scratch> SCRATCH </scratch>
+```
+
 Panic Behaviors
 ---------------
 
@@ -297,6 +310,8 @@ return code to 3 (see return codes below).
   syntax String ::= "BYTES_OVERFLOW"             [macro]
   syntax String ::= "TXN_ACCESS_FAILED"          [macro]
   syntax String ::= "INVALID_SCRATCH_LOC"        [macro]
+  syntax String ::= "TXN_OUT_OF_BOUNDS"          [macro]
+  syntax String ::= "FUTURE_TXN"                 [macro]
   syntax String ::= "INDEX_OUT_OF_BOUNDS"        [macro]
   syntax String ::= "ILLEGAL_JUMP"               [macro]
   syntax String ::= "ILL_TYPED_STACK"            [macro]
@@ -314,10 +329,12 @@ return code to 3 (see return codes below).
   rule ERR_OPCODE          => "err opcode encountered"
   rule INT_OVERFLOW        => "integer overflow"
   rule INT_UNDERFLOW       => "integer underflow"
-  rule DIV_BY_ZERO         => "Division by zero"
-  rule BYTES_OVERFLOW      => "Resulting byte array too large"
-  rule TXN_ACCESS_FAILED   => "Transaction field access failed"
-  rule INVALID_SCRATCH_LOC => "Invalid scratch space location"
+  rule DIV_BY_ZERO         => "division by zero"
+  rule BYTES_OVERFLOW      => "resulting byte array too large"
+  rule TXN_ACCESS_FAILED   => "transaction field access failed"
+  rule INVALID_SCRATCH_LOC => "invalid scratch space location"
+  rule TXN_OUT_OF_BOUNDS   => "transaction index out of bounds"
+  rule FUTURE_TXN          => "tried to access transaction that hasn't executed yet"
   rule INDEX_OUT_OF_BOUNDS => "array index out of bounds"
   rule ILLEGAL_JUMP        => "illegal branch to a non-existing label"
   rule ILL_TYPED_STACK     => "wrong argument type(s) for opcode"
@@ -326,12 +343,11 @@ return code to 3 (see return codes below).
   rule STACK_UNDERFLOW     => "stack underflow"
   rule ASSERTION_VIOLATION => "assertion violation"
   rule DUPLICATE_LABEL     => "duplicate label"
-  rule IMPOSSIBLE_NEGATIVE_NUMBER => "Impossible happened: negative number on stack"
+  rule IMPOSSIBLE_NEGATIVE_NUMBER => "impossible happened: negative number on stack"
   rule CALLSTACK_UNDERFLOW => "call stack underflow: illegal retsub"
   rule CALLSTACK_OVERFLOW  => "call stack overflow: recursion is too deep"
   rule MATH_BYTES_ARG_TOO_LONG => "math attempted on large byte-array"
   rule ASSERTION_VIOLATION => "assertion violation"
-  rule IMPOSSIBLE_NEGATIVE_NUMBER => "Impossible happened: negative number on stack"
   //--------------------------------------------------------------------------------
 
   syntax KItem ::= panic(String)

@@ -17,6 +17,7 @@ TEAL Interpreter
 module TEAL-DRIVER
   imports AVM-CONFIGURATION
   imports AVM-LIMITS
+  imports GLOBALS
   imports TEAL-INTERPRETER-STATE
   imports TEAL-EXECUTION
   imports TEAL-STACK
@@ -1707,7 +1708,7 @@ Stateful TEAL Operations
      andBool T <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
      andBool ({getTxnField(T, TypeEnum)}:>Int) ==Int (@ appl)
 
-  rule <k> gaid T => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> gaid T => panic(FUTURE_TXN) ... </k>
     requires T >=Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
      orBool ({getTxnField(T, TypeEnum)}:>Int) =/=Int (@ appl)
 ```
@@ -1720,10 +1721,89 @@ Stateful TEAL Operations
     requires T <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
      andBool ({getTxnField(T, TypeEnum)}:>Int) ==Int (@ appl)
 
-  rule <k> gaids => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> gaids => panic(FUTURE_TXN) ... </k>
        <stack> T : _ </stack>
     requires T >=Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
      orBool ({getTxnField(T, TypeEnum)}:>Int) =/=Int (@ appl)
+```
+
+*gload*
+
+```k
+  rule <k> gload TXN_IDX I => .K ...</k>
+       <stack> XS => ({M[I]}:>TValue) : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <transaction>
+         <txID> TXN_IDX </txID>
+         <txScratch> M </txScratch>
+         ...
+       </transaction>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+     andBool I in_keys(M)
+     andBool S <Int MAX_STACK_DEPTH
+     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+
+  rule <k> gload TXN_IDX I => .K ... </k>
+       <stack> XS => 0 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <transaction>
+         <txID> TXN_IDX </txID>
+         <txScratch> M </txScratch>
+         ...
+       </transaction>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+     andBool notBool (I in_keys(M))
+     andBool S <Int MAX_STACK_DEPTH
+     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+
+  rule <k> gload _ I => panic(INVALID_SCRATCH_LOC) ... </k>
+    requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
+
+  rule <k> gload TXN_IDX _ => panic(TXN_OUT_OF_BOUNDS) ... </k>
+    requires TXN_IDX <Int 0 orBool TXN_IDX >=Int {getGlobalField(GroupSize)}:>Int
+
+  rule <k> gload TXN_IDX _ => panic(FUTURE_TXN) ... </k>
+    requires TXN_IDX >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+```
+
+*gloads*
+
+```k
+  rule <k> gloads I => .K ... </k>
+       <stack> TXN_IDX:Int : XS => ({M[I]}:>TValue) : XS </stack>
+       <transaction>
+         <txID> TXN_IDX </txID>
+         <txScratch> M </txScratch>
+         ...
+       </transaction>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+     andBool I in_keys(M)
+     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+
+  rule <k> gloads I => .K ... </k>
+       <stack> TXN_IDX:Int : XS => 0 : XS </stack>
+       <transaction>
+         <txID> TXN_IDX </txID>
+         <txScratch> M </txScratch>
+         ...
+       </transaction>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+     andBool notBool (I in_keys(M))
+     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+
+  rule <k> gloads I => panic(INVALID_SCRATCH_LOC) ... </k>
+    requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
+
+  rule <k> gloads _ => panic(TXN_OUT_OF_BOUNDS) ... </k>
+       <stack> TXN_IDX:Int : _ </stack>
+    requires TXN_IDX <Int 0 orBool TXN_IDX >=Int {getGlobalField(GroupSize)}:>Int
+
+  rule <k> gloads _ => panic(FUTURE_TXN) ... </k>
+       <stack> TXN_IDX:Int : _ </stack>
+    requires TXN_IDX >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+
+  rule <k> gloads _ => panic(INVALID_ARGUMENT) ...</k>
+       <stack> _:Bytes : _ </stack>
 ```
 
 
