@@ -1806,6 +1806,47 @@ Stateful TEAL Operations
        <stack> _:Bytes : _ </stack>
 ```
 
+*gloadss*
+
+```k
+  rule <k> gloadss => .K ... </k>
+       <stack> I:Int : TXN_IDX:Int : XS => ({M[I]}:>TValue) : XS </stack>
+       <transaction>
+         <txID> TXN_IDX </txID>
+         <txScratch> M </txScratch>
+         ...
+       </transaction>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+     andBool I in_keys(M)
+     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+
+  rule <k> gloadss => .K ... </k>
+       <stack> I:Int : TXN_IDX:Int : XS => 0 : XS </stack>
+       <transaction>
+         <txID> TXN_IDX </txID>
+         <txScratch> M </txScratch>
+         ...
+       </transaction>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+     andBool notBool (I in_keys(M))
+     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+
+  rule <k> gloadss => panic(INVALID_SCRATCH_LOC) ... </k>
+       <stack> I:Int : _ </stack>
+    requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
+
+  rule <k> gloadss => panic(TXN_OUT_OF_BOUNDS) ... </k>
+       <stack> _ : TXN_IDX:Int : _ </stack>
+    requires TXN_IDX <Int 0 orBool TXN_IDX >=Int {getGlobalField(GroupSize)}:>Int
+
+  rule <k> gloadss => panic(FUTURE_TXN) ... </k>
+       <stack> _ : TXN_IDX:Int : _ </stack>
+    requires TXN_IDX >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+
+  rule <k> gloadss => panic(INVALID_ARGUMENT) ...</k>
+       <stack> I:TValue : TXN_IDX:TValue : _ </stack>
+    requires notBool (isInt(I) andBool isInt(TXN_IDX))
+```
 
 
 Panic Behaviors due to Ill-typed Stack Arguments

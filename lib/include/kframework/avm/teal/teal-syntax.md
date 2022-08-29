@@ -315,12 +315,15 @@ module TEAL-OPCODES
 ```k
   syntax TxnGroupStateOpCode ::= NullaryTxnGroupStateOpCode
                                | UnaryTxnGroupStateOpCode
+                               | BinaryTxnGroupStateOpCode
 
   syntax NullaryTxnGroupStateOpCode ::= "gaid" Int // transaction index
                                       | "gload" Int Int // transaction index, scratch position
 
   syntax UnaryTxnGroupStateOpCode ::= "gaids"
                                     | "gloads" Int // scratch position
+
+  syntax BinaryTxnGroupStateOpCode ::= "gloadss"
 
 ```
 
@@ -569,6 +572,11 @@ module TEAL-UNPARSER
   rule unparseTEAL(asset_holding_get FieldName)   => "asset_holding_get" +&+ TealField2String(FieldName:AssetHoldingField)
   rule unparseTEAL(app_local_get_ex)              => "app_local_get_ex"
   rule unparseTEAL(app_local_put)                 => "app_local_put"
+  rule unparseTEAL(gaid N)                        => "gaid" +&+ Int2String(N)
+  rule unparseTEAL(gload N M)                     => "gload" +&+ Int2String(N) +&+ Int2String(M)
+  rule unparseTEAL(gaids)                         => "gaids"
+  rule unparseTEAL(gloads N)                      => "gloads" +&+ Int2String(N)
+  rule unparseTEAL(gloadss N)                     => "gloadss" +&+ Int2String(N)
 
   syntax String ::= left:
                     String "+&+" String       [function]
