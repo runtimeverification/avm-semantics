@@ -8,7 +8,6 @@ from pyk.ktool import KPrint, paren
 
 
 class KAVM(KPrint):
-
     def __init__(self, kompiled_dir: Path):
         super().__init__(kompiled_dir)
         self.patch_symbol_table(self.symbol_table)

@@ -8,7 +8,6 @@ from ..teal_to_k import KAVM
 
 
 def _strip_path_suffix(path1: Path, path2: Path) -> Path:
-
     def strip_seq_suffix(seq1: Sequence, seq2: Sequence) -> List:
         len1 = len(seq1)
         len2 = len(seq2)
@@ -22,7 +21,7 @@ def _strip_path_suffix(path1: Path, path2: Path) -> Path:
         if expected_suffix != actual_suffix:
             raise ValueError(f'Suffix of first sequence is expected to be {expected_suffix}, found: {actual_suffix}')
 
-        return list(seq1[:len1 - len2])
+        return list(seq1[: len1 - len2])
 
     return Path(*strip_seq_suffix(path1.parts, path2.parts))
 
@@ -34,9 +33,7 @@ KOMPILED_DIR = ROOT_DIR / '.build/usr/lib/kavm/avm-llvm/avm-execution-kompiled'
 
 
 class PrintTest(TestCase):
-    TEST_DATA = (
-        (KApply('_+Int_', [KVariable('x'), KVariable('y')]), '( x +Int y )'),
-    )
+    TEST_DATA = ((KApply('_+Int_', [KVariable('x'), KVariable('y')]), '( x +Int y )'),)
 
     def setUp(self):
         self.kavm = KAVM(KOMPILED_DIR)

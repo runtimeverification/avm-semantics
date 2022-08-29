@@ -4,7 +4,6 @@ from ..teal_to_k import create_definition
 
 
 class CreateDefinitionTest(TestCase):
-
     def test_module_name(self):
         # Given
         contract_json = {}
