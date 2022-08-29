@@ -299,6 +299,7 @@ module TEAL-OPCODES
                               | "app_global_get"
                               | "asset_params_get" AssetParamsField
                               | "app_params_get" AppParamsField
+                              | "min_balance"
   syntax BinaryStateOpCode  ::= "app_opted_in"
                               | "app_local_get"
                               | "app_global_get_ex"
@@ -559,6 +560,7 @@ module TEAL-UNPARSER
   rule unparseTEAL(app_global_get)                => "app_global_get"
   rule unparseTEAL(asset_params_get FieldName)    => "asset_params_get" +&+ TealField2String(FieldName:AssetParamsField)
   rule unparseTEAL(app_params_get FieldName)      => "app_params_get" +&+ TealField2String(FieldName:AppParamsField)
+  rule unparseTEAL(min_balance)                   => "min_balance"
   rule unparseTEAL(app_opted_in)                  => "app_opted_in"
   rule unparseTEAL(app_local_get)                 => "app_local_get"
   rule unparseTEAL(app_global_get_ex)             => "app_global_get_ex"
@@ -575,12 +577,13 @@ module TEAL-UNPARSER
 
   syntax String ::= Label2String(Label) [function, functional, hook(STRING.token2string)]
 
-  syntax String ::= TealField2String(GlobalField)       [function]
-                  | TealField2String(AssetHoldingField) [function]
-                  | TealField2String(AssetParamsField)  [function]
-                  | TealField2String(AppParamsField)    [function]
-                  | TealField2String(TxnField)          [function]
-                  | TealField2String(TxnaFieldExt)      [function]
+  syntax String ::= TealField2String(GlobalField)        [function]
+                  | TealField2String(AssetHoldingField)  [function]
+                  | TealField2String(AssetParamsField)   [function]
+                  | TealField2String(AppParamsField)     [function]
+                  | TealField2String(TxnField)           [function]
+                  | TealField2String(TxnaFieldExt)       [function]
+                  | TealField2String(AccountParamsField) [function]
   // ---------------------------------------------------------------------------------------
   rule TealField2String(MinTxnFee)                => "MinTxnFee"
   rule TealField2String(MinBalance)               => "MinBalance"
@@ -665,6 +668,9 @@ module TEAL-UNPARSER
   rule TealField2String(Accounts)                 => "Accounts"
   rule TealField2String(Applications)             => "Applications"
   rule TealField2String(Assets)                   => "Assets"
+  rule TealField2String(AcctBalance)              => "AcctBalance"
+  rule TealField2String(AcctMinBalance)           => "AcctMinBalance"
+  rule TealField2String(AcctAuthAddr)             => "AcctAuthAddr"
 
 
   syntax String ::= TValue2String(TValue)         [function]

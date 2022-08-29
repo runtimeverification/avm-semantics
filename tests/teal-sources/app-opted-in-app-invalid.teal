@@ -1,7 +1,7 @@
 #pragma version 5
 #pragma mode stateful
 
-int 0
+txna Accounts 1
 int 5
 app_opted_in
 

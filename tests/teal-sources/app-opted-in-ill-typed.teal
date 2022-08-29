@@ -1,7 +1,7 @@
 #pragma version 5
 #pragma mode stateful
 
-int 0
+global CurrentApplicationID
 byte "1"
 app_opted_in
 

@@ -1,8 +1,8 @@
 #pragma version 5
 #pragma mode stateful
 
-byte "abcd"
-int 0
+byte "fake_account"
+global CurrentApplicationID
 app_opted_in
 
 int 1

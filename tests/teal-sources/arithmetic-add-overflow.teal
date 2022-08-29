@@ -1,19 +1,9 @@
 #pragma version 4
 #pragma mode stateful
 
-txn OnCompletion
-int NoOp
-==
-bnz handle_noop
-
-// OnCompletetion actions other than NoOp are denied
-err
-
-handle_noop:
 int 1
 int 18446744073709551615 // MAX_UINT64
 +
 
-accept:
 int 1
 return
