@@ -1778,7 +1778,7 @@ Stateful TEAL Operations
        </transaction>
     requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
      andBool I in_keys(M)
-     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
 
   rule <k> gloads I => .K ... </k>
        <stack> TXN_IDX:Int : XS => 0 : XS </stack>
