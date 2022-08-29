@@ -12,6 +12,8 @@ Transaction State Representation
 ```k
 module TXN-FIELDS
   imports TEAL-FIELDS
+  imports TEAL-SYNTAX
+  imports BYTES
 ```
 
 *Pseudo fields*
@@ -60,14 +62,16 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
 ```k
   configuration
       <appCallTxFields multiplicity="?">
-        <applicationID>     NoTValue    </applicationID>
-        <onCompletion>      NoTValue    </onCompletion>
-        <accounts>          .TValueList </accounts>
-        <approvalProgram>   NoTValue    </approvalProgram>
-        <clearStateProgram> NoTValue    </clearStateProgram>
-        <applicationArgs>   .TValueList </applicationArgs> // maximum size is 2KB, and all args are internally byte strings
-        <foreignApps>       .TValueList </foreignApps>
-        <foreignAssets>     .TValueList </foreignAssets>
+        <applicationID>        NoTValue    </applicationID>
+        <onCompletion>         NoTValue    </onCompletion>
+        <accounts>             .TValueList </accounts>
+        <approvalProgramSrc>   #pragma mode stateful int 1 </approvalProgramSrc>
+        <clearStateProgramSrc> #pragma mode stateful int 1 </clearStateProgramSrc>
+        <approvalProgram>      .Bytes      </approvalProgram>
+        <clearStateProgram>    .Bytes      </clearStateProgram>
+        <applicationArgs>      .TValueList </applicationArgs> // maximum size is 2KB, and all args are internally byte strings
+        <foreignApps>          .TValueList </foreignApps>
+        <foreignAssets>        .TValueList </foreignAssets>
         <globalStateSchema>
           <globalNui> NoTValue </globalNui>
           <globalNbs> NoTValue </globalNbs>
@@ -76,6 +80,7 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
           <localNui> NoTValue </localNui>
           <localNbs> NoTValue </localNbs>
         </localStateSchema>
+        <extraProgramPages> 0 </extraProgramPages>
       </appCallTxFields>
 ```
 
@@ -508,7 +513,7 @@ module ALGO-TXN
        </transaction>
     requires #isValidForTxnType(NumAccounts, TYPE)
 
-  rule [[ getTxnField(I, ApprovalProgram) => normalize(X) ]]
+  rule [[ getTxnField(I, ApprovalProgram) => X ]]
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
@@ -517,7 +522,7 @@ module ALGO-TXN
        </transaction>
     requires #isValidForTxnType(ApprovalProgram, TYPE)
 
-  rule [[ getTxnField(I, ClearStateProgram) => normalize(X) ]]
+  rule [[ getTxnField(I, ClearStateProgram) => X ]]
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>

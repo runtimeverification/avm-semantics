@@ -145,6 +145,14 @@ module TEAL-FIELDS
 //                        | "Assets"
 ```
 
+### `acct_params` fields
+
+```k
+  syntax AccountParamsField ::= "AcctBalance"
+                              | "AcctMinBalance"
+                              | "AcctAuthAddr"
+```
+
 ```k
 endmodule
 ```

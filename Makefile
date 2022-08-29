@@ -195,6 +195,7 @@ avm_files    :=                            \
                 avm/additional-fields.md   \
                 avm/args.md                \
                 avm/blockchain.md          \
+                avm/constants.md           \
                 avm/txn.md                 \
                 avm/avm-configuration.md   \
                 avm/avm-execution.md       \

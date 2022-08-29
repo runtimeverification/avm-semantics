@@ -2,7 +2,7 @@
 #pragma mode stateful
 
 int 5
-int 0
+global CurrentApplicationID
 app_opted_in
 
 int 1

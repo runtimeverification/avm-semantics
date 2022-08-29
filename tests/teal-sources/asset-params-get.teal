@@ -18,7 +18,7 @@ assert
 txna Assets 0
 asset_params_get AssetUnitName
 assert
-byte "testcoin"
+byte "testcoins"
 ==
 assert
 

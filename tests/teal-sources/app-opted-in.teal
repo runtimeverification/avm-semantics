@@ -2,13 +2,13 @@
 #pragma mode stateful
 
 txna Accounts 1
-txna Applications 0
+global CurrentApplicationID
 app_opted_in
 !
 assert
 
 txna Accounts 0
-txna Applications 0
+global CurrentApplicationID
 
 app_opted_in
 assert

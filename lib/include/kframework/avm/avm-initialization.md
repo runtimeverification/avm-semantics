@@ -91,15 +91,27 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
                                             OnCompletionCell AccountsCell
                                             ApplicationArgsCell ForeignAppsCell 
                                             ForeignAssetsCell
+                                            GlobalNuiCell GlobalNbsCell
+                                            LocalNuiCell LocalNbsCell
+                                            ExtraProgramPagesCell
+                                            "<approvalPgmIdx>" Int "</approvalPgmIdx>"
+                                            "<clearStatePgmIdx>" Int "</clearStatePgmIdx>"
   //-----------------------------------------------------------
-  rule <k> addAppCallTx <txID>            ID            </txID>
-                        <sender>          SENDER        </sender>
-                        <applicationID>   APP_ID        </applicationID>
-                        <onCompletion>    ON_COMPLETION </onCompletion>
-                        <accounts>        ACCOUNTS      </accounts>
-                        <applicationArgs> ARGS          </applicationArgs>
-                        <foreignApps>     APPS          </foreignApps>
-                        <foreignAssets>   ASSETS        </foreignAssets>
+  rule <k> addAppCallTx <txID>              ID              </txID>
+                        <sender>            SENDER          </sender>
+                        <applicationID>     APP_ID          </applicationID>
+                        <onCompletion>      ON_COMPLETION   </onCompletion>
+                        <accounts>          ACCOUNTS        </accounts>
+                        <applicationArgs>   ARGS            </applicationArgs>
+                        <foreignApps>       APPS            </foreignApps>
+                        <foreignAssets>     ASSETS          </foreignAssets>
+                        <globalNui>         GLOBAL_INTS     </globalNui>
+                        <globalNbs>         GLOBAL_BYTES    </globalNbs>
+                        <localNui>          LOCAL_INTS      </localNui>
+                        <localNbs>          LOCAL_BYTES     </localNbs>
+                        <extraProgramPages> EXTRA_PAGES     </extraProgramPages>
+                        <approvalPgmIdx>    APPROVAL_IDX    </approvalPgmIdx>
+                        <clearStatePgmIdx>  CLEAR_STATE_IDX </clearStatePgmIdx>
        => #pushTxnBack(<txID> ID </txID>)
            ...
        </k>
@@ -108,24 +120,32 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
          <transaction>
            <txID> ID </txID>
            <txHeader>
-             <sender>      SENDER </sender>
-             <txType>      "appl" </txType>
-             <typeEnum>    @ appl </typeEnum>
-             <group>       ID     </group> // for testing, we make these the same as sequential TxIDs
+             <sender>   SENDER </sender>
+             <txType>   "appl" </txType>
+             <typeEnum> @ appl </typeEnum>
+             <group>    ID     </group> // for testing, we make these the same as sequential TxIDs
              ...                           // other fields will receive default values
            </txHeader>
-          <appCallTxFields>
-            <applicationID>   APP_ID        </applicationID>
-            <onCompletion>    ON_COMPLETION </onCompletion>
-            <accounts>        ACCOUNTS      </accounts>
-            <applicationArgs> ARGS          </applicationArgs>
-            <foreignApps>     APPS          </foreignApps>
-            <foreignAssets>   ASSETS        </foreignAssets>
-            ...                            // other fields will receive default values
-          </appCallTxFields>
+           <appCallTxFields>
+             <applicationID>        APP_ID        </applicationID>
+             <onCompletion>         ON_COMPLETION </onCompletion>
+             <accounts>             ACCOUNTS      </accounts>
+             <applicationArgs>      ARGS          </applicationArgs>
+             <foreignApps>          APPS          </foreignApps>
+             <foreignAssets>        ASSETS        </foreignAssets>
+             <globalNui>            GLOBAL_INTS   </globalNui>
+             <globalNbs>            GLOBAL_BYTES  </globalNbs>
+             <localNui>             LOCAL_INTS    </localNui>
+             <localNbs>             LOCAL_BYTES   </localNbs>
+             <extraProgramPages>    EXTRA_PAGES   </extraProgramPages>
+             <approvalProgramSrc>   getTealByIndex(TEAL_PGMS_LIST, APPROVAL_IDX)    </approvalProgramSrc>
+             <clearStateProgramSrc> getTealByIndex(TEAL_PGMS_LIST, CLEAR_STATE_IDX) </clearStateProgramSrc>
+             ...                            // other fields will receive default values
+           </appCallTxFields>
          </transaction>
          TXNS
        </transactions>
+       <tealPrograms> TEAL_PGMS_LIST </tealPrograms>
        requires notBool (ID in_txns(<transactions> TXNS </transactions>))
 
 
@@ -210,78 +230,31 @@ python3 -c "import algosdk.encoding as e; print(e.encode_address(e.checksum(b'ap
 WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM
 ```
 
-```k
-  syntax AlgorandCommand ::= "addApp" AppIDCell AddressCell Int
-  //-----------------------------------------------------------
-
-  rule <k> addApp <appID>       APP_ID            </appID>
-                  <address>     CREATOR           </address>
-                  PGM_IDX
-       => .K ... </k>
-       <tealPrograms> TEAL_PGMS_LIST </tealPrograms>
-       <accountsMap>
-         <account>
-           <address>     CREATOR </address>
-           <appsCreated>
-             APPS =>
-             <app>
-               <appID>           APP_ID </appID>
-               <approvalPgm>     getTealByIndex(TEAL_PGMS_LIST, PGM_IDX) </approvalPgm>
-               ...
-             </app>
-             APPS
-           </appsCreated>
-           ...
-         </account>
-         ACCOUNTS
-       </accountsMap>
-       <appCreator> M => M[APP_ID <- CREATOR] </appCreator>
-      requires notBool (APP_ID in_apps(<accountsMap> ACCOUNTS </accountsMap>))
-       andBool notBool (APP_ID in_apps(<appsCreated> APPS     </appsCreated>))
-```
-
-Accounts can opt into apps to allocate local state for them:
-
-```k
-  syntax AlgorandCommand ::= "optinApp" AppIDCell AddressCell
-  //---------------------------------------------------------
-  rule <k> optinApp <appID>       APP_ID  </appID>
-                    <address>     USER    </address>
-       => .K ... </k>
-       <accountsMap>
-         <account>
-           <address>     USER </address>
-           <appsOptedIn>
-             OPTED_IN_APPS =>
-             <optInApp>
-               <optInAppID> APP_ID </optInAppID>
-               <localStorage> .Map </localStorage>
-             </optInApp>
-             OPTED_IN_APPS
-           </appsOptedIn>
-           ...
-         </account>
-         ...
-       </accountsMap>
-      requires appCreated(APP_ID)
-       andBool notBool hasOptedInApp(APP_ID, USER)
-```
-
 #### Assets Initialization
 
 The asset initialization rule must be used *after* initializing accounts.
 
 ```k
   syntax AlgorandCommand ::= "addAssetConfigTx" TxIDCell SenderCell ConfigAssetCell ConfigTotalCell
-                                                ConfigDecimalsCell ConfigDefaultFrozenCell ConfigAssetNameCell
+                                                ConfigDecimalsCell ConfigDefaultFrozenCell ConfigUnitNameCell
+                                                ConfigAssetNameCell ConfigAssetURLCell ConfigMetaDataHashCell
+                                                ConfigManagerAddrCell ConfigReserveAddrCell
+                                                ConfigFreezeAddrCell ConfigClawbackAddrCell
   //-----------------------------------------------------------
-  rule <k> addAssetConfigTx <txID>                TXN_ID   </txID>
-                            <sender>              SENDER   </sender>
-                            <configAsset>         ASSET_ID </configAsset>
-                            <configTotal>         TOTAL    </configTotal>
-                            <configDecimals>      DECIMALS </configDecimals>
-                            <configDefaultFrozen> FROZEN   </configDefaultFrozen>
-                            <configAssetName>     NAME     </configAssetName>
+  rule <k> addAssetConfigTx <txID>                TXN_ID        </txID>
+                            <sender>              SENDER        </sender>
+                            <configAsset>         ASSET_ID      </configAsset>
+                            <configTotal>         TOTAL         </configTotal>
+                            <configDecimals>      DECIMALS      </configDecimals>
+                            <configDefaultFrozen> FROZEN        </configDefaultFrozen>
+                            <configUnitName>      UNIT_NAME     </configUnitName>
+                            <configAssetName>     NAME          </configAssetName>
+                            <configAssetURL>      ASSET_URL     </configAssetURL>
+                            <configMetaDataHash>  METADATA_HASH </configMetaDataHash>
+                            <configManagerAddr>   MGR_ADDR      </configManagerAddr>
+                            <configReserveAddr>   RES_ADDR      </configReserveAddr>
+                            <configFreezeAddr>    FRZ_ADDR      </configFreezeAddr>
+                            <configClawbackAddr>  CLB_ADDR      </configClawbackAddr>
        => #pushTxnBack(<txID> TXN_ID </txID>)
            ...
        </k>
@@ -296,21 +269,69 @@ The asset initialization rule must be used *after* initializing accounts.
              <group>       TXN_ID </group> // for testing, we make these the same as sequential TxIDs
              ...                           // other fields will receive default values
            </txHeader>
-          <assetConfigTxFields>
-            <configAsset> ASSET_ID </configAsset>           // the asset ID
-            <assetParams>
-              <configTotal>         TOTAL    </configTotal>
-              <configDecimals>      DECIMALS </configDecimals>
-              <configDefaultFrozen> FROZEN   </configDefaultFrozen>
-              <configUnitName>      NAME     </configUnitName>
-              <configAssetName>     NAME     </configAssetName>
-              ...
-            </assetParams>
-          </assetConfigTxFields>
+           <assetConfigTxFields>
+             <configAsset> ASSET_ID </configAsset>           // the asset ID
+             <assetParams>
+               <configTotal>         TOTAL         </configTotal>
+               <configDecimals>      DECIMALS      </configDecimals>
+               <configDefaultFrozen> FROZEN        </configDefaultFrozen>
+               <configUnitName>      UNIT_NAME     </configUnitName>
+               <configAssetName>     NAME          </configAssetName>
+               <configAssetURL>      ASSET_URL     </configAssetURL>
+               <configManagerAddr>   MGR_ADDR      </configManagerAddr>
+               <configMetaDataHash>  METADATA_HASH </configMetaDataHash>
+               <configReserveAddr>   RES_ADDR      </configReserveAddr>
+               <configFreezeAddr>    FRZ_ADDR      </configFreezeAddr>
+               <configClawbackAddr>  CLB_ADDR      </configClawbackAddr>
+             </assetParams>
+           </assetConfigTxFields>
          </transaction>
          TXNS
        </transactions>
        requires notBool (TXN_ID in_txns(<transactions> TXNS </transactions>))
+```
+
+### Asset transfer
+
+```k
+  syntax AlgorandCommand ::= "addAssetTransferTx" TxIDCell SenderCell XferAssetCell AssetAmountCell
+                                                  AssetASenderCell AssetReceiverCell AssetCloseToCell
+  //-----------------------------------------------------------------------------------------------
+
+  rule <k> addAssetTransferTx <txID>          TXN_ID        </txID>
+                              <sender>        SENDER        </sender>
+                              <xferAsset>     ASSET_ID      </xferAsset>
+                              <assetAmount>   AMOUNT        </assetAmount>
+                              <assetASender>  CLAWBACK_FROM </assetASender>
+                              <assetReceiver> RECEIVER      </assetReceiver>
+                              <assetCloseTo>  CLOSE_TO      </assetCloseTo>
+           => #pushTxnBack(<txID> TXN_ID </txID>)
+           ...
+       </k>
+       <transactions>
+         TXNS =>
+         <transaction>
+           <txID> TXN_ID </txID>
+           <txHeader>
+             <sender>   SENDER  </sender>
+             <txType>   "axfer" </txType>
+             <typeEnum> @ axfer </typeEnum>
+             <group>    TXN_ID  </group> // for testing, we make these the same as sequential TxIDs
+             ...                         // other fields will receive default values
+           </txHeader>
+           <assetTransferTxFields>
+             <xferAsset>     ASSET_ID      </xferAsset>
+             <assetAmount>   AMOUNT        </assetAmount>
+             <assetASender>  CLAWBACK_FROM </assetASender>
+             <assetReceiver> RECEIVER      </assetReceiver>
+             <assetCloseTo>  CLOSE_TO      </assetCloseTo>
+             ...
+           </assetTransferTxFields>
+         </transaction>
+         TXNS
+       </transactions>
+       requires notBool (TXN_ID in_txns(<transactions> TXNS </transactions>))
+
 ```
 
 ### Teal Programs Declaration

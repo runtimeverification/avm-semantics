@@ -1,8 +1,7 @@
 declareTealSource "./tests/teal-sources/asset-holding-get-asset-invalid.teal";
+declareTealSource "./tests/teal-sources/clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 100000 </balance>;
-addApp     <appID>   1    </appID>   <address> b"1" </address> 0;
-optinApp   <appID>   1    </appID>   <address> b"1" </address>;
 
 #initTxGroup();
 
@@ -12,16 +11,30 @@ addAssetConfigTx <txID>                0          </txID>
                  <configTotal>         12345      </configTotal>
                  <configDecimals>      0          </configDecimals>
                  <configDefaultFrozen> NoTValue   </configDefaultFrozen>
-                 <configAssetName>     "testcoin" </configAssetName>;
+                 <configUnitName>     "testcoins" </configUnitName>
+                 <configAssetName>     "testcoin" </configAssetName>
+                 <configAssetURL>      NoTValue   </configAssetURL>
+                 <configMetaDataHash>  NoTValue   </configMetaDataHash>
+                 <configManagerAddr>   b"1"       </configManagerAddr>
+                 <configReserveAddr>   NoTValue   </configReserveAddr>
+                 <configFreezeAddr>    NoTValue   </configFreezeAddr>
+                 <configClawbackAddr>  NoTValue   </configClawbackAddr>;
 
-
-addAppCallTx <txID>            1           </txID>
-             <sender>          b"1"        </sender>
-             <applicationID>   1           </applicationID>
-             <onCompletion>    0           </onCompletion>
-             <accounts>        .TValueList </accounts>
-             <applicationArgs> .TValueList </applicationArgs>
-             <foreignApps>     .TValueList </foreignApps>
-             <foreignAssets>   0           </foreignAssets>;
+// Add app
+addAppCallTx <txID> 1 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     NoTValue    </applicationID>
+             <onCompletion>      @ NoOp      </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   .TValueList </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     0           </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          1           </localNui>
+             <localNbs>          2           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 #initGlobals(); #evalTxGroup(); .AS
