@@ -7,6 +7,10 @@
 
 all: check-code-style test
 
+ifeq "$(origin KAVM_DEFINITION_DIR)" "undefined"
+KAVM_DEFINITION_DIR := ../.build/usr/lib/kavm/avm-llvm/avm-execution-kompiled
+endif
+export KAVM_DEFINITION_DIR
 
 # virtualenv
 
