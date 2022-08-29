@@ -4,7 +4,6 @@ Algorand Transaction Representation
 ```k
 require "avm/teal/teal-fields.md"
 require "avm/teal/teal-types.md"
-require "avm/teal/teal-assembler.md"
 ```
 
 Transaction State Representation
@@ -14,7 +13,7 @@ Transaction State Representation
 module TXN-FIELDS
   imports TEAL-FIELDS
   imports TEAL-SYNTAX
-  imports TEAL-ASSEMBLER
+  imports BYTES
 ```
 
 *Pseudo fields*
