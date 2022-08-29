@@ -1,6 +1,12 @@
 import pytest
 from algosdk import account
-from algosdk.future.transaction import PaymentTxn, SuggestedParams
+from algosdk.future.transaction import (
+    ApplicationCreateTxn,
+    OnComplete,
+    PaymentTxn,
+    StateSchema,
+    SuggestedParams,
+)
 
 from kavm_algod.adaptors.transaction import KAVMTransaction, transaction_from_k
 from kavm_algod.kavm import KAVM
@@ -110,11 +116,27 @@ def test_application_call_txn_encode_decode(
     assert False
 
 
-@pytest.mark.skip(reason="ApplicationCreateTxn is not yet supported")
+# @pytest.mark.skip(reason="ApplicationCreateTxn is not yet supported")
 def test_application_create_txn_encode_decode(
     kavm: KAVM, suggested_params: SuggestedParams
 ) -> None:
-    assert False
+    private_key_creator, creator = account.generate_account()
+    local_schema = StateSchema(num_uints=0, num_byte_slices=0)
+    global_schema = StateSchema(num_uints=0, num_byte_slices=0)
+    approval_program = b'\x01 \x01\x00"'  # int 1
+    clear_program = b'\x01 \x01\x01"'  # int 0
+    txn = ApplicationCreateTxn(
+        creator,
+        suggested_params,
+        OnComplete.NoOpOC,
+        approval_program,
+        clear_program,
+        global_schema,
+        local_schema,
+    )
+    kavm_transaction = KAVMTransaction(kavm, txn, "0")
+    parsed_txn = transaction_from_k(kavm_transaction.transaction_cell)
+    assert parsed_txn.dictify() == txn.dictify()
 
 
 @pytest.mark.skip(reason="ApplicationUpdateTxn is not yet supported")

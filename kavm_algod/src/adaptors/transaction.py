@@ -1,9 +1,13 @@
+from base64 import b64decode
 from typing import Any
 
-from algosdk.constants import ASSETTRANSFER_TXN, PAYMENT_TXN
+from algosdk.constants import APPCALL_TXN, ASSETTRANSFER_TXN, PAYMENT_TXN
 from algosdk.future.transaction import (
+    ApplicationCallTxn,
     AssetTransferTxn,
+    OnComplete,
     PaymentTxn,
+    StateSchema,
     SuggestedParams,
     Transaction,
 )
@@ -69,6 +73,39 @@ class KAVMTransaction:
             )
         if txn.type == ASSETTRANSFER_TXN:
             raise NotImplementedError()
+        if txn.type == APPCALL_TXN:
+            type_specific_subst = Subst(
+                {
+                    'APPLICATIONID_CELL': maybeTValue(txn.index),
+                    'ONCOMPLETION_CELL': maybeTValue(txn.on_complete),
+                    'ACCOUNTS_CELL': tvalueList(txn.accounts)
+                    if txn.accounts is not None
+                    else tvalueList([]),
+                    'APPROVALPROGRAM_CELL': maybeTValue(txn.approval_program),
+                    'CLEARSTATEPROGRAM_CELL': maybeTValue(txn.clear_program),
+                    'APPLICATIONARGS_CELL': tvalueList(txn.app_args)
+                    if txn.app_args is not None
+                    else tvalueList([]),
+                    'FOREIGNAPPS_CELL': tvalueList(txn.foreign_apps)
+                    if txn.foreign_apps is not None
+                    else tvalueList([]),
+                    'FOREIGNASSETS_CELL': tvalueList(txn.foreign_assets)
+                    if txn.foreign_assets is not None
+                    else tvalueList([]),
+                    'GLOBALNUI_CELL': maybeTValue(txn.global_schema.num_uints)
+                    if txn.global_schema is not None
+                    else maybeTValue(0),
+                    'GLOBALNBS_CELL': maybeTValue(txn.global_schema.num_byte_slices)
+                    if txn.global_schema is not None
+                    else maybeTValue(0),
+                    'LOCALNUI_CELL': maybeTValue(txn.local_schema.num_uints)
+                    if txn.local_schema is not None
+                    else maybeTValue(0),
+                    'LOCALNBS_CELL': maybeTValue(txn.local_schema.num_byte_slices)
+                    if txn.local_schema is not None
+                    else maybeTValue(0),
+                }
+            )
         if type_specific_subst is None:
             raise ValueError(f'Transaction object {txn} is invalid')
 
@@ -148,6 +185,36 @@ def transaction_from_k(kast_term: KAst) -> Transaction:
             receiver=assetTransferTxCells['ASSETRECEIVER_CELL'].token.strip('"'),
             amt=int(assetTransferTxCells['ASSETAMOUNT_CELL'].token.strip('"')),
             index=int(assetTransferTxCells['XFERASSET_CELL'].token.strip('"')),
+        )
+    elif txnType == APPCALL_TXN:
+        (_, appCallTxCells) = split_config_from(kast_term)
+        result = ApplicationCallTxn(
+            sender=txHeaderCells['SENDER_CELL'].token.strip('"'),
+            sp=sp,
+            index=int(appCallTxCells['APPLICATIONID_CELL'].token.strip('"')),
+            on_complete=OnComplete(
+                int(appCallTxCells['ONCOMPLETION_CELL'].token.strip('"'))
+            ),
+            local_schema=StateSchema(
+                int(appCallTxCells['LOCALNUI_CELL'].token.strip('"')),
+                int(appCallTxCells['LOCALNBS_CELL'].token.strip('"')),
+            ),
+            global_schema=StateSchema(
+                int(appCallTxCells['GLOBALNUI_CELL'].token.strip('"')),
+                int(appCallTxCells['GLOBALNBS_CELL'].token.strip('"')),
+            ),
+            approval_program=b64decode(
+                appCallTxCells['APPROVALPROGRAM_CELL'].token.strip('"')
+            ),
+            clear_program=b64decode(
+                appCallTxCells['CLEARSTATEPROGRAM_CELL'].token.strip('"')
+            ),
+            # TODO: handle array fields
+            app_args=None,
+            accounts=None,
+            foreign_apps=None,
+            foreign_assets=None,
+            extra_pages=0,
         )
     else:
         raise ValueError(

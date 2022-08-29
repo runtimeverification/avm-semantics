@@ -1,5 +1,6 @@
 import logging
 import os
+from base64 import b64encode
 from pprint import PrettyPrinter
 from typing import Any, Dict, List, Optional
 
@@ -154,13 +155,16 @@ class KAVMClient(algod.AlgodClient):
             # TODO: make txid more smart than just the counter
             for txid_offset, signed_txn in enumerate(msgpack_decode_txn_list(data)):
                 known_addresses.add(signed_txn.transaction.sender)
-                known_addresses.add(signed_txn.transaction.receiver)
+                if hasattr(signed_txn.transaction, 'receiver'):
+                    known_addresses.add(signed_txn.transaction.receiver)
                 txid = self.kavm.next_valid_txid + txid_offset
                 kavm_txns.append(
                     KAVMTransaction(self.kavm, signed_txn.transaction, txid)
                 )
 
             return self.kavm.eval_transactions(kavm_txns, known_addresses)
-
+        elif requrl == '/teal/compile':
+            assert data is not None, 'attempt to compile an empty TEAL program!'
+            return {'result': b64encode(data)}
         else:
             raise NotImplementedError(f'Endpoint not implemented: {requrl}')
