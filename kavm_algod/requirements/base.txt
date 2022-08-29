@@ -1,2 +1,0 @@
-py-algorand-sdk==1.15.0
-../deps/k/pyk
