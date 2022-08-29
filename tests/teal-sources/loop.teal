@@ -1,15 +1,6 @@
 #pragma version 4
 #pragma mode stateful
 
-txn OnCompletion
-int NoOp
-==
-bnz handle_noop
-
-err
-
-handle_noop:
-
 // store sum of 0
 int 0
 store 0

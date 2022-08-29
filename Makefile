@@ -321,7 +321,7 @@ avm_tests_passing := $(filter-out $(avm_tests_failing), $(avm_simulation_sources
 teal_sources := $(wildcard tests/teal-sources/*.teal)
 all_sources := $(join $(avm_simulation_sources), $(teal_sources))
 
-test-avm: $(avm_simulation_sources:=.unit)
+test-avm: $(avm_tests_passing:=.unit)
 
 tests/scenarios/%.fail.avm-simulation.unit: tests/scenarios/%.fail.avm-simulation
 	! $(KAVM) run $< --output none

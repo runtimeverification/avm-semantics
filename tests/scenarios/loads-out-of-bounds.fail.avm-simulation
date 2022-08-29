@@ -1,16 +1,24 @@
 declareTealSource "./tests/teal-sources/loads-out-of-bounds.teal";
+declareTealSource "./tests/teal-sources/clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 10000 </balance>;
-addApp     <appID>   1    </appID>   <address> b"1" </address> 0;
-optinApp   <appID>   1    </appID>   <address> b"1" </address>;
 
 #initTxGroup();
 
-addAppCallTx <txID>            0        </txID>
-             <sender>          b"1"     </sender>
-             <applicationID>   1        </applicationID>
-             <onCompletion>    0        </onCompletion>
-             <accounts>        b"1"     </accounts>
-             <applicationArgs> NoTValue </applicationArgs>;
+addAppCallTx <txID> 0 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     NoTValue    </applicationID>
+             <onCompletion>      @ OptIn     </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   .TValueList </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 #initGlobals(); #evalTxGroup(); .AS

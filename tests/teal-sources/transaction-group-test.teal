@@ -1,10 +1,10 @@
-#pragma version 4
+#pragma version 5
 #pragma mode stateful
 
-byte "group_index"
-txn 
+txna ApplicationArgs 0
 txn GroupIndex
-app_global_put
+==
+assert
 
 int 1
 return

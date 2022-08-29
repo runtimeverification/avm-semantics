@@ -1,35 +1,58 @@
+declareTealSource "./tests/teal-sources/transaction-group-test.teal";
+declareTealSource "./tests/teal-sources/clear-basic.teal";
+
 addAccount <address> b"1" </address> <balance> 10000 </balance>;
 addAccount <address> b"2" </address> <balance> 10000 </balance>;
 
-declareTealSource "./tests/teal-sources/transaction-group-test.teal";
-
-addApp <appID> 1 </appID> <address> b"1" </address> 0;
-
-optinApp <appID> 1 </appID> <address> b"1" </address>;
-optinApp <appID> 1 </appID> <address> b"2" </address>;
-
 #initTxGroup();
 
-addAppCallTx <txID>            0        </txID>
-             <sender>          b"1"     </sender>
-             <applicationID>   1        </applicationID>
-             <onCompletion>    0        </onCompletion>
-             <accounts>        b"1"     </accounts>
-             <applicationArgs> NoTValue </applicationArgs>;
+addAppCallTx <txID> 0 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     NoTValue    </applicationID>
+             <onCompletion>      @ OptIn     </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   0           </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
-addAppCallTx <txID>            1        </txID>
-             <sender>          b"2"     </sender>
-             <applicationID>   1        </applicationID>
-             <onCompletion>    0        </onCompletion>
-             <accounts>        b"2"     </accounts>
-             <applicationArgs> NoTValue </applicationArgs>;
+addAppCallTx <txID> 1 </txID>
+             <sender>            b"2"        </sender>
+             <applicationID>     1           </applicationID>
+             <onCompletion>      @ OptIn     </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   1           </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
-addAppCallTx <txID>            2        </txID>
-             <sender>          b"1"     </sender>
-             <applicationID>   1        </applicationID>
-             <onCompletion>    0        </onCompletion>
-             <accounts>        b"1"     </accounts>
-             <applicationArgs> NoTValue </applicationArgs>;
+addAppCallTx <txID> 2 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     1           </applicationID>
+             <onCompletion>      @ NoOp      </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   2           </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 #initGlobals();
 #evalTxGroup();
