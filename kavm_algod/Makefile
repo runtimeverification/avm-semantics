@@ -43,7 +43,7 @@ $(VENV_PROD_DIR): $(VENV_PROD)
 test: test-unit test-integration
 
 test-unit: $(VENV_DEV)
-	$(ACTIVATE_DEV) && python -m pytest --ignore=tests/algod_integration
+	$(ACTIVATE_DEV) && python -m pytest tests/unit
 
 test-integration: test-integration-algod test-integration-kalgod
 

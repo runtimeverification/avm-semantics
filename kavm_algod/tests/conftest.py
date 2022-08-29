@@ -7,6 +7,7 @@ from algosdk.kmd import KMDClient
 from algosdk.v2client.algod import AlgodClient
 
 from kavm_algod.algod import KAVMClient
+from kavm_algod.kavm import KAVM
 
 from .constants import ALGOD_ADDRESS, ALGOD_TOKEN, KMD_ADDRESS, KMD_TOKEN
 
@@ -98,6 +99,11 @@ def kalgod(kalgod_faucet: Dict[str, Optional[Any]]) -> KAVMClient:
     algod_address = 'http://kteal:8080'
 
     return KAVMClient(algod_token, algod_address, kalgod_faucet['address'])
+
+
+@pytest.fixture
+def kavm(kalgod: KAVMClient) -> KAVM:
+    return kalgod.kavm
 
 
 @pytest.fixture
