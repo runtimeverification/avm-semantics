@@ -21,7 +21,7 @@ pipeline {
       }
       stages {
         stage('Build') { steps { sh 'make build -j4' } }
-        stage('Test kavm_algod') { steps { sh 'cd ./kavm_algod && docker-compose -up && make && docker-compose -down' } }
+        stage('Test kavm_algod') { steps { sh 'cd ./kavm_algod && make test-unit && make test-integration-kalgod' } }
         stage('Test kavm parse') {
           failFast true
           options { timeout(time: 10, unit: 'MINUTES') }
