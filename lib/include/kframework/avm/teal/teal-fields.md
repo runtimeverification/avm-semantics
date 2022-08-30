@@ -70,7 +70,10 @@ module TEAL-FIELDS
 ### `txn`/`gtxn` fields
 
 ```k
-  syntax TxnField ::= TxnHeaderField
+  syntax TxnField ::= TxnStaticField
+                    | TxnDynamicField
+
+  syntax TxnStaticField ::= TxnHeaderField
                     | TxnPayField
                     | TxnKeyregField
                     | TxnAcfgField
@@ -90,6 +93,11 @@ module TEAL-FIELDS
                           | "TxType"
                           | "TypeEnum"
                           | "GroupIndex"
+
+  // Dynamic fields can only be accessed after the transaction has finished, by subsequent transactions in the
+  // group.
+  syntax TxnDynamicField ::= "LastLog"
+                           | "NumLogs"
 
   syntax TxnPayField    ::= "Receiver"
                           | "Amount"
@@ -135,10 +143,15 @@ module TEAL-FIELDS
 ### `txna`/`gtxna` fields
 
 ```k
-  syntax TxnaField ::= "ApplicationArgs"
-                     | "Accounts"
-                     | "Applications"
-                     | "Assets"
+  syntax TxnaField ::= TxnaStaticField 
+                     | TxnaDynamicField
+
+  syntax TxnaStaticField ::= "ApplicationArgs"
+                           | "Accounts"
+                           | "Applications"
+                           | "Assets"
+
+  syntax TxnaDynamicField ::= "Logs"
 
   syntax TxnaFieldExt ::= TxnaField
 //                        | "Applications"

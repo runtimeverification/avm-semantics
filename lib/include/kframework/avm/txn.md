@@ -705,6 +705,51 @@ module ALGO-TXN
          ...
        </transaction>
     requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, LastLog) => MSG ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logs> _ MSG:TBytes </logs>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, LastLog) => MSG ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logs> MSG:TBytes </logs>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, NumLogs) => size(LOGS) ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logs> LOGS </logs>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, Logs, J) => normalize(getTValueAt(J, LOGS)) ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logs> LOGS </logs>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, Logs) => LOGS ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logs> LOGS </logs>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
 ```
 
 *Failure*
