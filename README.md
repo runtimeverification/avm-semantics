@@ -1,5 +1,5 @@
 Algorand Virtual Machine and TEAL Semantics in K
-=======================================
+================================================
 
 🛠️**Work in progress**🛠️
 
@@ -24,7 +24,7 @@ The semantics can be used either via the `kavm` command-line interface or progra
 
 #### `kavm_algod` Python library
 
-[`kavm_algod`](./kavm_algod) is a Python package that enables interoperability between KAVM and `algod` --- the Algorand node daemon. `kavm_algod` also provides a drop-in replacement for `py-algorand-sdk`, making it possible to run existing deployment and testing scripts on top of KAVM.
+[`kavm_algod`](./kavm_algod) is a Python package that enables interoperability between KAVM and `algod` &mdash; the Algorand node daemon. `kavm_algod` also provides a drop-in replacement for `py-algorand-sdk`, making it possible to run existing deployment and testing scripts on top of KAVM.
 
 See `kavm --help` for more information.
 
@@ -107,10 +107,10 @@ Not all TEAL opcodes are supported by the semantics as of yet. See the relevant 
 
 #### Python packages
 
-`kavm_algod`[./kavm_algod] is a Python package that enables interoperability between KAVM and `algod` --- the Algorand node daemon. `kavm_algod` also provides a drop-in replacement for `py-algorand-sdk`, making it possible to run existing deployment and testing scripts on top of KAVM.
+`kavm_algod`[./kavm_algod] is a Python package that enables interoperability between KAVM and `algod` &mdash; the Algorand node daemon. `kavm_algod` also provides a drop-in replacement for `py-algorand-sdk`, making it possible to run existing deployment and testing scripts on top of KAVM.
 
 Working on KTeal
----------------
+----------------
 
 ### Build system
 
