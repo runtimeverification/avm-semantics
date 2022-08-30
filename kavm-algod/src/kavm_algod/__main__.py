@@ -1,5 +1,5 @@
 def main() -> None:
-    assert False
+    raise AssertionError()
 
 
 if __name__ == '__main__':

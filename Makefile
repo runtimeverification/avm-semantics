@@ -51,7 +51,8 @@ export K_OPTS
 .PHONY: all clean distclean install uninstall                                         \
         deps k-deps libsecp256k1 libff plugin-deps hook-deps                          \
         build build-avm build-kavm                                                    \
-        test test-avm
+        test test-avm                                                                 \
+        venv venv-clean kavm-algod
 .SECONDARY:
 
 all: build
@@ -374,21 +375,25 @@ test-kavm-kast-teal: $(teal_sources:=.kavm-kast.unit)
 tests/teal-sources/%.teal.kavm-kast.unit: tests/teal-sources/%.teal
 	$(KAVM) kast $< none
 
-## * kavm_pyk
+## * kavm_algod
 
-KAVM_PYK_DIR = ./kavm_algod
-PYK_ACTIVATE = . $(KAVM_PYK_DIR)/venv-prod/bin/activate
+KAVM_ALGOD_DIR := ./kavm-algod
+VENV_DIR       := $(BUILD_DIR)/venv
+VENV_ACTIVATE  := . $(VENV_DIR)/bin/activate
 
-kavm-pyk-venv-clean:
-	rm -rf $(KAVM_PYK_DIR)/venv-dev
-	rm -rf $(KAVM_PYK_DIR)/venv-prod
+$(VENV_DIR)/pyvenv.cfg:
+	   virtualenv $(VENV_DIR)              \
+	&& pip install --editable ./deps/k/pyk \
+	&& pip install --editable $(KAVM_ALGOD_DIR)
 
+venv: $(VENV_DIR)/pyvenv.cfg
+	@echo $(VENV_ACTIVATE)
 
-kavm-pyk-venv:
-	$(MAKE) -C $(KAVM_PYK_DIR) venv-prod
+venv-clean:
+	rm -rf $(VENV_DIR)
 
-kavm-pyk-venv-dev:
-	$(MAKE) -C $(KAVM_PYK_DIR)
+kavm-algod:
+	$(MAKE) -C $(KAVM_ALGOD_DIR)
 
 # Utils
 # -----
@@ -397,10 +402,10 @@ kavm-pyk-venv-dev:
 module-imports-graph: module-imports-graph-dot
 	dot -Tsvg $(KAVM_LIB)/$(avm_kompiled)/import-graph -o module-imports-graph.svg
 
-module-imports-graph-dot: kavm-pyk-venv
-	$(PYK_ACTIVATE) && pyk graph-imports $(KAVM_LIB)/$(avm_kompiled)
+module-imports-graph-dot: venv
+	$(VENV_ACTIVATE) && pyk graph-imports $(KAVM_LIB)/$(avm_kompiled)
 
-clean: clean-avm clean-kavm kavm-pyk-venv-clean
+clean: clean-avm clean-kavm venv-clean
 
 distclean: clean
 	rm -rf $(BUILD_DIR)

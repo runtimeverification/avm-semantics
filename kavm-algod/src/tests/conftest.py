@@ -28,9 +28,7 @@ def faucet(algod: AlgodClient, kmd: KMDClient) -> Dict[str, Optional[Any]]:
     Faucet address and private key of the active Algorand Sandbox
     """
     wallets = kmd.list_wallets()
-    default_wallet = [
-        w if w['name'] == 'unencrypted-default-wallet' else None for w in wallets
-    ][0]
+    default_wallet = [w if w['name'] == 'unencrypted-default-wallet' else None for w in wallets][0]
     default_wallet_handle = kmd.init_wallet_handle(default_wallet['id'], '')
     default_wallet_keys = kmd.list_keys(default_wallet_handle)
     faucet_address = None
@@ -56,6 +54,4 @@ def kalgod() -> KAVMClient:
 @pytest.fixture
 def suggested_params() -> SuggestedParams:
     """Dummy transaction parameters"""
-    return SuggestedParams(
-        fee=1000, first=0, last=1, gh='ktealktealktealkteal', flat_fee=True
-    )
+    return SuggestedParams(fee=1000, first=0, last=1, gh='ktealktealktealkteal', flat_fee=True)
