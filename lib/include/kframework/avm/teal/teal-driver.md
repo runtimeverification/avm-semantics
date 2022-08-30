@@ -1338,6 +1338,23 @@ Stateful TEAL Operations
   rule <k> #min_balance _ => panic(TXN_ACCESS_FAILED) </k>  [owise]
 ```
 
+*log*
+
+```k
+  rule <k> log => . ...</k>
+       <stack> (MSG:TBytes : XS) => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+       <currentTx> TX_ID </currentTx>
+       <transaction>
+         <txID> TX_ID </txID>
+         <logs> LOG => append(MSG, LOG) </logs>
+         ...
+       </transaction>
+
+   rule <k> log => panic(ILL_TYPED_STACK) ...</k>
+        <stack> _:TUInt64 : _ </stack>
+```
+
 *app_opted_in*
 
 ```k

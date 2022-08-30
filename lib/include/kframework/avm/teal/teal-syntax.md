@@ -300,6 +300,7 @@ module TEAL-OPCODES
                               | "asset_params_get" AssetParamsField
                               | "app_params_get" AppParamsField
                               | "min_balance"
+                              | "log"
   syntax BinaryStateOpCode  ::= "app_opted_in"
                               | "app_local_get"
                               | "app_global_get_ex"
@@ -564,6 +565,7 @@ module TEAL-UNPARSER
   rule unparseTEAL(asset_params_get FieldName)    => "asset_params_get" +&+ TealField2String(FieldName:AssetParamsField)
   rule unparseTEAL(app_params_get FieldName)      => "app_params_get" +&+ TealField2String(FieldName:AppParamsField)
   rule unparseTEAL(min_balance)                   => "min_balance"
+  rule unparseTEAL(log)                           => "log"
   rule unparseTEAL(app_opted_in)                  => "app_opted_in"
   rule unparseTEAL(app_local_get)                 => "app_local_get"
   rule unparseTEAL(app_global_get_ex)             => "app_global_get_ex"
