@@ -41,3 +41,10 @@ skip-string-normalization = true
 [tool.mypy]
 disallow_untyped_defs = "True"
 show_column_numbers = "True"
+
+[[tool.mypy.overrides]]
+module = [
+    "algosdk.*",
+    "msgpack",
+]
+ignore_missing_imports = true

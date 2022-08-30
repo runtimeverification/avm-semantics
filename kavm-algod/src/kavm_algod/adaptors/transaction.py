@@ -73,36 +73,36 @@ def transaction_from_k(kast_term: KAst) -> Transaction:
 
     Raise ValueError if the transaction is marformed
     """
-    (_, txHeaderCells) = split_config_from(kast_term)
+    _, tx_header_cells = split_config_from(kast_term)
 
     sp = SuggestedParams(
-        int(txHeaderCells['FEE_CELL'].token),
-        int(txHeaderCells['FIRSTVALID_CELL'].token),
-        int(txHeaderCells['LASTVALID_CELL'].token),
-        txHeaderCells['GENESISHASH_CELL'].token,
+        int(tx_header_cells['FEE_CELL'].token),
+        int(tx_header_cells['FIRSTVALID_CELL'].token),
+        int(tx_header_cells['LASTVALID_CELL'].token),
+        tx_header_cells['GENESISHASH_CELL'].token,
         flat_fee=True,
     )
 
-    txnType = txHeaderCells['TXTYPE_CELL'].token.strip('"')
+    txn_type = tx_header_cells['TXTYPE_CELL'].token.strip('"')
     result = None
-    if txnType == PAYMENT_TXN:
-        (_, payTxCells) = split_config_from(kast_term)
+    if txn_type == PAYMENT_TXN:
+        _, pay_tx_cells = split_config_from(kast_term)
         result = PaymentTxn(
-            sender=txHeaderCells['SENDER_CELL'].token.strip('"'),
+            sender=tx_header_cells['SENDER_CELL'].token.strip('"'),
             sp=sp,
-            receiver=payTxCells['RECEIVER_CELL'].token.strip('"'),
-            amt=int(payTxCells['AMOUNT_CELL'].token),
+            receiver=pay_tx_cells['RECEIVER_CELL'].token.strip('"'),
+            amt=int(pay_tx_cells['AMOUNT_CELL'].token),
         )
-    elif txnType == ASSETTRANSFER_TXN:
-        (_, assetTransferTxCells) = split_config_from(kast_term)
+    elif txn_type == ASSETTRANSFER_TXN:
+        _, asset_transfer_tx_cells = split_config_from(kast_term)
         result = AssetTransferTxn(
-            sender=txHeaderCells['SENDER_CELL'].token.strip('"'),
+            sender=tx_header_cells['SENDER_CELL'].token.strip('"'),
             sp=sp,
-            receiver=assetTransferTxCells['ASSETRECEIVER_CELL'].token.strip('"'),
-            amt=int(assetTransferTxCells['ASSETAMOUNT_CELL'].token.strip('"')),
-            index=int(assetTransferTxCells['XFERASSET_CELL'].token.strip('"')),
+            receiver=asset_transfer_tx_cells['ASSETRECEIVER_CELL'].token.strip('"'),
+            amt=int(asset_transfer_tx_cells['ASSETAMOUNT_CELL'].token.strip('"')),
+            index=int(asset_transfer_tx_cells['XFERASSET_CELL'].token.strip('"')),
         )
     else:
-        raise ValueError(f'Cannot instantiate a Transaction of an unexpected type {txnType}')
+        raise ValueError(f'Cannot instantiate a Transaction of an unexpected type {txn_type}')
 
     return result
