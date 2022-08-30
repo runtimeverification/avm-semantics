@@ -11,7 +11,6 @@ from typing import (
     Any,
     Callable,
     Dict,
-    Final,
     Iterable,
     List,
     Optional,
@@ -32,8 +31,6 @@ from kavm_algod import constants
 from kavm_algod.adaptors.account import KAVMAccount
 from kavm_algod.adaptors.transaction import KAVMTransaction
 
-_LOGGER: Final = logging.getLogger(__name__)
-
 
 def add_include_arg(includes: List[str]) -> List[Any]:
     return [arg for include in includes for arg in ['-I', include]]
@@ -49,11 +46,13 @@ class KAVM(KRun):
         definition_dir: Path,
         use_directory: Any = None,
         faucet_address: Optional[str] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         super().__init__(definition_dir, use_directory=use_directory)
         KAVM._patch_symbol_table(self.symbol_table)
         self._accounts: Dict[str, KAVMAccount] = {}
         self._committed_txn_ids: List[int] = []
+        self._logger = logger
         if faucet_address is not None:
             self._faucet = KAVMAccount(faucet_address, constants.FAUCET_ALGO_SUPPLY)
             # TODO: possible bug in pyk, if a Map cell only contains one item,
@@ -62,6 +61,13 @@ class KAVM(KRun):
             self._accounts['dummy'] = KAVMAccount('dummy')
             self._accounts[faucet_address] = self._faucet
         self._current_config = self._initial_config()
+
+    @property
+    def logger(self) -> logging.Logger:
+        if self._logger is not None:
+            return self._logger
+        else:
+            raise RuntimeError('Logger has not been initialized')
 
     @property
     def accounts(self) -> Dict[str, KAVMAccount]:
@@ -105,7 +111,7 @@ class KAVM(KRun):
         )
         command += add_include_arg(includes)
         try:
-            run_process(command, logger=_LOGGER)
+            run_process(command)
         except CalledProcessError as err:
             sys.stderr.write(f'\nkompile stdout:\n{err.stdout}\n')
             sys.stderr.write(f'\nkompile stderr:\n{err.stderr}\n')
@@ -195,6 +201,7 @@ class KAVM(KRun):
             # TODO: update self.accounts
             return {'txId': f'{txns[0].txid}'}
         else:
+            self.logger.critical(output)
             exit(krun_return_code)
 
     def _initial_config(self) -> KAst:
@@ -236,7 +243,7 @@ class KAVM(KRun):
                     'GLOBALROUND_CELL': intToken(6),
                     'LATESTTIMESTAMP_CELL': intToken(50),
                     'CURRENTAPPLICATIONID_CELL': intToken(-1),
-                    'CURRENTAPPLICATIONADDRESS_CELL': KToken('b""', KSort('Bytes')),
+                    'CURRENTAPPLICATIONADDRESS_CELL': KToken('b"-1"', KSort('Bytes')),
                     'APPCREATOR_CELL': KApply('.Map'),
                     'ASSETCREATOR_CELL': KApply('.Map'),
                     'EFFECTS_CELL': KApply('.List'),
@@ -278,7 +285,6 @@ class KAVM(KRun):
         (current_symbolic_config, current_subst) = split_config_from(
             self._initial_config()
         )
-        # print(self.pretty_print(current_symbolic_config))
 
         txns_and_accounts_subst = Subst(
             {
@@ -343,23 +349,29 @@ class KAVM(KRun):
             )
             tmp_kore_file.write(kore_term)
 
-            krun_command = f'krun --no-expand-macros --definition {self.definition_dir} --output json --term --parser cat {tmp_kore_file.name}'
+            krun_command = ['krun', '--definition', str(self.definition_dir)]
+            krun_command += ['--output', 'json']
+            krun_command += ['--term']
+            krun_command += ['--parser', 'cat']
+            krun_command += [str(tmp_kore_file.name)]
+            command_env = os.environ.copy()
+            command_env['KAVM_DEFITION_DIR'] = str(self.definition_dir)
 
-            env = os.environ.copy()
-            env['KAVM_DEFITION_DIR'] = str(self.definition_dir)
-            output = subprocess.run(
-                krun_command, shell=True, capture_output=True, env=env
+            proc_result = run_process(
+                krun_command, env=command_env, logger=self._logger, profile=True
             )
 
             try:
-                output_kast_term = KAst.from_dict(json.loads(output.stdout)['term'])
+                output_kast_term = KAst.from_dict(
+                    json.loads(proc_result.stdout)['term']
+                )
             except json.JSONDecodeError:
                 return (
-                    output.returncode,
-                    output.stderr.decode(sys.getfilesystemencoding()),
+                    proc_result.returncode,
+                    proc_result.stderr.decode(sys.getfilesystemencoding()),
                 )
 
-            return (output.returncode, inline_cell_maps(output_kast_term))
+            return (proc_result.returncode, inline_cell_maps(output_kast_term))
 
     def run_legacy(self, input_file: Path) -> Tuple[int, Union[KAst, str]]:
         """Run an AVM simulaion scenario with krun"""
@@ -406,9 +418,9 @@ class KAVM(KRun):
         command_env = os.environ.copy()
         command_env['KAVM_DEFITION_DIR'] = str(self.definition_dir)
         try:
-            proc_result = run_process(kast_command, env=command_env, logger=_LOGGER)
+            proc_result = run_process(
+                kast_command, env=command_env, logger=self._logger, profile=True
+            )
         except CalledProcessError:
             raise RuntimeError(f'Calling kast failed: {" ".join(kast_command)}')
-        # if proc_result.returncode != 0:
-        #     raise RuntimeError(f'Calling kast failed: {" ".join(kast_command)}')
         return proc_result.stdout

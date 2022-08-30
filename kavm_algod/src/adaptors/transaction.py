@@ -11,7 +11,7 @@ from algosdk.future.transaction import (
     SuggestedParams,
     Transaction,
 )
-from pyk.kast import KAst, KInner, KSort, Subst
+from pyk.kast import KAst, KInner, KSort, KToken, Subst
 from pyk.kastManip import free_vars, split_config_from
 
 from kavm_algod.pyk_utils import maybeTValue, tvalueList
@@ -53,7 +53,7 @@ class KAVMTransaction:
                 'LASTVALID_CELL': maybeTValue(txn.last_valid_round),
                 'GENESISHASH_CELL': maybeTValue(txn.genesis_hash),
                 'GENESISID_CELL': maybeTValue(txn.genesis_id),
-                'SENDER_CELL': maybeTValue(txn.sender.strip("'")),
+                'SENDER_CELL': KToken(txn.sender.strip("'"), KSort('TAddressLiteral')),
                 'TXTYPE_CELL': maybeTValue(txn.type),
                 'TYPEENUM_CELL': maybeTValue(txn_type_to_type_enum(txn.type)),
                 'GROUP_CELL': maybeTValue(txn.group),
@@ -66,7 +66,9 @@ class KAVMTransaction:
         if txn.type == PAYMENT_TXN:
             type_specific_subst = Subst(
                 {
-                    'RECEIVER_CELL': maybeTValue(txn.receiver.strip("'")),
+                    'RECEIVER_CELL': KToken(
+                        txn.receiver.strip("'"), KSort('TAddressLiteral')
+                    ),
                     'AMOUNT_CELL': maybeTValue(txn.amt),
                     'CLOSEREMAINDERTO_CELL': maybeTValue(txn.close_remainder_to),
                 }
@@ -82,7 +84,9 @@ class KAVMTransaction:
                     if txn.accounts is not None
                     else tvalueList([]),
                     'APPROVALPROGRAM_CELL': maybeTValue(txn.approval_program),
+                    'APPROVALPROGRAMSRC_CELL': KToken('int 0', KSort('TealInputPgm')),
                     'CLEARSTATEPROGRAM_CELL': maybeTValue(txn.clear_program),
+                    'CLEARSTATEPROGRAMSRC_CELL': KToken('int 1', KSort('TealInputPgm')),
                     'APPLICATIONARGS_CELL': tvalueList(txn.app_args)
                     if txn.app_args is not None
                     else tvalueList([]),
@@ -122,14 +126,22 @@ class KAVMTransaction:
                 'FOREIGNASSETS_CELL': tvalueList([]),
             }
         )
+        empty_pgm_fileds_subst = Subst(
+            {
+                'APPROVALPROGRAM_CELL': maybeTValue(None),
+                'APPROVALPROGRAMSRC_CELL': KToken('int 0', KSort('TealInputPgm')),
+                'CLEARSTATEPROGRAM_CELL': maybeTValue(None),
+                'CLEARSTATEPROGRAMSRC_CELL': KToken('int 1', KSort('TealInputPgm')),
+            }
+        )
         transaction_cell = fields_subst.apply(empty_transaction_cell)
         empty_fields_subst = Subst(
             {k: maybeTValue(None) for k in free_vars(empty_transaction_cell)}
         )
 
-        return empty_fields_subst.compose(empty_array_fields_subst).apply(
-            transaction_cell
-        )
+        return empty_fields_subst.compose(
+            empty_array_fields_subst.compose(empty_pgm_fileds_subst)
+        ).apply(transaction_cell)
 
 
 def txn_type_to_type_enum(txn_type: str) -> int:
@@ -205,9 +217,13 @@ def transaction_from_k(kast_term: KAst) -> Transaction:
             ),
             approval_program=b64decode(
                 appCallTxCells['APPROVALPROGRAM_CELL'].token.strip('"')
+                if hasattr(appCallTxCells['APPROVALPROGRAM_CELL'], 'token')
+                else ''
             ),
             clear_program=b64decode(
                 appCallTxCells['CLEARSTATEPROGRAM_CELL'].token.strip('"')
+                if hasattr(appCallTxCells['CLEARSTATEPROGRAM_CELL'], 'token')
+                else ''
             ),
             # TODO: handle array fields
             app_args=None,

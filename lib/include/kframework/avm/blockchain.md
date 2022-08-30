@@ -193,6 +193,7 @@ module ALGO-BLOCKCHAIN
   imports APPLICATIONS
   imports ASSETS
   imports ADDITIONAL-FIELDS
+  imports TEAL-TYPES-SYNTAX
 
   // Note: An address is the base32 encoding of a {pub key + 4-byte checksum}
   // Note: There are three ways in which an account may be created:
@@ -205,14 +206,14 @@ module ALGO-BLOCKCHAIN
     <blockchain>
       <accountsMap>
         <account multiplicity="*" type="Map">
-          <address>    .Bytes             </address>
+          <address>    "":TBytes </address>
           <balance>    0                  </balance>
           <minBalance> PARAM_MIN_BALANCE  </minBalance> // the default min balance is 0.1 Algo
           <round>      0                  </round>
           <preRewards> 0                  </preRewards>
           <rewards>    0                  </rewards>
           <status>     0                  </status>
-          <key>        .Bytes             </key>
+          <key>        "":TBytes </key>
           <appsCreated/>
           <appsOptedIn/>
           <assetsCreated/>

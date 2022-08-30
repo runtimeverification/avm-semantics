@@ -1,11 +1,10 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 
-from pyk.kast import KApply, KInner, Subst
+from pyk.kast import KApply, KInner, KSort, KToken, Subst
 from pyk.kastManip import flatten_label, split_config_from
-from pyk.prelude import intToken, stringToken
+from pyk.prelude import intToken
 
 from kavm_algod.constants import MIN_BALANCE
-from kavm_algod.pyk_utils import maybeTValue
 
 
 class KAVMAccount:
@@ -22,7 +21,7 @@ class KAVMAccount:
         preRewards: int = 0,
         rewards: int = 0,
         status: int = 0,
-        key: str = '""',
+        key: str = '',
         appsCreated: List[int] = [],
         appsOptedIn: List[int] = [],
         assetsCreated: List[int] = [],
@@ -38,7 +37,7 @@ class KAVMAccount:
         self._preRewards = preRewards
         self._rewards = rewards
         self._status = status
-        self._key = address if key == '""' else key
+        self._key = address if key == '' else key
         self._appsCreated = appsCreated
         self._appsOptedIn = appsOptedIn
         self._assetsCreated = assetsCreated
@@ -61,14 +60,14 @@ class KAVMAccount:
         return KApply(
             '<account>',
             [
-                KApply('<address>', [maybeTValue(self._address)]),
+                KApply('<address>', [KToken(self._address, KSort('TAddressLiteral'))]),
                 KApply('<balance>', [intToken(self._balance)]),
                 KApply('<minBalance>', [intToken(self._minBalance)]),
                 KApply('<round>', [intToken(self._round)]),
                 KApply('<preRewards>', [intToken(self._preRewards)]),
                 KApply('<rewards>', [intToken(self._rewards)]),
                 KApply('<status>', [intToken(self._status)]),
-                KApply('<key>', [maybeTValue(self._key)]),
+                KApply('<key>', [KToken(self._key, KSort('TAddressLiteral'))]),
                 # TODO: handle apps and assets
                 KApply('<appsCreated>', [KApply('.AppCellMap')]),
                 KApply('<appsOptedIn>', [KApply('.OptInAppCellMap')]),
@@ -117,15 +116,16 @@ class KAVMAccount:
         }
 
 
-def get_account(address: str, accountsMapCell: KInner) -> Optional[KInner]:
+def get_account(address: str, accountsMapCell: KInner) -> KInner:
     (symbolic_account_cell_term, _) = split_config_from(
         KAVMAccount(address).account_cell
     )
-    account_pattern = Subst({'ADDRESS_CELL': stringToken(address)}).apply(
-        symbolic_account_cell_term
-    )
+    account_pattern = Subst(
+        {'ADDRESS_CELL': KToken(address, KSort('TAddressLiteral'))}
+    ).apply(symbolic_account_cell_term)
     account_cells = flatten_label('_AccountCellMap_', accountsMapCell)
     for term in account_cells:
         if account_pattern.match(term) is not None:
             return term
-    return None
+
+    raise KeyError(f'address {address} not found')

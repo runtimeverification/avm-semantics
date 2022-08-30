@@ -58,6 +58,7 @@ class KAVMClient(algod.AlgodClient):
             self.kavm = KAVM(
                 definition_dir=os.environ.get('KAVM_DEFINITION_DIR'),
                 faucet_address=faucet_address,
+                logger=self.algodLogger,
             )
         else:
             self.algodLogger.critical(
@@ -120,6 +121,7 @@ class KAVMClient(algod.AlgodClient):
                 raise NotImplementedError(f'Endpoint not implemented: {requrl}')
         elif endpoint == 'accounts':
             (config, subst) = split_config_from(self.kavm.current_config)
+
             address = params[0]
             return KAVMAccount.from_account_cell(
                 get_account(address, subst['ACCOUNTSMAP_CELL'])

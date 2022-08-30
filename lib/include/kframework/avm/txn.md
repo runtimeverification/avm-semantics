@@ -65,10 +65,10 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
         <applicationID>        NoTValue    </applicationID>
         <onCompletion>         NoTValue    </onCompletion>
         <accounts>             .TValueList </accounts>
-        <approvalProgramSrc>   #pragma mode stateful int 1 </approvalProgramSrc>
-        <clearStateProgramSrc> #pragma mode stateful int 1 </clearStateProgramSrc>
-        <approvalProgram>      .Bytes      </approvalProgram>
-        <clearStateProgram>    .Bytes      </clearStateProgram>
+        <approvalProgramSrc>   int 0 </approvalProgramSrc>
+        <clearStateProgramSrc> int 1 </clearStateProgramSrc>
+        <approvalProgram>      NoTValue      </approvalProgram>
+        <clearStateProgram>    NoTValue      </clearStateProgram>
         <applicationArgs>      .TValueList </applicationArgs> // maximum size is 2KB, and all args are internally byte strings
         <foreignApps>          .TValueList </foreignApps>
         <foreignAssets>        .TValueList </foreignAssets>
@@ -80,7 +80,7 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
           <localNui> NoTValue </localNui>
           <localNbs> NoTValue </localNbs>
         </localStateSchema>
-        <extraProgramPages> 0 </extraProgramPages>
+        <extraProgramPages> NoTValue </extraProgramPages>
       </appCallTxFields>
 ```
 
