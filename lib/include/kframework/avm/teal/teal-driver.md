@@ -1374,11 +1374,31 @@ Stateful TEAL Operations
        <transaction>
          <txID> TX_ID </txID>
          <logs> LOG => append(MSG, LOG) </logs>
+         <logSize> SIZE => SIZE +Int lengthBytes({MSG}:>Bytes) </logSize>
          ...
        </transaction>
+    requires size(LOG) <Int PARAM_MAX_LOG_CALLS
 
    rule <k> log => panic(ILL_TYPED_STACK) ...</k>
         <stack> _:TUInt64 : _ </stack>
+
+   rule <k> log => panic(LOG_CALLS_EXCEEDED) ...</k>
+       <currentTx> TX_ID </currentTx>
+       <transaction>
+         <txID> TX_ID </txID>
+         <logs> LOG </logs>
+         ...
+       </transaction>
+    requires size(LOG) >=Int PARAM_MAX_LOG_CALLS
+
+   rule <k> log => panic(LOG_SIZE_EXCEEDED) ...</k>
+       <currentTx> TX_ID </currentTx>
+       <transaction>
+         <txID> TX_ID </txID>
+         <logSize> SIZE </logSize>
+         ...
+       </transaction>
+    requires SIZE >=Int PARAM_MAX_LOG_SIZE
 ```
 
 *app_opted_in*

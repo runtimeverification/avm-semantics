@@ -315,6 +315,8 @@ return code to 3 (see return codes below).
   syntax String ::= "INDEX_OUT_OF_BOUNDS"        [macro]
   syntax String ::= "ILLEGAL_JUMP"               [macro]
   syntax String ::= "ILL_TYPED_STACK"            [macro]
+  syntax String ::= "LOG_CALLS_EXCEEDED"         [macro]
+  syntax String ::= "LOG_SIZE_EXCEEDED"          [macro]
   syntax String ::= "STACK_OVERFLOW"             [macro]
   syntax String ::= "STACK_UNDERFLOW"            [macro]
   syntax String ::= "ASSERTION_VIOLATION"        [macro]
@@ -338,6 +340,8 @@ return code to 3 (see return codes below).
   rule INDEX_OUT_OF_BOUNDS => "array index out of bounds"
   rule ILLEGAL_JUMP        => "illegal branch to a non-existing label"
   rule ILL_TYPED_STACK     => "wrong argument type(s) for opcode"
+  rule LOG_CALLS_EXCEEDED  => "too many log calls in transaction"
+  rule LOG_SIZE_EXCEEDED   => "total size of log calls in transaction is too large"
   rule INVALID_ARGUMENT    => "wrong argument range(s) for opcode"
   rule STACK_OVERFLOW      => "stack overflow"
   rule STACK_UNDERFLOW     => "stack underflow"

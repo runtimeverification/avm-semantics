@@ -83,6 +83,7 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
         <extraProgramPages> 0           </extraProgramPages>
         <txScratch>         .Map        </txScratch>
         <logs>              .TValueList </logs>
+        <logSize>           0           </logSize>
       </appCallTxFields>
 ```
 

@@ -1,0 +1,72 @@
+#pragma version 6
+#pragma mode stateful
+
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+
+int 1
+return
