@@ -5,9 +5,7 @@ from algosdk.future.transaction import PaymentTxn, SuggestedParams
 from kavm_algod.algod import KAVMClient
 
 
-def test_send_transactions(
-    kalgod: KAVMClient, suggested_params: SuggestedParams
-) -> None:
+def test_send_transactions(kalgod: KAVMClient, suggested_params: SuggestedParams) -> None:
 
     # generate accounts
     private_key_sender, sender = account.generate_account()
