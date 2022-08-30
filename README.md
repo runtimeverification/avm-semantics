@@ -1,8 +1,72 @@
-Algorand Virtual Machine Semantics in K
+Algorand Virtual Machine and TEAL Semantics in K
 =======================================
 
-AVM Files
----------
+🛠️**Work in progress**🛠️
+
+KTeal leverages the [K Framework](https://kframework.org/) to empower Algorand smart contracts' developers with property-based testing and formal verification.
+
+Getting Started
+---------------
+
+### Installing KTeal
+
+For now, KTeal can only installed from source. We intend to provide a Docker image and standalone packages for popular operating environments at a later stage. To install KTeal from source, please refer to [Working on KTeal](#working-on-kteal).
+
+### Entry points
+
+The semantics can be used either via the `kavm` command-line interface or programmatical, through the `kavm_algod` Python package.
+
+#### `kavm` runner script
+
+`kavm` is a shell script that provides a command-line interface for the semantics:
+* concrete simulations and tests are run via `krun` and the K LLVM Backend
+* symbolic execution proofs are run with `kprove` and the K Haskell Backend
+
+#### `kavm_algod` Python library
+
+[`kavm_algod`](./kavm_algod) is a Python package that enables interoperability between KAVM and `algod` --- the Algorand node daemon. `kavm_algod` also provides a drop-in replacement for `py-algorand-sdk`, making it possible to run existing deployment and testing scripts on top of KAVM.
+
+See `kavm --help` for more information.
+
+`kavm` uses two auxiliary scripts located in [`scripts/`](scripts/):
+* [`parse-avm-simulation.sh`](scripts/parse-avm-simulation.sh) calls `kparse` to parse a simulation scenario from a `.avm-simulation` file;
+* [`parse-teal-programs.sh`](scripts/parse-teal-programs.sh) calls `kparse` to parse a `;`-separated list of TEAL source codes.
+
+Testing harness
+---------------
+
+### Concrete Execution Tests
+
+The tests are located in [`tests/`](tests/).
+
+Run `make test-avm` to execute the test suite.
+
+Each test has two components:
+* a TEAL program `.teal`, or several programs, in [`tests/teal-sources/`](tests/teal-sources/);
+* a test scenario, `.avm-simulation` in [`tests/scenarios/`](tests/scenarios/) that defines the initial network state, the input transaction group and declares which TEAL programs it uses.
+
+Currently, a test is considered passing if the `kavm` runner script returns 0 and the final state network state is not examined. This will be implemented at a later stage.
+
+The negative test scenarios are expected to fail and have the `.fail.avm-simulation` file extension.
+
+### Symbolic Proofs
+
+The specifications are located in [`tests/specs/`](tests/specs/).
+
+Run `make test-avm-prove` to verify the specifications.
+
+The [`verification.md`](tests/specs/verification.k) module must be compiled with the Haskell backend and included in every spec file.
+The Makefile target `test-avm-prove` ensures that the verification module is compiled properly before checking the specs.
+
+**NOTE**: the specs have not yet been fully ported to the current semantics and are failing.
+They are not checked on CI and are not called by `make test`.
+
+Repository Structure
+--------------------
+
+#### K files
+
+##### Algorand network state and AVM files
 
 The AVM semantics source files are located in [`lib/include/kframework/avm/`](lib/include/kframework/avm/):
 
@@ -21,8 +85,7 @@ The AVM semantics source files are located in [`lib/include/kframework/avm/`](li
 * [`avm-txn-deque.md`](lib/include/kframework/avm/avm-txn-deque.md) defines an internal data structure that handles transaction execution schedule.
 * [`args.md`](lib/include/kframework/avm/args.md) defines the representation of Logic Signature transaction arguments.
 
-TEAL Interpreter Files
-----------------------
+##### TEAL Interpreter
 
 Transaction Execution Approval Language (TEAL) is the language that governs approval of Algorand transactions and serves as the execution layer for Algorand Smart Contracts.
 
@@ -40,47 +103,13 @@ The K modules describing syntax and semantics of TEAL are located in [`lib/inclu
   - [TEAL Panic Behaviors](lib/include/kframework/avm/teal/teal-execution.md#panic-behaviors)
 * [`teal-driver.md`](lib/include/kframework/avm/teal/teal-driver.md) defines the semantics of the various TEAL opcodes and specifies how a TEAL program is interpreted.
 
-### Opcode support and costs
+Not all TEAL opcodes are supported by the semantics as of yet. See the relevant [wiki page](https://github.com/runtimeverification/avm-semantics/wiki/TEAL-opcodes-support-and-costs) for the table of supported opcodes and their execution costs. The semantics does not yet support contract-to-contract calls.
 
-Not all TEAL opcodes are supported by the semantics as of yet. See the relevant [wiki page](https://github.com/runtimeverification/avm-semantics/wiki/TEAL-opcodes-support-and-costs) for the table of supported opcodes and their execution costs.
+#### Python packages
 
-`kavm` runner script
---------------------
+`kavm_algod`[./kavm_algod] is a Python package that enables interoperability between KAVM and `algod` --- the Algorand node daemon. `kavm_algod` also provides a drop-in replacement for `py-algorand-sdk`, making it possible to run existing deployment and testing scripts on top of KAVM.
 
-`kavm` is a shell script that provides a command-line interface for the semantics:
-* concrete simulations and tests are run via `krun` and the K LLVM Backend
-* symbolic execution proofs are run with `kprove` and the K Haskell Backend
-
-See `kavm --help` for more information.
-
-`kavm` uses two auxiliary scripts located in [`scripts/`](scripts/):
-* [`parse-avm-simulation.sh`](scripts/parse-avm-simulation.sh) calls `kparse` to parse a simulation scenario from a `.avm-simulation` file;
-* [`parse-teal-programs.sh`](scripts/parse-teal-programs.sh) calls `kparse` to parse a `;`-separated list of TEAL source codes.
-
-Testing harness
----------------
-
-### Concrete Execution Tests
-
-The tests are located in [`tests/`](tests/). Each test has two components:
-* a TEAL program `.teal`, or several programs, in [`tests/teal-sources/`](tests/teal-sources/);
-* a test scenario, `.avm-simulation` in [`tests/scenarios/`](tests/scenarios/) that defines the initial network state, the input transaction group and declares which TEAL programs should it uses.
-
-Note that negative test scenarios are mist have the `.fail.avm-simulation` file extension.
-
-### Symbolic Proofs
-
-The specifications are located in [`tests/specs/`](tests/specs/).
-
-Run `make test-avm-prove` to verify the specifications.
-
-The [`verification.md`](tests/specs/verification.k) module must be compiled with the Haskell backend and included in every spec file.
-The Makefile target `test-avm-prove` ensures that the verification module is compiled properly before checking the specs.
-
-**NOTE**: the specs have not yet been fully ported to the current semantics and are failing.
-They are not checked on CI and are not called by `make test`.
-
-Working on KAVM
+Working on KTeal
 ---------------
 
 ### Build system
@@ -89,10 +118,6 @@ Working on KAVM
 * `make build`: compile KAVM K modules and the `kavm` tool.
   By default, `kompile` is called with the LLVM backend. To compile the semantics with the Haskell backend, execute `K_BACKEND=haskell make build`.
 * `make test -j8`: run tests. Adjust the `-jX` option as needed to run `X` tests in parallel.
-
-### Adding new tests
-
-TBD
 
 ### Managing `PATH` with `direnv`
 
