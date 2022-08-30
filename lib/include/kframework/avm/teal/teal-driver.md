@@ -1770,10 +1770,22 @@ Stateful TEAL Operations
      orBool ({getTxnField(T, TypeEnum)}:>Int) =/=Int (@ appl)
 ```
 
-*gload*
+*gload, gloads, & gloadss*
 
 ```k
-  rule <k> gload TXN_IDX I => .K ...</k>
+  rule <k> gload TXN_IDX I => loadGroupScratch(TXN_IDX, I) ...</k>
+
+  rule <k> gloads I => loadGroupScratch(TXN_IDX, I) ... </k>
+       <stack> (TXN_IDX:Int : XS) => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
+  rule <k> gloadss => loadGroupScratch(TXN_IDX, I) ... </k>
+       <stack> (I:Int : TXN_IDX:Int : XS) => XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+
+  syntax KItem ::= loadGroupScratch(Int, Int)
+  //-----------------------------------------
+  rule <k> loadGroupScratch(TXN_IDX, I) => . ...</k>
        <stack> XS => ({M[I]}:>TValue) : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
        <transaction>
@@ -1786,7 +1798,7 @@ Stateful TEAL Operations
      andBool S <Int MAX_STACK_DEPTH
      andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
 
-  rule <k> gload TXN_IDX I => .K ... </k>
+  rule <k> loadGroupScratch(TXN_IDX, I) => . ...</k>
        <stack> XS => 0 : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
        <transaction>
@@ -1799,96 +1811,18 @@ Stateful TEAL Operations
      andBool S <Int MAX_STACK_DEPTH
      andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
 
-  rule <k> gload _ I => panic(INVALID_SCRATCH_LOC) ... </k>
+  rule <k> loadGroupScratch(_, I) => panic(INVALID_SCRATCH_LOC) ... </k>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
-  rule <k> gload TXN_IDX _ => panic(TXN_OUT_OF_BOUNDS) ... </k>
-    requires TXN_IDX <Int 0 orBool TXN_IDX >=Int {getGlobalField(GroupSize)}:>Int
-
-  rule <k> gload TXN_IDX _ => panic(FUTURE_TXN) ... </k>
-    requires TXN_IDX >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
-```
-
-*gloads*
-
-```k
-  rule <k> gloads I => .K ... </k>
-       <stack> TXN_IDX:Int : XS => ({M[I]}:>TValue) : XS </stack>
-       <transaction>
-         <txID> TXN_IDX </txID>
-         <txScratch> M </txScratch>
-         ...
-       </transaction>
-    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
-     andBool I in_keys(M)
-     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
-
-  rule <k> gloads I => .K ... </k>
-       <stack> TXN_IDX:Int : XS => 0 : XS </stack>
-       <transaction>
-         <txID> TXN_IDX </txID>
-         <txScratch> M </txScratch>
-         ...
-       </transaction>
-    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
-     andBool notBool (I in_keys(M))
-     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
-
-  rule <k> gloads I => panic(INVALID_SCRATCH_LOC) ... </k>
-    requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
-
-  rule <k> gloads _ => panic(TXN_OUT_OF_BOUNDS) ... </k>
-       <stack> TXN_IDX:Int : _ </stack>
-    requires TXN_IDX <Int 0 orBool TXN_IDX >=Int {getGlobalField(GroupSize)}:>Int
-
-  rule <k> gloads _ => panic(FUTURE_TXN) ... </k>
-       <stack> TXN_IDX:Int : _ </stack>
+  rule <k> loadGroupScratch(TXN_IDX, _) => panic(FUTURE_TXN) ... </k>
     requires TXN_IDX >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
 
-  rule <k> gloads _ => panic(INVALID_ARGUMENT) ...</k>
-       <stack> _:Bytes : _ </stack>
-```
-
-*gloadss*
-
-```k
-  rule <k> gloadss => .K ... </k>
-       <stack> I:Int : TXN_IDX:Int : XS => ({M[I]}:>TValue) : XS </stack>
-       <transaction>
-         <txID> TXN_IDX </txID>
-         <txScratch> M </txScratch>
-         ...
-       </transaction>
-    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
-     andBool I in_keys(M)
-     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
-
-  rule <k> gloadss => .K ... </k>
-       <stack> I:Int : TXN_IDX:Int : XS => 0 : XS </stack>
-       <transaction>
-         <txID> TXN_IDX </txID>
-         <txScratch> M </txScratch>
-         ...
-       </transaction>
-    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
-     andBool notBool (I in_keys(M))
-     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
-
-  rule <k> gloadss => panic(INVALID_SCRATCH_LOC) ... </k>
-       <stack> I:Int : _ </stack>
-    requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
-
-  rule <k> gloadss => panic(TXN_OUT_OF_BOUNDS) ... </k>
-       <stack> _ : TXN_IDX:Int : _ </stack>
+  rule <k> loadGroupScratch(TXN_IDX, _) => panic(TXN_OUT_OF_BOUNDS) ... </k>
     requires TXN_IDX <Int 0 orBool TXN_IDX >=Int {getGlobalField(GroupSize)}:>Int
-
-  rule <k> gloadss => panic(FUTURE_TXN) ... </k>
-       <stack> _ : TXN_IDX:Int : _ </stack>
-    requires TXN_IDX >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
-
-  rule <k> gloadss => panic(INVALID_ARGUMENT) ...</k>
-       <stack> I:TValue : TXN_IDX:TValue : _ </stack>
-    requires notBool (isInt(I) andBool isInt(TXN_IDX))
+  
+  rule <k> loadGroupScratch(_, _) => panic(STACK_OVERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S >=Int MAX_STACK_DEPTH
 ```
 
 
