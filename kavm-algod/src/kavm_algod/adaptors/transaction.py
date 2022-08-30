@@ -1,10 +1,5 @@
 from algosdk.constants import ASSETTRANSFER_TXN, PAYMENT_TXN
-from algosdk.future.transaction import (
-    AssetTransferTxn,
-    PaymentTxn,
-    SuggestedParams,
-    Transaction,
-)
+from algosdk.future.transaction import AssetTransferTxn, PaymentTxn, SuggestedParams, Transaction
 from pyk.kast import KApply, KAst
 from pyk.kastManip import split_config_from
 
@@ -108,8 +103,6 @@ def transaction_from_k(kast_term: KAst) -> Transaction:
             index=int(assetTransferTxCells['XFERASSET_CELL'].token.strip('"')),
         )
     else:
-        raise ValueError(
-            f'Cannot instantiate a Transaction of an unexpected type {txnType}'
-        )
+        raise ValueError(f'Cannot instantiate a Transaction of an unexpected type {txnType}')
 
     return result

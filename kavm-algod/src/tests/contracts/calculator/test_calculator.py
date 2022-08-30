@@ -3,12 +3,7 @@ from typing import Dict
 
 from algosdk import account
 from algosdk.future import transaction
-from algosdk.future.transaction import (
-    ApplicationCallTxn,
-    ApplicationCreateTxn,
-    OnComplete,
-    PaymentTxn,
-)
+from algosdk.future.transaction import ApplicationCallTxn, ApplicationCreateTxn, OnComplete, PaymentTxn
 from algosdk.v2client import AlgodClient
 
 approval_program_src = '''
@@ -57,18 +52,12 @@ return
 '''
 
 
-def generate_and_fund_account(
-    algod: AlgodClient, faucet: Dict[str, str]
-) -> Dict[str, str]:
+def generate_and_fund_account(algod: AlgodClient, faucet: Dict[str, str]) -> Dict[str, str]:
     private_key, address = account.generate_account()
 
     # fund the account from the faucet
     sp = algod.suggested_params()
-    algod.send_transaction(
-        PaymentTxn(faucet['address'], sp, address, 10_000_000).sign(
-            faucet['private_key']
-        )
-    )
+    algod.send_transaction(PaymentTxn(faucet['address'], sp, address, 10_000_000).sign(faucet['private_key']))
 
     return {'address': address, 'private_key': private_key}
 
@@ -99,9 +88,7 @@ def create_calculator_app(algod: AlgodClient, faucet: Dict[str, str]) -> int:
 
     # send the transaction to the network and save its id
     create_app_txn_id = algod.send_transactions([signed_create_app_txn])
-    created_app_id = algod.pending_transaction_info(create_app_txn_id)[
-        'application-index'
-    ]
+    created_app_id = algod.pending_transaction_info(create_app_txn_id)['application-index']
 
     return created_app_id
 
