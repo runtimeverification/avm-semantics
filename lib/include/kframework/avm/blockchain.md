@@ -101,10 +101,10 @@ module APPLICATIONS
     <appsCreated>
       <app multiplicity="*" type="Map">
         <appID>           0        </appID>
-        <approvalPgmSrc>     #pragma mode stateful int 1 </approvalPgmSrc>
+        <approvalPgmSrc>     #pragma mode stateful int 0 </approvalPgmSrc>
         <clearStatePgmSrc>   #pragma mode stateful int 1 </clearStatePgmSrc>
-        <approvalPgm>     .Bytes   </approvalPgm>
-        <clearStatePgm>   .Bytes   </clearStatePgm>
+        <approvalPgm>     NoTValue </approvalPgm>
+        <clearStatePgm>   NoTValue </clearStatePgm>
         <globalState>
           <globalInts>    NoTValue </globalInts>
           <globalBytes>   NoTValue </globalBytes>
@@ -658,8 +658,8 @@ Accessor functions
 
   rule _ in_assets(<assetsCreated> .Bag </assetsCreated>) => false
 
-  syntax Bool ::= TValue "in_apps" "(" AccountsMapCell ")" [function]
-  // ---------------------------------------------------------------
+  syntax Bool ::= TValue "in_apps" "(" AccountsMapCell ")" [function, functional]
+  // ----------------------------------------------------------------------------
   rule APP in_apps(<accountsMap>
                      <account>
                        <appsCreated> APPS </appsCreated> ...
@@ -670,8 +670,8 @@ Accessor functions
 
   rule _ in_apps( <accountsMap> .Bag </accountsMap> ) => false
 
-  syntax Bool ::= TValue "in_apps" "(" AppsCreatedCell ")" [function]
-  // -----------------------------------------------------------------
+  syntax Bool ::= TValue "in_apps" "(" AppsCreatedCell ")" [function, functional]
+  // ----------------------------------------------------------------------------
   rule APP in_apps(<appsCreated>
                      <app>
                        <appID> APP </appID> ...

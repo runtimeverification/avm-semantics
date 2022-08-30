@@ -725,12 +725,13 @@ Not supported.
 App create
 
 ```k
-  rule <k> #executeTxn(@appl) => (#executeTxn(@appl) ~> #assignAppID()) ...</k>
+//  rule <k> #executeTxn(@appl) => (#executeTxn(@appl) ~> #assignAppID()) ...</k>
+  rule <k> #executeTxn(@appl) => .K ...</k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>                 TXN_ID              </txID>
          <sender>               SENDER              </sender>
-         <applicationID>        NoTValue => 0       </applicationID>
+         <applicationID>        0                   </applicationID>
          <approvalProgramSrc>   APPROVAL_PGM_SRC    </approvalProgramSrc>
          <clearStateProgramSrc> CLEAR_STATE_PGM_SRC </clearStateProgramSrc>
          <approvalProgram>      APPROVAL_PGM        </approvalProgram>
@@ -771,7 +772,8 @@ App create
          ...
        </account>
        <appCreator> .Map => (0 |-> SENDER) ... </appCreator>
-    requires notBool(0 in_apps(<appsCreated> APPS </appsCreated>))
+//       <appCreator> APP_CREATOR_MAP => (0 |-> SENDER) APP_CREATOR_MAP ... </appCreator>
+     requires notBool(0 in_apps(<appsCreated> APPS </appsCreated>))
 ```
 
 NoOp

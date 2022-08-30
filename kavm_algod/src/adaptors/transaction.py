@@ -79,7 +79,9 @@ class KAVMTransaction:
             type_specific_subst = Subst(
                 {
                     'APPLICATIONID_CELL': maybeTValue(txn.index),
-                    'ONCOMPLETION_CELL': maybeTValue(txn.on_complete),
+                    'ONCOMPLETION_CELL': maybeTValue(int(txn.on_complete))
+                    if txn.on_complete is not None
+                    else maybeTValue(None),
                     'ACCOUNTS_CELL': tvalueList(txn.accounts)
                     if txn.accounts is not None
                     else tvalueList([]),
@@ -107,6 +109,9 @@ class KAVMTransaction:
                     else maybeTValue(0),
                     'LOCALNBS_CELL': maybeTValue(txn.local_schema.num_byte_slices)
                     if txn.local_schema is not None
+                    else maybeTValue(0),
+                    'EXTRAPROGRAMPAGES_CELL': maybeTValue(txn.extra_pages)
+                    if txn.extra_pages is not None
                     else maybeTValue(0),
                 }
             )

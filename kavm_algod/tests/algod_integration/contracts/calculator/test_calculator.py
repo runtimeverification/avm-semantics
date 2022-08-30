@@ -106,10 +106,10 @@ def create_calculator_app(client: AlgodClient, faucet: Dict[str, str]) -> int:
     return created_app_id
 
 
-@pytest.mark.skipif(
-    "config.getoption('--backend') == 'kalgod'",
-    reason='kalgod does not yet support ApplicationCallTxn',
-)
+# @pytest.mark.skipif(
+#     "config.getoption('--backend') == 'kalgod'",
+#     reason='kalgod does not yet support ApplicationCallTxn',
+# )
 def test_call_calculator(client: AlgodClient, faucet: Dict[str, str]) -> None:
     # create app
     app_id = create_calculator_app(client, faucet)

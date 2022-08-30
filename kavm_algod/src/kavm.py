@@ -28,7 +28,7 @@ from pyk.ktool.kprint import paren
 from pyk.prelude import Sorts, build_assoc, build_cons, intToken, stringToken
 
 from kavm_algod import constants
-from kavm_algod.adaptors.account import KAVMAccount
+from kavm_algod.adaptors.account import KAVMAccount, get_account
 from kavm_algod.adaptors.transaction import KAVMTransaction
 
 
@@ -195,6 +195,11 @@ class KAVM(KRun):
         if isinstance(output, KAst) and krun_return_code == 0:
             # Finilize successful evaluation: self._current_config and self._accounts
             self.current_config = output
+            (_, subst) = split_config_from(self.current_config)
+            for address in self.accounts.keys():
+                self.accounts[address] = KAVMAccount.from_account_cell(
+                    get_account(address, subst['ACCOUNTSMAP_CELL'])
+                )
             # save committed txn ids into a sorterd list
             # TODO: ids must be strings, but that needs changing in KAVM
             self._committed_txn_ids += sorted([txn.txid for txn in txns])
