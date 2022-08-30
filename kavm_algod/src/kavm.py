@@ -6,7 +6,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from subprocess import CalledProcessError
+from subprocess import CalledProcessError, CompletedProcess
 from typing import (
     Any,
     Callable,
@@ -321,16 +321,12 @@ class KAVM(KRun):
 
         If successful, put the resulting configuration as the new current config.
         """
-        return self.run_term(self.current_config)
-
-    def run_term(self, configuration: KAst) -> Tuple[int, Union[KAst, str]]:
-        """
-        Execute krun --term, passing the supplied configuration as a KORE term
-        """
+        configuration = self.current_config
         freeVars = free_vars(cast(KInner, configuration))
         assert (
             len(freeVars) == 0
         ), f'Cannot run from current configuration due to unbound variables {freeVars}'
+
         with tempfile.NamedTemporaryFile(
             'w+t', delete=False
         ) as tmp_kast_json_file, tempfile.NamedTemporaryFile(
@@ -346,21 +342,11 @@ class KAVM(KRun):
                 input_file=Path(tmp_kast_json_file.name),
                 module='AVM-EXECUTION',
                 sort=KSort('GeneratedTopCell'),
-            )
+                input='json',
+                output='kore',
+            ).stdout
             tmp_kore_file.write(kore_term)
-
-            krun_command = ['krun', '--definition', str(self.definition_dir)]
-            krun_command += ['--output', 'json']
-            krun_command += ['--term']
-            krun_command += ['--parser', 'cat']
-            krun_command += [str(tmp_kore_file.name)]
-            command_env = os.environ.copy()
-            command_env['KAVM_DEFITION_DIR'] = str(self.definition_dir)
-
-            proc_result = run_process(
-                krun_command, env=command_env, logger=self._logger, profile=True
-            )
-
+            proc_result = self.run_term(tmp_kore_file.name)
             try:
                 output_kast_term = KAst.from_dict(
                     json.loads(proc_result.stdout)['term']
@@ -372,6 +358,29 @@ class KAVM(KRun):
                 )
 
             return (proc_result.returncode, inline_cell_maps(output_kast_term))
+
+    def run_term(self, kore_file_name: str) -> CompletedProcess:
+        """
+        Execute krun --term, passing the supplied configuration as a KORE term
+        """
+        krun_command = ['krun', '--definition', str(self.definition_dir)]
+        krun_command += ['--output', 'json']
+        krun_command += ['--term']
+        krun_command += ['--parser', 'cat']
+        krun_command += [kore_file_name]
+        command_env = os.environ.copy()
+        command_env['KAVM_DEFITION_DIR'] = str(self.definition_dir)
+
+        try:
+            return run_process(
+                krun_command, env=command_env, logger=self._logger, profile=True
+            )
+        except CalledProcessError as err:
+            raise RuntimeError(
+                f'Command krun exited with code {err.returncode} for: {kore_file_name}',
+                err.stdout,
+                err.stderr,
+            ) from err
 
     def run_legacy(self, input_file: Path) -> Tuple[int, Union[KAst, str]]:
         """Run an AVM simulaion scenario with krun"""
@@ -409,7 +418,7 @@ class KAVM(KRun):
         module: str = 'AVM-EXECUTION',
         sort: KSort = Sorts.K,
         args: Iterable[str] = (),
-    ) -> str:
+    ) -> CompletedProcess:
         kast_command = ['kast', '--definition', str(self.definition_dir)]
         kast_command += ['--input', input, '--output', output]
         kast_command += ['--module', module]
@@ -418,9 +427,12 @@ class KAVM(KRun):
         command_env = os.environ.copy()
         command_env['KAVM_DEFITION_DIR'] = str(self.definition_dir)
         try:
-            proc_result = run_process(
+            return run_process(
                 kast_command, env=command_env, logger=self._logger, profile=True
             )
-        except CalledProcessError:
-            raise RuntimeError(f'Calling kast failed: {" ".join(kast_command)}')
-        return proc_result.stdout
+        except CalledProcessError as err:
+            raise RuntimeError(
+                f'Command kast exited with code {err.returncode} for: {input_file}',
+                err.stdout,
+                err.stderr,
+            ) from err
