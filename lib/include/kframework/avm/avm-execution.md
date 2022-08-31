@@ -52,7 +52,7 @@ Transaction Group Evaluation
 
 ### Transaction execution pipeline
 
-The `#evalTxGroup()` rule calls the `#evalTx()` rule until the transaction deque is empty.
+The `#evalTxs()` rule calls the `#evalTx()` rule until the transaction deque is empty.
 The transactions can push new (inner) transactions into the front of `txnDeque` and they
 will be executed immediately after their parent transaction, provided it has been accepted.
 
@@ -60,10 +60,15 @@ If one of the transactions is denied (including the inner ones), the group evalu
 and the current configuration is frozen for examination.
 
 ```k
+  syntax AlgorandCommand ::= #setMode(TealMode)
+  //-------------------------------------------
+  rule <k> #setMode(MODE) => . ...</k>
+       <mode> _ => MODE </mode>
+  
   syntax AlgorandCommand ::= #evalTxGroup()
-  //---------------------------------------
+  //-----------------------------------
 
-  rule <k> #evalTxGroup() => #popTxnFront() ~> #evalTx() ~> #evalTxGroup() ... </k>
+  rule <k> #evalTxGroup() => #popTxnFront() ~> #cleanUp() ~> #setMode(stateful) ~> #evalTx() ~> #evalTxGroup() ... </k>
        <deque> TXN_DEQUE </deque>
     requires TXN_DEQUE =/=K .List
 
@@ -333,7 +338,7 @@ TODO: address contact creation.
 ```k
   syntax AlgorandCommand ::= #evalTeal( TealInputPgm )
 
-  rule <k> #evalTeal( PGM ) => #cleanUp() ~> PGM ~> #startExecution() ... </k>
+  rule <k> #evalTeal( PGM ) => PGM ~> #startExecution() ... </k>
        <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
        <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
        <currentTx>           TXN_ID                            </currentTx>

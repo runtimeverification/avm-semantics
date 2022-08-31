@@ -1,5 +1,4 @@
 #pragma version 4
-#pragma mode stateful
 
 int 1
 int 18446744073709551615 // MAX_UINT64

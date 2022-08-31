@@ -1,5 +1,4 @@
 #pragma version 4
-#pragma mode stateful
 
 // If this is the first transaction, skip to end
 txna ApplicationArgs 0

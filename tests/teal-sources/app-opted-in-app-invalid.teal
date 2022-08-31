@@ -1,5 +1,4 @@
 #pragma version 5
-#pragma mode stateful
 
 txna Accounts 1
 int 5

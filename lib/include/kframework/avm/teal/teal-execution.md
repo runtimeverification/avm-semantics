@@ -24,8 +24,8 @@ there may be some remaining artefacts of the previous transaction's TEAL.
          _ => (
            <pc> 0 </pc>
            <program> .Map </program>
-           <mode> stateless </mode>
-           <version> 4 </version>
+           <mode> undefined </mode>
+           <version> 1 </version>
            <stack> .TStack </stack>
            <stacksize> 0 </stacksize>
            <jumped> false </jumped>
@@ -57,14 +57,8 @@ Pragmas are applied directly, and then the `#LoadPgm` performs program pre-proce
   rule <k> Rs:TealPragmas P:TealPgm => Rs ~> #LoadPgm(P, 0) ... </k>
   rule <k> R:TealPragma Rs:TealPragmas => R ~> Rs ... </k>
 
-  rule <k> #pragma mode M:TealMode => .K ...  </k>
-       <mode> _ => M </mode>
-
   rule <k> #pragma version V => . ... </k>
        <version> _ => V </version>
-
-  // legacy pseudo pragma for setting up current transaction --- now noop
-  rule <k> #pragma txn _ => .K ... </k>
 
   // Load the teal program into the `<progam>` cell (program memory)
   syntax KItem ::= #LoadPgm(TealPgm, Int)

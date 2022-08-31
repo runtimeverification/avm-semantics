@@ -65,8 +65,8 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
         <applicationID>        NoTValue    </applicationID>
         <onCompletion>         NoTValue    </onCompletion>
         <accounts>             .TValueList </accounts>
-        <approvalProgramSrc>   #pragma mode stateful int 1 </approvalProgramSrc>
-        <clearStateProgramSrc> #pragma mode stateful int 1 </clearStateProgramSrc>
+        <approvalProgramSrc>   (int 1):TealInputPgm       </approvalProgramSrc>
+        <clearStateProgramSrc> (int 1):TealInputPgm       </clearStateProgramSrc>
         <approvalProgram>      .Bytes      </approvalProgram>
         <clearStateProgram>    .Bytes      </clearStateProgram>
         <applicationArgs>      .TValueList </applicationArgs> // maximum size is 2KB, and all args are internally byte strings

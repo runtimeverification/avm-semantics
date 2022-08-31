@@ -353,20 +353,15 @@ module TEAL-SYNTAX
 
   syntax TealPragmas ::= TealPragma TealPragmas | TealPragma
   syntax TealPragma ::= "#pragma" PragmaDirective
-  syntax PragmaDirective ::= ModePragma
-                           | VersionPragma
-                           | TxnPragma
+  syntax PragmaDirective ::= VersionPragma
 
-  syntax TealMode ::= "stateless" | "stateful"
-  syntax ModePragma ::= "mode" TealMode
+  syntax TealMode ::= "stateless" | "stateful" | "undefined"
 
   syntax VersionPragma ::= "version" Int
 
-  syntax TxnPragma ::= "txn" Int
-
   syntax TealPgm ::= TealOpCodeOrLabel
                    | TealOpCodeOrLabel TealPgm
-  syntax TealInputPgm ::= TealPragmas TealPgm
+  syntax TealInputPgm ::= TealPragmas TealPgm | TealPgm
 
   syntax TealPrograms ::= TealInputPgm ";" TealPrograms | ".TealPrograms"
 ```

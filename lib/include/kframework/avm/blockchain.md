@@ -100,21 +100,21 @@ module APPLICATIONS
   configuration
     <appsCreated>
       <app multiplicity="*" type="Map">
-        <appID>           0        </appID>
-        <approvalPgmSrc>     #pragma mode stateful int 1 </approvalPgmSrc>
-        <clearStatePgmSrc>   #pragma mode stateful int 1 </clearStatePgmSrc>
-        <approvalPgm>     .Bytes   </approvalPgm>
-        <clearStatePgm>   .Bytes   </clearStatePgm>
+        <appID>            0        </appID>
+        <approvalPgmSrc>   (int 1):TealInputPgm </approvalPgmSrc>
+        <clearStatePgmSrc> (int 1):TealInputPgm </clearStatePgmSrc>
+        <approvalPgm>      .Bytes   </approvalPgm>
+        <clearStatePgm>    .Bytes   </clearStatePgm>
         <globalState>
-          <globalInts>    NoTValue </globalInts>
-          <globalBytes>   NoTValue </globalBytes>
-          <globalStorage> .Map     </globalStorage>
+          <globalInts>     NoTValue </globalInts>
+          <globalBytes>    NoTValue </globalBytes>
+          <globalStorage>  .Map     </globalStorage>
         </globalState>
         <localState>
-          <localInts>     NoTValue </localInts>
-          <localBytes>    NoTValue </localBytes>
+          <localInts>      NoTValue </localInts>
+          <localBytes>     NoTValue </localBytes>
         </localState>
-        <extraPages>      0        </extraPages>
+        <extraPages>       0        </extraPages>
       </app>
     </appsCreated>
 ```
