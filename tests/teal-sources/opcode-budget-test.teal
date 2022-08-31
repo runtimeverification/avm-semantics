@@ -1,0 +1,10 @@
+#pragma version 4
+#pragma mode stateful
+
+global OpcodeBudget
+
+// TODO figure out what the current opcode budget should be here (699?) and test whether it is correct after
+// running some opcodes
+
+int 1
+return

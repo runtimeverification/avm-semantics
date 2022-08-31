@@ -1,0 +1,7 @@
+#pragma version 6
+#pragma mode stateful
+
+// This only exists to be called through an inner transaction
+
+int 1
+return
