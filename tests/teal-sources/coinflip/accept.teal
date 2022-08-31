@@ -1,0 +1,72 @@
+#pragma version 5
+
+// Transaction is an OptIn
+txn OnCompletion
+int OptIn
+==
+
+&&
+
+// Group contains 2 transactions
+global GroupSize
+int 2
+==
+
+&&
+
+// This is the first transaction in the group
+txn GroupIndex
+int 0
+==
+
+&&
+
+// Other transaction is a payment
+gtxn 1 TypeEnum
+int pay
+==
+
+&&
+
+// Other transaction is a payment to the contract
+global CurrentApplicationAddress
+gtxn 1 Receiver
+
+&&
+
+// Contains 1 application argument
+txn NumAppArgs
+int 1
+==
+
+&&
+
+// Contains 1 account argument
+txn NumAccounts
+int 1
+==
+
+&&
+
+// The player 1 to which we refer to in the account argument has already initiated a game with us
+txn Accounts 0
+byte "player2_addr"
+app_local_get
+txn Sender
+==
+
+&&
+
+// The amount we paid to the contract is the same amount player 1 bet
+txn Accounts 0
+byte "player1_bet"
+app_local_get
+gtxn 1 Amount
+==
+
+assert
+
+txn Sender
+byte "seed2"
+txna ApplicationArgs 0
+app_local_put

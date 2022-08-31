@@ -1,0 +1,25 @@
+addAccount <address> b"1" </address> <balance> 1500000 </balance>;
+
+declareTealSource "./tests/teal-sources/multi-app1.teal";
+declareTealSource "./tests/teal-sources/multi-app2.teal";
+declareTealSource "./tests/teal-sources/clear-basic.teal";
+
+#initTxGroup();
+
+addAppCallTx <txID> 0 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     NoTValue    </applicationID>
+             <onCompletion>      @ NoOp      </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   .TValueList </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          1           </localNui>
+             <localNbs>          2           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  2           </clearStatePgmIdx>;
+
+#initGlobals(); #evalTxGroup(); .AS
