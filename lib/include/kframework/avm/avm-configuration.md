@@ -200,7 +200,8 @@ A subroutine call in TEAL is essentially an unconditional branch to a label, whi
       <bytecblock> .Map </bytecblock>      // (currently not used)
     </teal>
 
-  syntax TealExecutionOp ::= #cleanUp()
+  syntax TealExecutionOp ::= #initApp( Int )
+                           | #initSmartSig()
                            | #startExecution()
                            | #finalizeExecution()
                            | #fetchOpcode()

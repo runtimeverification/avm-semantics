@@ -151,6 +151,74 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
        requires notBool (ID in_txns(<transactions> TXNS </transactions>))
 
 
+  syntax AlgorandCommand ::= "addAppCallTx" TxIDCell SenderCell ApplicationIDCell
+                                            OnCompletionCell AccountsCell
+                                            ApplicationArgsCell ForeignAppsCell 
+                                            ForeignAssetsCell
+                                            GlobalNuiCell GlobalNbsCell
+                                            LocalNuiCell LocalNbsCell
+                                            ExtraProgramPagesCell
+                                            "<approvalPgmIdx>" Int "</approvalPgmIdx>"
+                                            "<clearStatePgmIdx>" Int "</clearStatePgmIdx>"
+                                            "<logicSigPgmIdx>" Int "</logicSigPgmIdx>"
+  //-----------------------------------------------------------
+  rule <k> addAppCallTx <txID>              ID              </txID>
+                        <sender>            SENDER          </sender>
+                        <applicationID>     APP_ID          </applicationID>
+                        <onCompletion>      ON_COMPLETION   </onCompletion>
+                        <accounts>          ACCOUNTS        </accounts>
+                        <applicationArgs>   ARGS            </applicationArgs>
+                        <foreignApps>       APPS            </foreignApps>
+                        <foreignAssets>     ASSETS          </foreignAssets>
+                        <globalNui>         GLOBAL_INTS     </globalNui>
+                        <globalNbs>         GLOBAL_BYTES    </globalNbs>
+                        <localNui>          LOCAL_INTS      </localNui>
+                        <localNbs>          LOCAL_BYTES     </localNbs>
+                        <extraProgramPages> EXTRA_PAGES     </extraProgramPages>
+                        <approvalPgmIdx>    APPROVAL_IDX    </approvalPgmIdx>
+                        <clearStatePgmIdx>  CLEAR_STATE_IDX </clearStatePgmIdx>
+                        <logicSigPgmIdx>    LOGIC_PGM_IDX   </logicSigPgmIdx>
+       => #pushTxnBack(<txID> ID </txID>)
+           ...
+       </k>
+       <transactions>
+         TXNS =>
+         <transaction>
+           <txID> ID </txID>
+           <txHeader>
+             <sender>   SENDER </sender>
+             <txType>   "appl" </txType>
+             <typeEnum> @ appl </typeEnum>
+             <group>    ID     </group> // for testing, we make these the same as sequential TxIDs
+             ...                           // other fields will receive default values
+           </txHeader>
+           <appCallTxFields>
+             <applicationID>        APP_ID        </applicationID>
+             <onCompletion>         ON_COMPLETION </onCompletion>
+             <accounts>             ACCOUNTS      </accounts>
+             <applicationArgs>      ARGS          </applicationArgs>
+             <foreignApps>          APPS          </foreignApps>
+             <foreignAssets>        ASSETS        </foreignAssets>
+             <globalNui>            GLOBAL_INTS   </globalNui>
+             <globalNbs>            GLOBAL_BYTES  </globalNbs>
+             <localNui>             LOCAL_INTS    </localNui>
+             <localNbs>             LOCAL_BYTES   </localNbs>
+             <extraProgramPages>    EXTRA_PAGES   </extraProgramPages>
+             <approvalProgramSrc>   getTealByIndex(TEAL_PGMS_LIST, APPROVAL_IDX)    </approvalProgramSrc>
+             <clearStateProgramSrc> getTealByIndex(TEAL_PGMS_LIST, CLEAR_STATE_IDX) </clearStateProgramSrc>
+             ...                            // other fields will receive default values
+           </appCallTxFields>
+           <signatures> 
+             <logicSig>
+               <logicSigProgramSrc> getTealByIndex(TEAL_PGMS_LIST, LOGIC_PGM_IDX) </logicSigProgramSrc> 
+               ...
+             </logicSig>
+           </signatures>
+         </transaction>
+         TXNS
+       </transactions>
+       <tealPrograms> TEAL_PGMS_LIST </tealPrograms>
+       requires notBool (ID in_txns(<transactions> TXNS </transactions>))
 ```
 
 ### Globals Initialization

@@ -19,12 +19,33 @@ Before starting the execution of a TEAL progam, the `<teal>` cell needs to be (r
 there may be some remaining artefacts of the previous transaction's TEAL.
 
 ```k
-  rule <k> #cleanUp() => .K ... </k>
+  rule <k> #initApp( APP_ID ) => .K ... </k>
+       <currentApplicationID> _ => APP_ID </currentApplicationID>
        <teal>
          _ => (
            <pc> 0 </pc>
            <program> .Map </program>
-           <mode> undefined </mode>
+           <mode> stateful </mode>
+           <version> 1 </version>
+           <stack> .TStack </stack>
+           <stacksize> 0 </stacksize>
+           <jumped> false </jumped>
+           <labels> .Map </labels>
+           <callStack> .List </callStack>
+           <scratch> .Map </scratch>
+           <intcblock> .Map </intcblock>
+           <bytecblock> .Map </bytecblock>
+         )
+       </teal>
+```
+
+```k
+  rule <k> #initSmartSig() => .K ... </k>
+       <teal>
+         _ => (
+           <pc> 0 </pc>
+           <program> .Map </program>
+           <mode> stateless </mode>
            <version> 1 </version>
            <stack> .TStack </stack>
            <stacksize> 0 </stacksize>

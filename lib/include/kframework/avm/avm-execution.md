@@ -96,10 +96,7 @@ the attached stateless TEAL if the transaction is logicsig-signed.
   syntax AlgorandCommand ::= #evalTx()
   //----------------------------------
   rule <k> #evalTx() => 
-             #setMode(stateless)
-          ~> #checkTxnSignature() 
-          ~> #cleanUp()
-          ~> #setMode(stateful)
+             #checkTxnSignature() 
           ~> #executeTxn(TXN_TYPE) 
        ... 
        </k>
@@ -154,7 +151,7 @@ TODO: augment the configuration in `modules/common/txn.md` to support signed tra
          ...
        </transaction>
 
-  rule <k> #checkTxnSignature() => #evalTeal(PGM) ... </k>
+  rule <k> #checkTxnSignature() => #initSmartSig() ~> #evalTeal(PGM) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID> TXN_ID </txID>
@@ -387,14 +384,6 @@ TODO: address contact creation.
   rule <k> #evalTeal( PGM ) => PGM ~> #startExecution() ... </k>
        <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
        <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
-       <currentTx>           TXN_ID                            </currentTx>
-       <currentApplicationID> _ => APP_ID                      </currentApplicationID>
-       <app>
-         <appID>          APP_ID </appID>
-         <approvalPgmSrc> PGM    </approvalPgmSrc>
-         ...
-       </app>
-   requires APP_ID ==K getTxnField(TXN_ID, ApplicationID)
 ```
 
 ##### Stateless
@@ -813,7 +802,7 @@ App create
 NoOp
 
 ```k
-  rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
+  rule <k> #executeTxn(@appl) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID        </txID>
@@ -834,7 +823,7 @@ OptIn
 
 // Case 1: user different from app creator is opting in
 
-  rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
+  rule <k> #executeTxn(@appl) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID  </txID>
@@ -873,7 +862,7 @@ OptIn
 
 // Case 2: app creator is opting in to their own app
 
-  rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
+  rule <k> #executeTxn(@appl) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID  </txID>
@@ -915,7 +904,7 @@ OptIn
 
 // Case 3: needed because of bug?
 
-  rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
+  rule <k> #executeTxn(@appl) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID  </txID>
@@ -965,7 +954,8 @@ CloseOut
 ```k
   rule <k>
          #executeTxn(@appl) => 
-              #evalTeal(APPROVAL_PGM) 
+              #initApp(APP_ID)
+           ~> #evalTeal(APPROVAL_PGM) 
            ~> #clearState(APP_ID, SENDER)
          ... 
        </k>
@@ -991,7 +981,8 @@ TODO make sure `#clearState` runs even when a panic is generated
 ```k
   rule <k>
          #executeTxn(@appl) => 
-              #evalTeal(CLEAR_STATE_PGM) 
+              #initApp(APP_ID)
+           ~> #evalTeal(CLEAR_STATE_PGM) 
            ~> #clearState(APP_ID, SENDER)
          ... 
        </k>
@@ -1015,7 +1006,8 @@ UpdateApplication
 ```k
   rule <k>
          #executeTxn(@appl) => 
-              #evalTeal(APPROVAL_PGM) 
+              #initApp(APP_ID)
+           ~> #evalTeal(APPROVAL_PGM) 
            ~> #updatePrograms(APP_ID, NEW_APPROVAL_PGM, NEW_CLEAR_STATE_PGM)
          ... 
        </k>
@@ -1040,7 +1032,8 @@ DeleteApplication
 ```k
   rule <k>
          #executeTxn(@appl) => 
-              #evalTeal(APPROVAL_PGM) 
+              #initApp(APP_ID)
+           ~> #evalTeal(APPROVAL_PGM) 
            ~> #deleteApplication(APP_ID)
          ... 
        </k>
