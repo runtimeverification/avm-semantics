@@ -23,6 +23,7 @@ module TEAL-FIELDS
                        | "LatestTimestamp"
                        | "CurrentApplicationID"
                        | "CurrentApplicationAddress"
+                       | "OpcodeBudget"
 ```
 
 ## Asset Fields

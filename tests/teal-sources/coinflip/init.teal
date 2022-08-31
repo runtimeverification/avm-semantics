@@ -1,0 +1,270 @@
+#pragma version 5
+
+// Contains 2 application arguments
+txn NumAppArgs
+int 2
+==
+assert
+
+// What type of call to this contract is it?
+txna ApplicationArgs 0
+bytes "init"
+==
+bnz init
+
+txna ApplicationArgs 0
+bytes "accept"
+==
+bnz accept
+
+txna ApplicationArgs 0
+bytes "finish"
+==
+bnz finish
+
+txna ApplicationArgs 0
+bytes "cancel"
+==
+bnz cancel
+
+int 0
+return
+
+
+// Called by player 1. Pays into the escrow and commits to a part of seed without revealing it via its hash
+init:
+
+// Transaction is opting in to this contract
+txn OnCompletion
+int OptIn
+==
+
+&&
+
+// 2 transactions in this group
+global GroupSize
+int 2
+==
+
+&&
+
+// This is the first transaction in the group
+txn GroupIndex
+int 0
+==
+
+&&
+
+// Other transaction is a payment
+gtxn 1 TypeEnum
+int pay
+==
+
+&&
+
+// Other transaction is sending money to the contract
+global CurrentApplicationAddress
+gtxn 1 Receiver
+==
+
+&&
+
+// Contains 1 account argument
+txn NumAccounts
+int 1
+==
+
+assert
+
+// Store the hash of player 1's secret seed in player 1's local state
+txn Sender
+byte "seed1_hash"
+txna ApplicationArgs 1
+app_local_put
+
+// Store player 2's address in player1's local state
+txn Sender
+byte "player2_addr"
+txna Accounts 0
+app_local_put
+
+// Store the amount paid in player 1's local state as their bet
+txn Sender
+byte "player1_bet"
+gtxn 1 Amount
+app_local_put
+
+int 1
+return
+
+
+// Called by player 2. Pays into the escrow an equal amount to player 1 paid and provides their own part of the seed
+accept:
+
+// Transaction is an OptIn
+txn OnCompletion
+int OptIn
+==
+
+&&
+
+// Group contains 2 transactions
+global GroupSize
+int 2
+==
+
+&&
+
+// This is the first transaction in the group
+txn GroupIndex
+int 0
+==
+
+&&
+
+// Other transaction is a payment
+gtxn 1 TypeEnum
+int pay
+==
+
+&&
+
+// Other transaction is a payment to the contract
+global CurrentApplicationAddress
+gtxn 1 Receiver
+
+&&
+
+// Contains 1 account argument
+txn NumAccounts
+int 1
+==
+
+assert
+
+// Store player 2's seed in their local state
+txn Sender
+byte "seed2"
+txna ApplicationArgs 1
+app_local_put
+
+// Store player 2's bet in their local state
+txn Sender
+byte "player2_bet"
+gtxn 1 Amount
+app_local_put
+
+// Store player 1's address in player2's local state
+txn Sender
+byte "player1_addr"
+txna Accounts 0
+app_local_put
+
+int 1
+return
+
+// Called by player 1 after player 2 has revealed their part of the seed and paid. Flips the "coin" and pays the rewards
+finish:
+
+// Transaction is a NoOp
+txn OnCompletion
+int NoOp
+==
+
+&&
+
+// Check that this transaction has one account argument
+txn NumAccounts
+int 1
+==
+
+&&
+
+// Check if player 1 is again referring to player 2
+txn Sender
+bytes "player2_addr"
+app_local_get
+txna Accounts 0
+==
+
+&&
+
+// Check if player 2 is playing with player 1
+txna Accounts 0
+bytes "player1_addr"
+app_local_get
+txn Sender
+==
+
+&&
+
+// Check if both players paid the same amount
+txn Sender
+bytes "player1_bet"
+app_local_get
+txna Accounts 0
+bytes "player2_bet"
+app_local_get
+==
+
+&&
+
+// Check if hash of player 1 seed is what they said it was
+txna ApplicationArgs 1
+sha256
+txn Sender
+bytes "seed1_hash"
+app_local_get
+==
+
+assert
+
+// Compute player1 contribution + player2 contribution
+txn Sender
+bytes "player1_bet"
+int 1
+shl
+// 0 = payout
+store 0
+
+// Save p1 and p2 addresses on the stack
+txn Sender
+txna Accounts 0
+
+// Compute hash of concatenation of seed 1 and 2
+txna ApplicationArgs 1
+txna Accounts 0
+bytes "seed2"
+app_local_get
+concat
+sha256
+
+// Compute the first bit
+int 255
+shr
+
+// Compute receiving address
+select
+// 1 = receiving address
+save 1
+pop
+pop
+
+// Store payout amount on p1's local state
+txn Sender
+byte "payout"
+load 0
+app_local_put
+
+// Store winner address on p1's local state
+txn Sender
+byte "winner"
+load 1
+app_local_put
+
+int 1
+return
+
+
+redeem:
+

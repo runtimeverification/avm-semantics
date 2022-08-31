@@ -30,7 +30,9 @@ module TEAL-OPCODES
                         | BranchingOpCode
                         | StackOpCode
   syntax SigOpCode    ::= SigVerOpCode | ArgOpCode           // Opcodes used only by stateless TEAL
-  syntax AppOpCode    ::= StateOpCode  | TxnGroupStateOpCode // Opcodes used only by stateful TEAL
+  syntax AppOpCode    ::= StateOpCode  
+                        | TxnGroupStateOpCode
+                        | InnerTxOpCode                      // Opcodes used only by stateful TEAL
 ```
 
 ### Generic TEAL Opcodes
@@ -328,6 +330,14 @@ module TEAL-OPCODES
 
 ```
 
+#### Inner transaction control
+
+```k
+  syntax InnerTxOpCode ::= "itxn_begin"
+                         | "itxn_submit"
+                         | "itxn_field" TxnField
+```
+
 ```k
 endmodule
 ```
@@ -579,6 +589,9 @@ module TEAL-UNPARSER
   rule unparseTEAL(gaids)                         => "gaids"
   rule unparseTEAL(gloads N)                      => "gloads" +&+ Int2String(N)
   rule unparseTEAL(gloadss N)                     => "gloadss" +&+ Int2String(N)
+  rule unparseTEAL(itxn_begin)                    => "itxn_begin"
+  rule unparseTEAL(itxn_submit)                   => "itxn_submit"
+  rule unparseTEAL(itxn_field FieldName)          => "itxn_field" +&+ TealField2String(FieldName:TxnField)
 
   syntax String ::= left:
                     String "+&+" String       [function]

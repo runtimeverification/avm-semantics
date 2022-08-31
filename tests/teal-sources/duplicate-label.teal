@@ -1,0 +1,9 @@
+#pragma version 4
+#pragma mode stateful
+
+label1:
+
+label1:
+
+int 1
+return

@@ -1,0 +1,16 @@
+// Declaring this version 4 doesn't cause it to crash, although `loads` is not supported until v5.
+#pragma version 5
+#pragma mode stateful
+
+int 123
+store 52
+
+int 52
+loads
+
+int 123
+==
+assert
+
+int 1
+return

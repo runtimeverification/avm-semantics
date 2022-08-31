@@ -1,0 +1,15 @@
+#pragma version 5
+#pragma mode stateful
+
+app_params_get AppCreator
+
+int 1
+==
+assert
+
+byte 0x1
+==
+assert
+
+int 1
+return
