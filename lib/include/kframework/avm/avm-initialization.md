@@ -78,6 +78,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
              <amount>           AMOUNT </amount>
              <closeRemainderTo> .Bytes </closeRemainderTo>
            </payTxFields>
+           <signatures> <singleSig> <singleSigAddr> SENDER </singleSigAddr> </singleSig> </signatures>
          </transaction>
          TXNS
        </transactions>
@@ -142,6 +143,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
              <clearStateProgramSrc> getTealByIndex(TEAL_PGMS_LIST, CLEAR_STATE_IDX) </clearStateProgramSrc>
              ...                            // other fields will receive default values
            </appCallTxFields>
+           <signatures> <singleSig> <singleSigAddr> SENDER </singleSigAddr> </singleSig> </signatures>
          </transaction>
          TXNS
        </transactions>
@@ -285,6 +287,7 @@ The asset initialization rule must be used *after* initializing accounts.
                <configClawbackAddr>  CLB_ADDR      </configClawbackAddr>
              </assetParams>
            </assetConfigTxFields>
+           <signatures> <singleSig> <singleSigAddr> SENDER </singleSigAddr> </singleSig> </signatures>
          </transaction>
          TXNS
        </transactions>
@@ -327,6 +330,7 @@ The asset initialization rule must be used *after* initializing accounts.
              <assetCloseTo>  CLOSE_TO      </assetCloseTo>
              ...
            </assetTransferTxFields>
+           <signatures> <singleSig> <singleSigAddr> SENDER </singleSigAddr> </singleSig> </signatures>
          </transaction>
          TXNS
        </transactions>

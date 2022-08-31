@@ -68,7 +68,7 @@ and the current configuration is frozen for examination.
   syntax AlgorandCommand ::= #evalTxGroup()
   //-----------------------------------
 
-  rule <k> #evalTxGroup() => #popTxnFront() ~> #cleanUp() ~> #setMode(stateful) ~> #evalTx() ~> #evalTxGroup() ... </k>
+  rule <k> #evalTxGroup() => #popTxnFront() ~> #evalTx() ~> #evalTxGroup() ... </k>
        <deque> TXN_DEQUE </deque>
     requires TXN_DEQUE =/=K .List
 
@@ -95,7 +95,14 @@ the attached stateless TEAL if the transaction is logicsig-signed.
 ```k
   syntax AlgorandCommand ::= #evalTx()
   //----------------------------------
-  rule <k> #evalTx() => #checkTxnSignature() ~> #executeTxn(TXN_TYPE) ... </k>
+  rule <k> #evalTx() => 
+             #setMode(stateless)
+          ~> #checkTxnSignature() 
+          ~> #cleanUp()
+          ~> #setMode(stateful)
+          ~> #executeTxn(TXN_TYPE) 
+       ... 
+       </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID> TXN_ID </txID>
