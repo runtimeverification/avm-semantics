@@ -69,8 +69,8 @@ class KAVMClient(algod.AlgodClient):
         txn_msg = ''
 
         if data is not None:
-            txns = map(lambda t: t.dictify()['txn'], msgpack_decode_txn_list(data))
-            txn_msg = self.pretty_printer.pformat(list(txns))
+            txns = [t.dictify()['txn'] for t in msgpack_decode_txn_list(data)]
+            txn_msg = self.pretty_printer.pformat(txns)
         algod_debug_log_msg = f'{method} {requrl} {txn_msg}'
         self.algodLogger.debug(algod_debug_log_msg)
 
