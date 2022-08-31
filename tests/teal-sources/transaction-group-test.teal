@@ -2,6 +2,7 @@
 #pragma mode stateful
 
 txna ApplicationArgs 0
+btoi
 txn GroupIndex
 ==
 assert
