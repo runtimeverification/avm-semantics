@@ -1,5 +1,5 @@
-declareTealSource "./tests/teal-sources/min-balance-app-create.teal";
-declareTealSource "./tests/teal-sources/clear-basic.teal";
+declareTealSource "min-balance-app-create.teal";
+declareTealSource "clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 100000 </balance>;
 

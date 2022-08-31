@@ -1,5 +1,5 @@
-declareTealSource "./tests/teal-sources/asset-holding-get-asset-invalid.teal";
-declareTealSource "./tests/teal-sources/clear-basic.teal";
+declareTealSource "asset-holding-get-asset-invalid.teal";
+declareTealSource "clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 100000 </balance>;
 

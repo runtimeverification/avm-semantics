@@ -4,7 +4,7 @@
         format isort autoflake black             \
         check check-isort check-autoflake check-black check-flake8 check-mypy
 
-default: check test-unit
+default: build check test-unit
 
 clean:
 	rm -rf dist .mypy_cache
@@ -17,7 +17,6 @@ poetry-install:
 	poetry install
 
 POETRY_RUN := poetry run
-
 
 # Tests
 
@@ -54,8 +53,8 @@ autoflake: poetry-install
 
 check-autoflake: poetry-install
 	$(POETRY_RUN) autoflake src    \
+	  --j 1                        \
 	  --check                      \
-	  --quiet                      \
 	  --recursive                  \
 	  --expand-star-imports        \
 	  --remove-all-unused-imports  \

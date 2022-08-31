@@ -24,6 +24,8 @@ KAVM_K_BIN       := $(KAVM_LIB)/kframework/bin
 KAVM             := kavm
 KAVM_LIB_ABS     := $(abspath $(KAVM_LIB))
 export KAVM_LIB_ABS
+KAVM_DEFINITION_DIR=$(KAVM_LIB_ABS)/avm-llvm/avm-execution-kompiled/
+export KAVM_DEFINITION_DIR
 
 K_SUBMODULE := $(DEPS_DIR)/k
 K_BIN       := $(INSTALL_LIB)/kframework/bin
@@ -99,15 +101,22 @@ else
     SEMANTICS_BUILD_TYPE := Debug
 endif
 
+ifneq ($(SKIP_HASKELL),)
+    SKIP_HASKELL := -Dhaskell.backend.skip=true
+else
+    SKIP_HASKELL :=
+endif
+
+
 k-deps: $(K_JAR)
 	cd $(K_SUBMODULE)                                                                                                                                                                            \
-	    && mvn --batch-mode package -DskipTests -Dllvm.backend.prefix=$(INSTALL_LIB)/kframework -Dllvm.backend.destdir=$(CURDIR)/$(BUILD_DIR) -Dproject.build.type=$(K_BUILD_TYPE) $(K_MVN_ARGS) \
+	    && mvn --batch-mode package -DskipTests $(SKIP_HASKELL) -Dllvm.backend.prefix=$(INSTALL_LIB)/kframework -Dllvm.backend.destdir=$(CURDIR)/$(BUILD_DIR) -Dproject.build.type=$(K_BUILD_TYPE) $(K_MVN_ARGS) \
 	    && DESTDIR=$(CURDIR)/$(BUILD_DIR) PREFIX=$(INSTALL_LIB)/kframework package/package
 
 # Building
 # --------
 
-build: build-avm build-kavm
+build: build-kavm build-avm
 
 $(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
 	@mkdir -p $(dir $@)
@@ -180,17 +189,65 @@ else
     COVERAGE_OPTS :=
 endif
 
-K_INCLUDES   :=                                         \
-                -I $(CURDIR)/$(KAVM_INCLUDE)/kframework \
-                -I $(INSTALL_INCLUDE)/kframework        \
-                -I $(plugin_include)/kframework
-KOMPILE_OPTS += --verbose --gen-glr-bison-parser $(COVERAGE_OPTS) $(K_INCLUDES)
+## * kavm --- Python library and CLI app
 
-ifneq (,$(RELEASE))
-    KOMPILE_OPTS += -O2 --read-only-kompiled-directory
-endif
+PY_KAVM_DIR := ./kavm
+VENV_DIR       := $(BUILD_DIR)/venv
+VENV_ACTIVATE  := . $(VENV_DIR)/bin/activate
 
-# AVM
+$(VENV_DIR)/pyvenv.cfg:
+	   virtualenv $(VENV_DIR)              \
+	&& $(VENV_ACTIVATE)                    \
+	&& pip install --editable ./deps/k/pyk \
+	&& pip install --editable $(PY_KAVM_DIR)
+
+venv: $(VENV_DIR)/pyvenv.cfg
+	@echo $(VENV_ACTIVATE)
+
+venv-clean:
+	rm -rf $(VENV_DIR)
+
+py-kavm:
+	$(MAKE) -C $(PY_KAVM_DIR)
+
+includes := $(avm_includes) $(plugin_includes) $(plugin_c_includes) $(hook_includes)
+
+kavm_scripts := $(patsubst %, $(KAVM_SCRIPTS)/%, parse-avm-simulation.sh  parse-teal-programs.sh)
+
+kavm_lib_files := version
+kavm_libs      := $(patsubst %, $(KAVM_LIB)/%, $(kavm_lib_files))
+
+build-kavm: $(KAVM_LIB)/version
+
+# this target packages the Python-based kavm CLI
+$(KAVM_LIB)/version: $(includes) $(kavm_scripts) py-kavm $(VENV_DIR)/pyvenv.cfg
+	@mkdir -p $(dir $@)
+	echo '== KAVM Version'    > $@
+	echo $(KAVM_RELEASE_TAG) >> $@
+	echo '== Build Date'     >> $@
+	date
+
+
+$(KAVM_LIB)/%: lib/%
+	@mkdir -p $(dir $@)
+	install $< $@
+
+$(KAVM_INCLUDE)/kframework/modules/%:
+	echo $@
+	@mkdir -p $(dir $@)
+	install $< $@
+
+# $(KAVM_LIB)/version:
+# 	@mkdir -p $(dir $@)
+# 	echo '== KAVM Version'    > $@
+# 	echo $(KAVM_RELEASE_TAG) >> $@
+# 	echo '== Build Date'     >> $@
+# 	date                     >> $@
+
+clean-kavm: venv-clean
+	rm -f $(KAVM_LIB)/version
+
+# * avm-semantics --- the K semantics of AVM
 
 avm_files    :=                            \
                 avm/additional-fields.md   \
@@ -220,8 +277,6 @@ ifeq ($(K_BACKEND),)
   K_BACKEND := llvm
 endif
 
-KOMPILE_AVM := kavm kompile
-
 avm_dir           := avm-llvm
 avm_main_module   := AVM-EXECUTION
 avm_syntax_module := TEAL-PARSER-SYNTAX
@@ -229,57 +284,18 @@ avm_main_file     := avm/avm-execution.md
 avm_main_filename := $(basename $(notdir $(avm_main_file)))
 avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled
 
-build-avm: $(KAVM_LIB)/$(avm_kompiled)
+build-avm: $(avm_includes) $(KAVM_LIB)/$(avm_kompiled)
 
 $(KAVM_LIB)/$(avm_kompiled): $(KAVM_LIB)/version $(libff_out)
-	$(KOMPILE_AVM) $(KAVM_INCLUDE)/kframework/$(avm_main_file)                     \
-	                --directory $(KAVM_LIB)/$(avm_dir)  \
-	                --main-module $(avm_main_module)     \
-	                --syntax-module $(avm_syntax_module) \
-	                $(AVM_KOMPILE_OPTS)
+	$(VENV_ACTIVATE) && $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file) \
+	                    --definition-dir $(KAVM_LIB)/$(avm_kompiled)                \
+	                    --main-module $(avm_main_module)                            \
+	                    --syntax-module $(avm_syntax_module)                        \
+	                    $(AVM_KOMPILE_OPTS)
 
 clean-avm:
-	rm -r $(KAVM_LIB)/$(avm_kompiled)
-	rm -r $(KAVM_INCLUDE)
-
-# Runners/Helpers
-
-includes := $(avm_includes) $(plugin_includes) $(plugin_c_includes) $(hook_includes)
-
-kavm_scripts := $(patsubst %, $(KAVM_SCRIPTS)/%, parse-avm-simulation.sh  parse-teal-programs.sh)
-
-kavm_bin_files := kavm
-kavm_bins      := $(patsubst %, $(KAVM_BIN)/%, $(kavm_bin_files))
-
-kavm_lib_files := version
-kavm_libs      := $(patsubst %, $(KAVM_LIB)/%, $(kavm_lib_files))
-
-build-kavm: $(KAVM_LIB)/version
-
-$(KAVM_LIB)/version: $(includes) $(kavm_scripts) $(kavm_bins)
-
-$(KAVM_BIN)/%: %
-	@mkdir -p $(dir $@)
-	install $< $@
-
-$(KAVM_LIB)/%: lib/%
-	@mkdir -p $(dir $@)
-	install $< $@
-
-$(KAVM_INCLUDE)/kframework/modules/%:
-	echo $@
-	@mkdir -p $(dir $@)
-	install $< $@
-
-$(KAVM_LIB)/version:
-	@mkdir -p $(dir $@)
-	echo '== KAVM Version'    > $@
-	echo $(KAVM_RELEASE_TAG) >> $@
-	echo '== Build Date'     >> $@
-	date                     >> $@
-
-clean-kavm:
-	rm $(KAVM_BIN)/kavm
+	rm -rf $(KAVM_LIB)/$(avm_kompiled)
+	rm -rf $(KAVM_INCLUDE)
 
 # Installation
 # ------------
@@ -325,10 +341,10 @@ all_sources := $(join $(avm_simulation_sources), $(teal_sources))
 test-avm: $(avm_simulation_sources:=.unit)
 
 tests/scenarios/%.fail.avm-simulation.unit: tests/scenarios/%.fail.avm-simulation
-	! $(KAVM) run $< --output none
+	$(VENV_ACTIVATE) && ! $(KAVM) run --teal-sources-dir=./tests/teal-sources/ --output none $<
 
 tests/scenarios/%.avm-simulation.unit: tests/scenarios/%.avm-simulation
-	$(KAVM) run $< --output none
+	$(VENV_ACTIVATE) && $(KAVM) run --teal-sources-dir=./tests/teal-sources/ --output none $<
 
 ###########################
 ## AVM Symbolic Proof Tests
@@ -347,20 +363,7 @@ tests/specs/verification-kompiled/timestamp: tests/specs/verification.k
 #######
 ## kavm
 #######
-test-kavm: test-kavm-parse test-kavm-kast module-imports-graph
-
-## * kavm parse
-test-kavm-parse: test-kavm-parse-avm-scenario test-kavm-parse-teal
-
-test-kavm-parse-avm-scenario: $(avm_simulation_sources:=.kavm-parse.unit)
-
-tests/scenarios/%.avm-simulation.kavm-parse.unit: tests/scenarios/%.avm-simulation
-	$(KAVM) parse $< > /dev/null 2>&1
-
-test-kavm-parse-teal: $(teal_sources:=.kavm-parse.unit)
-
-tests/teal-sources/%.teal.kavm-parse.unit: tests/teal-sources/%.teal
-	$(KAVM) parse $< > /dev/null 2>&1
+test-kavm: test-kavm-kast module-imports-graph
 
 ## * kavm kast
 test-kavm-kast: test-kavm-kast-avm-scenario test-kavm-kast-teal
@@ -368,32 +371,12 @@ test-kavm-kast: test-kavm-kast-avm-scenario test-kavm-kast-teal
 test-kavm-kast-avm-scenario: $(avm_simulation_sources:=.kavm-kast.unit)
 
 tests/scenarios/%.avm-simulation.kavm-kast.unit: tests/scenarios/%.avm-simulation
-	$(KAVM) kast $< none
+	$(VENV_ACTIVATE) && $(KAVM) kast $< --output none
 
 test-kavm-kast-teal: $(teal_sources:=.kavm-kast.unit)
 
 tests/teal-sources/%.teal.kavm-kast.unit: tests/teal-sources/%.teal
-	$(KAVM) kast $< none
-
-## * kavm_algod
-
-KAVM_ALGOD_DIR := ./kavm-algod
-VENV_DIR       := $(BUILD_DIR)/venv
-VENV_ACTIVATE  := . $(VENV_DIR)/bin/activate
-
-$(VENV_DIR)/pyvenv.cfg:
-	   virtualenv $(VENV_DIR)              \
-	&& pip install --editable ./deps/k/pyk \
-	&& pip install --editable $(KAVM_ALGOD_DIR)
-
-venv: $(VENV_DIR)/pyvenv.cfg
-	@echo $(VENV_ACTIVATE)
-
-venv-clean:
-	rm -rf $(VENV_DIR)
-
-kavm-algod:
-	$(MAKE) -C $(KAVM_ALGOD_DIR)
+	$(VENV_ACTIVATE) && $(KAVM) kast $< --output none
 
 # Utils
 # -----
