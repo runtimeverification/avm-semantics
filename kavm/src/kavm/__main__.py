@@ -14,7 +14,12 @@ def main() -> None:
     parser = create_argument_parser()
     args = parser.parse_args()
 
-    args.definition_dir = os.environ.get('KAVM_DEFINITION_DIR')
+    if not args.definition_dir:
+        env_definition_dir = os.environ.get('KAVM_DEFINITION_DIR')
+        if env_definition_dir:
+            args.definition_dir = Path(env_definition_dir)
+        else:
+            raise RuntimeError('Cannot find KAVM definition, plese specify either --definition or KAVM_DEFINITION_DIR')
 
     if args.command == 'kompile':
         install_prefix = Path('.build').resolve() / 'usr'
