@@ -53,7 +53,7 @@ export K_OPTS
 .PHONY: all clean distclean install uninstall                                         \
         deps k-deps libsecp256k1 libff plugin-deps hook-deps                          \
         build build-avm build-kavm                                                    \
-        test test-avm                                                                 \
+        test test-avm-semantics                                                       \
         venv venv-clean kavm-algod
 .SECONDARY:
 
@@ -327,7 +327,7 @@ uninstall:
 
 KAVM_OPTIONS :=
 
-test: test-avm test-kavm
+test: test-avm-semantics test-kavm
 
 #################
 ## AVM Unit Tests
@@ -338,7 +338,7 @@ avm_tests_passing := $(filter-out $(avm_tests_failing), $(avm_simulation_sources
 teal_sources := $(wildcard tests/teal-sources/*.teal)
 all_sources := $(join $(avm_simulation_sources), $(teal_sources))
 
-test-avm: $(avm_tests_passing:=.unit)
+test-avm-semantics: $(avm_tests_passing:=.unit)
 
 tests/scenarios/%.fail.avm-simulation.unit: tests/scenarios/%.fail.avm-simulation
 	$(VENV_ACTIVATE) && ! $(KAVM) run --teal-sources-dir=./tests/teal-sources/ --output none $<
@@ -352,7 +352,7 @@ tests/scenarios/%.avm-simulation.unit: tests/scenarios/%.avm-simulation
 
 avm_prove_tests := $(wildcard tests/specs/*-spec.k)
 
-test-avm-prove: $(avm_prove_tests:=.prove)
+test-avm-semantics-prove: $(avm_prove_tests:=.prove)
 
 tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
 	$(KAVM) prove --directory tests/specs tests/specs/$*-spec.k
