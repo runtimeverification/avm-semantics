@@ -52,12 +52,16 @@ export K_OPTS
 
 .PHONY: all clean distclean install uninstall                                         \
         deps k-deps libsecp256k1 libff plugin-deps hook-deps                          \
-        build build-avm build-kavm                                                    \
-        test test-avm-semantics                                                       \
-        venv venv-clean kavm-algod
+        build build-avm build-kavm py-kavm                                            \
+        test test-avm-semantics test-avm-semantics-prove                              \
+	test-kavm test-kavm-kast test-kavm-kast-avm-scenario test-kavm-kast-teal      \
+	clean-avm clean-kavm                                                          \
+	module-imports-graph module-imports-graph-dot                                 \
+        venv venv-clean
+
 .SECONDARY:
 
-all: build
+all: deps build test
 
 # Non-K Dependencies
 # ------------------
@@ -236,13 +240,6 @@ $(KAVM_INCLUDE)/kframework/modules/%:
 	echo $@
 	@mkdir -p $(dir $@)
 	install $< $@
-
-# $(KAVM_LIB)/version:
-# 	@mkdir -p $(dir $@)
-# 	echo '== KAVM Version'    > $@
-# 	echo $(KAVM_RELEASE_TAG) >> $@
-# 	echo '== Build Date'     >> $@
-# 	date                     >> $@
 
 clean-kavm: venv-clean
 	rm -f $(KAVM_LIB)/version

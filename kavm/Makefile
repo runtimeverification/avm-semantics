@@ -4,7 +4,7 @@
         format isort autoflake black             \
         check check-isort check-autoflake check-black check-flake8 check-mypy
 
-default: build check test-unit
+default: check test-unit build
 
 clean:
 	rm -rf dist .mypy_cache
