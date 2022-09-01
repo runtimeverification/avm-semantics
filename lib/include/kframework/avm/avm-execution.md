@@ -66,7 +66,7 @@ and the current configuration is frozen for examination.
        <mode> _ => MODE </mode>
   
   syntax AlgorandCommand ::= #evalTxGroup()
-  //-----------------------------------
+  //---------------------------------------
 
   rule <k> #evalTxGroup() => #popTxnFront() ~> #evalTx() ~> #evalTxGroup() ... </k>
        <deque> TXN_DEQUE </deque>
@@ -125,56 +125,6 @@ TODO: augment the configuration in `modules/common/txn.md` to support signed tra
   //---------------------------------------------
 
   rule <k> #checkTxnSignature() => .K ... </k>
-       <currentTx> TXN_ID </currentTx>
-       <transaction>
-         <txID> TXN_ID </txID>
-         <sender> SENDER </sender>
-         <signatures>
-           <singleSig>
-             <singleSigAddr> SENDER </singleSigAddr>
-           </singleSig>
-         </signatures>
-         ...
-       </transaction>
-
-  // TODO check against multisig account?
-  rule <k> #checkTxnSignature() => .K ... </k>
-       <currentTx> TXN_ID </currentTx>
-       <transaction>
-         <txID> TXN_ID </txID>
-         <sender> _ </sender>
-         <signatures>
-           <multiSig>
-              _
-           </multiSig>
-         </signatures>
-         ...
-       </transaction>
-
-  rule <k> #checkTxnSignature() => #initSmartSig() ~> #evalTeal(PGM) ... </k>
-       <currentTx> TXN_ID </currentTx>
-       <transaction>
-         <txID> TXN_ID </txID>
-         <sender> _ </sender>
-         <signatures>
-           <logicSig>
-              <logicSigProgramSrc> PGM </logicSigProgramSrc>
-              <logicSigProgram> _ </logicSigProgram>
-           </logicSig>
-         </signatures>
-         ...
-       </transaction>
-
-  rule <k> #checkTxnSignature() => #avmPanic(TXN_ID, INVALID_SIGNATURE) ... </k>
-       <currentTx> TXN_ID </currentTx>
-       <transaction>
-         <txID> TXN_ID </txID>
-         <sender> _ </sender>
-         <signatures>
-           .Bag
-         </signatures>
-         ...
-       </transaction>
 ```
 
 For now, we do not check signatures *here*, hence this operation is noop.

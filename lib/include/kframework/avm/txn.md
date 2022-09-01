@@ -46,28 +46,6 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
       </txHeader>
 ```
 
-*Signatures*
-
-```k
-  configuration
-      <signatures>
-        <singleSig multiplicity="?">
-          <singleSigAddr> .Bytes </singleSigAddr>
-        </singleSig>
-        <multiSig multiplicity="?">
-          <multiSigAddrs multiplicity="*" type="List">
-            <multiSigAddr> .Bytes </multiSigAddr>
-          </multiSigAddrs>
-          <multiSigThreshold> 1 </multiSigThreshold>
-          <multiSigVersion>   1 </multiSigVersion>
-        </multiSig>
-        <logicSig multiplicity="?">
-          <logicSigProgramSrc> (int 1):TealInputPgm </logicSigProgramSrc>
-          <logicSigProgram> .Bytes                  </logicSigProgram>
-        </logicSig>
-      </signatures>
-```
-
 *Pay Transaction*
 
 ```k
@@ -208,7 +186,6 @@ module ALGO-TXN
             <assetConfigTxFields/>
             <assetTransferTxFields/>
             <assetFreezeTxFields/>
-            <signatures/>
           </transaction>
         </transactions>
       </txGroup>

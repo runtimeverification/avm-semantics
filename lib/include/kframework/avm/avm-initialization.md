@@ -151,40 +151,6 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
        requires notBool (ID in_txns(<transactions> TXNS </transactions>))
 ```
 
-```k
-  syntax AlgorandCommand ::= "signTxn" TxIDCell SingleSigAddrCell
-                           | "signTxn" TxIDCell "<logicSigPgmIdx>" Int "</logicSigPgmIdx>"
-  rule <k> signTxn
-             <txID>          TX_ID </txID>
-             <singleSigAddr> ADDR  </singleSigAddr>
-           => .
-           ...
-       </k>
-       <transaction>
-         <txID> TX_ID </txID>
-         <signatures> .Bag => (<singleSig> <singleSigAddr> ADDR </singleSigAddr> </singleSig>) </signatures>
-         ...
-       </transaction>
-
-  rule <k> signTxn
-             <txID>           TX_ID </txID>
-             <logicSigPgmIdx> IDX   </logicSigPgmIdx>
-           => .
-           ...
-       </k>
-       <transaction>
-         <txID> TX_ID </txID>
-         <signatures> .Bag => 
-           (<logicSig> 
-             <logicSigProgramSrc> getTealByIndex(TEAL_PGMS_LIST, IDX) </logicSigProgramSrc> 
-             ...
-           </logicSig>) 
-         </signatures>
-         ...
-       </transaction>
-       <tealPrograms> TEAL_PGMS_LIST </tealPrograms>
-```
-
 ### Globals Initialization
 
 To now the group size, we need to count the transactions in the group:

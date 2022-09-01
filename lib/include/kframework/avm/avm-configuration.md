@@ -107,14 +107,12 @@ These are AVM-specific panic behaviors, caused by issues like depleted balances,
   syntax AvmPanic ::= "ASSET_FROZEN_FOR_SENDER" [macro]
   syntax AvmPanic ::= "ASSET_NOT_OPT_IN"        [macro]
   syntax AvmPanic ::= "ASSET_NO_PERMISSION"     [macro]
-  syntax AvmPanic ::= "INVALID_SIGNATURE"       [macro]
   //------------------------------------------------
   rule MIN_BALANCE_VIOLATION   => "sender account's balance falls below its allowed minimum balance"
   rule UNSUPPORTED_TXN_TYPE    => "attempt to execute an unsupported transaction type"
   rule ASSET_FROZEN_FOR_SENDER => "attempt to send frozen asset holdings"
   rule ASSET_NOT_OPT_IN        => "either sender or receiver have not opted into asset"
   rule ASSET_NO_PERMISSION     => "sender does not have permission to modify asset"
-  rule INVALID_SIGNATURE       => "transaction is authorized by someone other than the sender, or not authorized."
 
   syntax AlgorandCommand ::= #avmPanic(Int, AvmPanic)
   //-------------------------------------------

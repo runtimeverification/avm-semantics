@@ -22,8 +22,6 @@ addAppCallTx <txID> 0 </txID>
              <extraProgramPages> 0           </extraProgramPages>
              <approvalPgmIdx>    0           </approvalPgmIdx>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
-signTxn <txID> 0 </txID> <singleSigAddr> b"1" </singleSigAddr>;
-
 
 // Opt in b"2"
 addAppCallTx <txID>              1           </txID>
@@ -41,19 +39,16 @@ addAppCallTx <txID>              1           </txID>
              <extraProgramPages> 0           </extraProgramPages>
              <approvalPgmIdx>    0           </approvalPgmIdx>
              <clearStatePgmIdx>  0           </clearStatePgmIdx>;
-signTxn <txID> 1 </txID> <singleSigAddr> b"2" </singleSigAddr>;
 
 addPaymentTx <txID>     2     </txID>
              <sender>   b"1"  </sender>
              <receiver> b"2"  </receiver>
              <amount>   50000 </amount>;
-signTxn <txID> 2 </txID> <singleSigAddr> b"1" </singleSigAddr>;
 
 addPaymentTx <txID>     3       </txID>
              <sender>   b"2"    </sender>
              <receiver> b"1"    </receiver>
              <amount>   50005   </amount>;
-signTxn <txID> 3 </txID> <singleSigAddr> b"2" </singleSigAddr>;
 
 addAppCallTx <txID>              4           </txID>
              <sender>            b"1"        </sender>
@@ -79,7 +74,6 @@ addAppCallTx <txID>              4           </txID>
              <extraProgramPages> 0           </extraProgramPages>
              <approvalPgmIdx>    0           </approvalPgmIdx>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
-signTxn <txID> 4 </txID> <singleSigAddr> b"1" </singleSigAddr>;
 
 #initGlobals();
 #evalTxGroup();
