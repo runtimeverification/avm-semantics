@@ -14,6 +14,8 @@ module AVM-CONSTANTS
                | "PARAM_BYTES_MIN_BALANCE"     [macro]
                | "PARAM_MIN_TXN_FEE"           [macro]
                | "PARAM_MAX_TXN_LIFE"          [macro]
+               | "PARAM_MAX_LOG_CALLS"         [macro]
+               | "PARAM_MAX_LOG_SIZE"          [macro]
 ```
 
 Amount the min balance is set to by default, and amount it is increased by when creating or opting into
@@ -65,6 +67,18 @@ Maximum transaction life (MaxTxnLife)
 
 ```k
   rule PARAM_MAX_TXN_LIFE => 1000
+```
+
+Maximum number of log messages (MaxLogCalls)
+
+```k
+  rule PARAM_MAX_LOG_CALLS => 32
+```
+
+Maximum size of log messages (MaxLogSize)
+
+```k
+  rule PARAM_MAX_LOG_SIZE => 1024
 ```
 
 ```k

@@ -1,23 +1,57 @@
-#pragma version 4
+#pragma version 5
 #pragma mode stateful
 
-// If this is the first transaction, skip to end
 txna ApplicationArgs 0
+btoi
 int 1
 ==
-bz end
+bnz handle_1
 
-// When in the second transaction, test that correct value is loaded from final scratch space of first
-// transaction
-gload 0 123
-int 321
+txna ApplicationArgs 0
+btoi
+int 2
+==
+bnz handle_2
+
+err
+
+handle_1:
+//-------------
+// Phase 1
+
+int 1
+store 5
+
+int 3
+store 4
+
+int 7
+store 3
+
+//-------------
+b end
+handle_2:
+//-------------
+// Phase 2
+
+gload 0 5
+int 1
 ==
 assert
 
-end:
-// store 321 in scratch space 123. Reached by both transactions.
-int 321
-store 123
+gload 0 4
+int 3
+==
+assert
 
+gload 0 3
+int 7
+==
+assert
+
+//-------------
+b end
+
+end:
 int 1
 return

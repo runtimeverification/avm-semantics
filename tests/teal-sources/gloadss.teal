@@ -1,4 +1,4 @@
-#pragma version 5
+#pragma version 6
 #pragma mode stateful
 
 txna ApplicationArgs 0
@@ -35,19 +35,22 @@ handle_2:
 // Phase 2
 
 int 0
-gloads 5
+int 5
+gloadss
 int 1
 ==
 assert
 
 int 0
-gloads 4
+int 4
+gloadss
 int 3
 ==
 assert
 
 int 0
-gloads 3
+int 3
+gloadss
 int 7
 ==
 assert

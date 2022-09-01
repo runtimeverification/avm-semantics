@@ -1,16 +1,16 @@
 declareTealSource "./tests/teal-sources/gloads.teal";
 declareTealSource "./tests/teal-sources/clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 10000 </balance>;
+addAccount <address> b"1" </address> <balance> 1500000 </balance>;
 
 #initTxGroup();
 
 addAppCallTx <txID> 0 </txID>
              <sender>            b"1"        </sender>
              <applicationID>     NoTValue    </applicationID>
-             <onCompletion>      @ OptIn     </onCompletion>
+             <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
-             <applicationArgs>   0           </applicationArgs>
+             <applicationArgs>   1           </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
              <globalNui>         0           </globalNui>
@@ -26,7 +26,7 @@ addAppCallTx <txID> 1 </txID>
              <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
-             <applicationArgs>   1           </applicationArgs>
+             <applicationArgs>   2           </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
              <globalNui>         0           </globalNui>
@@ -37,4 +37,6 @@ addAppCallTx <txID> 1 </txID>
              <approvalPgmIdx>    0           </approvalPgmIdx>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
-#initGlobals(); #evalTxGroup(); .AS
+#initGlobals();
+#evalTxGroup();
+.AS
