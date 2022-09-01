@@ -1,5 +1,5 @@
-declareTealSource "./tests/teal-sources/transaction-group-test.teal";
-declareTealSource "./tests/teal-sources/clear-basic.teal";
+declareTealSource "transaction-group-test.teal";
+declareTealSource "clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 10000 </balance>;
 addAccount <address> b"2" </address> <balance> 10000 </balance>;

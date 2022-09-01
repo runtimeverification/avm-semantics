@@ -1,5 +1,5 @@
-declareTealSource "./tests/teal-sources/loads-out-of-bounds.teal";
-declareTealSource "./tests/teal-sources/clear-basic.teal";
+declareTealSource "loads-out-of-bounds.teal";
+declareTealSource "clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 10000 </balance>;
 
