@@ -128,17 +128,17 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
              ...                           // other fields will receive default values
            </txHeader>
            <appCallTxFields>
-             <applicationID>        APP_ID        </applicationID>
-             <onCompletion>         ON_COMPLETION </onCompletion>
-             <accounts>             ACCOUNTS      </accounts>
-             <applicationArgs>      ARGS          </applicationArgs>
-             <foreignApps>          APPS          </foreignApps>
-             <foreignAssets>        ASSETS        </foreignAssets>
-             <globalNui>            GLOBAL_INTS   </globalNui>
-             <globalNbs>            GLOBAL_BYTES  </globalNbs>
-             <localNui>             LOCAL_INTS    </localNui>
-             <localNbs>             LOCAL_BYTES   </localNbs>
-             <extraProgramPages>    EXTRA_PAGES   </extraProgramPages>
+             <applicationID>        APP_ID               </applicationID>
+             <onCompletion>         ON_COMPLETION        </onCompletion>
+             <accounts>             ACCOUNTS             </accounts>
+             <applicationArgs>      convertToBytes(ARGS) </applicationArgs>
+             <foreignApps>          APPS                 </foreignApps>
+             <foreignAssets>        ASSETS               </foreignAssets>
+             <globalNui>            GLOBAL_INTS          </globalNui>
+             <globalNbs>            GLOBAL_BYTES         </globalNbs>
+             <localNui>             LOCAL_INTS           </localNui>
+             <localNbs>             LOCAL_BYTES          </localNbs>
+             <extraProgramPages>    EXTRA_PAGES          </extraProgramPages>
              <approvalProgramSrc>   getTealByIndex(TEAL_PGMS_LIST, APPROVAL_IDX)    </approvalProgramSrc>
              <clearStateProgramSrc> getTealByIndex(TEAL_PGMS_LIST, CLEAR_STATE_IDX) </clearStateProgramSrc>
              ...                            // other fields will receive default values

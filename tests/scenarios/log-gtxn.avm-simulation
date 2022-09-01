@@ -1,4 +1,4 @@
-declareTealSource "./tests/teal-sources/gload.teal";
+declareTealSource "./tests/teal-sources/log-gtxn.teal";
 declareTealSource "./tests/teal-sources/clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 1500000 </balance>;
@@ -27,6 +27,22 @@ addAppCallTx <txID> 1 </txID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   2           </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
+
+addAppCallTx <txID> 2 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     1           </applicationID>
+             <onCompletion>      @ NoOp      </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   3           </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
              <globalNui>         0           </globalNui>

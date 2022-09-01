@@ -1,0 +1,8 @@
+#pragma version 6
+#pragma mode stateful
+
+byte "123"
+log
+
+int 1
+return

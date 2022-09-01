@@ -1,11 +1,13 @@
 #pragma version 5
 
 txn ApplicationArgs 0
+btoi
 int 1
 ==
 bnz phase1
 
 txn ApplicationArgs 0
+btoi
 int 2
 ==
 bnz phase2

@@ -1,0 +1,51 @@
+#pragma mode stateful
+#pragma version 6
+
+int 1
+txn ApplicationArgs 0
+btoi
+==
+bnz lbl1
+
+int 2
+txn ApplicationArgs 0
+btoi
+==
+bnz lbl2
+
+int 3
+txn ApplicationArgs 0
+btoi
+==
+bnz lbl3
+
+err
+
+lbl1:
+
+byte "1"
+log 
+
+b end
+lbl2:
+
+gtxn 2 NumLogs
+int 0
+==
+assert
+
+b end
+lbl3:
+
+byte "2"
+log
+
+byte "3"
+log
+
+
+b end
+end:
+
+int 1
+return
