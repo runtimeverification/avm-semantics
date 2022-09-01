@@ -78,7 +78,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
              <amount>           AMOUNT </amount>
              <closeRemainderTo> .Bytes </closeRemainderTo>
            </payTxFields>
-           <signatures> <singleSig> <singleSigAddr> SENDER </singleSigAddr> </singleSig> </signatures>
+           ...
          </transaction>
          TXNS
        </transactions>
@@ -143,82 +143,46 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
              <clearStateProgramSrc> getTealByIndex(TEAL_PGMS_LIST, CLEAR_STATE_IDX) </clearStateProgramSrc>
              ...                            // other fields will receive default values
            </appCallTxFields>
-           <signatures> <singleSig> <singleSigAddr> SENDER </singleSigAddr> </singleSig> </signatures>
+           ...
          </transaction>
          TXNS
        </transactions>
        <tealPrograms> TEAL_PGMS_LIST </tealPrograms>
        requires notBool (ID in_txns(<transactions> TXNS </transactions>))
+```
 
-
-  syntax AlgorandCommand ::= "addAppCallTx" TxIDCell SenderCell ApplicationIDCell
-                                            OnCompletionCell AccountsCell
-                                            ApplicationArgsCell ForeignAppsCell 
-                                            ForeignAssetsCell
-                                            GlobalNuiCell GlobalNbsCell
-                                            LocalNuiCell LocalNbsCell
-                                            ExtraProgramPagesCell
-                                            "<approvalPgmIdx>" Int "</approvalPgmIdx>"
-                                            "<clearStatePgmIdx>" Int "</clearStatePgmIdx>"
-                                            "<logicSigPgmIdx>" Int "</logicSigPgmIdx>"
-  //-----------------------------------------------------------
-  rule <k> addAppCallTx <txID>              ID              </txID>
-                        <sender>            SENDER          </sender>
-                        <applicationID>     APP_ID          </applicationID>
-                        <onCompletion>      ON_COMPLETION   </onCompletion>
-                        <accounts>          ACCOUNTS        </accounts>
-                        <applicationArgs>   ARGS            </applicationArgs>
-                        <foreignApps>       APPS            </foreignApps>
-                        <foreignAssets>     ASSETS          </foreignAssets>
-                        <globalNui>         GLOBAL_INTS     </globalNui>
-                        <globalNbs>         GLOBAL_BYTES    </globalNbs>
-                        <localNui>          LOCAL_INTS      </localNui>
-                        <localNbs>          LOCAL_BYTES     </localNbs>
-                        <extraProgramPages> EXTRA_PAGES     </extraProgramPages>
-                        <approvalPgmIdx>    APPROVAL_IDX    </approvalPgmIdx>
-                        <clearStatePgmIdx>  CLEAR_STATE_IDX </clearStatePgmIdx>
-                        <logicSigPgmIdx>    LOGIC_PGM_IDX   </logicSigPgmIdx>
-       => #pushTxnBack(<txID> ID </txID>)
+```k
+  syntax AlgorandCommand ::= "signTxn" TxIDCell SingleSigAddrCell
+                           | "signTxn" TxIDCell "<logicSigPgmIdx>" Int "</logicSigPgmIdx>"
+  rule <k> signTxn
+             <txID>          TX_ID </txID>
+             <singleSigAddr> ADDR  </singleSigAddr>
+           => .
            ...
        </k>
-       <transactions>
-         TXNS =>
-         <transaction>
-           <txID> ID </txID>
-           <txHeader>
-             <sender>   SENDER </sender>
-             <txType>   "appl" </txType>
-             <typeEnum> @ appl </typeEnum>
-             <group>    ID     </group> // for testing, we make these the same as sequential TxIDs
-             ...                           // other fields will receive default values
-           </txHeader>
-           <appCallTxFields>
-             <applicationID>        APP_ID        </applicationID>
-             <onCompletion>         ON_COMPLETION </onCompletion>
-             <accounts>             ACCOUNTS      </accounts>
-             <applicationArgs>      ARGS          </applicationArgs>
-             <foreignApps>          APPS          </foreignApps>
-             <foreignAssets>        ASSETS        </foreignAssets>
-             <globalNui>            GLOBAL_INTS   </globalNui>
-             <globalNbs>            GLOBAL_BYTES  </globalNbs>
-             <localNui>             LOCAL_INTS    </localNui>
-             <localNbs>             LOCAL_BYTES   </localNbs>
-             <extraProgramPages>    EXTRA_PAGES   </extraProgramPages>
-             <approvalProgramSrc>   getTealByIndex(TEAL_PGMS_LIST, APPROVAL_IDX)    </approvalProgramSrc>
-             <clearStateProgramSrc> getTealByIndex(TEAL_PGMS_LIST, CLEAR_STATE_IDX) </clearStateProgramSrc>
-             ...                            // other fields will receive default values
-           </appCallTxFields>
-           <signatures> 
-             <logicSig>
-               <logicSigProgramSrc> getTealByIndex(TEAL_PGMS_LIST, LOGIC_PGM_IDX) </logicSigProgramSrc> 
-               ...
-             </logicSig>
-           </signatures>
-         </transaction>
-         TXNS
-       </transactions>
+       <transaction>
+         <txID> TX_ID </txID>
+         <signatures> .Bag => (<singleSig> <singleSigAddr> ADDR </singleSigAddr> </singleSig>) </signatures>
+         ...
+       </transaction>
+
+  rule <k> signTxn
+             <txID>           TX_ID </txID>
+             <logicSigPgmIdx> IDX   </logicSigPgmIdx>
+           => .
+           ...
+       </k>
+       <transaction>
+         <txID> TX_ID </txID>
+         <signatures> .Bag => 
+           (<logicSig> 
+             <logicSigProgramSrc> getTealByIndex(TEAL_PGMS_LIST, IDX) </logicSigProgramSrc> 
+             ...
+           </logicSig>) 
+         </signatures>
+         ...
+       </transaction>
        <tealPrograms> TEAL_PGMS_LIST </tealPrograms>
-       requires notBool (ID in_txns(<transactions> TXNS </transactions>))
 ```
 
 ### Globals Initialization
@@ -355,7 +319,7 @@ The asset initialization rule must be used *after* initializing accounts.
                <configClawbackAddr>  CLB_ADDR      </configClawbackAddr>
              </assetParams>
            </assetConfigTxFields>
-           <signatures> <singleSig> <singleSigAddr> SENDER </singleSigAddr> </singleSig> </signatures>
+           ...
          </transaction>
          TXNS
        </transactions>
@@ -398,7 +362,7 @@ The asset initialization rule must be used *after* initializing accounts.
              <assetCloseTo>  CLOSE_TO      </assetCloseTo>
              ...
            </assetTransferTxFields>
-           <signatures> <singleSig> <singleSigAddr> SENDER </singleSigAddr> </singleSig> </signatures>
+           ...
          </transaction>
          TXNS
        </transactions>

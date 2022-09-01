@@ -164,6 +164,17 @@ TODO: augment the configuration in `modules/common/txn.md` to support signed tra
          </signatures>
          ...
        </transaction>
+
+  rule <k> #checkTxnSignature() => #avmPanic(TXN_ID, INVALID_SIGNATURE) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID> TXN_ID </txID>
+         <sender> _ </sender>
+         <signatures>
+           .Bag
+         </signatures>
+         ...
+       </transaction>
 ```
 
 For now, we do not check signatures *here*, hence this operation is noop.

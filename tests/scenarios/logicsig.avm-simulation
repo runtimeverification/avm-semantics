@@ -20,7 +20,8 @@ addAppCallTx <txID> 0 </txID>
              <localNbs>          0           </localNbs>
              <extraProgramPages> 0           </extraProgramPages>
              <approvalPgmIdx>    0           </approvalPgmIdx>
-             <clearStatePgmIdx>  1           </clearStatePgmIdx>
-             <logicSigPgmIdx>    2           </logicSigPgmIdx>;
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
+
+signTxn <txID> 0 </txID> <logicSigPgmIdx> 2 </logicSigPgmIdx>;
 
 #initGlobals(); #evalTxGroup(); .AS
