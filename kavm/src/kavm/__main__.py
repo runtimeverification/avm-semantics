@@ -66,8 +66,10 @@ def main() -> None:
     if args.command == 'run':
         kavm = KAVM(definition_dir=args.definition_dir)
 
-        if os.environ.get('KAVM_LIB'):
-            kavm_lib_dir = Path(str(os.environ.get('KAVM_LIB')))
+        if not os.environ.get('KAVM_LIB_ABS'):
+            raise RuntimeError('Cannot access KAVM_LIB_ABS environment variable. Is it set?')
+        kavm_lib_dir = Path(str(os.environ.get('KAVM_LIB_ABS')))
+
         if not args.teal_programs_parser:
             args.teal_programs_parser = kavm_lib_dir / 'scripts/parse-teal-programs.sh'
         if not args.avm_simulation_parser:
