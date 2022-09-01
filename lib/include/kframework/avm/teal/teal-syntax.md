@@ -30,7 +30,7 @@ module TEAL-OPCODES
                         | BranchingOpCode
                         | StackOpCode
   syntax SigOpCode    ::= SigVerOpCode | ArgOpCode           // Opcodes used only by stateless TEAL
-  syntax AppOpCode    ::= StateOpCode  
+  syntax AppOpCode    ::= StateOpCode
                         | TxnGroupStateOpCode
                         | InnerTxOpCode                      // Opcodes used only by stateful TEAL
 ```
