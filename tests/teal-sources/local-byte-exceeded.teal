@@ -1,0 +1,10 @@
+#pragma version 6
+#pragma mode stateful
+
+txn Sender
+byte "key"
+byte "val"
+app_local_put
+
+int 1
+return

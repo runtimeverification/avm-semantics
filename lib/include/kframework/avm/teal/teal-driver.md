@@ -1490,6 +1490,22 @@ Stateful TEAL Operations
 *app_local_put*
 
 ```k
+  syntax Int ::= getLocalByteLimit(Int) [function]
+  rule [[ getLocalByteLimit(APP) => X ]]
+       <app>
+         <appID> APP </appID>
+         <localBytes> X </localBytes>
+         ...
+       </app>
+
+  syntax Int ::= getLocalIntLimit(Int) [function]
+  rule [[ getLocalIntLimit(APP) => X ]]
+       <app>
+         <appID> APP </appID>
+         <localInts> X </localInts>
+         ...
+       </app>
+
   rule <k> app_local_put => #app_local_put {accountReference(A)}:>TValue
                                            getGlobalField(CurrentApplicationID) ... </k>
        <stack> (_:TValue) : (_:Bytes) : (A:TValue) : _ </stack>
@@ -1516,6 +1532,34 @@ Stateful TEAL Operations
            </optInApp> ...
          </appsOptedIn> ...
        </account>
+    requires countInts(M[KEY <- NEWVAL]) <=Int getLocalIntLimit(APP)
+     andBool countBytes(M[KEY <- NEWVAL]) <=Int getLocalByteLimit(APP)
+
+  rule <k> #app_local_put ADDR APP => panic(LOCAL_INTS_EXCEEDED) ... </k>
+       <stack> (NEWVAL:TValue) : (KEY:Bytes) : _ : _ </stack>
+       <account>
+         <address> ADDR </address>
+         <appsOptedIn>
+           <optInApp>
+             <optInAppID> APP </optInAppID>
+             <localStorage> M </localStorage> ...
+           </optInApp> ...
+         </appsOptedIn> ...
+       </account>
+    requires countInts(M[KEY <- NEWVAL]) >Int getLocalIntLimit(APP)
+
+  rule <k> #app_local_put ADDR APP => panic(LOCAL_BYTES_EXCEEDED) ... </k>
+       <stack> (NEWVAL:TValue) : (KEY:Bytes) : _ : _ </stack>
+       <account>
+         <address> ADDR </address>
+         <appsOptedIn>
+           <optInApp>
+             <optInAppID> APP </optInAppID>
+             <localStorage> M </localStorage> ...
+           </optInApp> ...
+         </appsOptedIn> ...
+       </account>
+    requires countBytes(M[KEY <- NEWVAL]) >Int getLocalByteLimit(APP)
 
   // if the account exists but is not opted in, panic
   rule <k> #app_local_put ADDR APP => panic(TXN_ACCESS_FAILED) ... </k>
@@ -1628,6 +1672,16 @@ Stateful TEAL Operations
 *app_global_put*
 
 ```k
+  syntax Int ::= countInts( Map ) [function, functional]
+  rule countInts(.Map) => 0
+  rule countInts( _ |-> _:Int REST ) => 1 +Int countInts(REST)
+  rule countInts( _ |-> _ REST ) => countInts(REST) [owise]
+
+  syntax Int ::= countBytes( Map ) [function, functional]
+  rule countBytes(.Map) => 0
+  rule countBytes( _ |-> _:Bytes REST ) => 1 +Int countBytes(REST)
+  rule countBytes( _ |-> _ REST ) => countBytes(REST) [owise]
+
   rule <k> app_global_put => #app_global_put getGlobalField(CurrentApplicationID) ... </k>
        <stack> (_:TValue) : (_:Bytes) : _ </stack>
 
@@ -1636,17 +1690,43 @@ Stateful TEAL Operations
   rule <k> #app_global_put APP => .K ... </k>
        <stack> (NEWVAL:TValue) : (KEY:Bytes) : XS => XS </stack>
        <stacksize> S => S -Int 2 </stacksize>
-       <appsCreated>
-         <app>
-           <appID> APP </appID>
-           <globalState>
-             <globalStorage> M => M[KEY <- NEWVAL] </globalStorage>
-             ...
-           </globalState>
-           ...
-         </app>
+       <app>
+         <appID> APP </appID>
+         <globalState>
+           <globalStorage> M => M[KEY <- NEWVAL] </globalStorage>
+           <globalInts>    GLOBAL_INTS </globalInts>
+           <globalBytes>   GLOBAL_BYTES </globalBytes>
+         </globalState>
          ...
-       </appsCreated>
+       </app>
+    requires countInts(M[KEY <- NEWVAL]) <=Int GLOBAL_INTS
+     andBool countBytes(M[KEY <- NEWVAL]) <=Int GLOBAL_BYTES
+
+  rule <k> #app_global_put APP => panic(GLOBAL_INTS_EXCEEDED) ... </k>
+       <stack> (NEWVAL:TValue) : (KEY:Bytes) : _ </stack>
+       <app>
+         <appID> APP </appID>
+         <globalState>
+           <globalStorage> M </globalStorage>
+           <globalInts>    GLOBAL_INTS </globalInts>
+           <globalBytes>   _ </globalBytes>
+         </globalState>
+         ...
+       </app>
+    requires countInts(M[KEY <- NEWVAL]) >Int GLOBAL_INTS
+
+  rule <k> #app_global_put APP => panic(GLOBAL_BYTES_EXCEEDED) ... </k>
+       <stack> (NEWVAL:TValue) : (KEY:Bytes) : _ </stack>
+       <app>
+         <appID> APP </appID>
+         <globalState>
+           <globalStorage> M </globalStorage>
+           <globalInts>    _ </globalInts>
+           <globalBytes>   GLOBAL_BYTES </globalBytes>
+         </globalState>
+         ...
+       </app>
+    requires countBytes(M[KEY <- NEWVAL]) >Int GLOBAL_BYTES
 
   // if the app doesn't exist, do nothing
   rule <k> #app_global_put APP => .K ... </k>

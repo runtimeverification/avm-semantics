@@ -317,6 +317,10 @@ return code to 3 (see return codes below).
   syntax String ::= "ILL_TYPED_STACK"            [macro]
   syntax String ::= "LOG_CALLS_EXCEEDED"         [macro]
   syntax String ::= "LOG_SIZE_EXCEEDED"          [macro]
+  syntax String ::= "GLOBAL_BYTES_EXCEEDED"      [macro]
+  syntax String ::= "GLOBAL_INTS_EXCEEDED"       [macro]
+  syntax String ::= "LOCAL_BYTES_EXCEEDED"       [macro]
+  syntax String ::= "LOCAL_INTS_EXCEEDED"        [macro]
   syntax String ::= "STACK_OVERFLOW"             [macro]
   syntax String ::= "STACK_UNDERFLOW"            [macro]
   syntax String ::= "ASSERTION_VIOLATION"        [macro]
@@ -342,6 +346,10 @@ return code to 3 (see return codes below).
   rule ILL_TYPED_STACK     => "wrong argument type(s) for opcode"
   rule LOG_CALLS_EXCEEDED  => "too many log calls in transaction"
   rule LOG_SIZE_EXCEEDED   => "total size of log calls in transaction is too large"
+  rule GLOBAL_BYTES_EXCEEDED => "tried to store too many byte values in global storage"
+  rule GLOBAL_INTS_EXCEEDED => "tried to store too many int values in global storage"
+  rule LOCAL_BYTES_EXCEEDED => "tried to store too many byte values in local storage"
+  rule LOCAL_INTS_EXCEEDED => "tried to store too many int values in local storage"
   rule INVALID_ARGUMENT    => "wrong argument range(s) for opcode"
   rule STACK_OVERFLOW      => "stack overflow"
   rule STACK_UNDERFLOW     => "stack underflow"

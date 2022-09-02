@@ -1,7 +1,7 @@
-declareTealSource "app-local-get.teal";
+declareTealSource "storage-limit-overwrite.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 100000 </balance>;
+addAccount <address> b"1" </address> <balance> 12345 </balance>;
 
 #initTxGroup();
 
@@ -14,10 +14,10 @@ addAppCallTx <txID> 0 </txID>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
-             <globalNui>         0           </globalNui>
-             <globalNbs>         0           </globalNbs>
+             <globalNui>         1           </globalNui>
+             <globalNbs>         1           </globalNbs>
              <localNui>          1           </localNui>
-             <localNbs>          0           </localNbs>
+             <localNbs>          1           </localNbs>
              <extraProgramPages> 0           </extraProgramPages>
              <approvalPgmIdx>    0           </approvalPgmIdx>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;

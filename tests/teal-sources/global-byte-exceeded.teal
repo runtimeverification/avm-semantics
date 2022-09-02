@@ -1,0 +1,9 @@
+#pragma version 5
+#pragma mode stateful
+
+byte "key"
+byte "val"
+app_global_put
+
+int 1
+return

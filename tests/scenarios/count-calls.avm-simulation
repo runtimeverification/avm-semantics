@@ -29,9 +29,9 @@ addAppCallTx <txID> 0 </txID>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
-             <globalNui>         0           </globalNui>
+             <globalNui>         1           </globalNui>
              <globalNbs>         0           </globalNbs>
-             <localNui>          0           </localNui>
+             <localNui>          1           </localNui>
              <localNbs>          0           </localNbs>
              <extraProgramPages> 0           </extraProgramPages>
              <approvalPgmIdx>    0           </approvalPgmIdx>
