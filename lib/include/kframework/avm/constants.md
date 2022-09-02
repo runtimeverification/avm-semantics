@@ -16,6 +16,9 @@ module AVM-CONSTANTS
                | "PARAM_MAX_TXN_LIFE"          [macro]
                | "PARAM_MAX_LOG_CALLS"         [macro]
                | "PARAM_MAX_LOG_SIZE"          [macro]
+               | "PARAM_MAX_LOCAL_KEYS"        [macro]
+               | "PARAM_MAX_GLOBAL_KEYS"       [macro]
+               | "PARAM_MAX_KEY_SIZE"          [macro]
 ```
 
 Amount the min balance is set to by default, and amount it is increased by when creating or opting into
@@ -79,6 +82,24 @@ Maximum size of log messages (MaxLogSize)
 
 ```k
   rule PARAM_MAX_LOG_SIZE => 1024
+```
+
+Maximum number of global storage slots per app (MaxGlobalSchemaEntries)
+
+```k
+  rule PARAM_MAX_GLOBAL_KEYS => 64
+```
+
+Maximum number of local storage slots per app (MaxLocalSchemaEntries)
+
+```k
+  rule PARAM_MAX_LOCAL_KEYS => 16
+```
+
+Maximum size of key for global/local storage (MaxAppKeyLen)
+
+```k
+  rule PARAM_MAX_KEY_SIZE => 16
 ```
 
 ```k

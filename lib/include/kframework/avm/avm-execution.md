@@ -757,6 +757,8 @@ App create
        </account>
        <appCreator> .Map => (0 |-> SENDER) ... </appCreator>
     requires notBool(0 in_apps(<appsCreated> APPS </appsCreated>))
+     andBool GLOBAL_INTS +Int GLOBAL_BYTES <=Int PARAM_MAX_GLOBAL_KEYS
+     andBool LOCAL_INTS  +Int LOCAL_BYTES  <=Int PARAM_MAX_LOCAL_KEYS
 ```
 
 NoOp
