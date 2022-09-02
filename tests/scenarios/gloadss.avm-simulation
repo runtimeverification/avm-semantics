@@ -1,4 +1,4 @@
-declareTealSource "gload.teal";
+declareTealSource "gloadss.teal";
 declareTealSource "clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 1500000 </balance>;

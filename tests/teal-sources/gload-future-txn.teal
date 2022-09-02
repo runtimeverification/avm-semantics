@@ -3,9 +3,15 @@
 
 txna ApplicationArgs 0
 btoi
-txn GroupIndex
+int 1
+==
+bnz end
+
+gload 1 0
+int 0
 ==
 assert
 
+end:
 int 1
 return

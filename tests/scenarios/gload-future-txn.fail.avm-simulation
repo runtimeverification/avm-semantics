@@ -1,4 +1,4 @@
-declareTealSource "gload.teal";
+declareTealSource "gload-future-txn.teal";
 declareTealSource "clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 1500000 </balance>;
@@ -10,7 +10,7 @@ addAppCallTx <txID> 0 </txID>
              <applicationID>     NoTValue    </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
-             <applicationArgs>   1           </applicationArgs>
+             <applicationArgs>   0           </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
              <globalNui>         0           </globalNui>
@@ -26,7 +26,7 @@ addAppCallTx <txID> 1 </txID>
              <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
-             <applicationArgs>   2           </applicationArgs>
+             <applicationArgs>   1           </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
              <globalNui>         0           </globalNui>

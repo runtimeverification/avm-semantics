@@ -80,7 +80,10 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
           <localNui> NoTValue </localNui>
           <localNbs> NoTValue </localNbs>
         </localStateSchema>
-        <extraProgramPages> 0 </extraProgramPages>
+        <extraProgramPages> 0           </extraProgramPages>
+        <txScratch>         .Map        </txScratch>
+        <logs>              .TValueList </logs>
+        <logSize>           0           </logSize>
       </appCallTxFields>
 ```
 
@@ -700,6 +703,51 @@ module ALGO-TXN
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
          <foreignAssets> X </foreignAssets>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, LastLog) => MSG ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logs> _ MSG:TBytes </logs>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, LastLog) => MSG ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logs> MSG:TBytes </logs>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, NumLogs) => size(LOGS) ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logs> LOGS </logs>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, Logs, J) => normalize(getTValueAt(J, LOGS)) ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logs> LOGS </logs>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, Logs) => LOGS ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logs> LOGS </logs>
          ...
        </transaction>
     requires #isValidForTxnType(Assets, TYPE)

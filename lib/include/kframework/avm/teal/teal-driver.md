@@ -17,6 +17,7 @@ TEAL Interpreter
 module TEAL-DRIVER
   imports AVM-CONFIGURATION
   imports AVM-LIMITS
+  imports GLOBALS
   imports TEAL-INTERPRETER-STATE
   imports TEAL-EXECUTION
   imports TEAL-STACK
@@ -1156,46 +1157,31 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
 ### Blockchain State Accessors
 
 ```k
-  syntax KItem ::= pushFieldValue(MaybeTValue)
-
-  rule <k> pushFieldValue(VAL:TValue) => . ...</k>
-       <stack> XS => VAL : XS </stack>
-       <stacksize> S => S +Int 1 </stacksize>
-    requires S <Int MAX_STACK_DEPTH
-
-  rule <k> pushFieldValue(_:TValue) => panic(STACK_OVERFLOW) ...</k>
-       <stacksize> S </stacksize>
-    requires S >=Int MAX_STACK_DEPTH
-
-  rule <k> pushFieldValue(NoTValue) => panic(TXN_ACCESS_FAILED) ...</k>
-
-  rule <k> txn I => pushFieldValue(getTxnField(getCurrentTxn(), I)) ... </k>
+  rule <k> txn I => gtxn getCurrentTxn() I ... </k>
 
   rule <k> txn I J => txna I J ... </k>
 
-  rule <k> gtxn G I => pushFieldValue(getTxnField(G, I)) ... </k>
+  rule <k> gtxn G I => loadFromGroup(G, I) ... </k>
 
-  rule <k> gtxns I => pushFieldValue(getTxnField(G, I)) ... </k>
+  rule <k> gtxns I => loadFromGroup(G, I) ... </k>
        <stack> G : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
-  rule <k> txna I J => pushFieldValue(getTxnField(getCurrentTxn(), I, J)) ... </k>
+  rule <k> txna I J => gtxna getCurrentTxn() I J ... </k>
 
-  rule <k> txnas I => pushFieldValue(getTxnField(getCurrentTxn(), I, J)) ... </k>
+  rule <k> txnas I => gtxnas getCurrentTxn() I ... </k>
+
+  rule <k> gtxna G I J => loadFromGroup(G, I, J) ... </k>
+
+  rule <k> gtxnas G I => loadFromGroup(G, I, J) ... </k>
        <stack> J : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
-  rule <k> gtxna G I J => pushFieldValue(getTxnField(G, I, J)) ... </k>
-
-  rule <k> gtxnas G I => pushFieldValue(getTxnField(G, I, J)) ... </k>
-       <stack> J : XS => XS </stack>
-       <stacksize> S => S -Int 1 </stacksize>
-
-  rule <k> gtxnsa I J => pushFieldValue(getTxnField(G, I, J)) ... </k>
+  rule <k> gtxnsa I J => loadFromGroup(G, I, J) ... </k>
        <stack> G : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
-  rule <k> gtxnsas I => pushFieldValue(getTxnField(G, I, J)) ... </k>
+  rule <k> gtxnsas I => loadFromGroup(G, I, J) ... </k>
        <stack> J : G : XS => XS </stack>
        <stacksize> S => S -Int 2 </stacksize>
 
@@ -1207,6 +1193,47 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
   rule <k> _:BlockchainOpCode => panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
+
+  syntax KItem ::= loadFromGroup(Int, TxnField)
+  //-------------------------------------------
+  rule <k> loadFromGroup(GROUP_IDX, FIELD) => . ...</k>
+       <stack> XS => {getTxnField(GROUP_IDX, FIELD)}:>TValue : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires   isTValue(getTxnField(GROUP_IDX, FIELD))
+    andBool    S <Int MAX_STACK_DEPTH
+    andBool    (notBool(isTxnDynamicField(FIELD))
+    orElseBool GROUP_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int))
+
+  rule <k> loadFromGroup(GROUP_IDX, _:TxnDynamicField) => panic(FUTURE_TXN) ...</k>
+    requires GROUP_IDX >=Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+
+  rule <k> loadFromGroup(_, _) => panic(STACK_OVERFLOW) ...</k>
+       <stacksize> S </stacksize>
+    requires S >=Int MAX_STACK_DEPTH
+
+  rule <k> loadFromGroup(GROUP_IDX, FIELD) => panic(TXN_ACCESS_FAILED) ...</k>
+    requires   notBool(isTValue(getTxnField(GROUP_IDX, FIELD)))
+
+  syntax KItem ::= loadFromGroup(Int, TxnaField, Int)
+  //-------------------------------------------------
+  rule <k> loadFromGroup(GROUP_IDX, FIELD, IDX) => . ...</k>
+       <stack> XS => {getTxnField(GROUP_IDX, FIELD, IDX)}:>TValue : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires   isTValue(getTxnField(GROUP_IDX, FIELD, IDX))
+    andBool    S <Int MAX_STACK_DEPTH
+    andBool    (notBool(isTxnaDynamicField(FIELD))
+    orElseBool GROUP_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int))
+
+  rule <k> loadFromGroup(GROUP_IDX, _:TxnaDynamicField, _) => panic(FUTURE_TXN) ...</k>
+    requires GROUP_IDX >=Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+
+  rule <k> loadFromGroup(_, _, _) => panic(STACK_OVERFLOW) ...</k>
+       <stacksize> S </stacksize>
+    requires S >=Int MAX_STACK_DEPTH
+
+  rule <k> loadFromGroup(GROUP_IDX, FIELD, IDX) => panic(TXN_ACCESS_FAILED) ...</k>
+    requires   notBool(isTValue(getTxnField(GROUP_IDX, FIELD, IDX)))
+       
 ```
 
 ```k
@@ -1335,6 +1362,43 @@ Stateful TEAL Operations
        <stack> _ : XS => MIN_BAL : XS </stack>
       
   rule <k> #min_balance _ => panic(TXN_ACCESS_FAILED) </k>  [owise]
+```
+
+*log*
+
+```k
+  rule <k> log => . ...</k>
+       <stack> (MSG:TBytes : XS) => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+       <currentTx> TX_ID </currentTx>
+       <transaction>
+         <txID> TX_ID </txID>
+         <logs> LOG => append(MSG, LOG) </logs>
+         <logSize> SIZE => SIZE +Int lengthBytes({MSG}:>Bytes) </logSize>
+         ...
+       </transaction>
+    requires size(LOG) <Int PARAM_MAX_LOG_CALLS
+
+   rule <k> log => panic(ILL_TYPED_STACK) ...</k>
+        <stack> _:TUInt64 : _ </stack>
+
+   rule <k> log => panic(LOG_CALLS_EXCEEDED) ...</k>
+       <currentTx> TX_ID </currentTx>
+       <transaction>
+         <txID> TX_ID </txID>
+         <logs> LOG </logs>
+         ...
+       </transaction>
+    requires size(LOG) >=Int PARAM_MAX_LOG_CALLS
+
+   rule <k> log => panic(LOG_SIZE_EXCEEDED) ...</k>
+       <currentTx> TX_ID </currentTx>
+       <transaction>
+         <txID> TX_ID </txID>
+         <logSize> SIZE </logSize>
+         ...
+       </transaction>
+    requires SIZE >=Int PARAM_MAX_LOG_SIZE
 ```
 
 *app_opted_in*
@@ -1707,7 +1771,7 @@ Stateful TEAL Operations
      andBool T <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
      andBool ({getTxnField(T, TypeEnum)}:>Int) ==Int (@ appl)
 
-  rule <k> gaid T => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> gaid T => panic(FUTURE_TXN) ... </k>
     requires T >=Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
      orBool ({getTxnField(T, TypeEnum)}:>Int) =/=Int (@ appl)
 ```
@@ -1720,12 +1784,66 @@ Stateful TEAL Operations
     requires T <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
      andBool ({getTxnField(T, TypeEnum)}:>Int) ==Int (@ appl)
 
-  rule <k> gaids => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> gaids => panic(FUTURE_TXN) ... </k>
        <stack> T : _ </stack>
     requires T >=Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
      orBool ({getTxnField(T, TypeEnum)}:>Int) =/=Int (@ appl)
 ```
 
+*gload, gloads, & gloadss*
+
+```k
+  rule <k> gload TXN_IDX I => loadGroupScratch(TXN_IDX, I) ...</k>
+
+  rule <k> gloads I => loadGroupScratch(TXN_IDX, I) ... </k>
+       <stack> (TXN_IDX:Int : XS) => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
+  rule <k> gloadss => loadGroupScratch(TXN_IDX, I) ... </k>
+       <stack> (I:Int : TXN_IDX:Int : XS) => XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+
+  syntax KItem ::= loadGroupScratch(Int, Int)
+  //-----------------------------------------
+  rule <k> loadGroupScratch(TXN_IDX, I) => . ...</k>
+       <stack> XS => ({M[I]}:>TValue) : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <transaction>
+         <txID> TXN_IDX </txID>
+         <txScratch> M </txScratch>
+         ...
+       </transaction>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+     andBool I in_keys(M)
+     andBool S <Int MAX_STACK_DEPTH
+     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+
+  rule <k> loadGroupScratch(TXN_IDX, I) => . ...</k>
+       <stack> XS => 0 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <transaction>
+         <txID> TXN_IDX </txID>
+         <txScratch> M </txScratch>
+         ...
+       </transaction>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+     andBool notBool (I in_keys(M))
+     andBool S <Int MAX_STACK_DEPTH
+     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+
+  rule <k> loadGroupScratch(_, I) => panic(INVALID_SCRATCH_LOC) ... </k>
+    requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
+
+  rule <k> loadGroupScratch(TXN_IDX, _) => panic(FUTURE_TXN) ... </k>
+    requires TXN_IDX >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+
+  rule <k> loadGroupScratch(TXN_IDX, _) => panic(TXN_OUT_OF_BOUNDS) ... </k>
+    requires TXN_IDX <Int 0 orBool TXN_IDX >=Int {getGlobalField(GroupSize)}:>Int
+  
+  rule <k> loadGroupScratch(_, _) => panic(STACK_OVERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S >=Int MAX_STACK_DEPTH
+```
 
 
 Panic Behaviors due to Ill-typed Stack Arguments
