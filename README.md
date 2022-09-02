@@ -1,5 +1,5 @@
 KAVM &mdash; Algorand Virtual Machine and TEAL Semantics in K
-================================================
+=============================================================
 
 🛠️**Work in progress**🛠️
 
@@ -117,7 +117,7 @@ Not all TEAL opcodes are supported by the semantics as of yet. See the relevant 
 
 
 Working on KAVM
-----------------
+---------------
 
 ### Build system
 

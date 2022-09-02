@@ -22,9 +22,8 @@ KAVM_INCLUDE     := $(KAVM_LIB)/include
 KAVM_SCRIPTS     := $(KAVM_LIB)/scripts
 KAVM_K_BIN       := $(KAVM_LIB)/kframework/bin
 KAVM             := kavm
-KAVM_LIB_ABS     := $(abspath $(KAVM_LIB))
-export KAVM_LIB_ABS
-KAVM_DEFINITION_DIR=$(KAVM_LIB_ABS)/avm-llvm/avm-execution-kompiled/
+KAVM_DEFINITION_DIR=$(KAVM_LIB)/avm-llvm/avm-execution-kompiled/
+export KAVM_LIB
 export KAVM_DEFINITION_DIR
 
 K_SUBMODULE := $(DEPS_DIR)/k
@@ -54,9 +53,9 @@ export K_OPTS
         deps k-deps libsecp256k1 libff plugin-deps hook-deps                          \
         build build-avm build-kavm py-kavm                                            \
         test test-avm-semantics test-avm-semantics-prove                              \
-	test-kavm test-kavm-kast test-kavm-kast-avm-scenario test-kavm-kast-teal      \
-	clean-avm clean-kavm                                                          \
-	module-imports-graph module-imports-graph-dot                                 \
+        test-kavm test-kavm-kast test-kavm-kast-avm-scenario test-kavm-kast-teal      \
+        clean-avm clean-kavm                                                          \
+        module-imports-graph module-imports-graph-dot                                 \
         venv venv-clean
 
 .SECONDARY:
@@ -88,9 +87,9 @@ endif
 $(libff_out): $(PLUGIN_SUBMODULE)/deps/libff/CMakeLists.txt
 	@mkdir -p $(PLUGIN_SUBMODULE)/deps/libff/build
 	cd $(PLUGIN_SUBMODULE)/deps/libff/build                                                                     \
-	    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(INSTALL_LIB)/libff $(LIBFF_CMAKE_FLAGS) \
-	    && make -s -j4                                                                                          \
-	    && make install DESTDIR=$(CURDIR)/$(BUILD_DIR)
+            && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(INSTALL_LIB)/libff $(LIBFF_CMAKE_FLAGS) \
+            && make -s -j4                                                                                          \
+            && make install DESTDIR=$(CURDIR)/$(BUILD_DIR)
 
 # K Dependencies
 # --------------
@@ -113,9 +112,9 @@ endif
 
 
 k-deps: $(K_JAR)
-	cd $(K_SUBMODULE)                                                                                                                                                                            \
-	    && mvn --batch-mode package -DskipTests $(SKIP_HASKELL) -Dllvm.backend.prefix=$(INSTALL_LIB)/kframework -Dllvm.backend.destdir=$(CURDIR)/$(BUILD_DIR) -Dproject.build.type=$(K_BUILD_TYPE) $(K_MVN_ARGS) \
-	    && DESTDIR=$(CURDIR)/$(BUILD_DIR) PREFIX=$(INSTALL_LIB)/kframework package/package
+	cd $(K_SUBMODULE) \
+        && mvn --batch-mode package -DskipTests $(SKIP_HASKELL) -Dllvm.backend.prefix=$(INSTALL_LIB)/kframework -Dllvm.backend.destdir=$(CURDIR)/$(BUILD_DIR) -Dproject.build.type=$(K_BUILD_TYPE) $(K_MVN_ARGS) \
+        && DESTDIR=$(CURDIR)/$(BUILD_DIR) PREFIX=$(INSTALL_LIB)/kframework package/package
 
 # Building
 # --------
@@ -201,9 +200,9 @@ VENV_ACTIVATE  := . $(VENV_DIR)/bin/activate
 
 $(VENV_DIR)/pyvenv.cfg:
 	   virtualenv $(VENV_DIR)              \
-	&& $(VENV_ACTIVATE)                    \
-	&& pip install --editable ./deps/k/pyk \
-	&& pip install --editable $(PY_KAVM_DIR)
+        && $(VENV_ACTIVATE)                    \
+        && pip install --editable ./deps/k/pyk \
+        && pip install --editable $(PY_KAVM_DIR)
 
 venv: $(VENV_DIR)/pyvenv.cfg
 	@echo $(VENV_ACTIVATE)
@@ -285,10 +284,12 @@ build-avm: $(avm_includes) $(KAVM_LIB)/$(avm_kompiled)
 
 $(KAVM_LIB)/$(avm_kompiled): $(KAVM_LIB)/version $(libff_out)
 	$(VENV_ACTIVATE) && $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file) \
-	                    --definition-dir $(KAVM_LIB)/$(avm_kompiled)                \
-	                    --main-module $(avm_main_module)                            \
-	                    --syntax-module $(avm_syntax_module)                        \
-	                    $(AVM_KOMPILE_OPTS)
+                            -I "${KAVM_INCLUDE}/kframework"                          \
+                            -I "${plugin_include}/kframework"                           \
+                            --definition-dir $(KAVM_LIB)/$(avm_kompiled)                \
+                            --main-module $(avm_main_module)                            \
+                            --syntax-module $(avm_syntax_module)                        \
+                            $(AVM_KOMPILE_OPTS)
 
 clean-avm:
 	rm -rf $(KAVM_LIB)/$(avm_kompiled)
