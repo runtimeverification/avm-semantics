@@ -1,5 +1,4 @@
 #pragma version 6
-#pragma mode stateful
 
 byte "a"
 log
