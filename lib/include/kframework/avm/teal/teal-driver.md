@@ -1535,10 +1535,20 @@ Stateful TEAL Operations
     requires countInts(M[KEY <- NEWVAL]) <=Int getLocalIntLimit(APP)
      andBool countBytes(M[KEY <- NEWVAL]) <=Int getLocalByteLimit(APP)
      andBool lengthBytes(KEY) <=Int PARAM_MAX_KEY_SIZE
+     andBool lengthBytes(KEY) +Int sizeInBytes(NEWVAL) <=Int PARAM_MAX_SUM_KEY_VALUE_SIZE
+     andBool (notBool(isBytes(NEWVAL)) orElseBool lengthBytes({NEWVAL}:>Bytes) <=Int PARAM_MAX_BYTE_VALUE_SIZE)
 
   rule <k> #app_local_put _ _ => panic(KEY_TOO_LARGE) ... </k>
        <stack> _ : (KEY:Bytes) : _ : _ </stack>
     requires lengthBytes(KEY) >Int PARAM_MAX_KEY_SIZE
+
+  rule <k> #app_local_put _ _ => panic(KEY_VALUE_TOO_LARGE) ... </k>
+       <stack> (NEWVAL:TValue) : (KEY:Bytes) : _ : _ </stack>
+    requires lengthBytes(KEY) +Int sizeInBytes(NEWVAL) >Int PARAM_MAX_SUM_KEY_VALUE_SIZE
+
+  rule <k> #app_local_put _ _ => panic(BYTE_VALUE_TOO_LARGE) ... </k>
+       <stack> (NEWVAL:Bytes) : _ : _ : _ </stack>
+    requires lengthBytes(NEWVAL) >Int PARAM_MAX_BYTE_VALUE_SIZE
 
   rule <k> #app_local_put ADDR APP => panic(LOCAL_INTS_EXCEEDED) ... </k>
        <stack> (NEWVAL:TValue) : (KEY:Bytes) : _ : _ </stack>
@@ -1707,10 +1717,20 @@ Stateful TEAL Operations
     requires countInts(M[KEY <- NEWVAL]) <=Int GLOBAL_INTS
      andBool countBytes(M[KEY <- NEWVAL]) <=Int GLOBAL_BYTES
      andBool lengthBytes(KEY) <=Int PARAM_MAX_KEY_SIZE
+     andBool lengthBytes(KEY) +Int sizeInBytes(NEWVAL) <=Int PARAM_MAX_SUM_KEY_VALUE_SIZE
+     andBool (notBool(isBytes(NEWVAL)) orElseBool lengthBytes({NEWVAL}:>Bytes) <=Int PARAM_MAX_BYTE_VALUE_SIZE)
 
   rule <k> #app_global_put _ => panic(KEY_TOO_LARGE) ... </k>
        <stack> _ : (KEY:Bytes) : _ </stack>
     requires lengthBytes(KEY) >Int PARAM_MAX_KEY_SIZE
+
+  rule <k> #app_global_put _ => panic(KEY_VALUE_TOO_LARGE) ... </k>
+       <stack> (NEWVAL:TValue) : (KEY:Bytes) : _ </stack>
+    requires lengthBytes(KEY) +Int sizeInBytes(NEWVAL) >Int PARAM_MAX_SUM_KEY_VALUE_SIZE
+
+  rule <k> #app_global_put _ => panic(BYTE_VALUE_TOO_LARGE) ... </k>
+       <stack> (NEWVAL:Bytes) : _ : _ </stack>
+    requires lengthBytes(NEWVAL) >Int PARAM_MAX_BYTE_VALUE_SIZE
 
   rule <k> #app_global_put APP => panic(GLOBAL_INTS_EXCEEDED) ... </k>
        <stack> (NEWVAL:TValue) : (KEY:Bytes) : _ </stack>

@@ -331,6 +331,8 @@ return code to 3 (see return codes below).
   syntax String ::= "INVALID_ARGUMENT"           [macro]
   syntax String ::= "MATH_BYTES_ARG_TOO_LONG"    [macro]
   syntax String ::= "KEY_TOO_LARGE"              [macro]
+  syntax String ::= "BYTE_VALUE_TOO_LARGE"       [macro]
+  syntax String ::= "KEY_VALUE_TOO_LARGE"        [macro]
   //----------------------------------------------------
   rule INVALID_OP_FOR_MODE => "invalid opcode for current execution mode"
   rule ERR_OPCODE          => "err opcode encountered"
@@ -361,6 +363,8 @@ return code to 3 (see return codes below).
   rule CALLSTACK_OVERFLOW  => "call stack overflow: recursion is too deep"
   rule MATH_BYTES_ARG_TOO_LONG => "math attempted on large byte-array"
   rule KEY_TOO_LARGE       => "key is too long"
+  rule BYTE_VALUE_TOO_LARGE => "tried to store too large of a byte value"
+  rule KEY_VALUE_TOO_LARGE => "sum of key length and value length is too high"
   rule ASSERTION_VIOLATION => "assertion violation"
   //--------------------------------------------------------------------------------
 
