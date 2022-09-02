@@ -3,7 +3,7 @@ from algosdk.future.transaction import AssetTransferTxn, PaymentTxn, SuggestedPa
 from pyk.kast import KApply, KAst
 from pyk.kastManip import split_config_from
 
-from kavm_algod.pyk_utils import int_token_cell, string_token_cell
+from kavm.pyk_utils import int_token_cell, string_token_cell
 
 
 def transaction_to_k(txn: Transaction) -> KApply:

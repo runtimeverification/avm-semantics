@@ -1,5 +1,5 @@
-declareTealSource "./tests/teal-sources/balance-offset-out-of-bounds.teal";
-declareTealSource "./tests/teal-sources/clear-basic.teal";
+declareTealSource "balance-offset-out-of-bounds.teal";
+declareTealSource "clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 12345 </balance>;
 addAccount <address> b"2" </address> <balance> 12345 </balance>;

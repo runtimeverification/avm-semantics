@@ -1,5 +1,5 @@
-declareTealSource "./tests/teal-sources/duplicate-label.teal";
-declareTealSource "./tests/teal-sources/clear-basic.teal";
+declareTealSource "duplicate-label.teal";
+declareTealSource "clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 10000 </balance>;
 

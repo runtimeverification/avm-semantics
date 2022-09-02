@@ -1,5 +1,5 @@
-declareTealSource "./tests/teal-sources/arithmetic-ill-typed.teal";
-declareTealSource "./tests/teal-sources/clear-basic.teal";
+declareTealSource "arithmetic-ill-typed.teal";
+declareTealSource "clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 10000 </balance>;
 

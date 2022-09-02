@@ -3,9 +3,9 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "kavm-algod"
+name = "kavm"
 version = "0.1.0"
-description = "KAVM backend for py-algorand-sdk"
+description = "Python bindings and command-line interface for KAVM"
 authors = [
     "Runtime Verification, Inc. <contact@runtimeverification.com>",
 ]
@@ -28,7 +28,7 @@ pyk = { path = "../deps/k/pyk" }
 pytest = "*"
 
 [tool.poetry.scripts]
-kavm-algod = "kavm_algod.__main__:main"
+kavm = "kavm.__main__:main"
 
 [tool.isort]
 profile = "black"
