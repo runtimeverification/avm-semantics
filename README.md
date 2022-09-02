@@ -1,36 +1,38 @@
-Algorand Virtual Machine and TEAL Semantics in K
-================================================
+KAVM &mdash; Algorand Virtual Machine and TEAL Semantics in K
+=============================================================
 
 🛠️**Work in progress**🛠️
 
-KTeal leverages the [K Framework](https://kframework.org/) to empower Algorand smart contracts' developers with property-based testing and formal verification.
+KAVM leverages the [K Framework](https://kframework.org/) to empower Algorand smart contracts' developers with property-based testing and formal verification.
 
 Getting Started
 ---------------
 
-### Installing KTeal
+### Installing KAVM
 
-For now, KTeal can only installed from source. We intend to provide a Docker image and standalone packages for popular operating environments at a later stage. To install KTeal from source, please refer to [Working on KTeal](#working-on-kteal).
+For now, KAVM can only be installed from source. We intend to provide a Docker image and standalone packages for popular operating systems at a later stage. To install KAVM from source, please refer to [Working on KAVM](#working-on-kavm).
 
 ### Entry points
 
-The semantics can be used either via the `kavm` command-line interface or programmatical, through the `kavm_algod` Python package.
+The semantics can be used either via the `kavm` command-line interface or programmaticaly with the `kavm` Python package.
 
 #### `kavm` runner script
 
-`kavm` is a shell script that provides a command-line interface for the semantics:
-* concrete simulations and tests are run via `krun` and the K LLVM Backend
-* symbolic execution proofs are run with `kprove` and the K Haskell Backend
-
-#### `kavm_algod` Python library
-
-[`kavm_algod`](./kavm_algod) is a Python package that enables interoperability between KAVM and `algod` &mdash; the Algorand node daemon. `kavm_algod` also provides a drop-in replacement for `py-algorand-sdk`, making it possible to run existing deployment and testing scripts on top of KAVM.
+The `kavm` Python tool provides a command-line interface for the semantics:
+* compiling the semantics with the LLVM and Haskell backends with `kavm kompile`
+* executing concrete simulations and tests are run via `krun` and the K LLVM Backend with `kavm run`
+* *Not yet implemented* proving properties by symbolic execution via `kprove` and the K Haskell Backend with `kavm prove`
+* parsing TEAL programs via `kast` with `kavm kast`
 
 See `kavm --help` for more information.
 
-`kavm` uses two auxiliary scripts located in [`scripts/`](scripts/):
-* [`parse-avm-simulation.sh`](scripts/parse-avm-simulation.sh) calls `kparse` to parse a simulation scenario from a `.avm-simulation` file;
-* [`parse-teal-programs.sh`](scripts/parse-teal-programs.sh) calls `kparse` to parse a `;`-separated list of TEAL source codes.
+**Note**: make sure to activate the Python virtual environment build by KAVM with `. .build/venv/bin/activate` for the `kavm` script to be available.
+
+#### `kavm` Python library
+
+[`kavm`](./kavm) provides Python bindings to KAVM
+* `kavm.algod` integrates KAVM with `py-algorand-sdk` and `algod` &mdash; the Algorand node client, making it possible to run existing deployment and testing scripts on top of KAVM.
+* `kavm.__main__` is the implementation of the `kavm` command-line tool
 
 Testing harness
 ---------------
@@ -39,17 +41,20 @@ Testing harness
 
 The tests are located in [`tests/`](tests/).
 
-Run `make test-avm` to execute the test suite.
+Run `make test-avm-semantics -j8` to execute the test suite. Adjust the `-jX` option as needed to run `X` tests in parallel.
 
 Each test has two components:
-* a TEAL program `.teal`, or several programs, in [`tests/teal-sources/`](tests/teal-sources/);
 * a test scenario, `.avm-simulation` in [`tests/scenarios/`](tests/scenarios/) that defines the initial network state, the input transaction group and declares which TEAL programs it uses.
+* a TEAL program `.teal`, or several programs, in [`tests/teal-sources/`](tests/teal-sources/);
 
-Currently, a test is considered passing if the `kavm` runner script returns 0 and the final state network state is not examined. This will be implemented at a later stage.
+Currently, a test is considered passing if the `kavm` runner script returns 0. The final state network state is not examined.
 
 The negative test scenarios are expected to fail and have the `.fail.avm-simulation` file extension.
 
 ### Symbolic Proofs
+
+**NOTE**: the specs have not yet been fully ported to the current semantics and are failing.
+They are not checked on CI and are not called by `make test`.
 
 The specifications are located in [`tests/specs/`](tests/specs/).
 
@@ -57,9 +62,6 @@ Run `make test-avm-prove` to verify the specifications.
 
 The [`verification.md`](tests/specs/verification.k) module must be compiled with the Haskell backend and included in every spec file.
 The Makefile target `test-avm-prove` ensures that the verification module is compiled properly before checking the specs.
-
-**NOTE**: the specs have not yet been fully ported to the current semantics and are failing.
-They are not checked on CI and are not called by `make test`.
 
 Repository Structure
 --------------------
@@ -107,17 +109,23 @@ Not all TEAL opcodes are supported by the semantics as of yet. See the relevant 
 
 #### Python packages
 
-`kavm_algod`[./kavm_algod] is a Python package that enables interoperability between KAVM and `algod` &mdash; the Algorand node daemon. `kavm_algod` also provides a drop-in replacement for `py-algorand-sdk`, making it possible to run existing deployment and testing scripts on top of KAVM.
+`kavm`[./kavm] is a Python package that enables interoperability between KAVM and `algod` &mdash; the Algorand node daemon. `kavm` also provides a drop-in replacement for `py-algorand-sdk`, making it possible to run existing deployment and testing scripts on top of KAVM.
 
-Working on KTeal
-----------------
+`kavm` uses two auxiliary scripts located in [`lib/include/kframework/avm/scripts/`](lib/include/kframework/avm/scripts/):
+* [`parse-avm-simulation.sh`](lib/include/kframework/avm/scripts/parse-avm-simulation.sh) calls `kparse` to parse a simulation scenario from a `.avm-simulation` file;
+* [`parse-teal-programs.sh`](lib/include/kframework/avm/scripts/parse-teal-programs.sh) calls `kparse` to parse a `;`-separated list of TEAL source codes.
+
+
+Working on KAVM
+---------------
 
 ### Build system
 
 * `make deps`: build K and other dependencies.
-* `make build`: compile KAVM K modules and the `kavm` tool.
-  By default, `kompile` is called with the LLVM backend. To compile the semantics with the Haskell backend, execute `K_BACKEND=haskell make build`.
+* `make build`: compile KAVM K modules and the `kavm` tool. By default, `kompile` is called with the LLVM backend. To compile the semantics with the Haskell backend, execute `K_BACKEND=haskell make build`.
 * `make test -j8`: run tests. Adjust the `-jX` option as needed to run `X` tests in parallel.
+
+When developing, make sure to activate the Python virtual environment build by KAVM with `. .build/venv/bin/activate` for the `kavm` script to be available. The Makefile activates the environment itself when necessary.
 
 ### Managing `PATH` with `direnv`
 

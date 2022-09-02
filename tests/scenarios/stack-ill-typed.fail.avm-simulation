@@ -1,5 +1,5 @@
-declareTealSource "./tests/teal-sources/stack-ill-typed.teal";
-declareTealSource "./tests/teal-sources/clear-basic.teal";
+declareTealSource "stack-ill-typed.teal";
+declareTealSource "clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 10000 </balance>;
 

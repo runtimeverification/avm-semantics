@@ -4,9 +4,9 @@
   "checkout": null,
   "context": {
     "cookiecutter": {
-      "project_name": "kavm-algod",
-      "project_slug": "kavm-algod",
-      "package_name": "kavm_algod",
+      "project_name": "kavm",
+      "project_slug": "kavm",
+      "package_name": "kavm",
       "version": "0.1.0",
       "description": "",
       "author_name": "Runtime Verification, Inc.",

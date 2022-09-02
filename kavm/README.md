@@ -1,4 +1,4 @@
-# kavm-algod
+# kavm
 
 KAVM integration with `py-algorand-sdk` and Algorand Sandbox
 
