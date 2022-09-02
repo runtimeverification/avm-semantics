@@ -777,6 +777,12 @@ module ALGO-TXN
 ```
 
 ```k
+  syntax Bytes ::= getAppAddress(Int) [function, functional]
+  //---------------------------------------------------------
+  rule getAppAddress(APP_ID) => b"application" +Bytes String2Bytes(Int2String(APP_ID))
+```
+
+```k
   syntax Bool ::= Int "in_txns" "(" TransactionsCell ")" [function]
   // --------------------------------------------------------------
   rule I in_txns( <transactions>
