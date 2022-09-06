@@ -30,7 +30,7 @@ module TEAL-OPCODES
                         | BranchingOpCode
                         | StackOpCode
   syntax SigOpCode    ::= SigVerOpCode | ArgOpCode           // Opcodes used only by stateless TEAL
-  syntax AppOpCode    ::= StateOpCode  
+  syntax AppOpCode    ::= StateOpCode
                         | TxnGroupStateOpCode
                         | InnerTxOpCode                      // Opcodes used only by stateful TEAL
 ```
@@ -357,20 +357,15 @@ module TEAL-SYNTAX
 
   syntax TealPragmas ::= TealPragma TealPragmas | TealPragma
   syntax TealPragma ::= "#pragma" PragmaDirective
-  syntax PragmaDirective ::= ModePragma
-                           | VersionPragma
-                           | TxnPragma
+  syntax PragmaDirective ::= VersionPragma
 
-  syntax TealMode ::= "stateless" | "stateful"
-  syntax ModePragma ::= "mode" TealMode
+  syntax TealMode ::= "stateless" | "stateful" | "undefined"
 
   syntax VersionPragma ::= "version" Int
 
-  syntax TxnPragma ::= "txn" Int
-
   syntax TealPgm ::= TealOpCodeOrLabel
                    | TealOpCodeOrLabel TealPgm
-  syntax TealInputPgm ::= TealPragmas TealPgm
+  syntax TealInputPgm ::= TealPragmas TealPgm | TealPgm
 
   syntax TealPrograms ::= TealInputPgm ";" TealPrograms | ".TealPrograms"
 ```
@@ -588,7 +583,7 @@ module TEAL-UNPARSER
   rule unparseTEAL(gload N M)                     => "gload" +&+ Int2String(N) +&+ Int2String(M)
   rule unparseTEAL(gaids)                         => "gaids"
   rule unparseTEAL(gloads N)                      => "gloads" +&+ Int2String(N)
-  rule unparseTEAL(gloadss N)                     => "gloadss" +&+ Int2String(N)
+  rule unparseTEAL(gloadss)                       => "gloadss"
   rule unparseTEAL(itxn_begin)                    => "itxn_begin"
   rule unparseTEAL(itxn_submit)                   => "itxn_submit"
   rule unparseTEAL(itxn_field FieldName)          => "itxn_field" +&+ TealField2String(FieldName:TxnField)

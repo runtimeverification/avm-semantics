@@ -1,5 +1,5 @@
-declareTealSource "./tests/teal-sources/gload-invalid-scratch-loc.teal";
-declareTealSource "./tests/teal-sources/clear-basic.teal";
+declareTealSource "gload-invalid-scratch-loc.teal";
+declareTealSource "clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 1500000 </balance>;
 

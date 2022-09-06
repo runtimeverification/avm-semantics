@@ -1,7 +1,7 @@
 from algosdk import account
 from algosdk.future.transaction import AssetTransferTxn, PaymentTxn, SuggestedParams
 
-from kavm_algod.adaptors.transaction import transaction_from_k, transaction_to_k
+from kavm.adaptors.transaction import transaction_from_k, transaction_to_k
 
 
 def test_payment_txn_encode_decode(suggested_params: SuggestedParams) -> None:

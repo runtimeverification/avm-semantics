@@ -1,5 +1,5 @@
-declareTealSource "./tests/teal-sources/log-basic.teal";
-declareTealSource "./tests/teal-sources/clear-basic.teal";
+declareTealSource "log-basic.teal";
+declareTealSource "clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 1500000 </balance>;
 

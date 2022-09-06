@@ -1,8 +1,8 @@
 addAccount <address> b"1" </address> <balance> 1500000 </balance>;
 
-declareTealSource "./tests/teal-sources/multi-app1.teal";
-declareTealSource "./tests/teal-sources/multi-app2.teal";
-declareTealSource "./tests/teal-sources/clear-basic.teal";
+declareTealSource "multi-app1.teal";
+declareTealSource "multi-app2.teal";
+declareTealSource "clear-basic.teal";
 
 #initTxGroup();
 

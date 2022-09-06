@@ -1,5 +1,5 @@
-declareTealSource "./tests/teal-sources/gload-future-txn.teal";
-declareTealSource "./tests/teal-sources/clear-basic.teal";
+declareTealSource "gload-future-txn.teal";
+declareTealSource "clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 1500000 </balance>;
 

@@ -1,5 +1,4 @@
 #pragma version 2
-#pragma mode stateless
 int 1
 byte "10"
 +

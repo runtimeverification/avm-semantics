@@ -1,5 +1,4 @@
 #pragma version 5
-#pragma mode stateful
 
 // Load dummy address
 byte "2"

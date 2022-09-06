@@ -53,7 +53,7 @@ Transaction Group Evaluation
 
 ### Transaction execution pipeline
 
-The `#evalTxGroup()` rule calls the `#evalTx()` rule until the transaction deque is empty.
+The `#evalTxs()` rule calls the `#evalTx()` rule until the transaction deque is empty.
 The transactions can push new (inner) transactions into the front of `txnDeque` and they
 will be executed immediately after their parent transaction, provided it has been accepted.
 
@@ -61,6 +61,11 @@ If one of the transactions is denied (including the inner ones), the group evalu
 and the current configuration is frozen for examination.
 
 ```k
+  syntax AlgorandCommand ::= #setMode(TealMode)
+  //-------------------------------------------
+  rule <k> #setMode(MODE) => . ...</k>
+       <mode> _ => MODE </mode>
+  
   syntax AlgorandCommand ::= #evalTxGroup()
   //---------------------------------------
 
@@ -91,7 +96,11 @@ the attached stateless TEAL if the transaction is logicsig-signed.
 ```k
   syntax AlgorandCommand ::= #evalTx()
   //----------------------------------
-  rule <k> #evalTx() => #checkTxnSignature() ~> #executeTxn(TXN_TYPE) ... </k>
+  rule <k> #evalTx() => 
+             #checkTxnSignature() 
+          ~> #executeTxn(TXN_TYPE) 
+       ... 
+       </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID> TXN_ID </txID>
@@ -295,41 +304,11 @@ We do not consider the special case of contract creation (deployment) here, it w
 TODO: address contact creation.
 
 ```k
-  syntax AlgorandCommand ::= #initApp( Int )
-  rule <k> #initApp(APP_ID) => . ...</k>
-       <currentApplicationID> _ => APP_ID </currentApplicationID>
-       <currentApplicationAddress> _ => getAppAddress(APP_ID)       </currentApplicationAddress>
-       <teal>
-         _ => (
-           <pc> 0 </pc>
-           <program> .Map </program>
-           <mode> stateless </mode>
-           <version> 4 </version>
-           <stack> .TStack </stack>
-           <stacksize> 0 </stacksize>
-           <jumped> false </jumped>
-           <labels> .Map </labels>
-           <callStack> .List </callStack>
-           <scratch> .Map </scratch>
-           <intcblock> .Map </intcblock>
-           <bytecblock> .Map </bytecblock>
-         )
-       </teal>
-  
   syntax AlgorandCommand ::= #evalTeal( TealInputPgm )
 
   rule <k> #evalTeal( PGM ) => PGM ~> #startExecution() ~> #saveScratch() ... </k>
-       <returncode>                _ => 4                           </returncode>   // (re-)initialize the code
-       <returnstatus>              _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
-//       <currentTx>                 TXN_ID                           </currentTx>
-//       <currentApplicationID>      _ => APP_ID                      </currentApplicationID>
-//       <currentApplicationAddress> _ => getAppAddress(APP_ID)       </currentApplicationAddress>
-//       <app>
-//         <appID>          APP_ID </appID>
-//         <approvalPgmSrc> PGM    </approvalPgmSrc>
-//         ...
-//       </app>
-//   requires APP_ID ==K getTxnField(TXN_ID, ApplicationID)
+       <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
+       <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
 ```
 
 ##### Stateless
