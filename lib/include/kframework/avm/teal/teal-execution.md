@@ -26,7 +26,7 @@ there may be some remaining artefacts of the previous transaction's TEAL.
          _ => (
            <pc> 0 </pc>
            <program> .Map </program>
-           <mode> stateless </mode>
+           <mode> stateful </mode>
            <version> 1 </version>
            <stack> .TStack </stack>
            <stacksize> 0 </stacksize>
