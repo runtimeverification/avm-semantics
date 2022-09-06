@@ -220,7 +220,7 @@ kavm_scripts := $(patsubst %, $(KAVM_SCRIPTS)/%, parse-avm-simulation.sh  parse-
 kavm_lib_files := version
 kavm_libs      := $(patsubst %, $(KAVM_LIB)/%, $(kavm_lib_files))
 
-build-kavm: $(KAVM_LIB)/version
+build-kavm: $(KAVM_LIB)/version $(KAVM_DEFINITION_DIR)
 
 # this target packages the Python-based kavm CLI
 $(KAVM_LIB)/version: $(includes) $(kavm_scripts) py-kavm $(VENV_DIR)/pyvenv.cfg
@@ -230,6 +230,8 @@ $(KAVM_LIB)/version: $(includes) $(kavm_scripts) py-kavm $(VENV_DIR)/pyvenv.cfg
 	echo '== Build Date'     >> $@
 	date
 
+$(KAVM_DEFINITION_DIR):
+	@mkdir -p $(dir $@)
 
 $(KAVM_LIB)/%: lib/%
 	@mkdir -p $(dir $@)
