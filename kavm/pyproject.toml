@@ -6,17 +6,17 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "kavm_algod"
+name = "kavm"
 description = "KAVM backend for py-algorand-sdk"
 readme = "README.md"
 requires-python = ">= 3.8.*, < 3.10"
 dynamic = ["version"]
 
 [project.scripts]
-kavm-algod = "kavm_algod.__main__:main"
+kavm = "kavm.__main__:main"
 
 [tool.setuptools.package-dir]
-kavm_algod = "src"
+kavm = "src"
 
 [tool.setuptools.package-data]
 "*" = ["py.typed"]
