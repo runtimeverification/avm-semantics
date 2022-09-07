@@ -15,7 +15,7 @@ from pyk.kast import KAst, KInner, KSort, KToken, Subst, KApply
 from pyk.kastManip import free_vars, split_config_from
 from pyk.prelude import intToken
 
-from kavm.pyk_utils import maybe_tvalue, tvalue_list
+from kavm.pyk_utils import tvalue, maybe_tvalue, tvalue_list
 
 
 class KAVMTransaction:
@@ -109,6 +109,7 @@ class KAVMTransaction:
                     if txn.extra_pages is not None
                     else maybe_tvalue(0),
                     'LOGS_CELL': tvalue_list([]),
+                    'LOGSIZE_CELL': tvalue(0),
                     'TXSCRATCH_CELL': KApply('.Map'),
                 }
             )
@@ -132,7 +133,9 @@ class KAVMTransaction:
                 'CLEARSTATEPROGRAMSRC_CELL': KToken('int 1', KSort('TealInputPgm')),
             }
         )
-        empty_service_fields_subst = Subst({'LOGS_CELL': tvalue_list([]), 'TXSCRATCH_CELL': KApply('.Map')})
+        empty_service_fields_subst = Subst(
+            {'LOGS_CELL': tvalue_list([]), 'LOGSIZE_CELL': tvalue(0), 'TXSCRATCH_CELL': KApply('.Map')}
+        )
         transaction_cell = fields_subst.apply(empty_transaction_cell)
         empty_fields_subst = Subst({k: maybe_tvalue(None) for k in free_vars(empty_transaction_cell)})
 

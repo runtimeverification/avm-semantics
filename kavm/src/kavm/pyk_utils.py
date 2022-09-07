@@ -21,6 +21,19 @@ def maybe_tvalue(value: Optional[Union[str, int, bytes]]) -> KInner:
         raise TypeError()
 
 
+def tvalue(value: Union[str, int, bytes]) -> KInner:
+    if type(value) is int:
+        return intToken(value)
+    elif type(value) is OnComplete:
+        return intToken(int(value))
+    elif type(value) is str:
+        return stringToken(value)
+    elif type(value) is bytes:
+        return stringToken(b64encode(value).decode('utf8'))
+    else:
+        raise TypeError()
+
+
 def tvalue_list(value: List[Union[str, int, bytes]]) -> KInner:
     if len(value) == 0:
         return KApply('.TValueList')
