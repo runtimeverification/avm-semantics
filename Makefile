@@ -279,15 +279,16 @@ avm_main_module   := AVM-EXECUTION
 avm_syntax_module := TEAL-PARSER-SYNTAX
 avm_main_file     := avm/avm-execution.md
 avm_main_filename := $(basename $(notdir $(avm_main_file)))
-avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled
+avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled/
 
 build-avm: $(KAVM_LIB)/$(avm_kompiled)
 
 $(KAVM_LIB)/$(avm_kompiled): $(avm_includes) $(KAVM_LIB)/version $(libff_out)
+	@mkdir -p $(dir $@)
 	$(VENV_ACTIVATE) && $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file) \
-                            -I "${KAVM_INCLUDE}/kframework"                          \
+                            -I "${KAVM_INCLUDE}/kframework"                             \
                             -I "${plugin_include}/kframework"                           \
-                            --definition-dir $(KAVM_LIB)/$(avm_kompiled)                \
+                            --definition-dir "${KAVM_LIB}/${avm_kompiled}"              \
                             --main-module $(avm_main_module)                            \
                             --syntax-module $(avm_syntax_module)                        \
                             $(AVM_KOMPILE_OPTS)
