@@ -69,6 +69,7 @@ class KAVM(KRun):
         input_file: Path,
         teal_programs_parser: Path,
         avm_simulation_parser: Path,
+        depth: Optional[int],
         output: str = 'json',
         profile: bool = False,
         teal_sources_dir: Optional[Path] = None,
@@ -93,6 +94,7 @@ class KAVM(KRun):
         krun_command += [f'-pTEAL_PROGRAMS={str(teal_programs_parser)}']
         krun_command += ['--parser', str(avm_simulation_parser)]
         krun_command += [str(input_file)]
+        krun_command += ['--depth', str(depth)] if depth else []
         command_env = os.environ.copy()
         command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
 

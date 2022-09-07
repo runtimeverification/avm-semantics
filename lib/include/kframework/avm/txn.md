@@ -65,8 +65,8 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
         <applicationID>        NoTValue    </applicationID>
         <onCompletion>         NoTValue    </onCompletion>
         <accounts>             .TValueList </accounts>
-        <approvalProgramSrc>   #pragma mode stateful int 1 </approvalProgramSrc>
-        <clearStateProgramSrc> #pragma mode stateful int 1 </clearStateProgramSrc>
+        <approvalProgramSrc>   (int 1):TealInputPgm       </approvalProgramSrc>
+        <clearStateProgramSrc> (int 1):TealInputPgm       </clearStateProgramSrc>
         <approvalProgram>      .Bytes      </approvalProgram>
         <clearStateProgram>    .Bytes      </clearStateProgram>
         <applicationArgs>      .TValueList </applicationArgs> // maximum size is 2KB, and all args are internally byte strings
@@ -774,6 +774,12 @@ module ALGO-TXN
   syntax MaybeTValue ::= getForeignAssetAt(Int) [function]
   //------------------------------------------------------
   rule getForeignAssetAt(I) => getTxnField(getCurrentTxn(), Assets, I)
+```
+
+```k
+  syntax Bytes ::= getAppAddress(Int) [function, functional]
+  //---------------------------------------------------------
+  rule getAppAddress(APP_ID) => b"application" +Bytes String2Bytes(Int2String(APP_ID))
 ```
 
 ```k

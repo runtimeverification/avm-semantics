@@ -1774,7 +1774,7 @@ Stateful TEAL Operations
 
   syntax KItem ::= "#app_global_del" TValue
   //---------------------------------------
-  rule <k> #app_global_put APP => .K ... </k>
+  rule <k> #app_global_del APP => .K ... </k>
        <stack> (KEY:Bytes) : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
        <appsCreated>

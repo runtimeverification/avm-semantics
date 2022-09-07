@@ -45,6 +45,7 @@ endmodule
 module AVM-EXECUTION
   imports AVM-EXECUTION-SYNTAX
   imports AVM-TXN-DEQUE
+  imports ALGO-TXN
 ```
 
 Transaction Group Evaluation
@@ -52,7 +53,7 @@ Transaction Group Evaluation
 
 ### Transaction execution pipeline
 
-The `#evalTxGroup()` rule calls the `#evalTx()` rule until the transaction deque is empty.
+The `#evalTxs()` rule calls the `#evalTx()` rule until the transaction deque is empty.
 The transactions can push new (inner) transactions into the front of `txnDeque` and they
 will be executed immediately after their parent transaction, provided it has been accepted.
 
@@ -60,6 +61,11 @@ If one of the transactions is denied (including the inner ones), the group evalu
 and the current configuration is frozen for examination.
 
 ```k
+  syntax AlgorandCommand ::= #setMode(TealMode)
+  //-------------------------------------------
+  rule <k> #setMode(MODE) => . ...</k>
+       <mode> _ => MODE </mode>
+  
   syntax AlgorandCommand ::= #evalTxGroup()
   //---------------------------------------
 
@@ -90,7 +96,11 @@ the attached stateless TEAL if the transaction is logicsig-signed.
 ```k
   syntax AlgorandCommand ::= #evalTx()
   //----------------------------------
-  rule <k> #evalTx() => #checkTxnSignature() ~> #executeTxn(TXN_TYPE) ... </k>
+  rule <k> #evalTx() => 
+             #checkTxnSignature() 
+          ~> #executeTxn(TXN_TYPE) 
+       ... 
+       </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID> TXN_ID </txID>
@@ -280,43 +290,6 @@ Add asset to account
        requires (BALANCE +Int AMOUNT) >=Int 0
 ```
 
-Assign app ID
-
-Performed after the first execution of an application. There are two cases because the user can possibly opt
-in to the app during creation, in which case they opt into app 0, and this entry also has to be changed to the
-correct app ID.
-
-```k
-  syntax AlgorandCommand ::= #assignAppID()
-  rule <k> #assignAppID() => . ...</k>
-       <account>
-         <app>
-           <appID> 0 => APP_ID </appID>
-           ...
-         </app>
-         <optInApp>
-           <optInAppID> 0 => APP_ID </optInAppID>
-           ...
-         </optInApp>
-         ...
-       </account>
-       <nextAppID> APP_ID => APP_ID +Int 1 </nextAppID>
-       <appCreator> ((0 => APP_ID) |-> _) ... </appCreator>
-
-  rule <k> #assignAppID() => . ...</k>
-       <account>
-         <app>
-           <appID> 0 => APP_ID </appID>
-           ...
-         </app>
-         <appsOptedIn> OA </appsOptedIn>
-         ...
-       </account>
-       <nextAppID> APP_ID => APP_ID +Int 1 </nextAppID>
-       <appCreator> ((0 => APP_ID) |-> _) ... </appCreator>
-    requires notBool (0 in_optedInApps(<appsOptedIn> OA </appsOptedIn>))
-```
-
 #### (Optional) Eval TEAL
 
 There are two types of TEAL programs:
@@ -333,17 +306,9 @@ TODO: address contact creation.
 ```k
   syntax AlgorandCommand ::= #evalTeal( TealInputPgm )
 
-  rule <k> #evalTeal( PGM ) => #cleanUp() ~> PGM ~> #startExecution() ~> #saveScratch() ... </k>
+  rule <k> #evalTeal( PGM ) => PGM ~> #startExecution() ~> #saveScratch() ... </k>
        <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
        <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
-       <currentTx>           TXN_ID                            </currentTx>
-       <currentApplicationID> _ => APP_ID                      </currentApplicationID>
-       <app>
-         <appID>          APP_ID </appID>
-         <approvalPgmSrc> PGM    </approvalPgmSrc>
-         ...
-       </app>
-   requires APP_ID ==K getTxnField(TXN_ID, ApplicationID)
 ```
 
 ##### Stateless
@@ -710,7 +675,7 @@ Not supported.
 App create
 
 ```k
-  rule <k> #executeTxn(@appl) => (#executeTxn(@appl) ~> #assignAppID()) ...</k>
+  rule <k> #executeTxn(@appl) => #executeAppl(APP_ID) ...</k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>                 TXN_ID              </txID>
@@ -727,48 +692,66 @@ App create
          <extraProgramPages>    EXTRA_PAGES         </extraProgramPages>
          ...
        </transaction>
-       <account>
-         <address> SENDER </address>
-         <minBalance> MIN_BALANCE => MIN_BALANCE 
-                                +Int ((1 +Int EXTRA_PAGES) *Int PARAM_APP_PAGE_FLAT) 
-                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
-                                  *Int GLOBAL_INTS)
-                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE)
-                                  *Int GLOBAL_BYTES)
-         </minBalance>
-         <appsCreated>
-           APPS =>
-           <app>
-             <appID>            0                   </appID>
-             <approvalPgmSrc>   APPROVAL_PGM_SRC    </approvalPgmSrc>
-             <clearStatePgmSrc> CLEAR_STATE_PGM_SRC </clearStatePgmSrc>
-             <approvalPgm>      APPROVAL_PGM        </approvalPgm>
-             <clearStatePgm>    CLEAR_STATE_PGM     </clearStatePgm>
-             <globalInts>       GLOBAL_INTS         </globalInts>
-             <globalBytes>      GLOBAL_BYTES        </globalBytes>
-             <localInts>        LOCAL_INTS          </localInts>
-             <localBytes>       LOCAL_BYTES         </localBytes>
-             <extraPages>       EXTRA_PAGES         </extraPages>
-             ...
-           </app>
-           APPS
-         </appsCreated>
+       <accountsMap>
+         <account>
+           <address> SENDER </address>
+           <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                  +Int ((1 +Int EXTRA_PAGES) *Int PARAM_APP_PAGE_FLAT) 
+                                  +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
+                                    *Int GLOBAL_INTS)
+                                  +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE)
+                                    *Int GLOBAL_BYTES)
+           </minBalance>
+           <appsCreated>
+             APPS =>
+             <app>
+               <appID>            APP_ID              </appID>
+               <approvalPgmSrc>   APPROVAL_PGM_SRC    </approvalPgmSrc>
+               <clearStatePgmSrc> CLEAR_STATE_PGM_SRC </clearStatePgmSrc>
+               <approvalPgm>      APPROVAL_PGM        </approvalPgm>
+               <clearStatePgm>    CLEAR_STATE_PGM     </clearStatePgm>
+               <globalInts>       GLOBAL_INTS         </globalInts>
+               <globalBytes>      GLOBAL_BYTES        </globalBytes>
+               <localInts>        LOCAL_INTS          </localInts>
+               <localBytes>       LOCAL_BYTES         </localBytes>
+               <extraPages>       EXTRA_PAGES         </extraPages>
+               ...
+             </app>
+             APPS
+           </appsCreated>
+           ...
+         </account>
+         (.Bag =>
+         (<account>
+           <address> getAppAddress(APP_ID) </address>
+           ...
+         </account>))
          ...
-       </account>
-       <appCreator> .Map => (0 |-> SENDER) ... </appCreator>
-    requires notBool(0 in_apps(<appsCreated> APPS </appsCreated>))
+       </accountsMap>
+       <appCreator> .Map => (APP_ID |-> SENDER) ... </appCreator>
+       <nextAppID> APP_ID => APP_ID +Int 1 </nextAppID>
+    requires notBool(APP_ID in_apps(<appsCreated> APPS </appsCreated>))
      andBool GLOBAL_INTS +Int GLOBAL_BYTES <=Int PARAM_MAX_GLOBAL_KEYS
      andBool LOCAL_INTS  +Int LOCAL_BYTES  <=Int PARAM_MAX_LOCAL_KEYS
+
+  rule <k> #executeTxn(@appl) => #executeAppl(APP_ID) ...</k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>                 TXN_ID              </txID>
+         <applicationID>        APP_ID:Int          </applicationID>
+         ...
+       </transaction>
 ```
 
 NoOp
 
 ```k
-  rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
+  syntax AlgorandCommand ::= #executeAppl(Int)
+
+  rule <k> #executeAppl(APP_ID) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID        </txID>
-         <applicationID> APP_ID:Int    </applicationID>
          <onCompletion>  @ NoOp        </onCompletion>
          ...
        </transaction>
@@ -785,12 +768,11 @@ OptIn
 
 // Case 1: user different from app creator is opting in
 
-  rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
+  rule <k> #executeAppl(APP_ID) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID  </txID>
          <sender>        SENDER  </sender>
-         <applicationID> APP_ID  </applicationID>
          <onCompletion>  @ OptIn </onCompletion>
          ...
        </transaction>
@@ -824,12 +806,11 @@ OptIn
 
 // Case 2: app creator is opting in to their own app
 
-  rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
+  rule <k> #executeAppl(APP_ID) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID  </txID>
          <sender>        SENDER  </sender>
-         <applicationID> APP_ID  </applicationID>
          <onCompletion>  @ OptIn </onCompletion>
          ...
        </transaction>
@@ -848,8 +829,8 @@ OptIn
          <appsOptedIn>
            OPTED_IN_APPS =>
            <optInApp>
-             <optInAppID> APP_ID </optInAppID>
-             <localStorage> .Map </localStorage>
+             <optInAppID>   APP_ID </optInAppID>
+             <localStorage> .Map        </localStorage>
            </optInApp>
            OPTED_IN_APPS
          </appsOptedIn>
@@ -866,12 +847,11 @@ OptIn
 
 // Case 3: needed because of bug?
 
-  rule <k> #executeTxn(@appl) => #evalTeal(APPROVAL_PGM) ... </k>
+  rule <k> #executeAppl(APP_ID) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID  </txID>
          <sender>        SENDER  </sender>
-         <applicationID> APP_ID  </applicationID>
          <onCompletion>  @ OptIn </onCompletion>
          ...
        </transaction>
@@ -915,15 +895,15 @@ CloseOut
 
 ```k
   rule <k>
-         #executeTxn(@appl) => 
-              #evalTeal(APPROVAL_PGM) 
+         #executeAppl(APP_ID) => 
+              #initApp(APP_ID)
+           ~> #evalTeal(APPROVAL_PGM) 
            ~> #clearState(APP_ID, SENDER)
          ... 
        </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID        </txID>
-         <applicationID> APP_ID:Int    </applicationID>
          <sender>        SENDER        </sender>
          <onCompletion>  @ CloseOut    </onCompletion>
          ...
@@ -941,15 +921,15 @@ TODO make sure `#clearState` runs even when a panic is generated
 
 ```k
   rule <k>
-         #executeTxn(@appl) => 
-              #evalTeal(CLEAR_STATE_PGM) 
+         #executeAppl(APP_ID) => 
+              #initApp(APP_ID)
+           ~> #evalTeal(CLEAR_STATE_PGM) 
            ~> #clearState(APP_ID, SENDER)
          ... 
        </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID        </txID>
-         <applicationID> APP_ID:Int    </applicationID>
          <sender>        SENDER        </sender>
          <onCompletion> @ ClearState   </onCompletion>
          ...
@@ -965,15 +945,15 @@ UpdateApplication
 
 ```k
   rule <k>
-         #executeTxn(@appl) => 
-              #evalTeal(APPROVAL_PGM) 
+         #executeAppl(APP_ID) => 
+              #initApp(APP_ID)
+           ~> #evalTeal(APPROVAL_PGM) 
            ~> #updatePrograms(APP_ID, NEW_APPROVAL_PGM, NEW_CLEAR_STATE_PGM)
          ... 
        </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>                 TXN_ID              </txID>
-         <applicationID>        APP_ID:Int          </applicationID>
          <onCompletion>         @ UpdateApplication </onCompletion>
          <approvalProgramSrc>   NEW_APPROVAL_PGM    </approvalProgramSrc>
          <clearStateProgramSrc> NEW_CLEAR_STATE_PGM </clearStateProgramSrc>
@@ -990,15 +970,15 @@ DeleteApplication
 
 ```k
   rule <k>
-         #executeTxn(@appl) => 
-              #evalTeal(APPROVAL_PGM) 
+         #executeAppl(APP_ID) => 
+              #initApp(APP_ID)
+           ~> #evalTeal(APPROVAL_PGM) 
            ~> #deleteApplication(APP_ID)
          ... 
        </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID              </txID>
-         <applicationID> APP_ID:Int          </applicationID>
          <onCompletion>  @ DeleteApplication </onCompletion>
          ...
        </transaction>

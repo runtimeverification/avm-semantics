@@ -1,3 +1,2 @@
 #pragma version 5
-#pragma mode stateful
 int 1

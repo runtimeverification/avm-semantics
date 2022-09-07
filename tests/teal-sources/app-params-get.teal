@@ -1,5 +1,4 @@
 #pragma version 5
-#pragma mode stateful
 
 app_params_get AppCreator
 

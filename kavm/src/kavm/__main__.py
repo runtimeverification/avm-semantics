@@ -8,7 +8,7 @@ from pathlib import Path
 from subprocess import CalledProcessError
 from typing import Any, Final, List, Optional
 
-from pyk.cli_utils import dir_path
+from pyk.cli_utils import dir_path, file_path
 
 from .kavm import KAVM
 
@@ -21,7 +21,6 @@ def exec_kompile(
     main_file: Path,
     main_module: Optional[str],
     syntax_module: Optional[str],
-    # includes: List[str] = [f'{install_include}/kframework', f'{plugin_include}/kframework'],
     includes: List[str],
     verbose: bool,
     **kwargs: Any,
@@ -64,6 +63,7 @@ def exec_kast(
         exit(proc_result.returncode)
 
     except CalledProcessError as err:
+        print(err.stdout)
         exit(err.returncode)
 
 
@@ -75,6 +75,7 @@ def exec_run(
     avm_simulation_parser: Path,
     output: str,
     profile: bool,
+    depth: Optional[int],
     **kwargs: Any,
 ) -> None:
     kavm = KAVM(definition_dir=definition_dir)
@@ -95,10 +96,12 @@ def exec_run(
             teal_sources_dir=teal_sources_dir,
             teal_programs_parser=teal_programs_parser,
             avm_simulation_parser=avm_simulation_parser,
+            depth=depth,
         )
         print(proc_result.stdout)
         exit(proc_result.returncode)
     except CalledProcessError as err:
+        print(err.stdout)
         exit(err.returncode)
 
 
@@ -136,12 +139,12 @@ def create_argument_parser() -> ArgumentParser:
     # kompile
     kompile_subparser = command_parser.add_parser('kompile', help='Kompile KAVM', parents=[shared_args])
     kompile_subparser.add_argument(
-        '--definition-dir', dest='definition_dir', type=Path, help='Path to store the kompiled definition'
+        '--definition-dir', dest='definition_dir', type=dir_path, help='Path to store the kompiled definition'
     )
     kompile_subparser.add_argument(
         '-I', type=str, dest='includes', default=[], action='append', help='Directories to lookup K definitions in.'
     )
-    kompile_subparser.add_argument('main_file', type=Path, help='Path to the main file')
+    kompile_subparser.add_argument('main_file', type=file_path, help='Path to the main file')
     kompile_subparser.add_argument('--main-module', type=str)
     kompile_subparser.add_argument('--syntax-module', type=str)
 
@@ -150,12 +153,12 @@ def create_argument_parser() -> ArgumentParser:
     kast_subparser.add_argument(
         '--definition',
         dest='definition_dir',
-        type=Path,
+        type=dir_path,
         help='Path to definition to use.',
     )
     kast_subparser.add_argument(
         'input_file',
-        type=Path,
+        type=file_path,
         help='Path to .avm-simulation, .teal or .teals file',
     )
     kast_subparser.add_argument(
@@ -177,26 +180,26 @@ def create_argument_parser() -> ArgumentParser:
     )
     run_subparser.add_argument(
         'input_file',
-        type=Path,
+        type=file_path,
         help='Path to AVM simulation scenario file',
     )
     run_subparser.add_argument(
         '--teal-sources-dir',
         dest='teal_sources_dir',
-        type=Path,
+        type=dir_path,
         help='Path to directory containing .teal files used by the scenario',
         required=True,
     )
     run_subparser.add_argument(
         '--teal-programs-parser',
         dest='teal_programs_parser',
-        type=Path,
+        type=file_path,
         help='Path to the executable to parse .teals files containing TealPrograms terms',
     )
     run_subparser.add_argument(
         '--avm-simulation-parser',
         dest='avm_simulation_parser',
-        type=Path,
+        type=file_path,
         help='Path to the executable to parse .avm-simulation files containing AVMSimulation terms',
     )
     run_subparser.add_argument(
@@ -206,6 +209,12 @@ def create_argument_parser() -> ArgumentParser:
         help='Output mode',
         choices=['pretty', 'json', 'kore', 'kast', 'none'],
         required=True,
+    )
+    run_subparser.add_argument(
+        '--depth',
+        dest='depth',
+        type=int,
+        help='Execute at most N rewrite steps',
     )
 
     return parser

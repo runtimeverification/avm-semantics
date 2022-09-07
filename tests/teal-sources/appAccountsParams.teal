@@ -1,6 +1,4 @@
 #pragma version 2
-#pragma mode stateful
-#pragma txn 2
 // Based on the stateful TEAL example in go-algorand: https://github.com/algorand/go-algorand/blob/master/test/scripts/e2e_subs/tealprogs/appAccountParams.teal
 int OptIn
 txn OnCompletion
