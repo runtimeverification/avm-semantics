@@ -8,7 +8,7 @@ declareTealSource "clear-basic.teal";
 
 addAppCallTx <txID> 0 </txID>
              <sender>            b"1"        </sender>
-             <applicationID>     NoTValue    </applicationID>
+             <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>

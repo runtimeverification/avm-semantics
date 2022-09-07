@@ -743,7 +743,7 @@ App create
          </account>))
          ...
        </accountsMap>
-       <appCreator> .Map => (APP_ID |-> SENDER) ... </appCreator>
+       <appCreator> (.Map => (APP_ID |-> SENDER)) ... </appCreator>
        <nextAppID> APP_ID => APP_ID +Int 1 </nextAppID>
     requires notBool(APP_ID in_apps(<appsCreated> APPS </appsCreated>))
 
@@ -751,15 +751,16 @@ App create
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>                 TXN_ID              </txID>
-         <applicationID>        APP_ID:Int          </applicationID>
+         <applicationID>        APP_ID:TValue       </applicationID>
          ...
        </transaction>
+  requires APP_ID =/=K 0
 ```
 
 NoOp
 
 ```k
-  syntax AlgorandCommand ::= #executeAppl(Int)
+  syntax AlgorandCommand ::= #executeAppl(TValue)
 
   rule <k> #executeAppl(APP_ID) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
        <currentTx> TXN_ID </currentTx>

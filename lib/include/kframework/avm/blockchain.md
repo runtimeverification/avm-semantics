@@ -100,7 +100,7 @@ module APPLICATIONS
   configuration
     <appsCreated>
       <app multiplicity="*" type="Map">
-        <appID>           0        </appID>
+        <appID>           NoTValue  </appID>
         <approvalPgmSrc>     (int 0):TealInputPgm </approvalPgmSrc>
         <clearStatePgmSrc>   (int 1):TealInputPgm </clearStatePgmSrc>
         <approvalPgm>     NoTValue </approvalPgm>
@@ -114,7 +114,7 @@ module APPLICATIONS
           <localInts>      NoTValue </localInts>
           <localBytes>     NoTValue </localBytes>
         </localState>
-        <extraPages>       0        </extraPages>
+        <extraPages>       NoTValue </extraPages>
       </app>
     </appsCreated>
 ```
