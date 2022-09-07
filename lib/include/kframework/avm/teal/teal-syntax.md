@@ -30,7 +30,9 @@ module TEAL-OPCODES
                         | BranchingOpCode
                         | StackOpCode
   syntax SigOpCode    ::= SigVerOpCode | ArgOpCode           // Opcodes used only by stateless TEAL
-  syntax AppOpCode    ::= StateOpCode  | TxnGroupStateOpCode // Opcodes used only by stateful TEAL
+  syntax AppOpCode    ::= StateOpCode
+                        | TxnGroupStateOpCode
+                        | InnerTxOpCode                      // Opcodes used only by stateful TEAL
 ```
 
 ### Generic TEAL Opcodes
@@ -300,6 +302,7 @@ module TEAL-OPCODES
                               | "asset_params_get" AssetParamsField
                               | "app_params_get" AppParamsField
                               | "min_balance"
+                              | "log"
   syntax BinaryStateOpCode  ::= "app_opted_in"
                               | "app_local_get"
                               | "app_global_get_ex"
@@ -315,6 +318,7 @@ module TEAL-OPCODES
 ```k
   syntax TxnGroupStateOpCode ::= NullaryTxnGroupStateOpCode
                                | UnaryTxnGroupStateOpCode
+                               | BinaryTxnGroupStateOpCode
 
   syntax NullaryTxnGroupStateOpCode ::= "gaid" Int // transaction index
                                       | "gload" Int Int // transaction index, scratch position
@@ -322,6 +326,16 @@ module TEAL-OPCODES
   syntax UnaryTxnGroupStateOpCode ::= "gaids"
                                     | "gloads" Int // scratch position
 
+  syntax BinaryTxnGroupStateOpCode ::= "gloadss"
+
+```
+
+#### Inner transaction control
+
+```k
+  syntax InnerTxOpCode ::= "itxn_begin"
+                         | "itxn_submit"
+                         | "itxn_field" TxnField
 ```
 
 ```k
@@ -343,20 +357,15 @@ module TEAL-SYNTAX
 
   syntax TealPragmas ::= TealPragma TealPragmas | TealPragma
   syntax TealPragma ::= "#pragma" PragmaDirective
-  syntax PragmaDirective ::= ModePragma
-                           | VersionPragma
-                           | TxnPragma
+  syntax PragmaDirective ::= VersionPragma
 
-  syntax TealMode ::= "stateless" | "stateful"
-  syntax ModePragma ::= "mode" TealMode
+  syntax TealMode ::= "stateless" | "stateful" | "undefined"
 
   syntax VersionPragma ::= "version" Int
 
-  syntax TxnPragma ::= "txn" Int
-
   syntax TealPgm ::= TealOpCodeOrLabel
                    | TealOpCodeOrLabel TealPgm
-  syntax TealInputPgm ::= TealPragmas TealPgm
+  syntax TealInputPgm ::= TealPragmas TealPgm | TealPgm
 
   syntax TealPrograms ::= TealInputPgm ";" TealPrograms | ".TealPrograms" [klabel(.TealPrograms), symbol]
 ```
@@ -561,6 +570,7 @@ module TEAL-UNPARSER
   rule unparseTEAL(asset_params_get FieldName)    => "asset_params_get" +&+ TealField2String(FieldName:AssetParamsField)
   rule unparseTEAL(app_params_get FieldName)      => "app_params_get" +&+ TealField2String(FieldName:AppParamsField)
   rule unparseTEAL(min_balance)                   => "min_balance"
+  rule unparseTEAL(log)                           => "log"
   rule unparseTEAL(app_opted_in)                  => "app_opted_in"
   rule unparseTEAL(app_local_get)                 => "app_local_get"
   rule unparseTEAL(app_global_get_ex)             => "app_global_get_ex"
@@ -569,6 +579,14 @@ module TEAL-UNPARSER
   rule unparseTEAL(asset_holding_get FieldName)   => "asset_holding_get" +&+ TealField2String(FieldName:AssetHoldingField)
   rule unparseTEAL(app_local_get_ex)              => "app_local_get_ex"
   rule unparseTEAL(app_local_put)                 => "app_local_put"
+  rule unparseTEAL(gaid N)                        => "gaid" +&+ Int2String(N)
+  rule unparseTEAL(gload N M)                     => "gload" +&+ Int2String(N) +&+ Int2String(M)
+  rule unparseTEAL(gaids)                         => "gaids"
+  rule unparseTEAL(gloads N)                      => "gloads" +&+ Int2String(N)
+  rule unparseTEAL(gloadss)                       => "gloadss"
+  rule unparseTEAL(itxn_begin)                    => "itxn_begin"
+  rule unparseTEAL(itxn_submit)                   => "itxn_submit"
+  rule unparseTEAL(itxn_field FieldName)          => "itxn_field" +&+ TealField2String(FieldName:TxnField)
 
   syntax String ::= left:
                     String "+&+" String       [function]
@@ -630,6 +648,9 @@ module TEAL-UNPARSER
   rule TealField2String(TxType)                   => "TxType"
   rule TealField2String(TypeEnum)                 => "TypeEnum"
   rule TealField2String(GroupIndex)               => "GroupIndex"
+  rule TealField2String(LastLog)                  => "LastLog"
+  rule TealField2String(NumLogs)                  => "NumLogs"
+  rule TealField2String(Logs)                     => "Logs"
   rule TealField2String(Receiver)                 => "Receiver"
   rule TealField2String(Amount)                   => "Amount"
   rule TealField2String(CloseRemainderTo)         => "CloseRemainderTo"

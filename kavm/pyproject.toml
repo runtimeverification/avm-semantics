@@ -1,43 +1,50 @@
 [build-system]
-requires = [
-  "setuptools >= 51.0.0",
-  "wheel",
-]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
-[project]
+[tool.poetry]
 name = "kavm"
-description = "KAVM backend for py-algorand-sdk"
+version = "0.1.0"
+description = "Python bindings and command-line interface for KAVM"
+authors = [
+    "Runtime Verification, Inc. <contact@runtimeverification.com>",
+]
 readme = "README.md"
-requires-python = ">= 3.8.*, < 3.10"
-dynamic = ["version"]
 
-[project.scripts]
+[tool.poetry.dependencies]
+python = "^3.8"
+py-algorand-sdk = "1.15.0"
+
+[tool.poetry.dev-dependencies]
+autoflake = "*"
+black = "*"
+flake8 = "*"
+flake8-bugbear = "*"
+flake8-comprehensions = "*"
+isort = "*"
+mypy = "*"
+pep8-naming = "*"
+pyk = { path = "../deps/k/pyk" }
+pytest = "*"
+
+[tool.poetry.scripts]
 kavm = "kavm.__main__:main"
 
-[tool.setuptools.package-dir]
-kavm = "src"
-
-[tool.setuptools.package-data]
-"*" = ["py.typed"]
-
-[tool.mypy]
-ignore_missing_imports = "True"
-disallow_untyped_defs = "True"
-show_column_numbers = "True"
-exclude = "(venv-dev|venv-prod)"
+[tool.isort]
+profile = "black"
+line_length = 120
 
 [tool.black]
-exclude = "(venv-dev|venv-prod)"
-target_version = ["py38"]
-line-length = 88
-skip-string-normalization="True"
+line-length = 120
+skip-string-normalization = true
 
-[tool.isort]
-py_version=38
-profile = "black"
-skip = ["venv-dev", "venv-prod"]
-multi_line_output=3
-include_trailing_comma=true
-ensure_newline_before_comments=true
-line_length = 88
+[tool.mypy]
+disallow_untyped_defs = "True"
+show_column_numbers = "True"
+
+[[tool.mypy.overrides]]
+module = [
+    "algosdk.*",
+    "msgpack",
+]
+ignore_missing_imports = true

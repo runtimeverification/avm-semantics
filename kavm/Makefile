@@ -1,87 +1,80 @@
-.PHONY: all clean                                                  \
-        $(VENV_DEV_DIR) $(VENV_PROD_DIR)                           \
-        test test-unit                                             \
-        check-code-style black check-black isort check-isort       \
-	autoflake check-autoflake check-mypy
+.PHONY: default all clean build install          \
+        poetry-install                           \
+        test test-unit test-integration          \
+        format isort autoflake black             \
+        check check-isort check-autoflake check-black check-flake8 check-mypy
 
+default: check test-unit build
 
-all: check-code-style test
+clean:
+	rm -rf dist .mypy_cache
+	find -type d -name __pycache__ -prune -exec rm -rf {} \;
 
-ifeq "$(origin KAVM_DEFINITION_DIR)" "undefined"
-KAVM_DEFINITION_DIR := ../.build/usr/lib/kavm/avm-llvm/avm-execution-kompiled
-endif
-export KAVM_DEFINITION_DIR
+build:
+	poetry build
 
-# virtualenv
+poetry-install:
+	poetry install
 
-VENV_DEV_DIR := venv-dev
-VENV_DEV     := $(VENV_DEV_DIR)/pyvenv.cfg
-ACTIVATE_DEV := . $(VENV_DEV_DIR)/bin/activate
-
-$(VENV_DEV):
-	   virtualenv -p python3.8 $(VENV_DEV_DIR) \
-	&& $(ACTIVATE_DEV)                         \
-	&& pip install -r requirements/dev.txt     \
-	&& pip install --editable .
-
-$(VENV_DEV_DIR): $(VENV_DEV)
-	@echo $(ACTIVATE_DEV)
-
-
-VENV_PROD_DIR := venv-prod
-VENV_PROD     := $(VENV_PROD_DIR)/pyvenv.cfg
-ACTIVATE_PROD := . $(VENV_PROD_DIR)/bin/activate
-
-$(VENV_PROD):
-	   virtualenv -p python3.8 $(VENV_PROD_DIR) \
-	&& $(ACTIVATE_PROD)                         \
-	&& pip install -r requirements/base.txt     \
-	&& pip install --editable . --no-deps
-
-$(VENV_PROD_DIR): $(VENV_PROD)
-	@echo $(ACTIVATE_PROD)
-
+POETRY_RUN := poetry run
 
 # Tests
 
 test: test-unit test-integration
 
-test-unit: $(VENV_DEV)
-	$(ACTIVATE_DEV) && python -m pytest tests/unit
+test-unit: poetry-install
+	$(POETRY_RUN) python -m pytest src/tests/unit
 
 test-integration: test-integration-algod test-integration-kalgod
 
-test-integration-algod: $(VENV_DEV)
-	$(ACTIVATE_DEV) && python -m pytest --backend=algod tests/algod_integration
+test-integration-algod: poetry-install
+	$(POETRY_RUN) python -m pytest --backend=algod src/tests/algod_integration
 
 test-integration-kalgod:
-	$(ACTIVATE_DEV) && python -m pytest --backend=kalgod tests/algod_integration
+	$(POETRY_RUN) python -m pytest --backend=kalgod src/tests/algod_integration
 
-# Checks
+# Checks and formatting
 
-check-code-style: check-isort check-autoflake check-black check-mypy
+format: isort autoflake black
+check: check-isort check-autoflake check-black check-flake8 check-mypy
 
-isort: $(VENV_DEV)
-	$(ACTIVATE_DEV) && isort --profile black .
+isort: poetry-install
+	$(POETRY_RUN) isort src
 
-check-isort: $(VENV_DEV)
-	$(ACTIVATE_DEV) && isort --profile black --check .
+check-isort: poetry-install
+	$(POETRY_RUN) isort --check src
 
-autoflake: $(VENV_DEV)
-	$(ACTIVATE_DEV) && autoflake --in-place --remove-all-unused-imports --recursive src tests
+autoflake: poetry-install
+	$(POETRY_RUN) autoflake src    \
+	  --in-place                   \
+	  --quiet                      \
+	  --recursive                  \
+	  --expand-star-imports        \
+	  --remove-all-unused-imports  \
+	  --ignore-init-module-imports \
+	  --remove-duplicate-keys      \
+	  --remove-unused-variables
 
-check-autoflake: $(VENV_DEV)
-	$(ACTIVATE_DEV) && autoflake --remove-all-unused-imports --recursive --check src tests
+check-autoflake: poetry-install
+	$(POETRY_RUN) autoflake src    \
+	  --j 1                        \
+	  --check                      \
+	  --recursive                  \
+	  --expand-star-imports        \
+	  --remove-all-unused-imports  \
+	  --ignore-init-module-imports \
+	  --remove-duplicate-keys      \
+	  --remove-unused-variables
 
-check-mypy: $(VENV_DEV)
-	$(ACTIVATE_DEV) && mypy .
+check-flake8: poetry-install
+	$(POETRY_RUN) flake8 src
 
-black: $(VENV_DEV)
-	$(ACTIVATE_DEV) && black .
+black: poetry-install
+	$(POETRY_RUN) black src
 
-check-black: $(VENV_DEV)
-	$(ACTIVATE_DEV) && black --check .
+check-black: poetry-install
+	$(POETRY_RUN) black --check src
 
-clean:
-	rm -rf $(VENV_DEV_DIR) $(VENV_PROD_DIR) build src/kavm_pyk.egg-info .myp_cache
-	find -type d -name __pycache__ -prune -exec rm -rf {} \;
+check-mypy: poetry-install
+	$(POETRY_RUN) mypy src
+

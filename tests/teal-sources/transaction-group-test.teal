@@ -1,0 +1,10 @@
+#pragma version 5
+
+txna ApplicationArgs 0
+btoi
+txn GroupIndex
+==
+assert
+
+int 1
+return

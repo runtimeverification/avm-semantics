@@ -1,0 +1,11 @@
+#pragma version 4
+
+byte 0xAB
+byte 0xCD
+concat
+byte 0xABCD
+==
+assert
+
+int 1
+return

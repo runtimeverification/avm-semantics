@@ -4,7 +4,6 @@
 // * tracks haw many times the app was called overall
 //   by incrementing a counter in the app's global state
 #pragma version 4
-#pragma mode stateful
 
 // Handle each possible OnCompletion type. We don't have to worry about
 // handling ClearState, because the ClearStateProgram will execute in that

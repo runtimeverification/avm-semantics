@@ -191,8 +191,8 @@ A subroutine call in TEAL is essentially an unconditional branch to a label, whi
     <teal>
       <pc> 0 </pc>
       <program> .Map </program>
-      <mode> stateless </mode>
-      <version> 3 </version>               // the default TEAL version is 3
+      <mode> undefined </mode>
+      <version> 1 </version>               // the default TEAL version is 1 if no #pragma version is specified
       <stack> .TStack </stack>             // stores UInt64 or Bytes
       <stacksize> 0 </stacksize>           // current stack size
       <jumped> false </jumped>             // `true` if the previous opcode triggered a jump
@@ -204,7 +204,8 @@ A subroutine call in TEAL is essentially an unconditional branch to a label, whi
       <bytecblock> .Map </bytecblock>      // (currently not used)
     </teal>
 
-  syntax TealExecutionOp ::= #cleanUp()
+  syntax TealExecutionOp ::= #initApp( Int )
+                           | #initSmartSig()
                            | #startExecution()
                            | #finalizeExecution()
                            | #fetchOpcode()

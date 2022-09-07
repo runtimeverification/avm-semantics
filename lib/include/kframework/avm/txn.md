@@ -65,8 +65,8 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
         <applicationID>        NoTValue    </applicationID>
         <onCompletion>         NoTValue    </onCompletion>
         <accounts>             .TValueList </accounts>
-        <approvalProgramSrc>     #pragma mode stateful int 0 </approvalProgramSrc>
-        <clearStateProgramSrc>     #pragma mode stateful int 1 </clearStateProgramSrc>
+        <approvalProgramSrc>     (int 0):TealInputPgm </approvalProgramSrc>
+        <clearStateProgramSrc>   (int 1):TealInputPgm </clearStateProgramSrc>
         <approvalProgram>      NoTValue      </approvalProgram>
         <clearStateProgram>    NoTValue      </clearStateProgram>
         <applicationArgs>      .TValueList </applicationArgs> // maximum size is 2KB, and all args are internally byte strings
@@ -81,6 +81,9 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
           <localNbs> NoTValue </localNbs>
         </localStateSchema>
         <extraProgramPages> NoTValue </extraProgramPages>
+        <txScratch>         .Map        </txScratch>
+        <logs>              .TValueList </logs>
+        <logSize>           NoTValue    </logSize>
       </appCallTxFields>
 ```
 
@@ -708,6 +711,51 @@ module ALGO-TXN
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
          <foreignAssets> X </foreignAssets>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, LastLog) => MSG ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logs> _ MSG:TBytes </logs>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, LastLog) => MSG ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logs> MSG:TBytes </logs>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, NumLogs) => size(LOGS) ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logs> LOGS </logs>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, Logs, J) => normalize(getTValueAt(J, LOGS)) ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logs> LOGS </logs>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, Logs) => LOGS ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logs> LOGS </logs>
          ...
        </transaction>
     requires #isValidForTxnType(Assets, TYPE)

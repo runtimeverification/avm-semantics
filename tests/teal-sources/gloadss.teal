@@ -1,0 +1,62 @@
+#pragma version 6
+
+txna ApplicationArgs 0
+btoi
+int 1
+==
+bnz handle_1
+
+txna ApplicationArgs 0
+btoi
+int 2
+==
+bnz handle_2
+
+err
+
+handle_1:
+//-------------
+// Phase 1
+
+int 1
+store 5
+
+int 3
+store 4
+
+int 7
+store 3
+
+//-------------
+b end
+handle_2:
+//-------------
+// Phase 2
+
+int 0
+int 5
+gloadss
+int 1
+==
+assert
+
+int 0
+int 4
+gloadss
+int 3
+==
+assert
+
+int 0
+int 3
+gloadss
+int 7
+==
+assert
+
+//-------------
+b end
+
+end:
+int 1
+return

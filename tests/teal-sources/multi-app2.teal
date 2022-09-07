@@ -1,0 +1,6 @@
+#pragma version 6
+
+// This only exists to be called through an inner transaction
+
+int 1
+return
