@@ -282,9 +282,9 @@ avm_main_file     := avm/avm-execution.md
 avm_main_filename := $(basename $(notdir $(avm_main_file)))
 avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled
 
-build-avm: $(avm_includes) $(KAVM_LIB)/$(avm_kompiled)
+build-avm: $(KAVM_LIB)/$(avm_kompiled)
 
-$(KAVM_LIB)/$(avm_kompiled): $(KAVM_LIB)/version $(libff_out)
+$(KAVM_LIB)/$(avm_kompiled): $(avm_includes) $(KAVM_LIB)/version $(libff_out)
 	$(VENV_ACTIVATE) && $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file) \
                             -I "${KAVM_INCLUDE}/kframework"                          \
                             -I "${plugin_include}/kframework"                           \
