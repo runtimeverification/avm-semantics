@@ -1,0 +1,10 @@
+#pragma version 6
+
+global CurrentApplicationAddress
+balance
+int 0
+==
+assert
+
+int 1
+return

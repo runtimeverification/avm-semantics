@@ -19,8 +19,9 @@ Before starting the execution of a TEAL progam, the `<teal>` cell needs to be (r
 there may be some remaining artefacts of the previous transaction's TEAL.
 
 ```k
-  rule <k> #initApp( APP_ID ) => .K ... </k>
+  rule <k> #initApp(APP_ID) => . ...</k>
        <currentApplicationID> _ => APP_ID </currentApplicationID>
+       <currentApplicationAddress> _ => getAppAddress(APP_ID)       </currentApplicationAddress>
        <teal>
          _ => (
            <pc> 0 </pc>
