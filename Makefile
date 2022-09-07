@@ -199,10 +199,9 @@ VENV_DIR       := $(BUILD_DIR)/venv
 VENV_ACTIVATE  := . $(VENV_DIR)/bin/activate
 
 $(VENV_DIR)/pyvenv.cfg:
-	   virtualenv $(VENV_DIR)              \
-        && $(VENV_ACTIVATE)                    \
-        && pip install --editable ./deps/k/pyk \
-        && pip install --editable $(PY_KAVM_DIR)
+	   virtualenv $(VENV_DIR) \
+	&& $(VENV_ACTIVATE)       \
+	&& pip install --editable $(PY_KAVM_DIR)
 
 venv: $(VENV_DIR)/pyvenv.cfg
 	@echo $(VENV_ACTIVATE)
