@@ -15,7 +15,7 @@ The elements of the stack are values of sort `TValue`, i.e. either `TUInt64` or 
 - `_:_` serves as the "cons" operator.
 
 ```k
-  syntax TStack ::= ".TStack" [smtlib(_dotTStack)]
+  syntax TStack ::= ".TStack" [klabel(.TStack), symbol, smtlib(_dotTStack)]
                   | TValue ":" TStack [klabel(_:_TStack), smtlib(_TStack_)]
   // --------------------------------------------------------------------
 ```

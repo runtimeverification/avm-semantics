@@ -8,7 +8,7 @@ addAccount <address> b"1" </address> <balance> 100000 </balance>;
 // Add app 0, and execute with phase 1
 addAppCallTx <txID> 0 </txID>
              <sender>            b"1"        </sender>
-             <applicationID>     NoTValue    </applicationID>
+             <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   1           </applicationArgs>
@@ -25,7 +25,7 @@ addAppCallTx <txID> 0 </txID>
 // Add app 1, and execute with phase 2, passing in app 0 as a foreign app
 addAppCallTx <txID> 1 </txID>
              <sender>            b"1"        </sender>
-             <applicationID>     NoTValue    </applicationID>
+             <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   2           </applicationArgs>

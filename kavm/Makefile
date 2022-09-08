@@ -23,11 +23,15 @@ POETRY_RUN := poetry run
 test: test-unit test-integration
 
 test-unit: poetry-install
-	$(POETRY_RUN) python -m pytest --ignore=src/tests/contracts
+	$(POETRY_RUN) python -m pytest src/tests/unit
 
-test-integration: poetry-install
-	$(POETRY_RUN) python -m pytest src/tests/contracts
+test-integration: test-integration-algod test-integration-kalgod
 
+test-integration-algod: poetry-install
+	$(POETRY_RUN) python -m pytest --backend=algod src/tests/algod_integration
+
+test-integration-kalgod:
+	$(POETRY_RUN) python -m pytest --backend=kalgod src/tests/algod_integration
 
 # Checks and formatting
 
@@ -73,3 +77,4 @@ check-black: poetry-install
 
 check-mypy: poetry-install
 	$(POETRY_RUN) mypy src
+

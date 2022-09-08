@@ -41,7 +41,7 @@ addAssetConfigTx <txID> 1 </txID>
 // Create app 1
 addAppCallTx <txID> 2 </txID>
              <sender>            b"2"        </sender>
-             <applicationID>     NoTValue    </applicationID>
+             <applicationID>     0           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
