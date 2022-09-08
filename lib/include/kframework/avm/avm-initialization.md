@@ -54,21 +54,6 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
 #### Payment Transaction
 
 ```k
-  syntax AlgorandCommand ::= "submit" TransactionCell
-  //-------------------------------------------------
-  rule <k> submit <transaction> TXN </transaction> =>
-           #pushTxnBack(<txID> getTxID(<transaction> TXN </transaction>) </txID>)
-           ...
-       </k>
-       <transactions>
-         TXNS =>
-         <transaction> TXN </transaction>
-         TXNS
-       </transactions>
-//       requires notBool (ID in_txns(<transactions> TXNS </transactions>))
-```
-
-```k
   syntax AlgorandCommand ::= "addPaymentTx" TxIDCell SenderCell ReceiverCell AmountCell
   //-----------------------------------------------------------------------------------
   rule <k> addPaymentTx <txID>     ID       </txID>
