@@ -216,7 +216,7 @@ class KAVM(KRun):
         ----------
         txns
             transaction group
-        new_accounts
+        new_addresses
             Algorand addresses discovered while pre-precessing the transactions in the KAVMClinet class
 
         Embed the group into the current configuration, and trigger its evaluation
