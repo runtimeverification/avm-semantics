@@ -1,28 +1,41 @@
-from typing import Optional
+from base64 import b64encode
+from typing import List, Optional, Union
 
-from pyk.kast import KApply
+from algosdk.future.transaction import OnComplete
+from pyk.kast import KApply, KInner
 from pyk.prelude import intToken, stringToken
 
 
-def int_token_cell(name: str, value: Optional[int]) -> KApply:
-    """Construct a cell containing an Int token. Default to 0 if None is supplied."""
-
-    if isinstance(value, int):
-        token = intToken(value)
-    elif value is None:
-        token = intToken(0)
+def maybe_tvalue(value: Optional[Union[str, int, bytes]]) -> KInner:
+    if value is None:
+        return KApply('NoTValue')
+    elif type(value) is int:
+        return intToken(value)
+    elif type(value) is OnComplete:
+        return intToken(int(value))
+    elif type(value) is str:
+        return stringToken(value)
+    elif type(value) is bytes:
+        return stringToken(b64encode(value).decode('utf8'))
     else:
-        raise TypeError(f'value {value} has unexpected type {type(value)}')
-    return KApply(f'{name}', [token])
+        raise TypeError()
 
 
-def string_token_cell(name: str, value: Optional[str]) -> KApply:
-    """Construct a cell containing an String token. Default to the empty string if None is supplied."""
-
-    if isinstance(value, str):
-        token = stringToken(value)
-    elif value is None:
-        token = stringToken('')
+def tvalue(value: Union[str, int, bytes]) -> KInner:
+    if type(value) is int:
+        return intToken(value)
+    elif type(value) is OnComplete:
+        return intToken(int(value))
+    elif type(value) is str:
+        return stringToken(value)
+    elif type(value) is bytes:
+        return stringToken(b64encode(value).decode('utf8'))
     else:
-        raise TypeError(f'value {value} has unexpected type {type(value)}')
-    return KApply(f'{name}', [token])
+        raise TypeError()
+
+
+def tvalue_list(value: List[Union[str, int, bytes]]) -> KInner:
+    if len(value) == 0:
+        return KApply('.TValueList')
+    else:
+        raise NotImplementedError()

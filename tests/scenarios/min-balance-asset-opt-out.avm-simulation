@@ -43,7 +43,7 @@ addAssetTransferTx <txID> 2 </txID>
 // Create app 1
 addAppCallTx <txID> 3 </txID>
              <sender>            b"1"        </sender>
-             <applicationID>     NoTValue    </applicationID>
+             <applicationID>     0           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
