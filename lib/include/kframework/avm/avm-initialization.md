@@ -36,7 +36,6 @@ The transaction is initialized first.
   rule <k> #initTxGroup() => .K ... </k>
        <txGroup>
          <txGroupID> _ => 0 </txGroupID>
-         <currentTx> _ => 0 </currentTx>
          <transactions>
            _ => .Bag
           </transactions>

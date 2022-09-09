@@ -32,28 +32,36 @@ module AVM-CONFIGURATION
       // Initially, the execution deque will contain the transactions from the submitted group (up to `MaxTxGroupSize`, 16 currently).
       // Outer transactions are referred to by their actual `txID`s. Inner transaction will be assigned "fake" `txID`s,
       // starting from `MaxTxGroupSize` (currently 16).
-      <txnDeque>
-        <deque>         .List </deque>
-        <dequeIndexSet> .Set  </dequeIndexSet>
-      </txnDeque>
+      <avmExecution>
 
-      // The execution context of the current transaction.
-      <currentTxnExecution>
-        // Globals are mostly immutable during the group execution,
-        // besides the application-related fields: CurrentApplicationID, CreatorID
-        // and CurrentApplicationAddress
-        <globals/>
+        <currentTx> 0 </currentTx>
 
-        // the `<teal>` cell will control evaluation of TEAL code of the current transaction.
-        // The semantics of TEAL has *read-only* access to the `<blockchain>` cell
-        // and *read-write* access to the `<effects>` cell.
-        <teal/>
+        <txnDeque>
+          <deque>         .List </deque>
+          <dequeIndexSet> .Set  </dequeIndexSet>
+        </txnDeque>
 
-        // the effects of the transaction. Upon approval of the transaction,
-        // its effects will be applied onto the `<blockchain>` cell.
-        // TODO: how to represent effects? We need to track changes to accounts, assets and apps.
-        <effects> .List </effects>
-      </currentTxnExecution>
+        // The execution context of the current transaction.
+        <currentTxnExecution>
+          // Globals are mostly immutable during the group execution,
+          // besides the application-related fields: CurrentApplicationID, CreatorID
+          // and CurrentApplicationAddress
+          <globals/>
+
+          // the `<teal>` cell will control evaluation of TEAL code of the current transaction.
+          // The semantics of TEAL has *read-only* access to the `<blockchain>` cell
+          // and *read-write* access to the `<effects>` cell.
+          <teal/>
+
+          // the effects of the transaction. Upon approval of the transaction,
+          // its effects will be applied onto the `<blockchain>` cell.
+          // TODO: how to represent effects? We need to track changes to accounts, assets and apps.
+          <effects> .List </effects>
+        </currentTxnExecution>
+
+        <innerTransactions/>
+
+      </avmExecution>
 
       // The blockchain state will be incrementally updated after
       // each transaction in the group. If one of the transactions fails,
@@ -74,6 +82,15 @@ module AVM-CONFIGURATION
   // Control of transaction evaluation
   // Defined in `avm-execution.md`
   syntax TxnCommand
+```
+
+## Lookup for kavm configuration
+
+```k
+//  syntax Int ::= getCurrentTxn() [function]
+  //--------------------------------------
+  rule [[ getCurrentTxn() => I ]]
+    <currentTx> I </currentTx>
 ```
 
 ## Panic behaviors
@@ -199,6 +216,13 @@ A subroutine call in TEAL is essentially an unconditional branch to a label, whi
       <intcblock> .Map </intcblock>        // (currently not used)
       <bytecblock> .Map </bytecblock>      // (currently not used)
     </teal>
+
+  configuration
+    <innerTransactions>
+      <innerTx multiplicity="*" type="Map">
+        <itxID> 0:Int </itxID>
+      </innerTx>
+    </innerTransactions>
 
   syntax TealExecutionOp ::= #initApp( Int )
                            | #initSmartSig()

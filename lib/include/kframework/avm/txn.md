@@ -178,7 +178,6 @@ module ALGO-TXN
   configuration
       <txGroup>
         <txGroupID> 0 </txGroupID>
-        <currentTx> 0 </currentTx>
         <transactions>
           <transaction multiplicity="*" type="Map">
             <txID> 0 </txID>
@@ -201,11 +200,6 @@ module ALGO-TXN
   //--------------------------------------
   rule [[ getTxnGroupID() => I ]]
     <txGroupID> I </txGroupID>
-
-  syntax Int ::= getCurrentTxn() [function]
-  //--------------------------------------
-  rule [[ getCurrentTxn() => I ]]
-    <currentTx> I </currentTx>
 
   syntax MaybeTValue ::= getTxnField(Int, TxnField)          [function, functional]
   syntax MaybeTValue ::= getTxnField(Int, TxnaFieldExt, Int) [function, functional]
@@ -761,20 +755,6 @@ module ALGO-TXN
 ```
 
 *Other Helper Functions*
-
-```k
-  syntax MaybeTValue ::= getAccountAddressAt(Int) [function]
-  //--------------------------------------------------------
-  rule getAccountAddressAt(I) => getTxnField(getCurrentTxn(), Accounts, I)
-
-  syntax MaybeTValue ::= getForeignAppAt(Int) [function]
-  //----------------------------------------------------
-  rule getForeignAppAt(I) => getTxnField(getCurrentTxn(), Applications, I)
-
-  syntax MaybeTValue ::= getForeignAssetAt(Int) [function]
-  //------------------------------------------------------
-  rule getForeignAssetAt(I) => getTxnField(getCurrentTxn(), Assets, I)
-```
 
 ```k
   syntax Bytes ::= getAppAddress(Int) [function, functional]

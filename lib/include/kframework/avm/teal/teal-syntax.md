@@ -336,6 +336,11 @@ module TEAL-OPCODES
   syntax InnerTxOpCode ::= "itxn_begin"
                          | "itxn_submit"
                          | "itxn_field" TxnField
+                         | "itxn_next"
+                         | "itxn" TxnField
+                         | "itxna" TxnField Int
+                         | "gitxn" Int TxnField
+                         | "gitxna" Int TxnField Int
 ```
 
 ```k
@@ -587,6 +592,11 @@ module TEAL-UNPARSER
   rule unparseTEAL(itxn_begin)                    => "itxn_begin"
   rule unparseTEAL(itxn_submit)                   => "itxn_submit"
   rule unparseTEAL(itxn_field FieldName)          => "itxn_field" +&+ TealField2String(FieldName:TxnField)
+  rule unparseTEAL(itxn_next)                     => "itxn_next"
+  rule unparseTEAL(itxn FieldName)                => "itxn" +&+ TealField2String(FieldName:TxnField)
+  rule unparseTEAL(itxna FieldName N)             => "itxna" +&+ TealField2String(FieldName:TxnField) +&+ Int2String(N)
+  rule unparseTEAL(gitxn T FieldName)             => "itxn" +&+ Int2String(T) +&+ TealField2String(FieldName:TxnField)
+  rule unparseTEAL(gitxna T FieldName N)          => "itxna" +&+ Int2String(T) +&+ TealField2String(FieldName:TxnField) +&+ Int2String(N)
 
   syntax String ::= left:
                     String "+&+" String       [function]

@@ -228,6 +228,10 @@ module ALGO-BLOCKCHAIN
     </blockchain>
 ```
 
+```k
+  syntax Int ::= getCurrentTxn() [function]
+```
+
 Accessor functions
 ------------------
 
