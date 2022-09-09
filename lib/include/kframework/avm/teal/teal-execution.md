@@ -342,6 +342,7 @@ return code to 3 (see return codes below).
   syntax String ::= "CALLSTACK_OVERFLOW"         [macro]
   syntax String ::= "INVALID_ARGUMENT"           [macro]
   syntax String ::= "MATH_BYTES_ARG_TOO_LONG"    [macro]
+  syntax String ::= "INSUFFICIENT_FUNDS"         [macro]
   //----------------------------------------------------
   rule INVALID_OP_FOR_MODE => "invalid opcode for current execution mode"
   rule ERR_OPCODE          => "err opcode encountered"
@@ -367,13 +368,14 @@ return code to 3 (see return codes below).
   rule CALLSTACK_UNDERFLOW => "call stack underflow: illegal retsub"
   rule CALLSTACK_OVERFLOW  => "call stack overflow: recursion is too deep"
   rule MATH_BYTES_ARG_TOO_LONG => "math attempted on large byte-array"
+  rule INSUFFICIENT_FUNDS  => "transaction would cause balance to go under the minimum balance"
   rule ASSERTION_VIOLATION => "assertion violation"
   //--------------------------------------------------------------------------------
 
   syntax KItem ::= panic(String)
   // ---------------------------
   rule <k> panic(S) ~> _ => .K </k>
-       <returncode> 4 => 3 </returncode>
+       <returncode> _ => 3 </returncode>
        <returnstatus> _ => "Failure - panic: " +String S </returnstatus>
 ```
 

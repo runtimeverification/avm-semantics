@@ -1,7 +1,7 @@
 declareTealSource "arithmetic-add-mul-div-sub.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 10000 </balance>;
+addAccount <address> b"1" </address> <balance> 200000 </balance>;
 
 #initTxGroup();
 

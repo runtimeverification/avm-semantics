@@ -99,12 +99,14 @@ the attached stateless TEAL if the transaction is logicsig-signed.
   rule <k> #evalTx() => 
              #checkTxnSignature() 
           ~> #executeTxn(TXN_TYPE) 
+          ~> #checkSufficientBalance(SENDER_ADDR)
        ... 
        </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID> TXN_ID </txID>
          <typeEnum> TXN_TYPE </typeEnum>
+         <sender> SENDER_ADDR </sender>
          ...
        </transaction>
 
@@ -288,6 +290,28 @@ Add asset to account
          ...
        </account>
        requires (BALANCE +Int AMOUNT) >=Int 0
+```
+
+```k
+  syntax AlgorandCommand ::= #checkSufficientBalance(Bytes)
+  //-------------------------------------------------------
+  rule <k> #checkSufficientBalance(ADDR) => . ...</k>
+       <account>
+         <address> ADDR </address>
+         <balance> BALANCE </balance>
+         <minBalance> MIN_BALANCE </minBalance>
+         ...
+       </account>
+    requires BALANCE >=Int MIN_BALANCE
+
+  rule <k> #checkSufficientBalance(ADDR) => panic(INSUFFICIENT_FUNDS) ...</k>
+       <account>
+         <address> ADDR </address>
+         <balance> BALANCE </balance>
+         <minBalance> MIN_BALANCE </minBalance>
+         ...
+       </account>
+    requires BALANCE <Int MIN_BALANCE
 ```
 
 #### (Optional) Eval TEAL

@@ -1,13 +1,13 @@
 #pragma version 5
 
-int 12345
+int 654321
 
 txn Sender
 balance
 ==
 assert
 
-int 54321
+int 123456
 
 txn Sender
 balance
