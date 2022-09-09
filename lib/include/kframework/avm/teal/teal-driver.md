@@ -1521,26 +1521,6 @@ Stateful TEAL Operations
   syntax KItem ::= "#app_local_put" TValue TValue
   //---------------------------------------------
   rule <k> #app_local_put ADDR APP => .K ... </k>
-       <stack> (NEWVAL:TValue) : (KEY:Bytes) : _ : XS => XS </stack>
-       <stacksize> S => S -Int 3 </stacksize>
-       <account>
-         <address> ADDR </address>
-         <appsOptedIn>
-           <optInApp>
-             <optInAppID> APP </optInAppID>
-             <localInts> MI => #if isInt(NEWVAL) #then MI[KEY <- NEWVAL] #else MI #fi </localInts>
-             <localBytes> MB => #if isBytes(NEWVAL) #then MB[KEY <- NEWVAL] #else MB #fi </localBytes>
-             ...
-           </optInApp> ...
-         </appsOptedIn> ...
-       </account>
-    requires (notBool(isInt(NEWVAL)) orElseBool (size(MI[KEY <- NEWVAL]) <=Int getLocalIntLimit(APP)))
-     andBool (notBool(isBytes(NEWVAL)) orElseBool (size(MB[KEY <- NEWVAL]) <=Int getLocalByteLimit(APP)))
-     andBool lengthBytes(KEY) <=Int PARAM_MAX_KEY_SIZE
-     andBool lengthBytes(KEY) +Int sizeInBytes(NEWVAL) <=Int PARAM_MAX_SUM_KEY_VALUE_SIZE
-     andBool (notBool(isBytes(NEWVAL)) orElseBool lengthBytes({NEWVAL}:>Bytes) <=Int PARAM_MAX_BYTE_VALUE_SIZE)
-
-  rule <k> #app_local_put ADDR APP => .K ... </k>
        <stack> (NEWVAL:Int) : (KEY:Bytes) : _ : XS => XS </stack>
        <stacksize> S => S -Int 3 </stacksize>
        <account>
