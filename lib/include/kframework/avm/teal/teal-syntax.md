@@ -372,7 +372,7 @@ module TEAL-SYNTAX
                    | TealOpCodeOrLabel TealPgm
   syntax TealInputPgm ::= TealPragmas TealPgm | TealPgm
 
-  syntax TealPrograms ::= TealInputPgm ";" TealPrograms | ".TealPrograms"
+  syntax TealPrograms ::= TealInputPgm ";" TealPrograms | ".TealPrograms" [klabel(.TealPrograms), symbol]
 ```
 
 We provide a function to extract a teal program by index from the syntactic list of input programs.

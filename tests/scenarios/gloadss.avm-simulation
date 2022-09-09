@@ -7,7 +7,7 @@ addAccount <address> b"1" </address> <balance> 1500000 </balance>;
 
 addAppCallTx <txID> 0 </txID>
              <sender>            b"1"        </sender>
-             <applicationID>     NoTValue    </applicationID>
+             <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   1           </applicationArgs>

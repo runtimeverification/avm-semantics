@@ -365,6 +365,21 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
          ...
        </account>
     requires SENDER_BALANCE -Int AMOUNT <Int SENDER_MIN_BALANCE
+
+  rule <k> #executeTxn(@pay) => #avmPanic(TXN_ID, UNKNOWN_ADDRESS) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>     TXN_ID   </txID>
+         <sender>   SENDER   </sender>
+         <amount>   _AMOUNT   </amount>
+         <receiver> RECEIVER </receiver>
+         ...
+       </transaction>
+       <accountsMap>
+         AMAP
+       </accountsMap>
+    requires notBool ( SENDER in_accounts (<accountsMap> AMAP </accountsMap>) )
+      orBool notBool ( RECEIVER in_accounts (<accountsMap> AMAP </accountsMap>) )
 ```
 
 * **Key Registration**
@@ -680,7 +695,7 @@ App create
        <transaction>
          <txID>                 TXN_ID              </txID>
          <sender>               SENDER              </sender>
-         <applicationID>        NoTValue => 0       </applicationID>
+         <applicationID>        0                   </applicationID>
          <approvalProgramSrc>   APPROVAL_PGM_SRC    </approvalProgramSrc>
          <clearStateProgramSrc> CLEAR_STATE_PGM_SRC </clearStateProgramSrc>
          <approvalProgram>      APPROVAL_PGM        </approvalProgram>
@@ -728,7 +743,7 @@ App create
          </account>))
          ...
        </accountsMap>
-       <appCreator> .Map => (APP_ID |-> SENDER) ... </appCreator>
+       <appCreator> (.Map => (APP_ID |-> SENDER)) ... </appCreator>
        <nextAppID> APP_ID => APP_ID +Int 1 </nextAppID>
     requires notBool(APP_ID in_apps(<appsCreated> APPS </appsCreated>))
 
@@ -736,15 +751,16 @@ App create
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>                 TXN_ID              </txID>
-         <applicationID>        APP_ID:Int          </applicationID>
+         <applicationID>        APP_ID:TValue       </applicationID>
          ...
        </transaction>
+  requires APP_ID =/=K 0
 ```
 
 NoOp
 
 ```k
-  syntax AlgorandCommand ::= #executeAppl(Int)
+  syntax AlgorandCommand ::= #executeAppl(TValue)
 
   rule <k> #executeAppl(APP_ID) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
        <currentTx> TXN_ID </currentTx>

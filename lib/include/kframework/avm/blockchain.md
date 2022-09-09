@@ -100,11 +100,11 @@ module APPLICATIONS
   configuration
     <appsCreated>
       <app multiplicity="*" type="Map">
-        <appID>            0        </appID>
-        <approvalPgmSrc>   (int 1):TealInputPgm </approvalPgmSrc>
-        <clearStatePgmSrc> (int 1):TealInputPgm </clearStatePgmSrc>
-        <approvalPgm>      .Bytes   </approvalPgm>
-        <clearStatePgm>    .Bytes   </clearStatePgm>
+        <appID>           NoTValue  </appID>
+        <approvalPgmSrc>     (int 0):TealInputPgm </approvalPgmSrc>
+        <clearStatePgmSrc>   (int 1):TealInputPgm </clearStatePgmSrc>
+        <approvalPgm>     NoTValue </approvalPgm>
+        <clearStatePgm>   NoTValue </clearStatePgm>
         <globalState>
           <globalInts>     NoTValue </globalInts>
           <globalBytes>    NoTValue </globalBytes>
@@ -114,7 +114,7 @@ module APPLICATIONS
           <localInts>      NoTValue </localInts>
           <localBytes>     NoTValue </localBytes>
         </localState>
-        <extraPages>       0        </extraPages>
+        <extraPages>       NoTValue </extraPages>
       </app>
     </appsCreated>
 ```
@@ -193,6 +193,7 @@ module ALGO-BLOCKCHAIN
   imports APPLICATIONS
   imports ASSETS
   imports ADDITIONAL-FIELDS
+  imports TEAL-TYPES-SYNTAX
 
   // Note: An address is the base32 encoding of a {pub key + 4-byte checksum}
   // Note: There are three ways in which an account may be created:
@@ -205,14 +206,14 @@ module ALGO-BLOCKCHAIN
     <blockchain>
       <accountsMap>
         <account multiplicity="*" type="Map">
-          <address>    .Bytes             </address>
+          <address>    "":TBytes </address>
           <balance>    0                  </balance>
           <minBalance> PARAM_MIN_BALANCE  </minBalance> // the default min balance is 0.1 Algo
           <round>      0                  </round>
           <preRewards> 0                  </preRewards>
           <rewards>    0                  </rewards>
           <status>     0                  </status>
-          <key>        .Bytes             </key>
+          <key>        "":TBytes </key>
           <appsCreated/>
           <appsOptedIn/>
           <assetsCreated/>
@@ -661,8 +662,8 @@ Accessor functions
 
   rule _ in_assets(<assetsCreated> .Bag </assetsCreated>) => false
 
-  syntax Bool ::= TValue "in_apps" "(" AccountsMapCell ")" [function]
-  // ---------------------------------------------------------------
+  syntax Bool ::= TValue "in_apps" "(" AccountsMapCell ")" [function, functional]
+  // ----------------------------------------------------------------------------
   rule APP in_apps(<accountsMap>
                      <account>
                        <appsCreated> APPS </appsCreated> ...
@@ -673,8 +674,8 @@ Accessor functions
 
   rule _ in_apps( <accountsMap> .Bag </accountsMap> ) => false
 
-  syntax Bool ::= TValue "in_apps" "(" AppsCreatedCell ")" [function]
-  // -----------------------------------------------------------------
+  syntax Bool ::= TValue "in_apps" "(" AppsCreatedCell ")" [function, functional]
+  // ----------------------------------------------------------------------------
   rule APP in_apps(<appsCreated>
                      <app>
                        <appID> APP </appID> ...

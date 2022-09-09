@@ -65,10 +65,10 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
         <applicationID>        NoTValue    </applicationID>
         <onCompletion>         NoTValue    </onCompletion>
         <accounts>             .TValueList </accounts>
-        <approvalProgramSrc>   (int 1):TealInputPgm       </approvalProgramSrc>
-        <clearStateProgramSrc> (int 1):TealInputPgm       </clearStateProgramSrc>
-        <approvalProgram>      .Bytes      </approvalProgram>
-        <clearStateProgram>    .Bytes      </clearStateProgram>
+        <approvalProgramSrc>     (int 0):TealInputPgm </approvalProgramSrc>
+        <clearStateProgramSrc>   (int 1):TealInputPgm </clearStateProgramSrc>
+        <approvalProgram>      NoTValue      </approvalProgram>
+        <clearStateProgram>    NoTValue      </clearStateProgram>
         <applicationArgs>      .TValueList </applicationArgs> // maximum size is 2KB, and all args are internally byte strings
         <foreignApps>          .TValueList </foreignApps>
         <foreignAssets>        .TValueList </foreignAssets>
@@ -80,10 +80,10 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
           <localNui> NoTValue </localNui>
           <localNbs> NoTValue </localNbs>
         </localStateSchema>
-        <extraProgramPages> 0           </extraProgramPages>
+        <extraProgramPages> NoTValue </extraProgramPages>
         <txScratch>         .Map        </txScratch>
         <logs>              .TValueList </logs>
-        <logSize>           0           </logSize>
+        <logSize>           0:TValue    </logSize>
       </appCallTxFields>
 ```
 
@@ -191,6 +191,14 @@ module ALGO-TXN
           </transaction>
         </transactions>
       </txGroup>
+```
+
+*Transaction ID Getter*
+
+```k
+  syntax Int ::= getTxID(TransactionCell) [function, functional]
+  //-------------------------------------------------------------
+  rule getTxID(<transaction> <txID> ID </txID> ... </transaction>) => ID
 ```
 
 *Transaction Group Accessors*
