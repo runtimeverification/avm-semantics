@@ -1,0 +1,22 @@
+#pragma version 6
+
+itxn_begin
+
+int pay
+itxn_field TypeEnum
+
+int 100
+itxn_field Amount
+
+itxn_next
+
+int pay
+itxn_field TypeEnum
+
+int 200
+itxn_field Amount
+
+itxn_submit
+
+int 1
+return

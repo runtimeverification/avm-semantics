@@ -223,9 +223,7 @@ A subroutine call in TEAL is essentially an unconditional branch to a label, whi
 
   configuration
     <innerTransactions>
-      <innerTx multiplicity="*" type="Map">
-        <itxID> 0:Int </itxID>
-      </innerTx>
+      .Map
     </innerTransactions>
 
   syntax TealExecutionOp ::= #initApp( Int )

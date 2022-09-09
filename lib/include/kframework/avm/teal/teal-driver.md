@@ -1849,6 +1849,164 @@ Stateful TEAL Operations
     requires S >=Int MAX_STACK_DEPTH
 ```
 
+### Inner transaction opcodes
+
+```k
+  rule <k> itxn_begin => . ...</k>
+       <innerTransactions>
+         .Map => (0 |-> (
+         <transaction>
+           <txID> -1 </txID>
+           ...
+         </transaction>
+         ))
+       </innerTransactions>
+
+  rule <k> itxn_submit => . ...</k>
+
+  rule <k> itxn_field FIELD => #setItxnField(FIELD, VAL, size(T) -Int 1) ...</k>
+       <innerTransactions> T </innerTransactions>
+       <stack> VAL : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
+  rule <k> itxn_next => . ...</k>
+       <innerTransactions>
+         (.Map => (size(REST) |-> (
+         <transaction>
+           <txID> -1 </txID>
+           ...
+         </transaction>
+         ))) REST
+       </innerTransactions>
+    requires size(REST) >Int 0
+
+  rule <k> itxn FIELD => . ...</k>
+
+  rule <k> itxna FIELD IDX => . ...</k>
+
+  rule <k> gitxn GROUP_IDX FIELD => . ...</k>
+
+  rule <k> gitxna GROUP_IDX FIELD IDX => . ...</k>
+```
+
+```k
+  syntax KItem ::= #setItxnField(TxnField, TValue, Int)
+
+  rule <k> #setItxnField(Sender, VAL, IDX) => . ... </k>
+       <innerTransactions>
+         (IDX |->
+         <transaction>
+           <sender> _ => VAL </sender>
+           ...
+         </transaction>)
+         ...
+       </innerTransactions>
+
+  rule <k> #setItxnField(Fee, VAL, IDX) => . ... </k>
+       <innerTransactions>
+         (IDX |->
+         <transaction>
+           <fee> _ => VAL </fee>
+           ...
+         </transaction>)
+         ...
+       </innerTransactions>
+
+  rule <k> #setItxnField(Note, VAL, IDX) => . ... </k>
+       <innerTransactions>
+         (IDX |->
+         <transaction>
+           <note> _ => VAL </note>
+           ...
+         </transaction>)
+         ...
+       </innerTransactions>
+
+  rule <k> #setItxnField(RekeyTo, VAL, IDX) => . ... </k>
+       <innerTransactions>
+         (IDX |->
+         <transaction>
+           <rekeyTo> _ => VAL </rekeyTo>
+           ...
+         </transaction>)
+         ...
+       </innerTransactions>
+
+  rule <k> #setItxnField(TxType, VAL, IDX) => . ... </k>
+       <innerTransactions>
+         (IDX |->
+         <transaction>
+           <txType> _ => VAL </txType>
+           ...
+         </transaction>)
+         ...
+       </innerTransactions>
+
+  rule <k> #setItxnField(TypeEnum, VAL, IDX) => . ... </k>
+       <innerTransactions>
+         (IDX |->
+         <transaction>
+           <typeEnum> _ => VAL </typeEnum>
+           ...
+         </transaction>)
+         ...
+       </innerTransactions>
+
+  rule <k> #setItxnField(_:TxnPayField, _, IDX) ... </k>
+       <innerTransactions>
+         (IDX |->
+         <transaction>
+           .PayTxFieldsCell =>
+           <payTxFields>
+             <receiver> .Bytes </receiver>
+             <amount> 0 </amount>
+             <closeRemainderTo> .Bytes </closeRemainderTo>
+           </payTxFields>
+           ...
+         </transaction>)
+         ...
+       </innerTransactions>
+
+  rule <k> #setItxnField(Receiver, VAL, IDX) => . ... </k>
+       <innerTransactions>
+         (IDX |->
+         <transaction>
+           <payTxFields>
+             <receiver> _ => VAL </receiver>
+             ...
+           </payTxFields>
+           ...
+         </transaction>)
+         ...
+       </innerTransactions>
+
+  rule <k> #setItxnField(Amount, VAL, IDX) => . ... </k>
+       <innerTransactions>
+         (IDX |->
+         <transaction>
+           <payTxFields>
+             <amount> _ => VAL </amount>
+             ...
+           </payTxFields>
+           ...
+         </transaction>)
+         ...
+       </innerTransactions>
+
+  rule <k> #setItxnField(CloseRemainderTo, VAL, IDX) => . ... </k>
+       <innerTransactions>
+         (IDX |->
+         <transaction>
+           <payTxFields>
+             <closeRemainderTo> _ => VAL </closeRemainderTo>
+             ...
+           </payTxFields>
+           ...
+         </transaction>)
+         ...
+       </innerTransactions>
+```
+
 
 Panic Behaviors due to Ill-typed Stack Arguments
 ------------------------------------------------
