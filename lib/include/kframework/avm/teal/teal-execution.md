@@ -325,6 +325,7 @@ return code to 3 (see return codes below).
   syntax String ::= "DIV_BY_ZERO"                [macro]
   syntax String ::= "BYTES_OVERFLOW"             [macro]
   syntax String ::= "TXN_ACCESS_FAILED"          [macro]
+  syntax String ::= "TXN_INVALID"                [macro]
   syntax String ::= "INVALID_SCRATCH_LOC"        [macro]
   syntax String ::= "TXN_OUT_OF_BOUNDS"          [macro]
   syntax String ::= "FUTURE_TXN"                 [macro]
@@ -350,6 +351,7 @@ return code to 3 (see return codes below).
   rule DIV_BY_ZERO         => "division by zero"
   rule BYTES_OVERFLOW      => "resulting byte array too large"
   rule TXN_ACCESS_FAILED   => "transaction field access failed"
+  rule TXN_INVALID         => "a transaction is malformed"
   rule INVALID_SCRATCH_LOC => "invalid scratch space location"
   rule TXN_OUT_OF_BOUNDS   => "transaction index out of bounds"
   rule FUTURE_TXN          => "tried to access transaction that hasn't executed yet"
