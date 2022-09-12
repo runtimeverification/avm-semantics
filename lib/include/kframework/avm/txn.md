@@ -162,6 +162,7 @@ Transaction Group State Representation
 module ALGO-TXN
   imports TXN-FIELDS
   imports TEAL-TYPES
+  imports SET
 ```
 
 *Transaction Group Configuration*
@@ -191,6 +192,7 @@ module ALGO-TXN
             <assetFreezeTxFields/>
           </transaction>
         </transactions>
+        <touchedAccounts> .Set </touchedAccounts>
       </txGroup>
 ```
 

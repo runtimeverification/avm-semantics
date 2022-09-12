@@ -41,6 +41,7 @@ The transaction is initialized first.
          <transactions>
            _ => .Bag
           </transactions>
+          <touchedAccounts> _ => .Set </touchedAccounts>
        </txGroup>
 ```
 

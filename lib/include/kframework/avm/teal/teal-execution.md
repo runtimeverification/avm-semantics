@@ -368,7 +368,7 @@ return code to 3 (see return codes below).
   rule CALLSTACK_UNDERFLOW => "call stack underflow: illegal retsub"
   rule CALLSTACK_OVERFLOW  => "call stack overflow: recursion is too deep"
   rule MATH_BYTES_ARG_TOO_LONG => "math attempted on large byte-array"
-  rule INSUFFICIENT_FUNDS  => "transaction would cause balance to go under the minimum balance"
+  rule INSUFFICIENT_FUNDS  => "negative balance reached"
   rule ASSERTION_VIOLATION => "assertion violation"
   //--------------------------------------------------------------------------------
 
