@@ -11,6 +11,7 @@ TEAL has a set of integer constants which may be passed as arguments to the
 ```k
 module TEAL-CONSTANTS
   import TEAL-TYPES-SYNTAX
+  import BYTES
 ```
 
 A pusedo unsigned 64-bit integer is an immediate argument to an `int`
@@ -110,5 +111,32 @@ actions occur when the transaction completes.
   rule @ ccfg              => 7
   rule @ ccall             => 8
   rule @ cfx               => 9
+
+  syntax Int ::= typeString2Enum(Bytes) [function]
+  //----------------------------------------------
+  rule typeString2Enum(b"unknown") => @ unknown
+  rule typeString2Enum(b"pay")     => @ pay
+  rule typeString2Enum(b"keyreg")  => @ keyreg
+  rule typeString2Enum(b"acfg")    => @ acfg
+  rule typeString2Enum(b"axfer")   => @ axfer
+  rule typeString2Enum(b"afrz")    => @ afrz
+  rule typeString2Enum(b"appl")    => @ appl
+  rule typeString2Enum(b"ccfg")    => @ ccfg
+  rule typeString2Enum(b"ccall")   => @ ccall
+  rule typeString2Enum(b"cfx")     => @ cfx
+
+  syntax Bytes ::= typeEnum2String(Int) [function]
+  //----------------------------------------------
+  rule typeEnum2String(@ unknown) => b"unknown"
+  rule typeEnum2String(@ pay)     => b"pay"
+  rule typeEnum2String(@ keyreg)  => b"keyreg"
+  rule typeEnum2String(@ acfg)    => b"acfg"
+  rule typeEnum2String(@ axfer)   => b"axfer"
+  rule typeEnum2String(@ afrz)    => b"afrz"
+  rule typeEnum2String(@ appl)    => b"appl"
+  rule typeEnum2String(@ ccfg)    => b"ccfg"
+  rule typeEnum2String(@ ccall)   => b"ccal"
+  rule typeEnum2String(@ cfx)     => b"cfx"
+
 endmodule
 ```

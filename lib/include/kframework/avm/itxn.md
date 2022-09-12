@@ -41,13 +41,21 @@ module ALGO-ITXN
 
   rule <k> #setItxnField(TxType, VAL, IDX) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <txType> _ => VAL </txType> ... </transaction>
+         IDX |-> <transaction> 
+                   <txType> _ => VAL </txType> 
+                   <typeEnum> _=> typeString2Enum(VAL) </typeEnum>
+                    ...
+                  </transaction>
          ...
        </innerTransactions>
 
   rule <k> #setItxnField(TypeEnum, VAL, IDX) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <typeEnum> _ => VAL </typeEnum> ... </transaction>
+         IDX |-> <transaction> 
+                   <txType> _ => typeEnum2String(VAL) </txType> 
+                   <typeEnum> _ => VAL </typeEnum>
+                   ...
+                  </transaction>
          ...
        </innerTransactions>
 
