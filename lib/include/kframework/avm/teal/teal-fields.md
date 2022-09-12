@@ -71,6 +71,9 @@ module TEAL-FIELDS
 ### `txn`/`gtxn` fields
 
 ```k
+  syntax TxnFieldTop ::= TxnField
+                       | TxnaFieldExt
+  
   syntax TxnField ::= TxnStaticField
                     | TxnDynamicField
 
@@ -109,6 +112,7 @@ module TEAL-FIELDS
                           | "VoteFirst"
                           | "VoteLast"
                           | "VoteKeyDilution"
+                          | "Nonparticipation"
 
   syntax TxnAcfgField   ::= "ConfigAsset"
                           | "ConfigAssetTotal"
