@@ -59,7 +59,9 @@ module AVM-CONFIGURATION
           <effects> .List </effects>
         </currentTxnExecution>
 
-        <innerTransactions/>
+        <innerTransactions>
+          .List
+        </innerTransactions>
 
       </avmExecution>
 
@@ -221,13 +223,10 @@ A subroutine call in TEAL is essentially an unconditional branch to a label, whi
       <bytecblock> .Map </bytecblock>      // (currently not used)
     </teal>
 
-  configuration
-    <innerTransactions>
-      .Map
-    </innerTransactions>
-
   syntax TealExecutionOp ::= #initApp( Int )
                            | #initSmartSig()
+                           | #cleanContext()
+                           | #restoreContext()
                            | #startExecution()
                            | #finalizeExecution()
                            | #fetchOpcode()

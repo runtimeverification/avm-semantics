@@ -1856,32 +1856,33 @@ Stateful TEAL Operations
 ```k
   rule <k> itxn_begin => . ...</k>
        <innerTransactions>
-         .Map => (0 |-> (
-         <transaction>
+         .List => 
+         ListItem(<transaction>
            <txID> -1 </txID>
+           <txnTypeSpecificFields>
+             .AssetTransferTxFieldsCell
+           </txnTypeSpecificFields>
            ...
-         </transaction>
-         ))
+         </transaction>)
        </innerTransactions>
 
-  rule <k> itxn_submit => #checkItxns(T) ...</k>
+  rule <k> itxn_submit => #checkItxns(T) ~> #executeItxnGroup()...</k>
        <innerTransactions> T </innerTransactions>
 
-  rule <k> itxn_field FIELD => #setItxnField(FIELD, VAL, size(T) -Int 1) ...</k>
-       <innerTransactions> T </innerTransactions>
+  rule <k> itxn_field FIELD => #setItxnField(FIELD, VAL) ...</k>
        <stack> VAL : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
 
   rule <k> itxn_next => . ...</k>
        <innerTransactions>
-         (.Map => (size(REST) |-> (
-         <transaction>
+         REST
+         (.List =>
+         ListItem(<transaction>
            <txID> -1 </txID>
            ...
-         </transaction>
-         ))) REST
+         </transaction>))
        </innerTransactions>
-    requires size(REST) >Int 0
+    requires size(REST) >=Int 1
 
   rule <k> itxn FIELD => . ...</k>
 

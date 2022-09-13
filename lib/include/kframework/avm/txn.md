@@ -182,12 +182,15 @@ module ALGO-TXN
           <transaction multiplicity="*" type="Map">
             <txID> 0 </txID>
             <txHeader/>
-            <payTxFields/>
-            <appCallTxFields/>
-            <keyRegTxFields/>
-            <assetConfigTxFields/>
-            <assetTransferTxFields/>
-            <assetFreezeTxFields/>
+            <txnTypeSpecificFields>
+              <payTxFields/>
+              <appCallTxFields/>
+              <keyRegTxFields/>
+              <assetConfigTxFields/>
+              <assetTransferTxFields/>
+              <assetFreezeTxFields/>
+            </txnTypeSpecificFields>
+            <txnExecutionContext> .K </txnExecutionContext>
           </transaction>
         </transactions>
       </txGroup>

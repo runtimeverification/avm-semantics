@@ -1,6 +1,9 @@
 ```k
 requires "avm/txn.md"
 requires "avm/avm-configuration.md"
+requires "avm/avm-txn-deque.md"
+requires "avm/avm-execution.md"
+requires "avm/avm-commands.md"
 requires "avm/teal/teal-types.md"
 requires "avm/teal/teal-fields.md"
 requires "avm/teal/teal-execution.md"
@@ -8,60 +11,63 @@ requires "avm/teal/teal-execution.md"
 module ALGO-ITXN
   imports ALGO-TXN
   imports AVM-CONFIGURATION
+  imports AVM-COMMANDS
+  imports AVM-TXN-DEQUE
   imports TEAL-TYPES
   imports TEAL-FIELDS
   imports TEAL-EXECUTION
   imports MAP
 
-  syntax KItem ::= #setItxnField(TxnFieldTop, TValue, Int)
+  syntax KItem ::= #setItxnField(TxnFieldTop, TValue)
 
-  rule <k> #setItxnField(Sender, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(Sender, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <sender> _ => VAL </sender> ... </transaction>
          ...
+         ListItem(<transaction> <sender> _ => VAL </sender> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(Fee, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(Fee, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <fee> _ => VAL </fee> ... </transaction>
          ...
+         ListItem(<transaction> <fee> _ => VAL </fee> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(Note, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(Note, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <note> _ => VAL </note> ... </transaction>
          ...
+         ListItem(<transaction> <note> _ => VAL </note> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(RekeyTo, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(RekeyTo, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <rekeyTo> _ => VAL </rekeyTo> ... </transaction>
          ...
+         ListItem(<transaction> <rekeyTo> _ => VAL </rekeyTo> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(TxType, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(TxType, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> 
+         ...
+         ListItem(<transaction> 
                    <txType> _ => VAL </txType> 
                    <typeEnum> _=> typeString2Enum(VAL) </typeEnum>
                     ...
-                  </transaction>
-         ...
+                  </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(TypeEnum, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(TypeEnum, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> 
+         ...
+         ListItem(<transaction> 
                    <txType> _ => typeEnum2String(VAL) </txType> 
                    <typeEnum> _ => VAL </typeEnum>
                    ...
-                  </transaction>
-         ...
+                  </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(_:TxnPayField, _, IDX) ... </k>
+  rule <k> #setItxnField(_:TxnPayField, _) ... </k>
        <innerTransactions>
-         IDX |->
+         ...
+         ListItem(
          <transaction>
            .PayTxFieldsCell =>
            <payTxFields>
@@ -70,31 +76,31 @@ module ALGO-ITXN
              <closeRemainderTo> .Bytes </closeRemainderTo>
            </payTxFields>
            ...
-         </transaction>
-         ...
+         </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(Receiver, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(Receiver, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <receiver> _ => VAL </receiver> ... </transaction>
          ...
+         ListItem(<transaction> <receiver> _ => VAL </receiver> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(Amount, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(Amount, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <amount> _ => VAL </amount> ... </transaction>
          ...
+         ListItem(<transaction> <amount> _ => VAL </amount> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(CloseRemainderTo, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(CloseRemainderTo, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <closeRemainderTo> _ => VAL </closeRemainderTo> ... </transaction>
          ...
+         ListItem(<transaction> <closeRemainderTo> _ => VAL </closeRemainderTo> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(_:TxnKeyregField, _, IDX) ... </k>
+  rule <k> #setItxnField(_:TxnKeyregField, _) ... </k>
        <innerTransactions>
-         IDX |->
+         ...
+         ListItem(
          <transaction>
            .KeyRegTxFieldsCell =>
            <keyRegTxFields>
@@ -106,49 +112,49 @@ module ALGO-ITXN
              <nonparticipation> 0 </nonparticipation>
            </keyRegTxFields>
            ...
-         </transaction>
-         ...
+         </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(VotePK, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(VotePK, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <votePk> _ => VAL </votePk> ... </transaction>
          ...
+         ListItem(<transaction> <votePk> _ => VAL </votePk> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(SelectionPK, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(SelectionPK, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <selectionPK> _ => VAL </selectionPK> ... </transaction>
          ...
+         ListItem(<transaction> <selectionPK> _ => VAL </selectionPK> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(VoteFirst, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(VoteFirst, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <voteFirst> _ => VAL </voteFirst> ... </transaction>
          ...
+         ListItem(<transaction> <voteFirst> _ => VAL </voteFirst> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(VoteLast, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(VoteLast, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <voteLast> _ => VAL </voteLast> ... </transaction>
          ...
+         ListItem(<transaction> <voteLast> _ => VAL </voteLast> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(VoteKeyDilution, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(VoteKeyDilution, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <voteKeyDilution> _ => VAL </voteKeyDilution> ... </transaction>
          ...
+         ListItem(<transaction> <voteKeyDilution> _ => VAL </voteKeyDilution> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(Nonparticipation, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(Nonparticipation, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <nonparticipation> _ => VAL </nonparticipation> ... </transaction>
          ...
+         ListItem(<transaction> <nonparticipation> _ => VAL </nonparticipation> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(_:TxnAcfgField, _, IDX) ... </k>
+  rule <k> #setItxnField(_:TxnAcfgField, _) ... </k>
        <innerTransactions>
-         IDX |->
+         ...
+         ListItem(
          <transaction>
            .AssetConfigTxFieldsCell =>
            <assetConfigTxFields>
@@ -168,85 +174,85 @@ module ALGO-ITXN
              </assetParams>
            </assetConfigTxFields>
            ...
-         </transaction>
-         ...
+         </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(ConfigAsset, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ConfigAsset, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <configAsset> _ => VAL </configAsset> ... </transaction>
          ...
+         ListItem(<transaction> <configAsset> _ => VAL </configAsset> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(ConfigAssetTotal, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ConfigAssetTotal, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <configTotal> _ => VAL </configTotal> ... </transaction>
          ...
+         ListItem(<transaction> <configTotal> _ => VAL </configTotal> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(ConfigAssetDecimals, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ConfigAssetDecimals, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <configDecimals> _ => VAL </configDecimals> ... </transaction>
          ...
+         ListItem(<transaction> <configDecimals> _ => VAL </configDecimals> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(ConfigAssetDefaultFrozen, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ConfigAssetDefaultFrozen, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <configDefaultFrozen> _ => VAL </configDefaultFrozen> ... </transaction>
          ...
+         ListItem(<transaction> <configDefaultFrozen> _ => VAL </configDefaultFrozen> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(ConfigAssetUnitName, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ConfigAssetUnitName, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <configUnitName> _ => VAL </configUnitName> ... </transaction>
          ...
+         ListItem(<transaction> <configUnitName> _ => VAL </configUnitName> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(ConfigAssetName, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ConfigAssetName, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <configAssetName> _ => VAL </configAssetName> ... </transaction>
          ...
+         ListItem(<transaction> <configAssetName> _ => VAL </configAssetName> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(ConfigAssetURL, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ConfigAssetURL, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <configAssetURL> _ => VAL </configAssetURL> ... </transaction>
          ...
+         ListItem(<transaction> <configAssetURL> _ => VAL </configAssetURL> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(ConfigAssetMetaDataHash, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ConfigAssetMetaDataHash, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <configMetaDataHash> _ => VAL </configMetaDataHash> ... </transaction>
          ...
+         ListItem(<transaction> <configMetaDataHash> _ => VAL </configMetaDataHash> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(ConfigAssetManager, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ConfigAssetManager, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <configManagerAddr> _ => VAL </configManagerAddr> ... </transaction>
          ...
+         ListItem(<transaction> <configManagerAddr> _ => VAL </configManagerAddr> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(ConfigAssetReserve, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ConfigAssetReserve, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <configReserveAddr> _ => VAL </configReserveAddr> ... </transaction>
          ...
+         ListItem(<transaction> <configReserveAddr> _ => VAL </configReserveAddr> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(ConfigAssetFreeze, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ConfigAssetFreeze, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <configFreezeAddr> _ => VAL </configFreezeAddr> ... </transaction>
          ...
+         ListItem(<transaction> <configFreezeAddr> _ => VAL </configFreezeAddr> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(ConfigAssetClawback, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ConfigAssetClawback, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <configClawbackAddr> _ => VAL </configClawbackAddr> ... </transaction>
          ...
+         ListItem(<transaction> <configClawbackAddr> _ => VAL </configClawbackAddr> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(_:TxnAxferField, _, IDX) ... </k>
+  rule <k> #setItxnField(_:TxnAxferField, _) ... </k>
        <innerTransactions>
-         IDX |->
+         ...
+         ListItem(
          <transaction>
            .AssetTransferTxFieldsCell =>
            <assetTransferTxFields>
@@ -257,43 +263,43 @@ module ALGO-ITXN
              <assetCloseTo> .Bytes </assetCloseTo>
            </assetTransferTxFields>
            ...
-         </transaction>
-         ...
+         </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(XferAsset, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(XferAsset, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <xferAsset> _ => VAL </xferAsset> ... </transaction>
          ...
+         ListItem(<transaction> <xferAsset> _ => VAL </xferAsset> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(AssetAmount, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(AssetAmount, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <assetAmount> _ => VAL </assetAmount> ... </transaction>
          ...
+         ListItem(<transaction> <assetAmount> _ => VAL </assetAmount> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(AssetASender, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(AssetASender, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <assetASender> _ => VAL </assetASender> ... </transaction>
          ...
+         ListItem(<transaction> <assetASender> _ => VAL </assetASender> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(AssetReceiver, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(AssetReceiver, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <assetReceiver> _ => VAL </assetReceiver> ... </transaction>
          ...
+         ListItem(<transaction> <assetReceiver> _ => VAL </assetReceiver> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(AssetCloseTo, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(AssetCloseTo, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <assetCloseTo> _ => VAL </assetCloseTo> ... </transaction>
          ...
+         ListItem(<transaction> <assetCloseTo> _ => VAL </assetCloseTo> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(_:TxnAfrzField, _, IDX) ... </k>
+  rule <k> #setItxnField(_:TxnAfrzField, _) ... </k>
        <innerTransactions>
-         IDX |->
+         ...
+         ListItem(
          <transaction>
            .AssetFreezeTxFieldsCell =>
            <assetFreezeTxFields>
@@ -302,31 +308,31 @@ module ALGO-ITXN
              <assetFrozen> 0 </assetFrozen>
            </assetFreezeTxFields>
            ...
-         </transaction>
-         ...
+         </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(FreezeAsset, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(FreezeAsset, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <freezeAsset> _ => VAL </freezeAsset> ... </transaction>
          ...
+         ListItem(<transaction> <freezeAsset> _ => VAL </freezeAsset> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(FreezeAssetAccount, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(FreezeAssetAccount, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <freezeAccount> _ => VAL </freezeAccount> ... </transaction>
          ...
+         ListItem(<transaction> <freezeAccount> _ => VAL </freezeAccount> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(FreezeAssetFrozen, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(FreezeAssetFrozen, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <assetFrozen> _ => VAL </assetFrozen> ... </transaction>
          ...
+         ListItem(<transaction> <assetFrozen> _ => VAL </assetFrozen> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(FIELD, _, IDX) ... </k>
+  rule <k> #setItxnField(FIELD, _) ... </k>
        <innerTransactions>
-         IDX |->
+         ...
+         ListItem(
          <transaction>
            .AppCallTxFieldsCell =>
            <appCallTxFields>
@@ -354,57 +360,56 @@ module ALGO-ITXN
              <logSize> 0 </logSize>
            </appCallTxFields>
            ...
-         </transaction>
-         ...
+         </transaction>)
        </innerTransactions>
     requires isTxnApplField(FIELD) orBool isTxnaField(FIELD)
 
-  rule <k> #setItxnField(ApplicationID, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ApplicationID, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <applicationID> _ => VAL </applicationID> ... </transaction>
          ...
+         ListItem(<transaction> <applicationID> _ => VAL </applicationID> ... </transaction>)
        </innerTransactions>
        
-  rule <k> #setItxnField(OnCompletion, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(OnCompletion, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <onCompletion> _ => VAL </onCompletion> ... </transaction>
          ...
+         ListItem(<transaction> <onCompletion> _ => VAL </onCompletion> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(ApprovalProgram, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ApprovalProgram, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <approvalProgram> _ => VAL </approvalProgram> ... </transaction>
          ...
+         ListItem(<transaction> <approvalProgram> _ => VAL </approvalProgram> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(ClearStateProgram, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ClearStateProgram, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <clearStateProgram> _ => VAL </clearStateProgram> ... </transaction>
          ...
+         ListItem(<transaction> <clearStateProgram> _ => VAL </clearStateProgram> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(ApplicationArgs, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(ApplicationArgs, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <applicationArgs> APP_ARGS => append(VAL, APP_ARGS) </applicationArgs> ... </transaction>
          ...
+         ListItem(<transaction> <applicationArgs> APP_ARGS => append(VAL, APP_ARGS) </applicationArgs> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(Accounts, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(Accounts, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <accounts> ACCOUNTS => append(VAL, ACCOUNTS) </accounts> ... </transaction>
          ...
+         ListItem(<transaction> <accounts> ACCOUNTS => append(VAL, ACCOUNTS) </accounts> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(Applications, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(Applications, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <foreignApps> APPS => append(VAL, APPS) </foreignApps> ... </transaction>
          ...
+         ListItem(<transaction> <foreignApps> APPS => append(VAL, APPS) </foreignApps> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(Assets, VAL, IDX) => . ... </k>
+  rule <k> #setItxnField(Assets, VAL) => . ... </k>
        <innerTransactions>
-         IDX |-> <transaction> <foreignAssets> ASSETS => append(VAL, ASSETS) </foreignAssets> ... </transaction>
          ...
+         ListItem(<transaction> <foreignAssets> ASSETS => append(VAL, ASSETS) </foreignAssets> ... </transaction>)
        </innerTransactions>
 ```
 
@@ -417,58 +422,106 @@ module ALGO-ITXN
 
   rule <k> #checkItxn(
          <transaction> 
-           <txID> _ </txID>
-           <txHeader> _ </txHeader>
-           <payTxFields> _ </payTxFields>
+           <txnTypeSpecificFields>
+             <payTxFields> _ </payTxFields>
+           </txnTypeSpecificFields>
+           ...
          </transaction>) => . ... 
        </k>
 
   rule <k> #checkItxn(
          <transaction> 
-           <txID> _ </txID>
-           <txHeader> _ </txHeader>
-           <appCallTxFields> _ </appCallTxFields>
+           <txnTypeSpecificFields>
+             <appCallTxFields> _ </appCallTxFields>
+           </txnTypeSpecificFields>
+           ...
          </transaction>) => . ... 
        </k>
 
   rule <k> #checkItxn(
          <transaction> 
-           <txID> _ </txID>
-           <txHeader> _ </txHeader>
-           <keyRegTxFields> _ </keyRegTxFields>
+           <txnTypeSpecificFields>
+             <keyRegTxFields> _ </keyRegTxFields>
+           </txnTypeSpecificFields>
+           ...
          </transaction>) => . ... 
        </k>
 
   rule <k> #checkItxn(
          <transaction> 
-           <txID> _ </txID>
-           <txHeader> _ </txHeader>
-           <assetConfigTxFields> _ </assetConfigTxFields>
+           <txnTypeSpecificFields>
+             <assetConfigTxFields> _ </assetConfigTxFields>
+           </txnTypeSpecificFields>
+           ...
          </transaction>) => . ... 
        </k>
 
   rule <k> #checkItxn(
          <transaction> 
-           <txID> _ </txID>
-           <txHeader> _ </txHeader>
-           <assetTransferTxFields> _ </assetTransferTxFields>
+           <txnTypeSpecificFields>
+             <assetTransferTxFields> _ </assetTransferTxFields>
+           </txnTypeSpecificFields>
+           ...
          </transaction>) => . ... 
        </k>
 
   rule <k> #checkItxn(
          <transaction> 
-           <txID> _ </txID>
-           <txHeader> _ </txHeader>
-           <assetFreezeTxFields> _ </assetFreezeTxFields>
+           <txnTypeSpecificFields>
+             <assetFreezeTxFields> _ </assetFreezeTxFields>
+           </txnTypeSpecificFields>
+           ...
          </transaction>) => . ... 
        </k>
 
   rule <k> #checkItxn(<transaction> T </transaction>) => panic(TXN_INVALID) ...</k> [owise]
 
-  syntax KItem ::= #checkItxns(Map)
+  syntax KItem ::= #checkItxns(List)
 
-  rule <k> #checkItxns((_ |-> T) REST) => #checkItxn(T) ~> #checkItxns(REST) ...</k>
-  rule <k> #checkItxns(.Map) => . ...</k>
+  rule <k> #checkItxns((ListItem(T:TransactionCell) REST)) => (#checkItxn(T) ~> #checkItxns(REST)) ...</k>
+  rule <k> #checkItxns(.List) => . ...</k>
+
+  syntax KItem ::= #executeItxnGroup()
+  //----------------------------------
+
+  rule <k> #executeItxnGroup() => (#saveState() ~> #pushItxns() ~> #evalTxGroup()) ...</k>
+
+  syntax KItem ::= #pushItxns()
+  //---------------------------
+
+  rule <k> #pushItxns() => (#pushTxnFront(<txID> TXN_ID </txID>) ~> #pushItxns()) ...</k>
+       <innerTransactions> ... (ListItem(
+         <transaction>
+           <txID> _ </txID>
+           TXN_BODY
+         </transaction>
+         ) => .List)
+       </innerTransactions>
+       <transactions>
+         .Bag =>
+         <transaction>
+           <txID> TXN_ID </txID>
+           TXN_BODY
+         </transaction>
+         ...
+       </transactions>
+       <nextTxnID> TXN_ID => TXN_ID +Int 1 </nextTxnID>
+
+  rule <k> #pushItxns() => . ...</k>
+       <innerTransactions> .List </innerTransactions>
+
+  syntax KItem ::= #saveState()
+
+  rule <k> #saveState() => . ...</k>
+       <currentTxnExecution> C </currentTxnExecution>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID> TXN_ID </txID>
+         <txnExecutionContext>
+           _ => <currentTxnExecution> C </currentTxnExecution>
+         </txnExecutionContext>
+         ...
+       </transaction>
 
 endmodule
 ```

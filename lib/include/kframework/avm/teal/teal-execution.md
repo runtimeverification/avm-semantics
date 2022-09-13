@@ -19,14 +19,13 @@ Before starting the execution of a TEAL progam, the `<teal>` cell needs to be (r
 there may be some remaining artefacts of the previous transaction's TEAL.
 
 ```k
-  rule <k> #initApp(APP_ID) => . ...</k>
-       <currentApplicationID> _ => APP_ID </currentApplicationID>
-       <currentApplicationAddress> _ => getAppAddress(APP_ID)       </currentApplicationAddress>
-       <teal>
+  rule <k> #cleanContext() => . ...</k>
+       <currentTxnExecution>
+         <teal>
          _ => (
            <pc> 0 </pc>
            <program> .Map </program>
-           <mode> stateful </mode>
+           <mode> undefined </mode>
            <version> 1 </version>
            <stack> .TStack </stack>
            <stacksize> 0 </stacksize>
@@ -37,27 +36,57 @@ there may be some remaining artefacts of the previous transaction's TEAL.
            <intcblock> .Map </intcblock>
            <bytecblock> .Map </bytecblock>
          )
-       </teal>
+         </teal>
+         ...
+       </currentTxnExecution>
+
+  rule <k> #restoreContext() => . ...</k>
+       <currentTx> TX_ID </currentTx>
+       <transaction>
+         <txID> TX_ID </txID>
+         <txnExecutionContext> <currentTxnExecution> C </currentTxnExecution> </txnExecutionContext>
+         ...
+       </transaction>
+       <currentTxnExecution> _ => C </currentTxnExecution>
+
+  rule <k> #restoreContext() => . ...</k>
+       <currentTx> TX_ID </currentTx>
+       <transaction>
+         <txID> TX_ID </txID>
+         <txnExecutionContext> .K </txnExecutionContext>
+         ...
+       </transaction>
+       <currentTxnExecution>
+         <teal>
+         _ => (
+           <pc> 0 </pc>
+           <program> .Map </program>
+           <mode> undefined </mode>
+           <version> 1 </version>
+           <stack> .TStack </stack>
+           <stacksize> 0 </stacksize>
+           <jumped> false </jumped>
+           <labels> .Map </labels>
+           <callStack> .List </callStack>
+           <scratch> .Map </scratch>
+           <intcblock> .Map </intcblock>
+           <bytecblock> .Map </bytecblock>
+         )
+         </teal>
+         ...
+       </currentTxnExecution>
+```
+
+```k
+  rule <k> #initApp(APP_ID) => . ...</k>
+       <currentApplicationID> _ => APP_ID </currentApplicationID>
+       <currentApplicationAddress> _ => getAppAddress(APP_ID)       </currentApplicationAddress>
+       <mode> _ => stateful </mode>
 ```
 
 ```k
   rule <k> #initSmartSig() => .K ... </k>
-       <teal>
-         _ => (
-           <pc> 0 </pc>
-           <program> .Map </program>
-           <mode> stateless </mode>
-           <version> 1 </version>
-           <stack> .TStack </stack>
-           <stacksize> 0 </stacksize>
-           <jumped> false </jumped>
-           <labels> .Map </labels>
-           <callStack> .List </callStack>
-           <scratch> .Map </scratch>
-           <intcblock> .Map </intcblock>
-           <bytecblock> .Map </bytecblock>
-         )
-       </teal>
+       <mode> _ => stateless </mode>
 ```
 
 ### Program initialization
@@ -375,7 +404,7 @@ return code to 3 (see return codes below).
   syntax KItem ::= panic(String)
   // ---------------------------
   rule <k> panic(S) ~> _ => .K </k>
-       <returncode> 4 => 3 </returncode>
+       <returncode> _ => 3 </returncode>
        <returnstatus> _ => "Failure - panic: " +String S </returnstatus>
 ```
 

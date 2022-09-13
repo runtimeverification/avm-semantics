@@ -1,22 +1,33 @@
 #pragma version 6
 
+txn ApplicationID
+int 0
+==
+bnz end
+
 itxn_begin
 
-int pay
-itxn_field TypeEnum
+global CurrentApplicationAddress
+itxn_field Sender
+
+txn Sender
+itxn_field Receiver
 
 int 100
 itxn_field Amount
 
-itxn_next
-
 int pay
 itxn_field TypeEnum
 
-int 200
-itxn_field Amount
-
 itxn_submit
+
+txn Sender
+balance
+int 99500100
+==
+assert
+
+end:
 
 int 1
 return

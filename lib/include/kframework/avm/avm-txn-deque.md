@@ -95,11 +95,18 @@ we will know immediately, since `#pushTxnFront()`/`#pushTxnBack()` would panic.
 `#pushTxnFront()`/`#pushTxnBack()`.
 
 ```k
+  syntax TxnDequeCommand ::= #getNextTxn()
+  rule <k> #getNextTxn() => .K ... </k>
+       <deque> ListItem(TXN_ID) TXNS </deque>
+       <currentTx> _ => TXN_ID </currentTx>
+
+  rule <k> #getNextTxn() => #internalPanic(TXN_DEQUE_ERROR) ... </k>
+       <deque> .List </deque>
+
   syntax TxnDequeCommand ::= #popTxnFront()
   //-----------------------------------------------
   rule <k> #popTxnFront() => .K ... </k>
        <deque> ListItem(TXN_ID) TXNS => TXNS </deque>
-       <currentTx> _ => TXN_ID </currentTx>
 
   rule <k> #popTxnFront() => #internalPanic(TXN_DEQUE_ERROR) ... </k>
        <deque> .List </deque>

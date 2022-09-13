@@ -2,11 +2,13 @@
 requires "avm/blockchain.md"
 requires "avm/constants.md"
 requires "avm/txn.md"
+requires "avm/itxn.md"
 requires "avm/teal/teal-syntax.md"
 requires "avm/teal/teal-driver.md"
 requires "avm/avm-configuration.md"
 requires "avm/avm-initialization.md"
 requires "avm/avm-txn-deque.md"
+requires "avm/avm-commands.md"
 
 module AVM-EXECUTION-SYNTAX
   imports INT
@@ -15,9 +17,11 @@ module AVM-EXECUTION-SYNTAX
   imports AVM-CONSTANTS
   imports ALGO-BLOCKCHAIN
   imports ALGO-TXN
+  imports ALGO-ITXN
   imports AVM-CONFIGURATION
   imports AVM-INITIALIZATION
   imports TEAL-DRIVER
+  imports AVM-COMMANDS
 ```
 
 Top-level model control rules
@@ -66,10 +70,10 @@ and the current configuration is frozen for examination.
   rule <k> #setMode(MODE) => . ...</k>
        <mode> _ => MODE </mode>
   
-  syntax AlgorandCommand ::= #evalTxGroup()
+  // #evalTxGroup
   //---------------------------------------
 
-  rule <k> #evalTxGroup() => #popTxnFront() ~> #evalTx() ~> #evalTxGroup() ... </k>
+  rule <k> #evalTxGroup() => #getNextTxn() ~> #restoreContext() ~> #evalTx() ~> #popTxnFront() ~> #evalTxGroup() ... </k>
        <deque> TXN_DEQUE </deque>
     requires TXN_DEQUE =/=K .List
 
