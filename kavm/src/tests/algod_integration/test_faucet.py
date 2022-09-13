@@ -5,6 +5,7 @@ from algosdk.future import transaction
 from algosdk.future.transaction import PaymentTxn
 from algosdk.v2client.algod import AlgodClient
 
+from kavm.kavm import KAVM
 from kavm.constants import FAUCET_ALGO_SUPPLY
 
 
@@ -12,6 +13,7 @@ def test_faucet(
     client: AlgodClient,
     faucet: Dict[str, str],
 ) -> None:
+
     """Faucet can fund two accounts using a group of two PaymentTxn"""
     private_key_alice, alice = account.generate_account()
     private_key_bob, bob = account.generate_account()

@@ -1,0 +1,53 @@
+from kavm.pyk_utils import AppCellMap
+import pytest
+
+from kavm.kavm import KAVM
+from kavm.constants import MIN_BALANCE
+from kavm.adaptors.account import KAVMAccount
+from tests.unit.test_application_encoding import application_blank
+
+
+def account_blank(kavm) -> KAVMAccount:
+    return KAVMAccount(address="test", balance=42, min_balance=MIN_BALANCE)
+
+
+def account_one_app_created(kavm) -> KAVMAccount:
+    return KAVMAccount(
+        address="test",
+        balance=42,
+        min_balance=MIN_BALANCE,
+        apps_created=AppCellMap.from_list([application_blank(kavm)]),
+    )
+
+
+def account_two_apps_created(kavm) -> KAVMAccount:
+    return KAVMAccount(address="test", balance=42, min_balance=MIN_BALANCE)
+
+
+def account_one_app_optedin(kavm) -> KAVMAccount:
+    return KAVMAccount(address="test", balance=42, min_balance=MIN_BALANCE)
+
+
+def account_two_apps_optedin(kavm) -> KAVMAccount:
+    return KAVMAccount(address="test", balance=42, min_balance=MIN_BALANCE)
+
+
+def account_complex(kavm) -> KAVMAccount:
+    return KAVMAccount(address="test", balance=42, min_balance=MIN_BALANCE)
+
+
+@pytest.fixture(params=[account_blank, account_one_app_created])
+def account(kavm: KAVM, request) -> KAVMAccount:
+    return request.param(kavm)
+
+
+def test_init(account: KAVMAccount):
+    assert account
+
+
+def test_account_k_encoding(account: KAVMAccount):
+    rountrip_account = KAVMAccount.from_account_cell(account.account_cell)
+    # travers attributes of KAVMAccount and assert that the ones starting with _ are the same,
+    # ignoring the __ ones
+    for attr in [a for a in dir(account) if a.startswith('_') and not a.startswith('__')]:
+        assert getattr(account, attr) == getattr(rountrip_account, attr)
