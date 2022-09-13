@@ -1,0 +1,8 @@
+#pragma version 5
+
+byte "key"
+byte "val"
+app_global_put
+
+int 1
+return

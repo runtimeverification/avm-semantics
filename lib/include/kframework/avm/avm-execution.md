@@ -147,14 +147,14 @@ case 1: clear state from own created app
          <appsOptedIn>
            (<optInApp>
              <optInAppID> APP_ID </optInAppID>
-             <localStorage> _ </localStorage>
+             ...
            </optInApp>) => .Bag
            ...
          </appsOptedIn>
          <appsCreated>
            <appID> APP_ID </appID>
-           <localInts>     LOCAL_INTS      </localInts>
-           <localBytes>    LOCAL_BYTES     </localBytes>
+           <localNumInts>     LOCAL_INTS      </localNumInts>
+           <localNumBytes>    LOCAL_BYTES     </localNumBytes>
            ...
          </appsCreated>
          <minBalance> MIN_BALANCE => MIN_BALANCE 
@@ -177,7 +177,7 @@ case 1: clear state from other's created app
          <appsOptedIn>
            (<optInApp>
              <optInAppID> APP_ID </optInAppID>
-             <localStorage> _ </localStorage>
+             ...
            </optInApp>) => .Bag
            ...
          </appsOptedIn>
@@ -192,8 +192,8 @@ case 1: clear state from other's created app
        </account>
        <appsCreated>
          <appID> APP_ID </appID>
-         <localInts>     LOCAL_INTS      </localInts>
-         <localBytes>    LOCAL_BYTES     </localBytes>
+         <localNumInts>     LOCAL_INTS      </localNumInts>
+         <localNumBytes>    LOCAL_BYTES     </localNumBytes>
          ...
        </appsCreated>
 
@@ -225,8 +225,8 @@ Delete application
          <appsCreated>
            ((<app>
              <appID> APP_ID </appID>
-             <globalInts>    GLOBAL_INTS     </globalInts>
-             <globalBytes>   GLOBAL_BYTES    </globalBytes>
+             <globalNumInts>    GLOBAL_INTS     </globalNumInts>
+             <globalNumBytes>   GLOBAL_BYTES    </globalNumBytes>
              <extraPages>    EXTRA_PAGES     </extraPages>
              ...
            </app>) => .Bag) ...
@@ -725,10 +725,10 @@ App create
                <clearStatePgmSrc> CLEAR_STATE_PGM_SRC </clearStatePgmSrc>
                <approvalPgm>      APPROVAL_PGM        </approvalPgm>
                <clearStatePgm>    CLEAR_STATE_PGM     </clearStatePgm>
-               <globalInts>       GLOBAL_INTS         </globalInts>
-               <globalBytes>      GLOBAL_BYTES        </globalBytes>
-               <localInts>        LOCAL_INTS          </localInts>
-               <localBytes>       LOCAL_BYTES         </localBytes>
+               <globalNumInts>       GLOBAL_INTS         </globalNumInts>
+               <globalNumBytes>      GLOBAL_BYTES        </globalNumBytes>
+               <localNumInts>        LOCAL_INTS          </localNumInts>
+               <localNumBytes>       LOCAL_BYTES         </localNumBytes>
                <extraPages>       EXTRA_PAGES         </extraPages>
                ...
              </app>
@@ -746,6 +746,8 @@ App create
        <appCreator> (.Map => (APP_ID |-> SENDER)) ... </appCreator>
        <nextAppID> APP_ID => APP_ID +Int 1 </nextAppID>
     requires notBool(APP_ID in_apps(<appsCreated> APPS </appsCreated>))
+     andBool GLOBAL_INTS +Int GLOBAL_BYTES <=Int PARAM_MAX_GLOBAL_KEYS
+     andBool LOCAL_INTS  +Int LOCAL_BYTES  <=Int PARAM_MAX_LOCAL_KEYS
 
   rule <k> #executeTxn(@appl) => #executeAppl(APP_ID) ...</k>
        <currentTx> TXN_ID </currentTx>
@@ -796,7 +798,8 @@ OptIn
            OPTED_IN_APPS =>
            <optInApp>
              <optInAppID>   APP_ID </optInAppID>
-             <localStorage> .Map   </localStorage>
+             <localInts> .Map   </localInts>
+             <localBytes> .Map   </localBytes>
            </optInApp>
            OPTED_IN_APPS
          </appsOptedIn>
@@ -812,8 +815,8 @@ OptIn
        <app>
          <appID>          APP_ID       </appID>
          <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
-         <localInts>      LOCAL_INTS   </localInts>
-         <localBytes>     LOCAL_BYTES  </localBytes>
+         <localNumInts>      LOCAL_INTS   </localNumInts>
+         <localNumBytes>     LOCAL_BYTES  </localNumBytes>
          ...
        </app>
      requires notBool hasOptedInApp(APP_ID, SENDER)
@@ -834,8 +837,8 @@ OptIn
            <app>
              <appID>          APP_ID       </appID>
              <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
-             <localInts>      LOCAL_INTS   </localInts>
-             <localBytes>     LOCAL_BYTES  </localBytes>
+             <localNumInts>      LOCAL_INTS   </localNumInts>
+             <localNumBytes>     LOCAL_BYTES  </localNumBytes>
              ...
            </app>
            ...
@@ -844,7 +847,8 @@ OptIn
            OPTED_IN_APPS =>
            <optInApp>
              <optInAppID>   APP_ID </optInAppID>
-             <localStorage> .Map        </localStorage>
+             <localInts> .Map        </localInts>
+             <localBytes> .Map        </localBytes>
            </optInApp>
            OPTED_IN_APPS
          </appsOptedIn>
@@ -876,8 +880,8 @@ OptIn
              <app>
                <appID>          APP_ID       </appID>
                <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
-               <localInts>      LOCAL_INTS   </localInts>
-               <localBytes>     LOCAL_BYTES  </localBytes>
+               <localNumInts>      LOCAL_INTS   </localNumInts>
+               <localNumBytes>     LOCAL_BYTES  </localNumBytes>
                ...
              </app>
              ...
@@ -886,7 +890,8 @@ OptIn
              OPTED_IN_APPS =>
              <optInApp>
                <optInAppID>   APP_ID </optInAppID>
-               <localStorage> .Map   </localStorage>
+               <localInts> .Map   </localInts>
+               <localBytes> .Map   </localBytes>
              </optInApp>
              OPTED_IN_APPS
            </appsOptedIn>
