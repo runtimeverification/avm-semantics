@@ -193,6 +193,7 @@ module ALGO-BLOCKCHAIN
   imports APPLICATIONS
   imports ASSETS
   imports ADDITIONAL-FIELDS
+  imports TEAL-SYNTAX
   imports TEAL-TYPES-SYNTAX
 
   // Note: An address is the base32 encoding of a {pub key + 4-byte checksum}

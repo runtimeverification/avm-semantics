@@ -1,10 +1,10 @@
 from collections.abc import MutableMapping
 from base64 import b64encode
-from typing import List, Optional, Union, cast, Callable, Any, Type
+from typing import List, Optional, Union, cast, Callable, Any, Type, Set
 import re
 
 from algosdk.future.transaction import OnComplete
-from pyk.kast import KAst, KApply, KInner, KLabel, top_down
+from pyk.kast import KAst, KApply, KInner, KLabel, KVariable, top_down
 from pyk.prelude import build_cons, build_assoc, intToken, stringToken
 
 
@@ -43,7 +43,57 @@ def tvalue_list(value: List[Union[str, int, bytes]]) -> KInner:
         raise NotImplementedError()
 
 
+def split_direct_subcells_from(configuration):
+    """
+    Split the *direct* subcell substitution from a given configuration.
+
+    Like pyk.kastManip.split_config_from, but does not recurse deeper than one layer
+    """
+    initial_substitution = {}
+
+    def _mk_cell_var(label):
+        return label.replace('-', '_').replace('<', '').replace('>', '').upper() + '_CELL'
+
+    def _replace_with_var(k):
+        if type(k) is KApply and k.is_cell:
+            config_var = _mk_cell_var(k.label.name)
+            initial_substitution[config_var] = k.args[0]
+            return KApply(k.label, [KVariable(config_var)])
+        return k
+
+    symbolic_config = configuration.map_inner(_replace_with_var)
+    return (symbolic_config, initial_substitution)
+
+
+def carefully_split_config_from(configuration, ignore_cells: Optional[Set[str]]):
+    """
+    Like pyk.kastManip.split_config_from, but does not substitute the given cells with variables
+    """
+    initial_substitution = {}
+
+    if not ignore_cells:
+        ignore_cells = set()
+
+    def _mk_cell_var(label):
+        return label.replace('-', '_').replace('<', '').replace('>', '').upper() + '_CELL'
+
+    def _replace_with_var(k):
+        if type(k) is KApply and k.is_cell:
+            if (k.arity == 1 and not (type(k.args[0]) is KApply and k.args[0].is_cell)) or (
+                k.arity == 1 and not (k.label.name in ignore_cells)
+            ):
+                config_var = _mk_cell_var(k.label.name)
+                initial_substitution[config_var] = k.args[0]
+                return KApply(k.label, [KVariable(config_var)])
+        return k
+
+    symbolic_config = top_down(_replace_with_var, configuration)
+    return (symbolic_config, initial_substitution)
+
+
 class KCellMap(MutableMapping):
+    '''Represents K type=map cell as a Python dict'''
+
     def __init__(
         self,
         unit_klabel: Union[str, KLabel],
@@ -113,6 +163,8 @@ class KCellMap(MutableMapping):
 
 
 class AccountCellMap(KCellMap):
+    '''Python-friendly access to <accounts> cell'''
+
     def __init__(
         self,
         term: Optional[KAst] = None,
@@ -131,6 +183,8 @@ class AccountCellMap(KCellMap):
 
 
 class AppCellMap(KCellMap):
+    '''Python-friendly access to <appsCreated> cell'''
+
     def __init__(
         self,
         term: Optional[KAst] = None,

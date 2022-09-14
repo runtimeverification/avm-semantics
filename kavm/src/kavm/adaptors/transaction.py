@@ -80,12 +80,16 @@ class KAVMTransaction:
                     'APPLICATIONID_CELL': maybe_tvalue(txn.index),
                     'ONCOMPLETION_CELL': maybe_tvalue(int(txn.on_complete))
                     if txn.on_complete is not None
-                    else maybe_tvalue(None),
+                    else maybe_tvalue(0),
                     'ACCOUNTS_CELL': tvalue_list(txn.accounts) if txn.accounts is not None else tvalue_list([]),
                     'APPROVALPROGRAM_CELL': maybe_tvalue(txn.approval_program),
-                    'APPROVALPROGRAMSRC_CELL': KToken('int 0', KSort('TealInputPgm')),
+                    'APPROVALPROGRAMSRC_CELL': kavm.parse_teal(txn.approval_program.decode('utf8'))
+                    if txn.approval_program
+                    else kavm.parse_teal('int 1'),
                     'CLEARSTATEPROGRAM_CELL': maybe_tvalue(txn.clear_program),
-                    'CLEARSTATEPROGRAMSRC_CELL': KToken('int 1', KSort('TealInputPgm')),
+                    'CLEARSTATEPROGRAMSRC_CELL': kavm.parse_teal(txn.clear_program.decode('utf8'))
+                    if txn.clear_program
+                    else kavm.parse_teal('int 1'),
                     'APPLICATIONARGS_CELL': tvalue_list(txn.app_args) if txn.app_args is not None else tvalue_list([]),
                     'FOREIGNAPPS_CELL': tvalue_list(txn.foreign_apps)
                     if txn.foreign_apps is not None

@@ -110,10 +110,8 @@ class KAVMClient(algod.AlgodClient):
                     'min-fee': 1000,
                 }
             elif params[0] == 'pending':
-                # PendingTransactionResponse https://github.com/algorand/go-algorand/blob/87867c9381260dc4efb5a42abaeb9e038b1c10af/daemon/algod/api/algod.oas2.json#L2600
-                # fow now we return return any transction as confirmed
-                # TODO: track accepted transctions in a set
-                return {'confirmed-round': 1}
+                txid = int(params[1])
+                return self.kavm._committed_txns[txid]
             else:
                 raise NotImplementedError(f'Endpoint not implemented: {requrl}')
         elif endpoint == 'accounts':
@@ -125,6 +123,18 @@ class KAVMClient(algod.AlgodClient):
         else:
             self.algodLogger.debug(requrl.split('/'))
             raise NotImplementedError(f'Endpoint not implemented: {requrl}')
+
+    def _pending_transaction_info(self, txid: int) -> Dict[str, Any]:
+        """
+        Fetch info about a pending transaction from KAVM
+
+        Fow now, we return any transction as confirmed
+
+        returns:
+            PendingTransactionResponse https://github.com/algorand/go-algorand/tree/master/daemon/algod/api/algod.oas2.json#L2600
+
+        """
+        return {'confirmed-round': 1}
 
     def _handle_post_requests(self, requrl: str, data: Optional[bytes]) -> Dict[str, Any]:
         """
@@ -151,11 +161,14 @@ class KAVMClient(algod.AlgodClient):
                 if hasattr(signed_txn.transaction, 'receiver'):
                     known_addresses.add(signed_txn.transaction.receiver)
                 txid = self.kavm.next_valid_txid + txid_offset
-                kavm_txns.append(KAVMTransaction(self.kavm, signed_txn.transaction, txid))
+                kavm_txn = KAVMTransaction(self.kavm, signed_txn.transaction, txid)
+                self.algodLogger.debug(f'Submitting txn with id: {kavm_txn.txid}')
+                kavm_txns.append(kavm_txn)
 
             return self.kavm.eval_transactions(kavm_txns, known_addresses)
         elif requrl == '/teal/compile':
             assert data is not None, 'attempt to compile an empty TEAL program!'
+            # we do not actually compile therogram since KAVM needs the source code
             return {'result': b64encode(data)}
         else:
             raise NotImplementedError(f'Endpoint not implemented: {requrl}')

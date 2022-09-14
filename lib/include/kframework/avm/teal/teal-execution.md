@@ -27,7 +27,7 @@ there may be some remaining artefacts of the previous transaction's TEAL.
            <pc> 0 </pc>
            <program> .Map </program>
            <mode> stateful </mode>
-           <version> 1 </version>
+           <version> 4 </version>
            <stack> .TStack </stack>
            <stacksize> 0 </stacksize>
            <jumped> false </jumped>
@@ -78,6 +78,7 @@ Pragmas are applied directly, and then the `#LoadPgm` performs program pre-proce
 ```k
   rule <k> Rs:TealPragmas P:TealPgm => Rs ~> #LoadPgm(P, 0) ... </k>
   rule <k> R:TealPragma Rs:TealPragmas => R ~> Rs ... </k>
+  rule <k> P:TealPgm => #LoadPgm(P, 0) ... </k>
 
   rule <k> #pragma version V => . ... </k>
        <version> _ => V </version>
