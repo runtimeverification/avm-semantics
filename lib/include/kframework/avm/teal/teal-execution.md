@@ -40,7 +40,14 @@ there may be some remaining artefacts of the previous transaction's TEAL.
          ...
        </currentTxnExecution>
 
-  rule <k> #restoreContext() => . ...</k>
+  syntax KItem ::= #resetPgmAndLbls()
+  //---------------------------------
+
+  rule <k> #resetPgmAndLbls() => . ...</k>
+       <program> _ => .Map </program>
+       <labels> _ => .Map </labels>
+
+  rule <k> #restoreContext() => #resetPgmAndLbls() ...</k>
        <currentTx> TX_ID </currentTx>
        <transaction>
          <txID> TX_ID </txID>

@@ -1868,6 +1868,7 @@ Stateful TEAL Operations
 
   rule <k> itxn_submit => #checkItxns(T) ~> #executeItxnGroup()...</k>
        <innerTransactions> T </innerTransactions>
+       <pc> PC => PC +Int 1 </pc>
 
   rule <k> itxn_field FIELD => #setItxnField(FIELD, VAL) ...</k>
        <stack> VAL : XS => XS </stack>
