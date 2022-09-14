@@ -8,7 +8,6 @@ requires "avm/teal/teal-driver.md"
 requires "avm/avm-configuration.md"
 requires "avm/avm-initialization.md"
 requires "avm/avm-txn-deque.md"
-requires "avm/avm-commands.md"
 
 module AVM-EXECUTION-SYNTAX
   imports INT
@@ -21,7 +20,6 @@ module AVM-EXECUTION-SYNTAX
   imports AVM-CONFIGURATION
   imports AVM-INITIALIZATION
   imports TEAL-DRIVER
-  imports AVM-COMMANDS
 ```
 
 Top-level model control rules
@@ -73,7 +71,7 @@ and the current configuration is frozen for examination.
   // #evalTxGroup
   //---------------------------------------
 
-  rule <k> #evalTxGroup() => #getNextTxn() ~> #restoreContext() ~> #evalTx() ~> #popTxnFront() ~> #evalTxGroup() ... </k>
+  rule <k> (#evalTxGroup() ~> _) => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalTxGroup() </k>
        <deque> TXN_DEQUE </deque>
     requires TXN_DEQUE =/=K .List
 
@@ -101,7 +99,8 @@ the attached stateless TEAL if the transaction is logicsig-signed.
   syntax AlgorandCommand ::= #evalTx()
   //----------------------------------
   rule <k> #evalTx() => 
-             #checkTxnSignature() 
+             #initContext()
+          ~> #checkTxnSignature() 
           ~> #executeTxn(TXN_TYPE) 
        ... 
        </k>
@@ -109,6 +108,16 @@ the attached stateless TEAL if the transaction is logicsig-signed.
        <transaction>
          <txID> TXN_ID </txID>
          <typeEnum> TXN_TYPE </typeEnum>
+         <resume> false => true </resume>
+         ...
+       </transaction>
+
+  rule <k> #evalTx() => #restoreContext() ~> #evalTeal() ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID> TXN_ID </txID>
+         <typeEnum> TXN_TYPE </typeEnum>
+         <resume> true </resume>
          ...
        </transaction>
 
@@ -308,11 +317,15 @@ We do not consider the special case of contract creation (deployment) here, it w
 TODO: address contact creation.
 
 ```k
-  syntax AlgorandCommand ::= #evalTeal( TealInputPgm )
+  syntax AlgorandCommand ::= #evalTeal()
 
-  rule <k> #evalTeal( PGM ) => PGM ~> #startExecution() ~> #saveScratch() ... </k>
+  rule <k> #evalTeal() => #startExecution() ~> #saveScratch() ... </k>
        <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
        <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
+
+  syntax AlgorandCommand ::= #loadInputPgm( TealInputPgm )
+
+  rule <k> #loadInputPgm(PGM) => PGM ...</k>
 ```
 
 ##### Stateless
@@ -766,7 +779,12 @@ NoOp
 ```k
   syntax AlgorandCommand ::= #executeAppl(TValue)
 
-  rule <k> #executeAppl(APP_ID) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
+  rule <k> #executeAppl(APP_ID) => 
+               #initApp(APP_ID) 
+            ~> #loadInputPgm(APPROVAL_PGM) 
+            ~> #evalTeal() 
+            ... 
+       </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID        </txID>
@@ -786,7 +804,12 @@ OptIn
 
 // Case 1: user different from app creator is opting in
 
-  rule <k> #executeAppl(APP_ID) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
+  rule <k> #executeAppl(APP_ID) => 
+               #initApp(APP_ID) 
+            ~> #loadInputPgm(APPROVAL_PGM)
+            ~> #evalTeal()
+            ...
+       </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID  </txID>
@@ -824,7 +847,12 @@ OptIn
 
 // Case 2: app creator is opting in to their own app
 
-  rule <k> #executeAppl(APP_ID) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
+  rule <k> #executeAppl(APP_ID) => 
+               #initApp(APP_ID) 
+            ~> #loadInputPgm(APPROVAL_PGM) 
+            ~> #evalTeal()
+            ...
+       </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID  </txID>
@@ -865,7 +893,12 @@ OptIn
 
 // Case 3: needed because of bug?
 
-  rule <k> #executeAppl(APP_ID) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
+  rule <k> #executeAppl(APP_ID) => 
+               #initApp(APP_ID) 
+            ~> #loadInputPgm(APPROVAL_PGM) 
+            ~> #evalTeal()
+            ...
+       </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID  </txID>
@@ -915,7 +948,8 @@ CloseOut
   rule <k>
          #executeAppl(APP_ID) => 
               #initApp(APP_ID)
-           ~> #evalTeal(APPROVAL_PGM) 
+           ~> #loadInputPgm(APPROVAL_PGM)
+           ~> #evalTeal() 
            ~> #clearState(APP_ID, SENDER)
          ... 
        </k>
@@ -941,7 +975,8 @@ TODO make sure `#clearState` runs even when a panic is generated
   rule <k>
          #executeAppl(APP_ID) => 
               #initApp(APP_ID)
-           ~> #evalTeal(CLEAR_STATE_PGM) 
+           ~> #loadInputPgm(CLEAR_STATE_PGM)
+           ~> #evalTeal() 
            ~> #clearState(APP_ID, SENDER)
          ... 
        </k>
@@ -965,7 +1000,8 @@ UpdateApplication
   rule <k>
          #executeAppl(APP_ID) => 
               #initApp(APP_ID)
-           ~> #evalTeal(APPROVAL_PGM) 
+           ~> #loadInputPgm(APPROVAL_PGM)
+           ~> #evalTeal() 
            ~> #updatePrograms(APP_ID, NEW_APPROVAL_PGM, NEW_CLEAR_STATE_PGM)
          ... 
        </k>
@@ -990,7 +1026,8 @@ DeleteApplication
   rule <k>
          #executeAppl(APP_ID) => 
               #initApp(APP_ID)
-           ~> #evalTeal(APPROVAL_PGM) 
+           ~> #loadInputPgm(APPROVAL_PGM)
+           ~> #evalTeal() 
            ~> #deleteApplication(APP_ID)
          ... 
        </k>

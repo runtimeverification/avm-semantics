@@ -191,6 +191,7 @@ module ALGO-TXN
               <assetFreezeTxFields/>
             </txnTypeSpecificFields>
             <txnExecutionContext> .K </txnExecutionContext>
+            <resume> false </resume>
           </transaction>
         </transactions>
       </txGroup>

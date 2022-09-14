@@ -225,8 +225,9 @@ A subroutine call in TEAL is essentially an unconditional branch to a label, whi
 
   syntax TealExecutionOp ::= #initApp( Int )
                            | #initSmartSig()
-                           | #cleanContext()
+//                         | #cleanContext()
                            | #restoreContext()
+                           | #initContext()
                            | #startExecution()
                            | #finalizeExecution()
                            | #fetchOpcode()

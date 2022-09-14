@@ -3,7 +3,6 @@ requires "avm/txn.md"
 requires "avm/avm-configuration.md"
 requires "avm/avm-txn-deque.md"
 requires "avm/avm-execution.md"
-requires "avm/avm-commands.md"
 requires "avm/teal/teal-types.md"
 requires "avm/teal/teal-fields.md"
 requires "avm/teal/teal-execution.md"
@@ -11,7 +10,6 @@ requires "avm/teal/teal-execution.md"
 module ALGO-ITXN
   imports ALGO-TXN
   imports AVM-CONFIGURATION
-  imports AVM-COMMANDS
   imports AVM-TXN-DEQUE
   imports TEAL-TYPES
   imports TEAL-FIELDS
@@ -480,6 +478,8 @@ module ALGO-ITXN
 
   rule <k> #checkItxns((ListItem(T:TransactionCell) REST)) => (#checkItxn(T) ~> #checkItxns(REST)) ...</k>
   rule <k> #checkItxns(.List) => . ...</k>
+
+  syntax AlgorandCommand ::= #evalTxGroup()
 
   syntax KItem ::= #executeItxnGroup()
   //----------------------------------

@@ -19,7 +19,7 @@ Before starting the execution of a TEAL progam, the `<teal>` cell needs to be (r
 there may be some remaining artefacts of the previous transaction's TEAL.
 
 ```k
-  rule <k> #cleanContext() => . ...</k>
+  rule <k> #initContext() => . ...</k>
        <currentTxnExecution>
          <teal>
          _ => (
@@ -40,14 +40,7 @@ there may be some remaining artefacts of the previous transaction's TEAL.
          ...
        </currentTxnExecution>
 
-  syntax KItem ::= #resetPgmAndLbls()
-  //---------------------------------
-
-  rule <k> #resetPgmAndLbls() => . ...</k>
-       <program> _ => .Map </program>
-       <labels> _ => .Map </labels>
-
-  rule <k> #restoreContext() => #resetPgmAndLbls() ...</k>
+  rule <k> #restoreContext() => . ...</k>
        <currentTx> TX_ID </currentTx>
        <transaction>
          <txID> TX_ID </txID>
@@ -55,33 +48,6 @@ there may be some remaining artefacts of the previous transaction's TEAL.
          ...
        </transaction>
        <currentTxnExecution> _ => C </currentTxnExecution>
-
-  rule <k> #restoreContext() => . ...</k>
-       <currentTx> TX_ID </currentTx>
-       <transaction>
-         <txID> TX_ID </txID>
-         <txnExecutionContext> .K </txnExecutionContext>
-         ...
-       </transaction>
-       <currentTxnExecution>
-         <teal>
-         _ => (
-           <pc> 0 </pc>
-           <program> .Map </program>
-           <mode> undefined </mode>
-           <version> 1 </version>
-           <stack> .TStack </stack>
-           <stacksize> 0 </stacksize>
-           <jumped> false </jumped>
-           <labels> .Map </labels>
-           <callStack> .List </callStack>
-           <scratch> .Map </scratch>
-           <intcblock> .Map </intcblock>
-           <bytecblock> .Map </bytecblock>
-         )
-         </teal>
-         ...
-       </currentTxnExecution>
 ```
 
 ```k
@@ -185,7 +151,7 @@ The `#fetchOpcode()` operation will lookup the next opcode from program memory a
 put it into the `<k>` cell for execution.
 
 ```k
-  rule <k> #fetchOpcode() => PGM[PC] ~> #incrementPC() ... </k>
+  rule <k> #fetchOpcode() => PGM[PC] ~> #incrementPC() ~> #fetchOpcode() ... </k>
        <pc> PC </pc>
        <program> PGM </program>
    requires isValidProgamAddress(PC)
@@ -213,7 +179,7 @@ Program counter is incremented after every opcode execution, unless its a branch
 The semantics of branches updates the PC on its own.
 
 ```k
-  rule <k> #incrementPC() => #fetchOpcode() ... </k>
+  rule <k> #incrementPC() => . ... </k>
        <pc> PC => PC +Int #if JUMPED #then 0 #else 1 #fi </pc>
        <jumped> JUMPED => false </jumped>
 ```
