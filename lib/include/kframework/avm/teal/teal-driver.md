@@ -1004,10 +1004,9 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
   // TODO: `return` used to consume the rest of the `<k>` cell. Now we have to preceed,
   //       but we will need to make sure that TEAL execution stops here, so
   //       we erase only the items of sort `TealExecutionOp`.
-   rule <k> return ~> X::TealExecutionOp => #finalizeExecution() ... </k>
+   rule <k> return ~> #incrementPC() ~> #fetchOpcode() => #finalizeExecution() ... </k>
         <stack> (I:Int) : _XS => I : .TStack </stack>
         <stacksize> _ => 1 </stacksize>
-    requires notBool isTxnCommand(X)
 
   rule <k> _: => .K ... </k>
 
