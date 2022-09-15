@@ -5,6 +5,11 @@ int 0
 ==
 bnz end
 
+int 3
+store 5
+int 4
+store 6
+
 global CurrentApplicationID
 global CurrentApplicationAddress
 
@@ -36,6 +41,16 @@ global CurrentApplicationAddress
 assert
 
 global CurrentApplicationID
+==
+assert
+
+load 5
+int 3
+==
+assert
+
+load 6
+int 4
 ==
 assert
 
