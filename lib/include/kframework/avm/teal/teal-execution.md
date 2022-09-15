@@ -54,7 +54,9 @@ there may be some remaining artefacts of the previous transaction's TEAL.
   rule <k> #initApp(APP_ID) => . ...</k>
        <currentApplicationID> _ => APP_ID </currentApplicationID>
        <currentApplicationAddress> _ => getAppAddress(APP_ID)       </currentApplicationAddress>
+       <activeApps> (.Set => SetItem(APP_ID)) REST </activeApps>
        <mode> _ => stateful </mode>
+    requires notBool(APP_ID in REST)
 ```
 
 ```k
@@ -203,33 +205,42 @@ Note: For stateless teal, failure means rejecting the transaction. For stateful
 teal, failure means undoing changes made to the state (for more details, see
 [this article](https://developer.algorand.org/docs/features/asc1/).)
 ```k
-  rule <k> #finalizeExecution() => .K ... </k>
+  syntax KItem ::= #calcReturn()
+  syntax KItem ::= #deactivateApp()
+
+  rule <k> #finalizeExecution() => #deactivateApp() ~> #calcReturn() ... </k>
+
+  rule <k> #deactivateApp() => . ... </k>
+       <currentApplicationID> APP_ID </currentApplicationID>
+       <activeApps> (SetItem(APP_ID) => .Set) ...</activeApps>
+
+  rule <k> #calcReturn() => .K ... </k>
        <stack> I : .TStack </stack>
        <stacksize> SIZE </stacksize>
        <returncode> 4 => 0 </returncode>
        <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
     requires I >Int 0 andBool SIZE ==Int 1
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #calcReturn() => .K </k>
        <stack> I : .TStack => I : .TStack </stack>
        <stacksize> _ </stacksize>
        <returncode> 4 => 1 </returncode>
        <returnstatus> _ => "Failure - zero-valued singleton stack" </returnstatus>
     requires I <=Int 0
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #calcReturn() => .K </k>
        <stack> _ </stack>
        <stacksize> SIZE </stacksize>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - stack size greater than 1" </returnstatus>
     requires SIZE >Int 1
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #calcReturn() => .K </k>
        <stack> .TStack </stack>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - empty stack" </returnstatus>
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #calcReturn() => .K </k>
        <stack> (_:Bytes) : .TStack </stack>
        <stacksize> _ </stacksize>
        <returncode> 4 => 2 </returncode>

@@ -59,9 +59,9 @@ module AVM-CONFIGURATION
           <effects> .List </effects>
         </currentTxnExecution>
 
-        <innerTransactions>
-          .List
-        </innerTransactions>
+        <innerTransactions> .List </innerTransactions>
+
+        <activeApps> .Set </activeApps>
 
       </avmExecution>
 

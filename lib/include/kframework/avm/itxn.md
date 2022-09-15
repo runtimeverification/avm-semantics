@@ -431,10 +431,8 @@ module ALGO-ITXN
              </transaction>) => . 
              ...
        </k>
-       <transactions>
-         T
-       </transactions>
-    requires notBool(APP_ID in_calledApps(<transactions> T </transactions>))
+       <activeApps> AA </activeApps>
+    requires notBool(APP_ID in AA )
 
   rule <k> #checkForReentrance(
              <transaction>
@@ -449,10 +447,10 @@ module ALGO-ITXN
              </transaction>) => panic(ITXN_REENTRY)
              ...
        </k>
-       <transactions>
-         T
-       </transactions>
-    requires APP_ID in_calledApps(<transactions> T </transactions>)
+       <activeApps> AA </activeApps>
+    requires APP_ID in AA
+
+  rule <k> #checkForReentrance(_) => . ...</k>  [owise]
 
   // Ensures the transaction is not malformed prior to executing it in a group. E.g., has fields set only for
   // one type of transaction. This implementation does not yet allow unsetting of fields, e.g. setting them to
