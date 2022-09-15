@@ -1,10 +1,7 @@
 import pytest
-
-from pyk.kast import KApply, KAst, KLabel, KToken, KSort
-from pyk.prelude import intToken, stringToken
+from pyk.kast import KApply, KAst, KInner, KLabel, KSort, KToken
 
 from kavm.pyk_utils import AccountCellMap
-from kavm.adaptors.account import KAVMAccount
 
 
 @pytest.fixture
@@ -175,21 +172,21 @@ def two_accounts_term() -> KAst:
     )
 
 
-def test_kmapcell_empty(empty_accounts_term):
+def test_kmapcell_empty(empty_accounts_term: KInner) -> None:
     thing = AccountCellMap(
         term=empty_accounts_term,
     )
     assert len(thing) == 0
 
 
-def test_kmapcell_one(one_accounts_term):
+def test_kmapcell_one(one_accounts_term: KInner) -> None:
     thing = AccountCellMap(
         term=one_accounts_term,
     )
     assert len(thing) == 1
 
 
-def test_kmapcell_two(two_accounts_term):
+def test_kmapcell_two(two_accounts_term: KInner) -> None:
     thing = AccountCellMap(
         term=two_accounts_term,
     )

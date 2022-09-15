@@ -8,17 +8,17 @@ import tempfile
 from pathlib import Path
 from subprocess import CalledProcessError, CompletedProcess
 from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Set, Tuple, Union, cast
-from algosdk.future.transaction import Transaction
 
+from algosdk.future.transaction import Transaction
 from pyk.cli_utils import run_process
 from pyk.kast import KApply, KAst, KInner, KLabel, KSort, KToken, Subst
 from pyk.kastManip import free_vars, inline_cell_maps, split_config_from
-from pyk.ktool.krun import KRun
 from pyk.ktool.kprint import paren
+from pyk.ktool.krun import KRun
 from pyk.prelude import Sorts, build_assoc, build_cons, intToken, stringToken
 
 from kavm import constants
-from kavm.adaptors.account import KAVMAccount, get_account
+from kavm.adaptors.account import KAVMAccount
 from kavm.adaptors.transaction import KAVMTransaction, transaction_from_k
 from kavm.pyk_utils import AccountCellMap, AppCellMap, carefully_split_config_from
 
@@ -74,12 +74,12 @@ class KAVM(KRun):
     @property
     def next_valid_txid(self) -> int:
         """Return a txid consequative to the last commited one"""
-        return list(sorted(self._committed_txns.keys()))[-1] + 1 if len(self._committed_txns) > 0 else 0
+        return sorted(self._committed_txns.keys())[-1] + 1 if len(self._committed_txns) > 0 else 0
 
     @property
     def next_valid_appid(self) -> int:
         """Return an app id consequative to the last created one"""
-        return list(sorted(self.apps.keys()))[-1] + 1 if len(self.apps) > 0 else 1
+        return sorted(self.apps.keys())[-1] + 1 if len(self.apps) > 0 else 1
 
     @staticmethod
     def kompile(
@@ -291,7 +291,7 @@ class KAVM(KRun):
                 try:
                     if self._committed_txns[txn.txid]['application-index']:
                         next_app_id += 1
-                except:
+                except Exception:
                     pass
             return {'txId': f'{txns[0].txid}'}
         else:
@@ -388,7 +388,7 @@ class KAVM(KRun):
         self.logger.debug(f'Preparing simulation config for txn ids: {txids}')
 
         (current_symbolic_config, current_subst) = carefully_split_config_from(
-            self._current_config, ignore_cells={'<transaction>'}
+            cast(KInner, self._current_config), ignore_cells={'<transaction>'}
         )
 
         control_subst = Subst(

@@ -1,6 +1,7 @@
-import pytest
+from typing import Any
 
-from pyk.kast import KApply, KToken, KSort
+import pytest
+from pyk.kast import KApply, KInner, KSort, KToken
 from pyk.prelude import intToken, stringToken
 
 from kavm.pyk_utils import maybe_tvalue, split_direct_subcells_from
@@ -15,7 +16,7 @@ from kavm.pyk_utils import maybe_tvalue, split_direct_subcells_from
         (b'42', stringToken('NDI=')),
     ],
 )
-def test_maybe_tvalue(input, expected):
+def test_maybe_tvalue(input: Any, expected: Any) -> None:
     assert maybe_tvalue(input) == expected
 
 
@@ -29,7 +30,7 @@ def test_maybe_tvalue(input, expected):
                     KApply('<address>', [KToken('dummy', KSort('TAddressLiteral'))]),
                 ],
             ),
-            set(['ADDRESS_CELL']),
+            {['ADDRESS_CELL']},
         ),
         (
             KApply(
@@ -39,7 +40,7 @@ def test_maybe_tvalue(input, expected):
                     KApply('<appsCreated>', [KApply('<app>', [KApply('<appID>', [intToken(1)])])]),
                 ],
             ),
-            set(['ADDRESS_CELL', 'APPSCREATED_CELL']),
+            {['ADDRESS_CELL', 'APPSCREATED_CELL']},
         ),
         (
             KApply(
@@ -55,10 +56,10 @@ def test_maybe_tvalue(input, expected):
                     ),
                 ],
             ),
-            set(['ADDRESS_CELL', 'APPSCREATED_CELL']),
+            {['ADDRESS_CELL', 'APPSCREATED_CELL']},
         ),
     ],
 )
-def test_split_direct_subcells_from(input, expected):
+def test_split_direct_subcells_from(input: KInner, expected: KInner) -> None:
     (_, subst) = split_direct_subcells_from(input)
     assert set(subst.keys()) == expected

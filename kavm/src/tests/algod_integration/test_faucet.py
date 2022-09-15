@@ -5,7 +5,6 @@ from algosdk.future import transaction
 from algosdk.future.transaction import PaymentTxn
 from algosdk.v2client.algod import AlgodClient
 
-from kavm.kavm import KAVM
 from kavm.constants import FAUCET_ALGO_SUPPLY
 
 

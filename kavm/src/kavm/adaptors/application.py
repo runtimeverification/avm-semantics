@@ -1,14 +1,13 @@
-from base64 import b64decode
-from typing import Dict, List, Optional, Union, cast, Any
-import tempfile
 import json
+import tempfile
+from base64 import b64decode
 from pathlib import Path
+from typing import Any, Dict, Union, cast
 
-from pyk.kast import KApply, KInner, KSort, KToken, Subst, KLabel, KAst
-from pyk.kastManip import flatten_label, split_config_from
+from pyk.kast import KApply, KAst, KInner, KSort
+from pyk.kastManip import split_config_from
 from pyk.prelude import intToken
 
-from kavm.constants import MIN_BALANCE
 from kavm.pyk_utils import tvalue
 
 
@@ -19,65 +18,65 @@ class KAVMApplication:
 
     def __init__(
         self,
-        appID: int,
-        approvalPgmSrc: KAst,
-        clearStatePgmSrc: KAst,
-        approvalPgm: bytes = b'',
-        clearStatePgm: bytes = b'',
-        globalInts: int = 0,
-        globalBytes: int = 0,
-        localInts: int = 0,
-        localBytes: int = 0,
-        extraPages: int = 0,
+        app_id: int,
+        approval_pgm_src: KAst,
+        clear_state_pgm_src: KAst,
+        approval_pgm: bytes = b'',
+        clear_state_pgm: bytes = b'',
+        global_ints: int = 0,
+        global_bytes: int = 0,
+        local_ints: int = 0,
+        local_bytes: int = 0,
+        extra_pages: int = 0,
     ) -> None:
         """
         Create a KAVM app cell.
         """
-        self._appID = appID
-        self._approvalPgmSrc = approvalPgmSrc
-        self._clearStatePgmSrc = clearStatePgmSrc
-        self._approvalPgm = approvalPgm
-        self._clearStatePgm = clearStatePgm
-        self._globalInts = globalInts
-        self._globalBytes = globalBytes
-        self._localInts = localInts
-        self._localBytes = localBytes
-        self._extraPages = extraPages
+        self._app_id = app_id
+        self._approval_pgm_src = approval_pgm_src
+        self._clear_state_pgm_src = clear_state_pgm_src
+        self._approval_pgm = approval_pgm
+        self._clear_state_pgm = clear_state_pgm
+        self._global_ints = global_ints
+        self._global_bytes = global_bytes
+        self._local_ints = local_ints
+        self._local_bytes = local_bytes
+        self._extra_pages = extra_pages
 
     # TODO: implement better eq
-    def __eq__(self, other: 'KAVMApplication') -> bool:
-        return self._appID == other._appID
+    def __eq__(self, other: Any) -> bool:
+        return self._app_id == other._app_id
 
     @property
     def address(self) -> str:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     @property
     def app_cell(self) -> KInner:
         return KApply(
             '<app>',
             [
-                KApply('<appID>', [intToken(self._appID)]),
-                KApply('<approvalPgmSrc>', cast(KInner, self._approvalPgmSrc)),
-                KApply('<clearStatePgmSrc>', cast(KInner, self._clearStatePgmSrc)),
-                KApply('<approvalPgm>', tvalue(self._approvalPgm)),
-                KApply('<clearStatePgm>', tvalue(self._clearStatePgm)),
+                KApply('<appID>', [intToken(self._app_id)]),
+                KApply('<approvalPgmSrc>', cast(KInner, self._approval_pgm_src)),
+                KApply('<clearStatePgmSrc>', cast(KInner, self._clear_state_pgm_src)),
+                KApply('<approvalPgm>', tvalue(self._approval_pgm)),
+                KApply('<clearStatePgm>', tvalue(self._clear_state_pgm)),
                 KApply(
                     '<globalState>',
                     [
-                        KApply('<globalInts>', [intToken(self._globalInts)]),
-                        KApply('<globalBytes>', [intToken(self._globalBytes)]),
+                        KApply('<globalInts>', [intToken(self._global_ints)]),
+                        KApply('<globalBytes>', [intToken(self._global_bytes)]),
                         KApply('<globalStorage>', [KApply('.Map')]),
                     ],
                 ),
                 KApply(
                     '<localState>',
                     [
-                        KApply('<localInts>', [intToken(self._localInts)]),
-                        KApply('<localBytes>', [intToken(self._localBytes)]),
+                        KApply('<localInts>', [intToken(self._local_ints)]),
+                        KApply('<localBytes>', [intToken(self._local_bytes)]),
                     ],
                 ),
-                KApply('<extraPages>', [intToken(self._extraPages)]),
+                KApply('<extraPages>', [intToken(self._extra_pages)]),
             ],
         )
 
@@ -132,16 +131,16 @@ class KAVMApplication:
         """
         (_, subst) = split_config_from(term)
         return KAVMApplication(
-            appID=int(subst['APPID_CELL'].token),
-            approvalPgmSrc=subst['APPROVALPGMSRC_CELL'],
-            clearStatePgmSrc=subst['CLEARSTATEPGMSRC_CELL'],
-            approvalPgm=b64decode(subst['APPROVALPGM_CELL'].token),
-            clearStatePgm=b64decode(subst['CLEARSTATEPGM_CELL'].token),
-            globalInts=int(subst['GLOBALINTS_CELL'].token),
-            globalBytes=int(subst['GLOBALBYTES_CELL'].token),
-            localInts=int(subst['LOCALINTS_CELL'].token),
-            localBytes=int(subst['LOCALBYTES_CELL'].token),
-            extraPages=int(subst['EXTRAPAGES_CELL'].token),
+            app_id=int(subst['APPID_CELL'].token),
+            approval_pgm_src=subst['APPROVALPGMSRC_CELL'],
+            clear_state_pgm_src=subst['CLEARSTATEPGMSRC_CELL'],
+            approval_pgm=b64decode(subst['APPROVALPGM_CELL'].token),
+            clear_state_pgm=b64decode(subst['CLEARSTATEPGM_CELL'].token),
+            global_ints=int(subst['GLOBALINTS'].token),
+            global_bytes=int(subst['GLOBALBYTES_CELL'].token),
+            local_ints=int(subst['LOCALINTS_CELL'].token),
+            local_bytes=int(subst['LOCALBYTES_CELL'].token),
+            extra_pages=int(subst['EXTRAPAGES_CELL'].token),
         )
 
     def dictify(self) -> Dict[str, Union[str, int]]:
@@ -149,5 +148,5 @@ class KAVMApplication:
         Return a dictified representation of the application cell to pass to py-algorand-sdk
         """
         return {
-            'index': str(self._appID),
+            'index': str(self._app_id),
         }

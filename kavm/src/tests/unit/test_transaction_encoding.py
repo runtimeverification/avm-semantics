@@ -1,4 +1,3 @@
-from base64 import b64encode
 import pytest
 from algosdk import account
 from algosdk.future.transaction import ApplicationCreateTxn, OnComplete, PaymentTxn, StateSchema, SuggestedParams

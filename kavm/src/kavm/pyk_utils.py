@@ -1,11 +1,12 @@
-from collections.abc import MutableMapping
-from base64 import b64encode
-from typing import List, Optional, Union, cast, Callable, Any, Type, Set
 import re
+import typing
+from base64 import b64encode
+from collections.abc import MutableMapping
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, Union, cast
 
 from algosdk.future.transaction import OnComplete
-from pyk.kast import KAst, KApply, KInner, KLabel, KVariable, top_down
-from pyk.prelude import build_cons, build_assoc, intToken, stringToken
+from pyk.kast import KApply, KAst, KInner, KLabel, KVariable, top_down
+from pyk.prelude import build_cons, intToken, stringToken
 
 
 def maybe_tvalue(value: Optional[Union[str, int, bytes]]) -> KInner:
@@ -43,7 +44,7 @@ def tvalue_list(value: List[Union[str, int, bytes]]) -> KInner:
         raise NotImplementedError()
 
 
-def split_direct_subcells_from(configuration):
+def split_direct_subcells_from(configuration: KInner) -> Tuple[KInner, Any]:
     """
     Split the *direct* subcell substitution from a given configuration.
 
@@ -51,10 +52,10 @@ def split_direct_subcells_from(configuration):
     """
     initial_substitution = {}
 
-    def _mk_cell_var(label):
+    def _mk_cell_var(label: str) -> str:
         return label.replace('-', '_').replace('<', '').replace('>', '').upper() + '_CELL'
 
-    def _replace_with_var(k):
+    def _replace_with_var(k: KInner) -> KInner:
         if type(k) is KApply and k.is_cell:
             config_var = _mk_cell_var(k.label.name)
             initial_substitution[config_var] = k.args[0]
@@ -65,19 +66,20 @@ def split_direct_subcells_from(configuration):
     return (symbolic_config, initial_substitution)
 
 
-def carefully_split_config_from(configuration, ignore_cells: Optional[Set[str]]):
+@typing.no_type_check
+def carefully_split_config_from(configuration: KInner, ignore_cells: Optional[Set[str]]) -> Tuple[KInner, Any]:
     """
     Like pyk.kastManip.split_config_from, but does not substitute the given cells with variables
     """
     initial_substitution = {}
 
-    if not ignore_cells:
+    if ignore_cells is None:
         ignore_cells = set()
 
-    def _mk_cell_var(label):
+    def _mk_cell_var(label: str) -> str:
         return label.replace('-', '_').replace('<', '').replace('>', '').upper() + '_CELL'
 
-    def _replace_with_var(k):
+    def _replace_with_var(k: KInner) -> KInner:
         if type(k) is KApply and k.is_cell:
             if (k.arity == 1 and not (type(k.args[0]) is KApply and k.args[0].is_cell)) or (
                 k.arity == 1 and not (k.label.name in ignore_cells)
@@ -104,7 +106,7 @@ class KCellMap(MutableMapping):
         value_k_cell: Callable[[Any], KInner],
         term: Optional[KAst] = None,
     ):
-        self._store = dict()
+        self._store: Dict[Any, Any] = {}
         self._unit_klabel = unit_klabel.name if isinstance(unit_klabel, KLabel) else unit_klabel
         assert self._unit_klabel.endswith('CellMap')
         self._item_cell_name = '<' + re.sub('CellMap$', '', self._unit_klabel).strip('.').lower() + '>'
@@ -114,7 +116,8 @@ class KCellMap(MutableMapping):
         self._value_initializer = value_initializer
         self._value_k_cell = value_k_cell
 
-        def extractor(inner: KInner):
+        @typing.no_type_check
+        def extractor(inner: KInner) -> KInner:
             if type(inner) is KApply and inner.label.name == self._item_cell_name:
                 key = int(inner.args[0].args[0].token) if key_type is int else str(inner.args[0].args[0].token)
                 self._store[key] = value_initializer(inner)
@@ -123,27 +126,27 @@ class KCellMap(MutableMapping):
         if term:
             top_down(extractor, cast(KInner, term))
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Any) -> Any:
         return self._store[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: Any, value: Any) -> Any:
         self._store[key] = value
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: Any) -> None:
         del self._store[key]
 
-    def __iter__(self):
+    def __iter__(self) -> Any:
         return iter(self._store)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._store)
 
-    def __eq__(self, other: 'KCellMap'):
+    def __eq__(self, other: Any) -> bool:
         klabels_are_same = self._unit_klabel == other._unit_klabel and self._cons_klabel == other._cons_klabel
         stores_are_same = len(self._store) == len(other._store) and self._store == other._store
         return klabels_are_same and stores_are_same
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(self._store)
 
     @property
@@ -202,7 +205,7 @@ class AppCellMap(KCellMap):
         )
 
     @staticmethod
-    def from_list(apps: List[Any]):
+    def from_list(apps: List[Any]) -> 'AppCellMap':
         result = AppCellMap()
         for app in apps:
             result._store[app._appID] = app

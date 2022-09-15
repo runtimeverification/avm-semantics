@@ -1,15 +1,13 @@
-from typing import Dict, List, Optional, Union, Any, cast
-import tempfile
 import json
+import tempfile
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Union, cast
 
-from pyk.kast import KApply, KInner, KSort, KToken, Subst, KLabel, KAst
+from pyk.kast import KApply, KAst, KInner, KSort, KToken, Subst
 from pyk.kastManip import flatten_label, split_config_from
 from pyk.prelude import intToken
-from kavm.adaptors.application import KAVMApplication
 
 from kavm.constants import MIN_BALANCE
-from kavm.adaptors.application import KAVMApplication
 from kavm.pyk_utils import AppCellMap, split_direct_subcells_from
 
 
@@ -50,7 +48,7 @@ class KAVMAccount:
         self._assets_opted_in = assets_opted_in if assets_opted_in else []
 
     # TODO: implement better eq
-    def __eq__(self, other: 'KAVMAccount') -> bool:
+    def __eq__(self, other: Any) -> bool:
         return self._address == other._address
 
     @property
@@ -66,7 +64,7 @@ class KAVMAccount:
         self._balance = microalgos
 
     @property
-    def apps_created(self):
+    def apps_created(self) -> AppCellMap:
         return self._apps_created
 
     @property
@@ -180,7 +178,7 @@ class KAVMAccount:
             'total-created-assets': len(self._assets_created) if self._assets_created else 0,
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(self.dictify())
 
 
