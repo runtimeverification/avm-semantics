@@ -1,6 +1,9 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Any, cast
+import tempfile
+import json
+from pathlib import Path
 
-from pyk.kast import KApply, KInner, KSort, KToken, Subst, KLabel
+from pyk.kast import KApply, KInner, KSort, KToken, Subst, KLabel, KAst
 from pyk.kastManip import flatten_label, split_config_from
 from pyk.prelude import intToken
 from kavm.adaptors.application import KAVMApplication
@@ -45,6 +48,10 @@ class KAVMAccount:
         self._apps_opted_in = apps_opted_in if apps_opted_in else []
         self._assets_created = assets_created if assets_created else []
         self._assets_opted_in = assets_opted_in if assets_opted_in else []
+
+    # TODO: implement better eq
+    def __eq__(self, other: 'KAVMAccount') -> bool:
+        return self._address == other._address
 
     @property
     def address(self) -> str:
@@ -112,6 +119,46 @@ class KAVMAccount:
             assets_opted_in=[],
         )
 
+    def to_kore_term(self, kavm: Any) -> str:
+        '''
+        Encode account as a KORE term
+
+        A KAVM instance must be passed to use kavm.kast
+        '''
+        with tempfile.NamedTemporaryFile('w+t', delete=True) as tmp_kast_json_file:
+            term = self.account_cell
+            term_json = json.dumps({'format': 'KAST', 'version': 2, 'term': term.to_dict()})
+            tmp_kast_json_file.write(term_json)
+            tmp_kast_json_file.seek(0)
+            kore_term = kavm.kast(
+                input_file=Path(tmp_kast_json_file.name),
+                module='ALGO-BLOCKCHAIN',
+                sort=KSort('AccountCell'),
+                input='json',
+                output='kore',
+            ).stdout
+            return kore_term
+
+    @staticmethod
+    def from_kore_term(kore_term: str, kavm: Any) -> 'KAVMAccount':
+        '''
+        Decode an account from a KORE term
+
+        A KAVM instance must be passed to use kavm.kast
+        '''
+        with tempfile.NamedTemporaryFile('w+t', delete=True) as tmp_kore_file:
+            tmp_kore_file.write(kore_term)
+            tmp_kore_file.seek(0)
+            kast_term_json = kavm.kast(
+                input_file=Path(tmp_kore_file.name),
+                module='ALGO-BLOCKCHAIN',
+                sort=KSort('AccountCell'),
+                input='kore',
+                output='json',
+            ).stdout
+            kast_term = KAst.from_dict(json.loads(kast_term_json)['term'])
+            return KAVMAccount.from_account_cell(cast(KInner, kast_term))
+
     def dictify(self) -> Dict[str, Union[str, int]]:
         """
         Return a dictified representation of the account cell to pass to py-algorand-sdk
@@ -132,6 +179,9 @@ class KAVMAccount:
             'total-created-apps': len(self._apps_created) if self._apps_created else 0,
             'total-created-assets': len(self._assets_created) if self._assets_created else 0,
         }
+
+    def __repr__(self):
+        return repr(self.dictify())
 
 
 def get_account(address: str, accounts_map_cell: KInner) -> KInner:

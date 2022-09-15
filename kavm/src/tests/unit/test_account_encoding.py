@@ -51,3 +51,9 @@ def test_account_k_encoding(account: KAVMAccount):
     # ignoring the __ ones
     for attr in [a for a in dir(account) if a.startswith('_') and not a.startswith('__')]:
         assert getattr(account, attr) == getattr(rountrip_account, attr)
+
+
+def test_account_to_from_kore(kavm: KAVM, account: KAVMAccount):
+    kore_term = account.to_kore_term(kavm)
+    rountrip_account = KAVMAccount.from_kore_term(kore_term, kavm)
+    assert rountrip_account == account
