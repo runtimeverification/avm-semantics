@@ -1,3 +1,4 @@
+from base64 import b64encode
 import pytest
 from algosdk import account
 from algosdk.future.transaction import ApplicationCreateTxn, OnComplete, PaymentTxn, StateSchema, SuggestedParams
@@ -87,8 +88,10 @@ def test_application_create_txn_encode_decode(kavm: KAVM, suggested_params: Sugg
     private_key_creator, creator = account.generate_account()
     local_schema = StateSchema(num_uints=0, num_byte_slices=0)
     global_schema = StateSchema(num_uints=0, num_byte_slices=0)
-    approval_program = b'\x01 \x01\x00"'  # int 1
-    clear_program = b'\x01 \x01\x01"'  # int 0
+    # approval_program = b'\x01 \x01\x00"'  # int 0
+    # clear_program = b'\x01 \x01\x01"'  # int 1
+    approval_program = b'int 0'
+    clear_program = b'int 1'
     txn = ApplicationCreateTxn(
         creator,
         suggested_params,

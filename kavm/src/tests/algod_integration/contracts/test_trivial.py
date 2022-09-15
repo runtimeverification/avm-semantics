@@ -8,11 +8,13 @@ from algosdk.future.transaction import ApplicationCallTxn, ApplicationCreateTxn,
 from algosdk.v2client.algod import AlgodClient
 
 approval_program_src = '''
+#pragma version 4
 int 1
 return
 '''
 
 clear_program_src = '''
+#pragma version 4
 int 1
 return
 '''
@@ -73,7 +75,7 @@ def test_create(client: AlgodClient, faucet: Dict[str, str]) -> None:
     app_call_txn_id = client.send_transactions([signed_app_call_txn])
     app_call_txn_status = client.pending_transaction_info(app_call_txn_id)
 
-    # # check that the transaction was confirmed --- call succeded
-    # assert app_call_txn_status['confirmed-round']
+    # check that the transaction was confirmed --- call succeded
+    assert app_call_txn_status['confirmed-round']
     # # check that a valid (non-zero) app id was returned
     # assert app_call_txn_status['application-index']
