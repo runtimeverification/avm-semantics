@@ -769,6 +769,37 @@ module ALGO-TXN
 *Other Helper Functions*
 
 ```k
+  syntax Bool ::= Int "in_calledApps" "(" TransactionsCell ")" [function]
+  //---------------------------------------------------------------------
+  rule I in_calledApps( <transactions>
+                          <transaction>
+                            <txnTypeSpecificFields>
+                              <appCallTxFields>
+                                <applicationID> APP_ID </applicationID> ...
+                              </appCallTxFields>
+                            </txnTypeSpecificFields> ...
+                          </transaction>
+                          REST
+                        </transactions> )
+       => I in_calledApps(<transactions> REST </transactions>)
+    requires I =/=K APP_ID
+
+  rule I in_calledApps( <transactions>
+                          <transaction>
+                            <txnTypeSpecificFields>
+                              <appCallTxFields>
+                                <applicationID> I </applicationID> ...
+                              </appCallTxFields>
+                            </txnTypeSpecificFields> ...
+                          </transaction>
+                          ...
+                        </transactions> )
+       => true
+
+  rule _ in_calledApps( <transactions> .Bag </transactions> ) => false
+```
+
+```k
   syntax Bytes ::= getAppAddress(Int) [function, functional]
   //---------------------------------------------------------
   rule getAppAddress(APP_ID) => b"application" +Bytes String2Bytes(Int2String(APP_ID))

@@ -412,13 +412,55 @@ module ALGO-ITXN
 ```
 
 ```k
+  syntax KItem ::= #checkItxn(TransactionCell)
+
+  rule <k> #checkItxn(TXN) => (#checkItxnFieldsCoherent(TXN) ~> #checkForReentrance(TXN)) ...</k>
+
+  syntax KItem ::= #checkForReentrance(TransactionCell)
+
+  rule <k> #checkForReentrance(
+             <transaction>
+               <txID> TX_ID </txID>
+               <txnTypeSpecificFields>
+                 <appCallTxFields>
+                   <applicationID> APP_ID </applicationID>
+                   ...
+                 </appCallTxFields>
+               </txnTypeSpecificFields>
+               ...
+             </transaction>) => . 
+             ...
+       </k>
+       <transactions>
+         T
+       </transactions>
+    requires notBool(APP_ID in_calledApps(<transactions> T </transactions>))
+
+  rule <k> #checkForReentrance(
+             <transaction>
+               <txID> TX_ID </txID>
+               <txnTypeSpecificFields>
+                 <appCallTxFields>
+                   <applicationID> APP_ID </applicationID>
+                   ...
+                 </appCallTxFields>
+               </txnTypeSpecificFields>
+               ...
+             </transaction>) => panic(ITXN_REENTRY)
+             ...
+       </k>
+       <transactions>
+         T
+       </transactions>
+    requires APP_ID in_calledApps(<transactions> T </transactions>)
+
   // Ensures the transaction is not malformed prior to executing it in a group. E.g., has fields set only for
   // one type of transaction. This implementation does not yet allow unsetting of fields, e.g. setting them to
   // a default value, allowing you to set more than one type of transaction field as long as all but one end
   // up with only default values.
-  syntax KItem ::= #checkItxn(TransactionCell)
+  syntax KItem ::= #checkItxnFieldsCoherent(TransactionCell)
 
-  rule <k> #checkItxn(
+  rule <k> #checkItxnFieldsCoherent(
          <transaction> 
            <txnTypeSpecificFields>
              <payTxFields> _ </payTxFields>
@@ -427,7 +469,7 @@ module ALGO-ITXN
          </transaction>) => . ... 
        </k>
 
-  rule <k> #checkItxn(
+  rule <k> #checkItxnFieldsCoherent(
          <transaction> 
            <txnTypeSpecificFields>
              <appCallTxFields> _ </appCallTxFields>
@@ -436,7 +478,7 @@ module ALGO-ITXN
          </transaction>) => . ... 
        </k>
 
-  rule <k> #checkItxn(
+  rule <k> #checkItxnFieldsCoherent(
          <transaction> 
            <txnTypeSpecificFields>
              <keyRegTxFields> _ </keyRegTxFields>
@@ -445,7 +487,7 @@ module ALGO-ITXN
          </transaction>) => . ... 
        </k>
 
-  rule <k> #checkItxn(
+  rule <k> #checkItxnFieldsCoherent(
          <transaction> 
            <txnTypeSpecificFields>
              <assetConfigTxFields> _ </assetConfigTxFields>
@@ -454,7 +496,7 @@ module ALGO-ITXN
          </transaction>) => . ... 
        </k>
 
-  rule <k> #checkItxn(
+  rule <k> #checkItxnFieldsCoherent(
          <transaction> 
            <txnTypeSpecificFields>
              <assetTransferTxFields> _ </assetTransferTxFields>
@@ -463,7 +505,7 @@ module ALGO-ITXN
          </transaction>) => . ... 
        </k>
 
-  rule <k> #checkItxn(
+  rule <k> #checkItxnFieldsCoherent(
          <transaction> 
            <txnTypeSpecificFields>
              <assetFreezeTxFields> _ </assetFreezeTxFields>
@@ -472,7 +514,7 @@ module ALGO-ITXN
          </transaction>) => . ... 
        </k>
 
-  rule <k> #checkItxn(<transaction> T </transaction>) => panic(TXN_INVALID) ...</k> [owise]
+  rule <k> #checkItxnFieldsCoherent(<transaction> T </transaction>) => panic(TXN_INVALID) ...</k> [owise]
 
   syntax KItem ::= #checkItxns(List)
 

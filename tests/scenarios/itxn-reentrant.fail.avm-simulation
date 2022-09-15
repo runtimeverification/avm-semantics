@@ -1,4 +1,4 @@
-declareTealSource "itxn-appl-call.teal";
+declareTealSource "itxn-reentrant.teal";
 declareTealSource "clear-basic.teal";
 
 addAccount <address> b"1" </address> <balance> 100000000 </balance>;
