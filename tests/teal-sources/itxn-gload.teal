@@ -3,10 +3,23 @@
 txn ApplicationID
 int 0
 ==
-bnz end
+bnz handle_init
 
-global CurrentApplicationID
-global CurrentApplicationAddress
+b handle_run
+
+handle_init:
+
+int 3
+store 5
+
+int 2
+store 7
+
+int 1
+store 9
+
+b end
+handle_run:
 
 itxn_begin
 
@@ -24,21 +37,22 @@ itxn_field TypeEnum
 
 itxn_submit
 
-txn Sender
-balance
-int 99500100
+gload 0 5
+int 3
 ==
 assert
 
-// Check global fields are restored
-global CurrentApplicationAddress
+gload 0 7
+int 2
 ==
 assert
 
-global CurrentApplicationID
+gload 0 9
+int 1
 ==
 assert
 
+b end
 end:
 
 int 1
