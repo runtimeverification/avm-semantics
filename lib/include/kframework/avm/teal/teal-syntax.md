@@ -335,7 +335,7 @@ module TEAL-OPCODES
 ```k
   syntax InnerTxOpCode ::= "itxn_begin"
                          | "itxn_submit"
-                         | "itxn_field" TxnField
+                         | "itxn_field" TxnFieldTop
                          | "itxn_next"
                          | "itxn" TxnField
                          | "itxna" TxnField Int
