@@ -164,6 +164,24 @@ class KAVM(KRun):
         command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
         return run_process(kast_command, env=command_env, logger=self._logger, profile=True)
 
+    def kast_expr(
+        self,
+        expr: str,
+        input: str = 'json',
+        output: str = 'kore',
+        module: str = 'AVM-EXECUTION',
+        sort: Union[KSort, str] = Sorts.K,
+        args: Iterable[str] = (),
+    ) -> CompletedProcess:
+        kast_command = ['kast', '--definition', str(self.definition_dir)]
+        kast_command += ['--input', input, '--output', output]
+        kast_command += ['--module', module]
+        kast_command += ['--sort', sort.name if isinstance(sort, KSort) else sort]
+        kast_command += ['--expression', expr]
+        command_env = os.environ.copy()
+        command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
+        return run_process(kast_command, env=command_env, logger=self._logger, profile=True)
+
     def parse_teal(self, teal_expr: str, input: str = 'program', output: str = 'json') -> KAst:
         """Parse a TEAL progam from the provided input string"""
         kast_command = ['kast', '--definition', str(self.definition_dir)]
