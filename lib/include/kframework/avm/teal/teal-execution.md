@@ -208,30 +208,39 @@ teal, failure means undoing changes made to the state (for more details, see
        <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
     requires I >Int 0 andBool SIZE ==Int 1
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
        <stack> I : .TStack => I : .TStack </stack>
        <stacksize> _ </stacksize>
        <returncode> 4 => 1 </returncode>
        <returnstatus> _ => "Failure - zero-valued singleton stack" </returnstatus>
     requires I <=Int 0
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
        <stack> _ </stack>
        <stacksize> SIZE </stacksize>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - stack size greater than 1" </returnstatus>
     requires SIZE >Int 1
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
        <stack> .TStack </stack>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - empty stack" </returnstatus>
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
        <stack> (_:Bytes) : .TStack </stack>
        <stacksize> _ </stacksize>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - singleton stack with byte array type" </returnstatus>
+
+  // Consume the rest of the K cell if the execution terminated with an error
+  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
+       <returncode> RETURN_CODE </returncode>
+    requires RETURN_CODE =/=Int 0 andBool RETURN_CODE =/=Int 4
+
+  rule <k> #finalizeExecution() => .K </k>
+       <returncode> RETURN_CODE </returncode>
+    requires RETURN_CODE =/=Int 0 andBool RETURN_CODE =/=Int 4
 ```
 
 ```k
