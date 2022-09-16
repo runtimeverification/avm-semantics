@@ -1810,40 +1810,84 @@ Stateful TEAL Operations
 
   syntax KItem ::= loadGroupScratch(Int, Int)
   //-----------------------------------------
-  rule <k> loadGroupScratch(TXN_IDX, I) => . ...</k>
+  rule <k> loadGroupScratch(GROUP_IDX, I) => . ...</k>
        <stack> XS => ({M[I]}:>TValue) : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
+       <currentTx> TX_ID </currentTx>
        <transaction>
-         <txID> TXN_IDX </txID>
+         <txID> TX_ID </txID>
+         <groupID> GROUP_ID </groupID>
+         ...
+       </transaction>
+       <transaction>
+         <groupID> GROUP_ID </groupID>
+         <groupIdx> GROUP_IDX </groupIdx>
          <txScratch> M </txScratch>
          ...
        </transaction>
     requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
      andBool I in_keys(M)
      andBool S <Int MAX_STACK_DEPTH
-     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+     andBool GROUP_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
 
-  rule <k> loadGroupScratch(TXN_IDX, I) => . ...</k>
+  rule <k> loadGroupScratch(GROUP_IDX, I) => . ...</k>
+       <stack> XS => ({M[I]}:>TValue) : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <currentTx> TX_ID </currentTx>
+       <transaction>
+         <txID> TX_ID </txID>
+         <groupIdx> GROUP_IDX </groupIdx>
+         <txScratch> M </txScratch>
+         ...
+       </transaction>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+     andBool I in_keys(M)
+     andBool S <Int MAX_STACK_DEPTH
+     andBool GROUP_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+
+  rule <k> loadGroupScratch(GROUP_IDX, I) => . ...</k>
        <stack> XS => 0 : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
+       <currentTx> TX_ID </currentTx>
        <transaction>
-         <txID> TXN_IDX </txID>
+         <txID> TX_ID </txID>
+         <groupID> GROUP_ID </groupID>
+         ...
+       </transaction>
+       <transaction>
+         <groupID> GROUP_ID </groupID>
+         <groupIdx> GROUP_IDX </groupIdx>
          <txScratch> M </txScratch>
          ...
        </transaction>
     requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
      andBool notBool (I in_keys(M))
      andBool S <Int MAX_STACK_DEPTH
-     andBool TXN_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+     andBool GROUP_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+
+  rule <k> loadGroupScratch(GROUP_IDX, I) => . ...</k>
+       <stack> XS => 0 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <currentTx> TX_ID </currentTx>
+       <transaction>
+         <txID> TX_ID </txID>
+         <groupIdx> GROUP_IDX </groupIdx>
+         <txScratch> M </txScratch>
+         ...
+       </transaction>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+     andBool notBool (I in_keys(M))
+     andBool S <Int MAX_STACK_DEPTH
+     andBool GROUP_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
 
   rule <k> loadGroupScratch(_, I) => panic(INVALID_SCRATCH_LOC) ... </k>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
-  rule <k> loadGroupScratch(TXN_IDX, _) => panic(FUTURE_TXN) ... </k>
-    requires TXN_IDX >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+  rule <k> loadGroupScratch(GROUP_IDX, _) => panic(FUTURE_TXN) ... </k>
+    requires GROUP_IDX >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
 
-  rule <k> loadGroupScratch(TXN_IDX, _) => panic(TXN_OUT_OF_BOUNDS) ... </k>
-    requires TXN_IDX <Int 0 orBool TXN_IDX >=Int {getGlobalField(GroupSize)}:>Int
+  rule <k> loadGroupScratch(GROUP_IDX, _) => panic(TXN_OUT_OF_BOUNDS) ... </k>
+    requires GROUP_IDX <Int 0 orBool GROUP_IDX >=Int {getGlobalField(GroupSize)}:>Int
   
   rule <k> loadGroupScratch(_, _) => panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
@@ -1858,16 +1902,18 @@ Stateful TEAL Operations
          .List => 
          ListItem(<transaction>
            <txID> -1 </txID>
+           <groupID> GROUP_ID </groupID>
            <txnTypeSpecificFields>
              .AssetTransferTxFieldsCell
            </txnTypeSpecificFields>
            ...
          </transaction>)
        </innerTransactions>
+       <nextGroupID> GROUP_ID </nextGroupID>
 
   rule <k> itxn_submit => #incrementPC() ~> #checkItxns(T) ~> #executeItxnGroup()...</k>
-//  rule <k> itxn_submit => #checkItxns(T) ~> #executeItxnGroup()...</k>
        <innerTransactions> T </innerTransactions>
+       <nextGroupID> GROUP_ID => GROUP_ID +Int 1 </nextGroupID>
 
   rule <k> itxn_field FIELD => #setItxnField(FIELD, VAL) ...</k>
        <stack> VAL : XS => XS </stack>
@@ -1879,9 +1925,14 @@ Stateful TEAL Operations
          (.List =>
          ListItem(<transaction>
            <txID> -1 </txID>
+           <groupID> GROUP_ID </groupID>
+           <txnTypeSpecificFields>
+             .AssetTransferTxFieldsCell
+           </txnTypeSpecificFields>
            ...
          </transaction>))
        </innerTransactions>
+       <nextGroupID> GROUP_ID </nextGroupID>
     requires size(REST) >=Int 1
 
   rule <k> itxn FIELD => . ...</k>

@@ -206,24 +206,63 @@ module ALGO-TXN
 *Transaction Group Accessors*
 
 ```k
-//  syntax Int ::= getTxnGroupID() [function]
-  //--------------------------------------
-//  rule [[ getTxnGroupID() => I ]]
-//    <txGroupID> I </txGroupID>
+  syntax Int ::= getTxnGroupID(Int) [function]
+  //---------------------------------------------
+  rule [[ getTxnGroupID(TXN_ID) => I ]]
+       <transaction> 
+         <txID> TXN_ID </txID>
+         <groupID> I </groupID>
+         ...
+       </transaction>
 
-  syntax MaybeTValue ::= getGroupTxnField(Int, Int, TxnField)      [function, functional]
-  syntax MaybeTValue ::= getGroupTxnField(Int, Int, TxnField, Int) [function, functional]
-  syntax MaybeTValue ::= getTxnField(Int, TxnField)                [function, functional]
-  syntax MaybeTValue ::= getTxnField(Int, TxnaFieldExt, Int)       [function, functional]
-  syntax TValueList  ::= getTxnField(Int, TxnaFieldExt)            [function, functional]
-  //-------------------------------------------------------------------------------------
-  rule [[ getGroupTxnField(GROUP_ID, GROUP_INDEX, FIELD) => getTxnField(TXN_ID, FIELD)]]
+  syntax MaybeTValue ::= getGroupTxnField(Int, Int, TxnField)          [function, functional]
+  syntax MaybeTValue ::= getGroupTxnField(Int, Int, TxnaFieldExt, Int) [function, functional]
+  syntax MaybeTValue ::= getTxnField(Int, TxnField)                    [function, functional]
+  syntax MaybeTValue ::= getTxnField(Int, TxnaFieldExt, Int)           [function, functional]
+  syntax TValueList  ::= getTxnField(Int, TxnaFieldExt)                [function, functional]
+  //-----------------------------------------------------------------------------------------
+  rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD) => getTxnField(TXN_ID, FIELD)]]
+       <transaction>
+         <txID> CURRENT_TX_ID </txID>
+         <groupID> GROUP_ID </groupID>
+         ...
+       </transaction>
        <transaction>
          <txID> TXN_ID </txID>
          <groupID> GROUP_ID </groupID>
          <groupIdx> GROUP_INDEX </groupIdx>
          ...
        </transaction>
+
+  rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD) => getTxnField(CURRENT_TX_ID, FIELD)]]
+       <transaction>
+         <txID> CURRENT_TX_ID </txID>
+         <groupIdx> GROUP_INDEX </groupIdx>
+         ...
+       </transaction>
+
+  rule getGroupTxnField(_, _, _) => NoTValue  [owise]
+
+  rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD, IDX) => getTxnField(TXN_ID, FIELD, IDX)]]
+       <transaction>
+         <txID> CURRENT_TX_ID </txID>
+         <groupID> GROUP_ID </groupID>
+         ...
+       </transaction>
+       <transaction>
+         <txID> TXN_ID </txID>
+         <groupID> GROUP_ID </groupID>
+         <groupIdx> GROUP_INDEX </groupIdx>
+         ...
+       </transaction>
+
+  rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD, IDX) => getTxnField(CURRENT_TX_ID, FIELD, IDX)]]
+       <transaction>
+         <txID> CURRENT_TX_ID </txID>
+         <groupIdx> GROUP_INDEX </groupIdx>
+         ...
+       </transaction>
+  rule getGroupTxnField(_, _, _, _) => NoTValue  [owise]
 
   rule [[ getTxnField(I, TxID) => normalize(I) ]]
        <transaction>
@@ -824,7 +863,7 @@ module ALGO-TXN
                     </transaction>
                     REST
                   </transactions>)
-       => 1 +Int groupSize(GROUP_ID, REST)
+       => 1 +Int groupSize(GROUP_ID, <transactions> REST </transactions>)
 
   rule groupSize( GROUP_ID,
                   <transactions>
@@ -834,7 +873,7 @@ module ALGO-TXN
                     </transaction>
                     REST
                   </transactions>)
-       => groupSize(GROUP_ID, REST)
+       => groupSize(GROUP_ID, <transactions> REST </transactions>)
     requires GROUP_ID =/=K GROUP_ID'
 
   rule groupSize( _, <transactions> .Bag </transactions>) => 0

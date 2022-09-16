@@ -66,7 +66,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
              <txType>      "pay"    </txType>
              <typeEnum>    @ pay    </typeEnum>
              <groupID>     GROUP_ID </groupID>
-             <groupIdx>    groupSize(GROUP_ID, TXNS) </groupIdx>    // for testing, we make these the same as sequential TxIDs
+             <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>    // for testing, we make these the same as sequential TxIDs
              ...                              // other fields will receive default values
            </txHeader>
            <payTxFields>
@@ -122,7 +122,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
              <txType>   "appl"   </txType>
              <typeEnum> @ appl   </typeEnum>
              <groupID>  GROUP_ID </groupID>
-             <groupIdx> groupSize(GROUP_ID, TXNS) </groupIdx> // for testing, we make these the same as sequential TxIDs
+             <groupIdx> groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx> // for testing, we make these the same as sequential TxIDs
              ...                           // other fields will receive default values
            </txHeader>
            <appCallTxFields>
@@ -263,7 +263,7 @@ The asset initialization rule must be used *after* initializing accounts.
              <txType>      "acfg"   </txType>
              <typeEnum>    @ acfg   </typeEnum>
              <groupID>     GROUP_ID </groupID>
-             <groupIdx>    groupSize(GROUP_ID, TXNS) </groupIdx> // for testing, we make these the same as sequential TxIDs
+             <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx> // for testing, we make these the same as sequential TxIDs
              ...                           // other fields will receive default values
            </txHeader>
            <assetConfigTxFields>
@@ -316,7 +316,7 @@ The asset initialization rule must be used *after* initializing accounts.
              <txType>   "axfer"  </txType>
              <typeEnum> @ axfer  </typeEnum>
              <groupID>  GROUP_ID </groupID>
-             <groupIdx> groupSize(GROUP_ID, TXNS) </groupIdx> // for testing, we make these the same as sequential TxIDs
+             <groupIdx> groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx> // for testing, we make these the same as sequential TxIDs
              ...                         // other fields will receive default values
            </txHeader>
            <assetTransferTxFields>

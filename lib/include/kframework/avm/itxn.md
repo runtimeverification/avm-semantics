@@ -530,20 +530,30 @@ module ALGO-ITXN
   //---------------------------
 
   rule <k> #pushItxns() => (#pushTxnFront(<txID> TXN_ID </txID>) ~> #pushItxns()) ...</k>
-       <innerTransactions> ... (ListItem(
+       <innerTransactions> OTHER_ITXNS (ListItem(
          <transaction>
            <txID> _ </txID>
+           <txHeader>
+             <groupID> GROUP_ID </groupID>
+             <groupIdx> _ </groupIdx>
+             TX_HEADER
+           </txHeader>
            TXN_BODY
          </transaction>
          ) => .List)
        </innerTransactions>
        <transactions>
-         .Bag =>
+         (.Bag =>
          <transaction>
            <txID> TXN_ID </txID>
+           <txHeader>
+             <groupID> GROUP_ID </groupID>
+             <groupIdx> size(OTHER_ITXNS) </groupIdx>
+             TX_HEADER
+           </txHeader>
            TXN_BODY
-         </transaction>
-         ...
+         </transaction>)
+         TXNS
        </transactions>
        <nextTxnID> TXN_ID => TXN_ID +Int 1 </nextTxnID>
 
