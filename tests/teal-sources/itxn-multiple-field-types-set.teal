@@ -1,0 +1,30 @@
+#pragma version 6
+
+txn ApplicationID
+int 0
+==
+bnz end
+
+itxn_begin
+
+global CurrentApplicationAddress
+itxn_field Sender
+
+txn Sender
+itxn_field Receiver
+
+int 100
+itxn_field Amount
+
+int pay
+itxn_field TypeEnum
+
+int 0
+itxn_field ApplicationID
+
+itxn_submit
+
+end:
+
+int 1
+return

@@ -1,0 +1,75 @@
+#pragma version 6
+
+txna ApplicationArgs 0
+btoi
+int 0
+==
+bnz end
+
+txna ApplicationArgs 0
+btoi
+int 1
+==
+bnz lbl1
+
+txna ApplicationArgs 0
+btoi
+int 2
+==
+bnz lbl2
+
+err
+
+b end
+lbl1:
+
+itxn_begin
+
+global CurrentApplicationAddress
+itxn_field Sender
+
+txna Applications 0
+itxn_field ApplicationID
+
+int 2
+itob
+itxn_field ApplicationArgs
+
+txn Sender
+itxn_field Accounts
+
+int appl
+itxn_field TypeEnum
+
+itxn_submit
+
+txn Sender
+balance
+int 99000100
+==
+assert
+
+b end
+lbl2:
+
+itxn_begin
+
+global CurrentApplicationAddress
+itxn_field Sender
+
+txna Accounts 1
+itxn_field Receiver
+
+int 100
+itxn_field Amount
+
+int pay
+itxn_field TypeEnum
+
+itxn_submit
+
+b end
+end:
+
+int 1
+return
