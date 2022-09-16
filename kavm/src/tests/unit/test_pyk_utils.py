@@ -30,7 +30,7 @@ def test_maybe_tvalue(input: Any, expected: Any) -> None:
                     KApply('<address>', [KToken('dummy', KSort('TAddressLiteral'))]),
                 ],
             ),
-            {['ADDRESS_CELL']},
+            {'ADDRESS_CELL'},
         ),
         (
             KApply(
@@ -40,7 +40,7 @@ def test_maybe_tvalue(input: Any, expected: Any) -> None:
                     KApply('<appsCreated>', [KApply('<app>', [KApply('<appID>', [intToken(1)])])]),
                 ],
             ),
-            {['ADDRESS_CELL', 'APPSCREATED_CELL']},
+            {'ADDRESS_CELL', 'APPSCREATED_CELL'},
         ),
         (
             KApply(
@@ -56,7 +56,7 @@ def test_maybe_tvalue(input: Any, expected: Any) -> None:
                     ),
                 ],
             ),
-            {['ADDRESS_CELL', 'APPSCREATED_CELL']},
+            {'ADDRESS_CELL', 'APPSCREATED_CELL'},
         ),
     ],
 )
