@@ -1,0 +1,72 @@
+#pragma version 6
+
+txn ApplicationID
+int 0
+==
+bnz end
+
+int 1
+txn ApplicationArgs 0
+btoi
+==
+bnz lbl1
+
+int 2
+txn ApplicationArgs 0
+btoi
+==
+bnz lbl2
+
+lbl1:
+
+itxn_begin
+
+int appl
+itxn_field TypeEnum
+
+global CurrentApplicationAddress
+itxn_field Sender
+
+txn Applications 0
+itxn_field ApplicationID
+
+int 2
+itob
+itxn_field ApplicationArgs
+
+itxn_submit
+
+itxn NumLogs
+int 2
+==
+assert
+
+itxna Logs 0
+byte "123"
+==
+assert
+
+itxna Logs 1
+byte "456"
+==
+assert
+
+byte "456"
+itxn LastLog
+==
+assert
+
+b end
+lbl2:
+
+byte "123"
+log
+
+byte "456"
+log
+
+b end
+end:
+
+int 1
+return

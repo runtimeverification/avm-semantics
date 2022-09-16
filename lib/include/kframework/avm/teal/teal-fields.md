@@ -102,6 +102,8 @@ module TEAL-FIELDS
   // group.
   syntax TxnDynamicField ::= "LastLog"
                            | "NumLogs"
+                           | "CreatedApplicationID"
+                           | "CreatedAssetID"
 
   syntax TxnPayField    ::= "Receiver"
                           | "Amount"
