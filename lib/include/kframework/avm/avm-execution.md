@@ -70,16 +70,19 @@ and the current configuration is frozen for examination.
   
   // #evalTxGroup
   //---------------------------------------
+  rule <k> #evalTxGroup() => #initTxGroup() ~> #evalNextTx() ...</k>
 
-  rule <k> (#evalTxGroup() ~> _) => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalTxGroup() </k>
+  syntax AlgorandCommand ::= #evalNextTx()
+
+  rule <k> (#evalNextTx() ~> _) => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalNextTx() </k>
        <deque> TXN_DEQUE </deque>
     requires TXN_DEQUE =/=K .List
 
-  rule <k> #evalTxGroup() => .K ... </k>
+  rule <k> #evalNextTx() => .K ... </k>
       <returncode> _ => 0 </returncode>
       <returnstatus> _ => "Success - transaction group accepted"
       </returnstatus>
-       <deque> .List </deque>
+      <deque> .List </deque>
 ```
 
 ### Executing next transaction

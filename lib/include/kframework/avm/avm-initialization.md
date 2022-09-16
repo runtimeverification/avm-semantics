@@ -35,17 +35,12 @@ The transaction is initialized first.
 ### Transaction Group Initialization
 ```k
   rule <k> #initTxGroup() => .K ... </k>
-       <txGroup>
-         <txGroupID> _ => 0 </txGroupID>
-         <transactions>
-           _ => .Bag
-          </transactions>
-       </txGroup>
+       <nextGroupID> GROUP_ID => GROUP_ID +Int 1 </nextGroupID>
 ```
 
 ### Transactions
 
-By convention, we initialise the `<group>` cell, which tracks the transaction's position
+By convention, we initialise the `<groupIdx>` cell, which tracks the transaction's position
 withing the group, with it's `<txID>`. Transaction IDs will be assigned sequentially.
 
 **TODO**: transaction IDs and group indices need be assigned differently for real blockchain transactions.
@@ -67,10 +62,11 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
          <transaction>
            <txID> ID </txID>
            <txHeader>
-             <sender>      SENDER </sender>
-             <txType>      "pay"  </txType>
-             <typeEnum>    @ pay  </typeEnum>
-             <group>       ID     </group>    // for testing, we make these the same as sequential TxIDs
+             <sender>      SENDER   </sender>
+             <txType>      "pay"    </txType>
+             <typeEnum>    @ pay    </typeEnum>
+             <groupID>     GROUP_ID </groupID>
+             <groupIdx>    groupSize(GROUP_ID, TXNS) </groupIdx>    // for testing, we make these the same as sequential TxIDs
              ...                              // other fields will receive default values
            </txHeader>
            <payTxFields>
@@ -82,6 +78,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
          </transaction>
          TXNS
        </transactions>
+       <nextGroupID> GROUP_ID </nextGroupID>
        requires notBool (ID in_txns(<transactions> TXNS </transactions>))
 ```
 
@@ -121,10 +118,11 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
          <transaction>
            <txID> ID </txID>
            <txHeader>
-             <sender>   SENDER </sender>
-             <txType>   "appl" </txType>
-             <typeEnum> @ appl </typeEnum>
-             <group>    ID     </group> // for testing, we make these the same as sequential TxIDs
+             <sender>   SENDER   </sender>
+             <txType>   "appl"   </txType>
+             <typeEnum> @ appl   </typeEnum>
+             <groupID>  GROUP_ID </groupID>
+             <groupIdx> groupSize(GROUP_ID, TXNS) </groupIdx> // for testing, we make these the same as sequential TxIDs
              ...                           // other fields will receive default values
            </txHeader>
            <appCallTxFields>
@@ -147,6 +145,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
          </transaction>
          TXNS
        </transactions>
+       <nextGroupID> GROUP_ID </nextGroupID>
        <tealPrograms> TEAL_PGMS_LIST </tealPrograms>
        requires notBool (ID in_txns(<transactions> TXNS </transactions>))
 ```
@@ -177,10 +176,7 @@ and ` <latestTimestamp>` are initialized with somewhat arbitrary values.
          <currentApplicationID> _ => 0 </currentApplicationID>
          <currentApplicationAddress> _ => .Bytes </currentApplicationAddress>
        </globals>
-       <txGroup>
-         <transactions> TXNS </transactions>
-          ...
-       </txGroup>
+       <transactions> TXNS </transactions>
 ```
 
 ### Blockchain Initialization
@@ -263,10 +259,11 @@ The asset initialization rule must be used *after* initializing accounts.
          <transaction>
            <txID> TXN_ID </txID>
            <txHeader>
-             <sender>      SENDER </sender>
-             <txType>      "acfg" </txType>
-             <typeEnum>    @ acfg </typeEnum>
-             <group>       TXN_ID </group> // for testing, we make these the same as sequential TxIDs
+             <sender>      SENDER   </sender>
+             <txType>      "acfg"   </txType>
+             <typeEnum>    @ acfg   </typeEnum>
+             <groupID>     GROUP_ID </groupID>
+             <groupIdx>    groupSize(GROUP_ID, TXNS) </groupIdx> // for testing, we make these the same as sequential TxIDs
              ...                           // other fields will receive default values
            </txHeader>
            <assetConfigTxFields>
@@ -289,6 +286,7 @@ The asset initialization rule must be used *after* initializing accounts.
          </transaction>
          TXNS
        </transactions>
+       <nextGroupID> GROUP_ID </nextGroupID>
        requires notBool (TXN_ID in_txns(<transactions> TXNS </transactions>))
 ```
 
@@ -314,10 +312,11 @@ The asset initialization rule must be used *after* initializing accounts.
          <transaction>
            <txID> TXN_ID </txID>
            <txHeader>
-             <sender>   SENDER  </sender>
-             <txType>   "axfer" </txType>
-             <typeEnum> @ axfer </typeEnum>
-             <group>    TXN_ID  </group> // for testing, we make these the same as sequential TxIDs
+             <sender>   SENDER   </sender>
+             <txType>   "axfer"  </txType>
+             <typeEnum> @ axfer  </typeEnum>
+             <groupID>  GROUP_ID </groupID>
+             <groupIdx> groupSize(GROUP_ID, TXNS) </groupIdx> // for testing, we make these the same as sequential TxIDs
              ...                         // other fields will receive default values
            </txHeader>
            <assetTransferTxFields>
@@ -332,6 +331,7 @@ The asset initialization rule must be used *after* initializing accounts.
          </transaction>
          TXNS
        </transactions>
+       <nextGroupID> GROUP_ID </nextGroupID>
        requires notBool (TXN_ID in_txns(<transactions> TXNS </transactions>))
 
 ```

@@ -25,7 +25,7 @@ module AVM-CONFIGURATION
       </returnstatus>
 
       // The transaction group as submitted
-      <txGroup/>
+      <transactions/>
 
       // Transaction can create inner transactions, and we chose to treat them similarly to the outer ones.
       // We add them into an execution deque --- inner transactions are executed right after their parent one.

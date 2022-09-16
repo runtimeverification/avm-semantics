@@ -226,7 +226,8 @@ module ALGO-BLOCKCHAIN
       <blockheight>  0    </blockheight>
       <nextAssetID>  1    </nextAssetID>
       <nextAppID>    1    </nextAppID>
-      <nextTxnID>    1000    </nextTxnID>
+      <nextTxnID>    1000 </nextTxnID>
+      <nextGroupID>  0    </nextGroupID>
     </blockchain>
 ```
 

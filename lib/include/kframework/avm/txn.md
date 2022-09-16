@@ -38,7 +38,8 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
         <sender>      NoTValue </sender>
         <txType>      NoTValue </txType>
         <typeEnum>    NoTValue </typeEnum>
-        <group>       NoTValue </group>
+        <groupID>     NoTValue </groupID>
+        <groupIdx>    NoTValue </groupIdx>
         <genesisID>   NoTValue </genesisID>        // a human-readable name: does not necessarily uniquely identify the network
         <lease>       NoTValue </lease>
         <note>        NoTValue </note>
@@ -176,25 +177,22 @@ module ALGO-TXN
   //       on the transactions with empty group-id fields?)
 
   configuration
-      <txGroup>
-        <txGroupID> 0 </txGroupID>
-        <transactions>
-          <transaction multiplicity="*" type="Map">
-            <txID> 0 </txID>
-            <txHeader/>
-            <txnTypeSpecificFields>
-              <payTxFields/>
-              <appCallTxFields/>
-              <keyRegTxFields/>
-              <assetConfigTxFields/>
-              <assetTransferTxFields/>
-              <assetFreezeTxFields/>
-            </txnTypeSpecificFields>
-            <txnExecutionContext> .K </txnExecutionContext>
-            <resume> false </resume>
-          </transaction>
-        </transactions>
-      </txGroup>
+      <transactions>
+        <transaction multiplicity="*" type="Map">
+          <txID> 0 </txID>
+          <txHeader/>
+          <txnTypeSpecificFields>
+            <payTxFields/>
+            <appCallTxFields/>
+            <keyRegTxFields/>
+            <assetConfigTxFields/>
+            <assetTransferTxFields/>
+            <assetFreezeTxFields/>
+          </txnTypeSpecificFields>
+          <txnExecutionContext> .K </txnExecutionContext>
+          <resume> false </resume>
+        </transaction>
+      </transactions>
 ```
 
 *Transaction ID Getter*
@@ -208,15 +206,25 @@ module ALGO-TXN
 *Transaction Group Accessors*
 
 ```k
-  syntax Int ::= getTxnGroupID() [function]
+//  syntax Int ::= getTxnGroupID() [function]
   //--------------------------------------
-  rule [[ getTxnGroupID() => I ]]
-    <txGroupID> I </txGroupID>
+//  rule [[ getTxnGroupID() => I ]]
+//    <txGroupID> I </txGroupID>
 
-  syntax MaybeTValue ::= getTxnField(Int, TxnField)          [function, functional]
-  syntax MaybeTValue ::= getTxnField(Int, TxnaFieldExt, Int) [function, functional]
-  syntax TValueList  ::= getTxnField(Int, TxnaFieldExt)      [function, functional]
-  //-------------------------------------------------------------------------------
+  syntax MaybeTValue ::= getGroupTxnField(Int, Int, TxnField)      [function, functional]
+  syntax MaybeTValue ::= getGroupTxnField(Int, Int, TxnField, Int) [function, functional]
+  syntax MaybeTValue ::= getTxnField(Int, TxnField)                [function, functional]
+  syntax MaybeTValue ::= getTxnField(Int, TxnaFieldExt, Int)       [function, functional]
+  syntax TValueList  ::= getTxnField(Int, TxnaFieldExt)            [function, functional]
+  //-------------------------------------------------------------------------------------
+  rule [[ getGroupTxnField(GROUP_ID, GROUP_INDEX, FIELD) => getTxnField(TXN_ID, FIELD)]]
+       <transaction>
+         <txID> TXN_ID </txID>
+         <groupID> GROUP_ID </groupID>
+         <groupIdx> GROUP_INDEX </groupIdx>
+         ...
+       </transaction>
+
   rule [[ getTxnField(I, TxID) => normalize(I) ]]
        <transaction>
          <txID> I </txID>
@@ -307,7 +315,7 @@ module ALGO-TXN
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
-         <group> X </group>
+         <groupIdx> X </groupIdx>
          ...
        </transaction>
     requires #isValidForTxnType(GroupIndex, TYPE)
@@ -804,6 +812,34 @@ module ALGO-TXN
   //---------------------------------------------------------
   rule getAppAddress(APP_ID) => b"application" +Bytes String2Bytes(Int2String(APP_ID))
 ```
+
+```k
+  syntax Int ::= groupSize(Int, TransactionsCell) [function]
+  //------------------------------------------------
+  rule groupSize( GROUP_ID,
+                  <transactions>
+                    <transaction>
+                      <groupID> GROUP_ID </groupID>
+                      ...
+                    </transaction>
+                    REST
+                  </transactions>)
+       => 1 +Int groupSize(GROUP_ID, REST)
+
+  rule groupSize( GROUP_ID,
+                  <transactions>
+                    <transaction>
+                      <groupID> GROUP_ID' </groupID>
+                      ...
+                    </transaction>
+                    REST
+                  </transactions>)
+       => groupSize(GROUP_ID, REST)
+    requires GROUP_ID =/=K GROUP_ID'
+
+  rule groupSize( _, <transactions> .Bag </transactions>) => 0
+```
+
 
 ```k
   syntax Bool ::= Int "in_txns" "(" TransactionsCell ")" [function]
