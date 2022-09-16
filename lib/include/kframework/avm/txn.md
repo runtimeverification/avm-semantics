@@ -215,6 +215,15 @@ module ALGO-TXN
          ...
        </transaction>
 
+  syntax Int ::= getTxnGroupIndex(Int) [function]
+  //---------------------------------------------
+  rule [[ getTxnGroupIndex(TXN_ID) => I ]]
+       <transaction> 
+         <txID> TXN_ID </txID>
+         <groupIdx> I </groupIdx>
+         ...
+       </transaction>
+
   syntax MaybeTValue ::= getGroupTxnField(Int, Int, TxnField)          [function, functional]
   syntax MaybeTValue ::= getGroupTxnField(Int, Int, TxnaFieldExt, Int) [function, functional]
   syntax MaybeTValue ::= getTxnField(Int, TxnField)                    [function, functional]
