@@ -25,7 +25,7 @@ RUN pip3 install virtualenv
 
 RUN    git clone 'https://github.com/z3prover/z3' --branch=z3-4.8.11 \
     && cd z3                                                         \
-    && python scripts/mk_make.py                                     \
+    && python3 scripts/mk_make.py                                    \
     && cd build                                                      \
     && make -j8                                                      \
     && make install                                                  \
