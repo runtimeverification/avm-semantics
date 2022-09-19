@@ -71,6 +71,10 @@ module TEAL-FIELDS
 ### `txn`/`gtxn` fields
 
 ```k
+
+  syntax TxnFieldTop ::= TxnField
+                       | TxnaFieldExt
+
   syntax TxnField ::= TxnStaticField
                     | TxnDynamicField
 
