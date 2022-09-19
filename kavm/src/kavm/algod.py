@@ -73,9 +73,9 @@ class KAVMClient(algod.AlgodClient):
         self,
         method: str,
         requrl: str,
-        params: List[str] = None,
+        params: Optional[List[str]] = None,
         data: Optional[bytes] = None,
-        headers: List[str] = None,
+        headers: Optional[List[str]] = None,
         response_format: str = 'Json',
     ) -> Dict[str, Any]:
         """

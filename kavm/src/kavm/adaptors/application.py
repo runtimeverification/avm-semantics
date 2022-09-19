@@ -136,7 +136,7 @@ class KAVMApplication:
             clear_state_pgm_src=subst['CLEARSTATEPGMSRC_CELL'],
             approval_pgm=b64decode(subst['APPROVALPGM_CELL'].token),
             clear_state_pgm=b64decode(subst['CLEARSTATEPGM_CELL'].token),
-            global_ints=int(subst['GLOBALINTS'].token),
+            global_ints=int(subst['GLOBALINTS_CELL'].token),
             global_bytes=int(subst['GLOBALBYTES_CELL'].token),
             local_ints=int(subst['LOCALINTS_CELL'].token),
             local_bytes=int(subst['LOCALBYTES_CELL'].token),

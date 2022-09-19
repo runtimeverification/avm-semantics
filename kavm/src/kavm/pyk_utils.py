@@ -208,5 +208,5 @@ class AppCellMap(KCellMap):
     def from_list(apps: List[Any]) -> 'AppCellMap':
         result = AppCellMap()
         for app in apps:
-            result._store[app._appID] = app
+            result._store[app._app_id] = app
         return result
