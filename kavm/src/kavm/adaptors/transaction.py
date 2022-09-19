@@ -11,11 +11,11 @@ from algosdk.future.transaction import (
     SuggestedParams,
     Transaction,
 )
-from pyk.kast import KAst, KInner, KSort, KToken, Subst, KApply
+from pyk.kast import KApply, KAst, KInner, KSort, KToken, Subst
 from pyk.kastManip import free_vars, split_config_from
 from pyk.prelude import intToken
 
-from kavm.pyk_utils import tvalue, maybe_tvalue, tvalue_list
+from kavm.pyk_utils import maybe_tvalue, tvalue, tvalue_list
 
 
 class KAVMTransaction:
