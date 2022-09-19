@@ -8,6 +8,7 @@ RUN    apt-get update            \
             curl                 \
             debhelper            \
             default-jdk-headless \
+            graphviz             \
             libcrypto++-dev      \
             libcurl4-openssl-dev \
             libmsgpack-dev       \
