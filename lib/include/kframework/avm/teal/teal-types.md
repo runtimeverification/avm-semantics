@@ -239,6 +239,11 @@ We expose several functions for working with lists.
   rule convertToBytes(I:TUInt64) => Int2Bytes({I}:>Int, BE, Unsigned)
   rule convertToBytes(B:TBytes L:TValueNeList) => (B {convertToBytes(L)}:>TValueNeList)
   rule convertToBytes(I:TUInt64 L:TValueNeList) => (Int2Bytes({I}:>Int, BE, Unsigned) {convertToBytes(L)}:>TValueNeList)
+
+  syntax Int ::= sizeInBytes(TValue) [function, functional]
+  //--------------------------------
+  rule sizeInBytes(_:TUInt64) => 64
+  rule sizeInBytes(B:TBytes) => lengthBytes({B}:>Bytes)
 ```
 
 TValue normaliziation converts higher-level type representations in TEAL into

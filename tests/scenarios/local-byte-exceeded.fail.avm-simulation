@@ -1,7 +1,7 @@
-declareTealSource "app-local-get.teal";
+declareTealSource "local-byte-exceeded.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 350000 </balance>;
+addAccount <address> b"1" </address> <balance> 12345 </balance>;
 
 #initTxGroup();
 
@@ -16,7 +16,7 @@ addAppCallTx <txID> 0 </txID>
              <foreignAssets>     .TValueList </foreignAssets>
              <globalNui>         0           </globalNui>
              <globalNbs>         0           </globalNbs>
-             <localNui>          1           </localNui>
+             <localNui>          0           </localNui>
              <localNbs>          0           </localNbs>
              <extraProgramPages> 0           </extraProgramPages>
              <approvalPgmIdx>    0           </approvalPgmIdx>
