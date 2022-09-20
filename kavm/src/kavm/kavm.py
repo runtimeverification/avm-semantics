@@ -282,6 +282,7 @@ class KAVM(KRun):
                     'TXGROUPID_CELL': intToken(0),  # TODO: revise
                     # TODO: CURRENTTX_CELL should be of sort String in the semantics
                     'CURRENTTX_CELL': intToken(0),
+                    'TOUCHEDACCOUNTS_CELL': KApply('.Set'),
                     'RETURNCODE_CELL': intToken(4),
                     'RETURNSTATUS_CELL': stringToken('Failure - program is stuck'),
                     'GLOBALROUND_CELL': intToken(6),
@@ -335,6 +336,7 @@ class KAVM(KRun):
                 'GROUPSIZE_CELL': intToken(len(transactions)),
                 'TXGROUPID_CELL': intToken(0),  # TODO: revise
                 'CURRENTTX_CELL': intToken(transactions[0].txid),
+                'TOUCHEDACCOUNTS_CELL': KApply('.Set'),
                 'K_CELL': KApply(
                     '#evalTxGroup()_AVM-EXECUTION_AlgorandCommand',
                 ),
