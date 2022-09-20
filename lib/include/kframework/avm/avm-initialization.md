@@ -41,6 +41,8 @@ The transaction is initialized first.
          <transactions>
            _ => .Bag
           </transactions>
+          // Accounts that have been modified during this (top-level) transaction group: those for which it will be checked
+          // that their balance has not gone below their minimum balance. 
           <touchedAccounts> _ => .Set </touchedAccounts>
        </txGroup>
 ```
