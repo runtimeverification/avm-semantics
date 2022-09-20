@@ -118,7 +118,7 @@ class KAVMClient(algod.AlgodClient):
             (config, subst) = split_config_from(self.kavm.current_config)
 
             address = params[0]
-            return KAVMAccount.from_account_cell(get_account(address, subst['ACCOUNTSMAP_CELL'])).dictify()
+            return self.kavm.accounts[address].dictify()
 
         else:
             self.algodLogger.debug(requrl.split('/'))
