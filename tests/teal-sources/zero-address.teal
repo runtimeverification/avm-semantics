@@ -1,0 +1,9 @@
+#pragma version 6
+
+global ZeroAddress
+global ZeroAddress
+==
+assert
+
+int 1
+return
