@@ -73,6 +73,7 @@ and the current configuration is frozen for examination.
        <deque> TXN_DEQUE </deque>
     requires TXN_DEQUE =/=K .List
 
+  // Minimum balances are only checked at the conclusion of the outer-level group.
   rule <k> #evalTxGroup() => #checkSufficientBalance() ... </k>
       <returncode> _ => 0 </returncode>
       <returnstatus> _ => "Success - transaction group accepted"
