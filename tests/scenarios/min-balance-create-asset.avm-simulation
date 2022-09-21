@@ -8,7 +8,7 @@ addAccount <address> b"2" </address> <balance> 200000 </balance>;
 
 addAssetConfigTx <txID>                0            </txID>
                  <sender>              b"2"         </sender>
-                 <configAsset>         NoTValue     </configAsset>
+                 <configAsset>         0            </configAsset>
                  <configTotal>         12345        </configTotal>
                  <configDecimals>      0            </configDecimals>
                  <configDefaultFrozen> 0            </configDefaultFrozen>
