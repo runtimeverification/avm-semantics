@@ -73,7 +73,8 @@ and the current configuration is frozen for examination.
        <deque> TXN_DEQUE </deque>
     requires TXN_DEQUE =/=K .List
 
-  rule <k> #evalTxGroup() => .K ... </k>
+  // Minimum balances are only checked at the conclusion of the outer-level group.
+  rule <k> #evalTxGroup() => #checkSufficientBalance() ... </k>
       <returncode> _ => 0 </returncode>
       <returnstatus> _ => "Success - transaction group accepted"
       </returnstatus>
@@ -105,8 +106,10 @@ the attached stateless TEAL if the transaction is logicsig-signed.
        <transaction>
          <txID> TXN_ID </txID>
          <typeEnum> TXN_TYPE </typeEnum>
+         <sender> SENDER_ADDR </sender>
          ...
        </transaction>
+       <touchedAccounts> .Set => SetItem(SENDER_ADDR) ...</touchedAccounts>
 
 ```
 
@@ -290,6 +293,37 @@ Add asset to account
        requires (BALANCE +Int AMOUNT) >=Int 0
 ```
 
+```k
+  syntax AlgorandCommand ::= #checkSufficientBalance()
+  //--------------------------------------------------
+  rule <k> #checkSufficientBalance() => (#checkSufficientBalance(ADDR) ~> #checkSufficientBalance()) ...</k>
+       <touchedAccounts> (SetItem(ADDR) => .Set) ...</touchedAccounts>
+
+  rule <k> #checkSufficientBalance() => . ...</k>
+       <touchedAccounts> .Set </touchedAccounts>
+  
+  syntax AlgorandCommand ::= #checkSufficientBalance(Bytes)
+  //-------------------------------------------------------
+  rule <k> #checkSufficientBalance(ADDR) => . ...</k>
+       <account>
+         <address> ADDR </address>
+         <balance> BALANCE </balance>
+         <minBalance> MIN_BALANCE </minBalance>
+         ...
+       </account>
+    requires BALANCE >=Int MIN_BALANCE
+
+  rule <k> #checkSufficientBalance(ADDR) => #avmPanic(TX_ID, MIN_BALANCE_VIOLATION) ...</k>
+       <currentTx> TX_ID </currentTx>
+       <account>
+         <address> ADDR </address>
+         <balance> BALANCE </balance>
+         <minBalance> MIN_BALANCE </minBalance>
+         ...
+       </account>
+    requires BALANCE <Int MIN_BALANCE
+```
+
 #### (Optional) Eval TEAL
 
 There are two types of TEAL programs:
@@ -340,7 +374,6 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
        <account>
          <address> SENDER </address>
          <balance> SENDER_BALANCE => SENDER_BALANCE -Int AMOUNT </balance>
-         <minBalance> SENDER_MIN_BALANCE </minBalance>
          ...
        </account>
        <account>
@@ -348,9 +381,9 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
          <balance> RECEIVER_BALANCE => RECEIVER_BALANCE +Int AMOUNT </balance>
          ...
        </account>
-    requires SENDER_BALANCE -Int AMOUNT >=Int SENDER_MIN_BALANCE
+       <touchedAccounts> (.Set => SetItem(RECEIVER)) ...</touchedAccounts>
 
-  rule <k> #executeTxn(@pay) => #avmPanic(TXN_ID, MIN_BALANCE_VIOLATION) ... </k>
+  rule <k> #executeTxn(@pay) => panic(INSUFFICIENT_FUNDS) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>     TXN_ID   </txID>
@@ -361,10 +394,9 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
        <account>
          <address> SENDER </address>
          <balance> SENDER_BALANCE </balance>
-         <minBalance> SENDER_MIN_BALANCE </minBalance>
          ...
        </account>
-    requires SENDER_BALANCE -Int AMOUNT <Int SENDER_MIN_BALANCE
+    requires SENDER_BALANCE -Int AMOUNT <Int 0
 
   rule <k> #executeTxn(@pay) => #avmPanic(TXN_ID, UNKNOWN_ADDRESS) ... </k>
        <currentTx> TXN_ID </currentTx>

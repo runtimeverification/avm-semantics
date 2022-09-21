@@ -355,6 +355,7 @@ return code to 3 (see return codes below).
   syntax String ::= "CALLSTACK_OVERFLOW"         [macro]
   syntax String ::= "INVALID_ARGUMENT"           [macro]
   syntax String ::= "MATH_BYTES_ARG_TOO_LONG"    [macro]
+  syntax String ::= "INSUFFICIENT_FUNDS"         [macro]
   syntax String ::= "KEY_TOO_LARGE"              [macro]
   syntax String ::= "BYTE_VALUE_TOO_LARGE"       [macro]
   syntax String ::= "KEY_VALUE_TOO_LARGE"        [macro]
@@ -387,6 +388,7 @@ return code to 3 (see return codes below).
   rule CALLSTACK_UNDERFLOW => "call stack underflow: illegal retsub"
   rule CALLSTACK_OVERFLOW  => "call stack overflow: recursion is too deep"
   rule MATH_BYTES_ARG_TOO_LONG => "math attempted on large byte-array"
+  rule INSUFFICIENT_FUNDS  => "negative balance reached"
   rule KEY_TOO_LARGE       => "key is too long"
   rule BYTE_VALUE_TOO_LARGE => "tried to store too large of a byte value"
   rule KEY_VALUE_TOO_LARGE => "sum of key length and value length is too high"
@@ -396,7 +398,7 @@ return code to 3 (see return codes below).
   syntax KItem ::= panic(String)
   // ---------------------------
   rule <k> panic(S) ~> _ => .K </k>
-       <returncode> 4 => 3 </returncode>
+       <returncode> _ => 3 </returncode>
        <returnstatus> _ => "Failure - panic: " +String S </returnstatus>
 ```
 
