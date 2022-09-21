@@ -78,7 +78,8 @@ and the current configuration is frozen for examination.
        <deque> TXN_DEQUE </deque>
     requires TXN_DEQUE =/=K .List
 
-  rule <k> #evalNextTx() => .K ... </k>
+  // Minimum balances are only checked at the conclusion of the outer-level group.
+  rule <k> #evalNextTx() => #checkSufficientBalance() ... </k>
       <returncode> _ => 0 </returncode>
       <returnstatus> _ => "Success - transaction group accepted"
       </returnstatus>
@@ -112,8 +113,10 @@ the attached stateless TEAL if the transaction is logicsig-signed.
          <txID> TXN_ID </txID>
          <typeEnum> TXN_TYPE </typeEnum>
          <resume> false => true </resume>
+         <sender> SENDER_ADDR </sender>
          ...
        </transaction>
+       <touchedAccounts> .Set => SetItem(SENDER_ADDR) ...</touchedAccounts>
 
   rule <k> #evalTx() => #restoreContext() ~> #evalTeal() ... </k>
        <currentTx> TXN_ID </currentTx>
@@ -121,8 +124,10 @@ the attached stateless TEAL if the transaction is logicsig-signed.
          <txID> TXN_ID </txID>
          <typeEnum> TXN_TYPE </typeEnum>
          <resume> true </resume>
+         <sender> SENDER_ADDR </sender>
          ...
        </transaction>
+       <touchedAccounts> .Set => SetItem(SENDER_ADDR) ...</touchedAccounts>
 
 ```
 
@@ -163,14 +168,14 @@ case 1: clear state from own created app
          <appsOptedIn>
            (<optInApp>
              <optInAppID> APP_ID </optInAppID>
-             <localStorage> _ </localStorage>
+             ...
            </optInApp>) => .Bag
            ...
          </appsOptedIn>
          <appsCreated>
            <appID> APP_ID </appID>
-           <localInts>     LOCAL_INTS      </localInts>
-           <localBytes>    LOCAL_BYTES     </localBytes>
+           <localNumInts>     LOCAL_INTS      </localNumInts>
+           <localNumBytes>    LOCAL_BYTES     </localNumBytes>
            ...
          </appsCreated>
          <minBalance> MIN_BALANCE => MIN_BALANCE 
@@ -193,7 +198,7 @@ case 1: clear state from other's created app
          <appsOptedIn>
            (<optInApp>
              <optInAppID> APP_ID </optInAppID>
-             <localStorage> _ </localStorage>
+             ...
            </optInApp>) => .Bag
            ...
          </appsOptedIn>
@@ -208,8 +213,8 @@ case 1: clear state from other's created app
        </account>
        <appsCreated>
          <appID> APP_ID </appID>
-         <localInts>     LOCAL_INTS      </localInts>
-         <localBytes>    LOCAL_BYTES     </localBytes>
+         <localNumInts>     LOCAL_INTS      </localNumInts>
+         <localNumBytes>    LOCAL_BYTES     </localNumBytes>
          ...
        </appsCreated>
 
@@ -241,8 +246,8 @@ Delete application
          <appsCreated>
            ((<app>
              <appID> APP_ID </appID>
-             <globalInts>    GLOBAL_INTS     </globalInts>
-             <globalBytes>   GLOBAL_BYTES    </globalBytes>
+             <globalNumInts>    GLOBAL_INTS     </globalNumInts>
+             <globalNumBytes>   GLOBAL_BYTES    </globalNumBytes>
              <extraPages>    EXTRA_PAGES     </extraPages>
              ...
            </app>) => .Bag) ...
@@ -306,6 +311,37 @@ Add asset to account
        requires (BALANCE +Int AMOUNT) >=Int 0
 ```
 
+```k
+  syntax AlgorandCommand ::= #checkSufficientBalance()
+  //--------------------------------------------------
+  rule <k> #checkSufficientBalance() => (#checkSufficientBalance(ADDR) ~> #checkSufficientBalance()) ...</k>
+       <touchedAccounts> (SetItem(ADDR) => .Set) ...</touchedAccounts>
+
+  rule <k> #checkSufficientBalance() => . ...</k>
+       <touchedAccounts> .Set </touchedAccounts>
+  
+  syntax AlgorandCommand ::= #checkSufficientBalance(Bytes)
+  //-------------------------------------------------------
+  rule <k> #checkSufficientBalance(ADDR) => . ...</k>
+       <account>
+         <address> ADDR </address>
+         <balance> BALANCE </balance>
+         <minBalance> MIN_BALANCE </minBalance>
+         ...
+       </account>
+    requires BALANCE >=Int MIN_BALANCE
+
+  rule <k> #checkSufficientBalance(ADDR) => #avmPanic(TX_ID, MIN_BALANCE_VIOLATION) ...</k>
+       <currentTx> TX_ID </currentTx>
+       <account>
+         <address> ADDR </address>
+         <balance> BALANCE </balance>
+         <minBalance> MIN_BALANCE </minBalance>
+         ...
+       </account>
+    requires BALANCE <Int MIN_BALANCE
+```
+
 #### (Optional) Eval TEAL
 
 There are two types of TEAL programs:
@@ -360,7 +396,6 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
        <account>
          <address> SENDER </address>
          <balance> SENDER_BALANCE => SENDER_BALANCE -Int AMOUNT </balance>
-         <minBalance> SENDER_MIN_BALANCE </minBalance>
          ...
        </account>
        <account>
@@ -368,9 +403,9 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
          <balance> RECEIVER_BALANCE => RECEIVER_BALANCE +Int AMOUNT </balance>
          ...
        </account>
-    requires SENDER_BALANCE -Int AMOUNT >=Int SENDER_MIN_BALANCE
+       <touchedAccounts> (.Set => SetItem(RECEIVER)) ...</touchedAccounts>
 
-  rule <k> #executeTxn(@pay) => #avmPanic(TXN_ID, MIN_BALANCE_VIOLATION) ... </k>
+  rule <k> #executeTxn(@pay) => panic(INSUFFICIENT_FUNDS) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>     TXN_ID   </txID>
@@ -381,10 +416,9 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
        <account>
          <address> SENDER </address>
          <balance> SENDER_BALANCE </balance>
-         <minBalance> SENDER_MIN_BALANCE </minBalance>
          ...
        </account>
-    requires SENDER_BALANCE -Int AMOUNT <Int SENDER_MIN_BALANCE
+    requires SENDER_BALANCE -Int AMOUNT <Int 0
 
   rule <k> #executeTxn(@pay) => #avmPanic(TXN_ID, UNKNOWN_ADDRESS) ... </k>
        <currentTx> TXN_ID </currentTx>
@@ -433,6 +467,7 @@ Create asset
          <configReserveAddr>   RESERVE_ADDR   </configReserveAddr>
          <configFreezeAddr>    FREEZE_ADDR    </configFreezeAddr>
          <configClawbackAddr>  CLAWB_ADDR     </configClawbackAddr>
+         <txConfigAsset>       _ => ASSET_ID  </txConfigAsset>
          ...
        </transaction>
 
@@ -725,6 +760,7 @@ App create
          <localNui>             LOCAL_INTS          </localNui>
          <localNbs>             LOCAL_BYTES         </localNbs>
          <extraProgramPages>    EXTRA_PAGES         </extraProgramPages>
+         <txApplicationID>      _ => APP_ID         </txApplicationID>
          ...
        </transaction>
        <accountsMap>
@@ -745,10 +781,10 @@ App create
                <clearStatePgmSrc> CLEAR_STATE_PGM_SRC </clearStatePgmSrc>
                <approvalPgm>      APPROVAL_PGM        </approvalPgm>
                <clearStatePgm>    CLEAR_STATE_PGM     </clearStatePgm>
-               <globalInts>       GLOBAL_INTS         </globalInts>
-               <globalBytes>      GLOBAL_BYTES        </globalBytes>
-               <localInts>        LOCAL_INTS          </localInts>
-               <localBytes>       LOCAL_BYTES         </localBytes>
+               <globalNumInts>       GLOBAL_INTS         </globalNumInts>
+               <globalNumBytes>      GLOBAL_BYTES        </globalNumBytes>
+               <localNumInts>        LOCAL_INTS          </localNumInts>
+               <localNumBytes>       LOCAL_BYTES         </localNumBytes>
                <extraPages>       EXTRA_PAGES         </extraPages>
                ...
              </app>
@@ -766,6 +802,8 @@ App create
        <appCreator> (.Map => (APP_ID |-> SENDER)) ... </appCreator>
        <nextAppID> APP_ID => APP_ID +Int 1 </nextAppID>
     requires notBool(APP_ID in_apps(<appsCreated> APPS </appsCreated>))
+     andBool GLOBAL_INTS +Int GLOBAL_BYTES <=Int PARAM_MAX_GLOBAL_KEYS
+     andBool LOCAL_INTS  +Int LOCAL_BYTES  <=Int PARAM_MAX_LOCAL_KEYS
 
   rule <k> #executeTxn(@appl) => #executeAppl(APP_ID) ...</k>
        <currentTx> TXN_ID </currentTx>
@@ -826,7 +864,8 @@ OptIn
            OPTED_IN_APPS =>
            <optInApp>
              <optInAppID>   APP_ID </optInAppID>
-             <localStorage> .Map   </localStorage>
+             <localInts> .Map   </localInts>
+             <localBytes> .Map   </localBytes>
            </optInApp>
            OPTED_IN_APPS
          </appsOptedIn>
@@ -842,8 +881,8 @@ OptIn
        <app>
          <appID>          APP_ID       </appID>
          <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
-         <localInts>      LOCAL_INTS   </localInts>
-         <localBytes>     LOCAL_BYTES  </localBytes>
+         <localNumInts>      LOCAL_INTS   </localNumInts>
+         <localNumBytes>     LOCAL_BYTES  </localNumBytes>
          ...
        </app>
      requires notBool hasOptedInApp(APP_ID, SENDER)
@@ -869,8 +908,8 @@ OptIn
            <app>
              <appID>          APP_ID       </appID>
              <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
-             <localInts>      LOCAL_INTS   </localInts>
-             <localBytes>     LOCAL_BYTES  </localBytes>
+             <localNumInts>      LOCAL_INTS   </localNumInts>
+             <localNumBytes>     LOCAL_BYTES  </localNumBytes>
              ...
            </app>
            ...
@@ -879,7 +918,8 @@ OptIn
            OPTED_IN_APPS =>
            <optInApp>
              <optInAppID>   APP_ID </optInAppID>
-             <localStorage> .Map        </localStorage>
+             <localInts> .Map        </localInts>
+             <localBytes> .Map        </localBytes>
            </optInApp>
            OPTED_IN_APPS
          </appsOptedIn>
@@ -916,8 +956,8 @@ OptIn
              <app>
                <appID>          APP_ID       </appID>
                <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
-               <localInts>      LOCAL_INTS   </localInts>
-               <localBytes>     LOCAL_BYTES  </localBytes>
+               <localNumInts>      LOCAL_INTS   </localNumInts>
+               <localNumBytes>     LOCAL_BYTES  </localNumBytes>
                ...
              </app>
              ...
@@ -926,7 +966,8 @@ OptIn
              OPTED_IN_APPS =>
              <optInApp>
                <optInAppID>   APP_ID </optInAppID>
-               <localStorage> .Map   </localStorage>
+               <localInts> .Map   </localInts>
+               <localBytes> .Map   </localBytes>
              </optInApp>
              OPTED_IN_APPS
            </appsOptedIn>

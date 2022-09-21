@@ -15,8 +15,8 @@
 declareTealSource "count_calls.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 10000 </balance>;
-addAccount <address> b"2" </address> <balance> 10000 </balance>;
+addAccount <address> b"1" </address> <balance> 357000 </balance>;
+addAccount <address> b"2" </address> <balance> 228500 </balance>;
 
 #initTxGroup();
 
@@ -29,9 +29,9 @@ addAppCallTx <txID> 0 </txID>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
-             <globalNui>         0           </globalNui>
+             <globalNui>         1           </globalNui>
              <globalNbs>         0           </globalNbs>
-             <localNui>          0           </localNui>
+             <localNui>          1           </localNui>
              <localNbs>          0           </localNbs>
              <extraProgramPages> 0           </extraProgramPages>
              <approvalPgmIdx>    0           </approvalPgmIdx>
@@ -74,6 +74,3 @@ addAppCallTx <txID> 2 </txID>
 #initGlobals();
 #evalTxGroup();
 .AS
-
-
-

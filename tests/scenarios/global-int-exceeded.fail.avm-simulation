@@ -1,11 +1,11 @@
-declareTealSource "arithmetic-add-overflow.teal";
+declareTealSource "global-int-exceeded.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 200000 </balance>;
+addAccount <address> b"1" </address> <balance> 12345 </balance>;
 
 #initTxGroup();
 
-// Add app
+// Add app and opt in b"1"
 addAppCallTx <txID> 0 </txID>
              <sender>            b"1"        </sender>
              <applicationID>     0           </applicationID>

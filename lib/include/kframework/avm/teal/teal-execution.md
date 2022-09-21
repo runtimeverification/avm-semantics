@@ -246,6 +246,15 @@ teal, failure means undoing changes made to the state (for more details, see
        <stacksize> _ </stacksize>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - singleton stack with byte array type" </returnstatus>
+
+  // Consume the rest of the K cell if the execution terminated with an error
+  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
+       <returncode> RETURN_CODE </returncode>
+    requires RETURN_CODE =/=Int 0 andBool RETURN_CODE =/=Int 4
+
+  rule <k> #finalizeExecution() => .K </k>
+       <returncode> RETURN_CODE </returncode>
+    requires RETURN_CODE =/=Int 0 andBool RETURN_CODE =/=Int 4
 ```
 
 ```k
@@ -348,6 +357,10 @@ return code to 3 (see return codes below).
   syntax String ::= "ILL_TYPED_STACK"            [macro]
   syntax String ::= "LOG_CALLS_EXCEEDED"         [macro]
   syntax String ::= "LOG_SIZE_EXCEEDED"          [macro]
+  syntax String ::= "GLOBAL_BYTES_EXCEEDED"      [macro]
+  syntax String ::= "GLOBAL_INTS_EXCEEDED"       [macro]
+  syntax String ::= "LOCAL_BYTES_EXCEEDED"       [macro]
+  syntax String ::= "LOCAL_INTS_EXCEEDED"        [macro]
   syntax String ::= "STACK_OVERFLOW"             [macro]
   syntax String ::= "STACK_UNDERFLOW"            [macro]
   syntax String ::= "ASSERTION_VIOLATION"        [macro]
@@ -358,6 +371,10 @@ return code to 3 (see return codes below).
   syntax String ::= "INVALID_ARGUMENT"           [macro]
   syntax String ::= "ITXN_REENTRY"               [macro]
   syntax String ::= "MATH_BYTES_ARG_TOO_LONG"    [macro]
+  syntax String ::= "INSUFFICIENT_FUNDS"         [macro]
+  syntax String ::= "KEY_TOO_LARGE"              [macro]
+  syntax String ::= "BYTE_VALUE_TOO_LARGE"       [macro]
+  syntax String ::= "KEY_VALUE_TOO_LARGE"        [macro]
   //----------------------------------------------------
   rule INVALID_OP_FOR_MODE => "invalid opcode for current execution mode"
   rule ERR_OPCODE          => "err opcode encountered"
@@ -375,6 +392,10 @@ return code to 3 (see return codes below).
   rule ILL_TYPED_STACK     => "wrong argument type(s) for opcode"
   rule LOG_CALLS_EXCEEDED  => "too many log calls in transaction"
   rule LOG_SIZE_EXCEEDED   => "total size of log calls in transaction is too large"
+  rule GLOBAL_BYTES_EXCEEDED => "tried to store too many byte values in global storage"
+  rule GLOBAL_INTS_EXCEEDED => "tried to store too many int values in global storage"
+  rule LOCAL_BYTES_EXCEEDED => "tried to store too many byte values in local storage"
+  rule LOCAL_INTS_EXCEEDED => "tried to store too many int values in local storage"
   rule INVALID_ARGUMENT    => "wrong argument range(s) for opcode"
   rule STACK_OVERFLOW      => "stack overflow"
   rule STACK_UNDERFLOW     => "stack underflow"
@@ -385,6 +406,10 @@ return code to 3 (see return codes below).
   rule CALLSTACK_OVERFLOW  => "call stack overflow: recursion is too deep"
   rule ITXN_REENTRY        => "application called from itself"
   rule MATH_BYTES_ARG_TOO_LONG => "math attempted on large byte-array"
+  rule INSUFFICIENT_FUNDS  => "negative balance reached"
+  rule KEY_TOO_LARGE       => "key is too long"
+  rule BYTE_VALUE_TOO_LARGE => "tried to store too large of a byte value"
+  rule KEY_VALUE_TOO_LARGE => "sum of key length and value length is too high"
   rule ASSERTION_VIOLATION => "assertion violation"
   //--------------------------------------------------------------------------------
 

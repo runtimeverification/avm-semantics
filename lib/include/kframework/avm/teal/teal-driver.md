@@ -1378,7 +1378,7 @@ Stateful TEAL Operations
        <currentTx> TX_ID </currentTx>
        <transaction>
          <txID> TX_ID </txID>
-         <logs> LOG => append(MSG, LOG) </logs>
+         <logData> LOG => append(MSG, LOG) </logData>
          <logSize> SIZE => SIZE +Int lengthBytes({MSG}:>Bytes) </logSize>
          ...
        </transaction>
@@ -1391,7 +1391,7 @@ Stateful TEAL Operations
        <currentTx> TX_ID </currentTx>
        <transaction>
          <txID> TX_ID </txID>
-         <logs> LOG </logs>
+         <logData> LOG </logData>
          ...
        </transaction>
     requires size(LOG) >=Int PARAM_MAX_LOG_CALLS
@@ -1495,6 +1495,22 @@ Stateful TEAL Operations
 *app_local_put*
 
 ```k
+  syntax Int ::= getLocalByteLimit(Int) [function]
+  rule [[ getLocalByteLimit(APP) => X ]]
+       <app>
+         <appID> APP </appID>
+         <localNumBytes> X </localNumBytes>
+         ...
+       </app>
+
+  syntax Int ::= getLocalIntLimit(Int) [function]
+  rule [[ getLocalIntLimit(APP) => X ]]
+       <app>
+         <appID> APP </appID>
+         <localNumInts> X </localNumInts>
+         ...
+       </app>
+
   rule <k> app_local_put => #app_local_put {accountReference(A)}:>TValue
                                            getGlobalField(CurrentApplicationID) ... </k>
        <stack> (_:TValue) : (_:Bytes) : (A:TValue) : _ </stack>
@@ -1510,17 +1526,81 @@ Stateful TEAL Operations
   syntax KItem ::= "#app_local_put" TValue TValue
   //---------------------------------------------
   rule <k> #app_local_put ADDR APP => .K ... </k>
-       <stack> (NEWVAL:TValue) : (KEY:Bytes) : _ : XS => XS </stack>
+       <stack> (NEWVAL:Int) : (KEY:Bytes) : _ : XS => XS </stack>
        <stacksize> S => S -Int 3 </stacksize>
        <account>
          <address> ADDR </address>
          <appsOptedIn>
            <optInApp>
              <optInAppID> APP </optInAppID>
-             <localStorage> M => M[KEY <- NEWVAL] </localStorage> ...
+             <localInts> MI => MI[KEY <- NEWVAL] </localInts>
+             <localBytes> MB => MB[KEY <- undef]  </localBytes>
+             ...
            </optInApp> ...
          </appsOptedIn> ...
        </account>
+    requires size(MI[KEY <- NEWVAL]) <=Int getLocalIntLimit(APP)
+     andBool lengthBytes(KEY) <=Int PARAM_MAX_KEY_SIZE
+     andBool lengthBytes(KEY) +Int sizeInBytes(NEWVAL) <=Int PARAM_MAX_SUM_KEY_VALUE_SIZE
+
+  rule <k> #app_local_put ADDR APP => .K ... </k>
+       <stack> (NEWVAL:Bytes) : (KEY:Bytes) : _ : XS => XS </stack>
+       <stacksize> S => S -Int 3 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <appsOptedIn>
+           <optInApp>
+             <optInAppID> APP </optInAppID>
+             <localInts> MI => MI[KEY <- undef] </localInts>
+             <localBytes> MB => MB[KEY <- NEWVAL] </localBytes>
+             ...
+           </optInApp> ...
+         </appsOptedIn> ...
+       </account>
+    requires size(MB[KEY <- NEWVAL]) <=Int getLocalByteLimit(APP)
+     andBool lengthBytes(KEY) <=Int PARAM_MAX_KEY_SIZE
+     andBool lengthBytes(KEY) +Int sizeInBytes(NEWVAL) <=Int PARAM_MAX_SUM_KEY_VALUE_SIZE
+     andBool lengthBytes(NEWVAL) <=Int PARAM_MAX_BYTE_VALUE_SIZE
+
+  rule <k> #app_local_put _ _ => panic(KEY_TOO_LARGE) ... </k>
+       <stack> _ : (KEY:Bytes) : _ : _ </stack>
+    requires lengthBytes(KEY) >Int PARAM_MAX_KEY_SIZE
+
+  rule <k> #app_local_put _ _ => panic(KEY_VALUE_TOO_LARGE) ... </k>
+       <stack> (NEWVAL:TValue) : (KEY:Bytes) : _ : _ </stack>
+    requires lengthBytes(KEY) +Int sizeInBytes(NEWVAL) >Int PARAM_MAX_SUM_KEY_VALUE_SIZE
+
+  rule <k> #app_local_put _ _ => panic(BYTE_VALUE_TOO_LARGE) ... </k>
+       <stack> (NEWVAL:Bytes) : _ : _ : _ </stack>
+    requires lengthBytes(NEWVAL) >Int PARAM_MAX_BYTE_VALUE_SIZE
+
+  rule <k> #app_local_put ADDR APP => panic(LOCAL_INTS_EXCEEDED) ... </k>
+       <stack> (NEWVAL:Int) : (KEY:Bytes) : _ : _ </stack>
+       <account>
+         <address> ADDR </address>
+         <appsOptedIn>
+           <optInApp>
+             <optInAppID> APP </optInAppID>
+             <localInts> M </localInts>
+             ...
+           </optInApp> ...
+         </appsOptedIn> ...
+       </account>
+    requires size(M[KEY <- NEWVAL]) >Int getLocalIntLimit(APP)
+
+  rule <k> #app_local_put ADDR APP => panic(LOCAL_BYTES_EXCEEDED) ... </k>
+       <stack> (NEWVAL:Bytes) : (KEY:Bytes) : _ : _ </stack>
+       <account>
+         <address> ADDR </address>
+         <appsOptedIn>
+           <optInApp>
+             <optInAppID> APP </optInAppID>
+             <localBytes> M </localBytes>
+             ...
+           </optInApp> ...
+         </appsOptedIn> ...
+       </account>
+    requires size(M[KEY <- NEWVAL]) >Int getLocalByteLimit(APP)
 
   // if the account exists but is not opted in, panic
   rule <k> #app_local_put ADDR APP => panic(TXN_ACCESS_FAILED) ... </k>
@@ -1566,7 +1646,9 @@ Stateful TEAL Operations
          <appsOptedIn>
            <optInApp>
              <optInAppID> APP </optInAppID>
-             <localStorage> M => M[KEY <- undef] </localStorage> ...
+             <localInts> MI => MI[KEY <- undef] </localInts> 
+             <localBytes> MB => MB[KEY <- undef] </localBytes> 
+             ...
            </optInApp> ...
          </appsOptedIn> ...
        </account>
@@ -1639,19 +1721,79 @@ Stateful TEAL Operations
   syntax KItem ::= "#app_global_put" TValue
   //---------------------------------------
   rule <k> #app_global_put APP => .K ... </k>
-       <stack> (NEWVAL:TValue) : (KEY:Bytes) : XS => XS </stack>
+       <stack> (NEWVAL:Int) : (KEY:Bytes) : XS => XS </stack>
        <stacksize> S => S -Int 2 </stacksize>
-       <appsCreated>
-         <app>
-           <appID> APP </appID>
-           <globalState>
-             <globalStorage> M => M[KEY <- NEWVAL] </globalStorage>
-             ...
-           </globalState>
+       <app>
+         <appID> APP </appID>
+         <globalState>
+           <globalInts> MI => MI[KEY <- NEWVAL] </globalInts>
+           <globalBytes> MB => MB[KEY <- undef] </globalBytes>
+           <globalNumInts>    GLOBAL_INTS </globalNumInts>
            ...
-         </app>
+         </globalState>
          ...
-       </appsCreated>
+       </app>
+    requires size(MI[KEY <- NEWVAL]) <=Int GLOBAL_INTS
+     andBool lengthBytes(KEY) <=Int PARAM_MAX_KEY_SIZE
+     andBool lengthBytes(KEY) +Int sizeInBytes(NEWVAL) <=Int PARAM_MAX_SUM_KEY_VALUE_SIZE
+
+  rule <k> #app_global_put APP => .K ... </k>
+       <stack> (NEWVAL:Bytes) : (KEY:Bytes) : XS => XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+       <app>
+         <appID> APP </appID>
+         <globalState>
+           <globalInts> MI => MI[KEY <- undef] </globalInts>
+           <globalBytes> MB => MB[KEY <- NEWVAL] </globalBytes>
+           <globalNumBytes>   GLOBAL_BYTES </globalNumBytes>
+           ...
+         </globalState>
+         ...
+       </app>
+    requires size(MB[KEY <- NEWVAL]) <=Int GLOBAL_BYTES
+     andBool lengthBytes(KEY) <=Int PARAM_MAX_KEY_SIZE
+     andBool lengthBytes(KEY) +Int sizeInBytes(NEWVAL) <=Int PARAM_MAX_SUM_KEY_VALUE_SIZE
+     andBool lengthBytes(NEWVAL) <=Int PARAM_MAX_BYTE_VALUE_SIZE
+
+  rule <k> #app_global_put _ => panic(KEY_TOO_LARGE) ... </k>
+       <stack> _ : (KEY:Bytes) : _ </stack>
+    requires lengthBytes(KEY) >Int PARAM_MAX_KEY_SIZE
+
+  rule <k> #app_global_put _ => panic(KEY_VALUE_TOO_LARGE) ... </k>
+       <stack> (NEWVAL:TValue) : (KEY:Bytes) : _ </stack>
+    requires lengthBytes(KEY) +Int sizeInBytes(NEWVAL) >Int PARAM_MAX_SUM_KEY_VALUE_SIZE
+
+  rule <k> #app_global_put _ => panic(BYTE_VALUE_TOO_LARGE) ... </k>
+       <stack> (NEWVAL:Bytes) : _ : _ </stack>
+    requires lengthBytes(NEWVAL) >Int PARAM_MAX_BYTE_VALUE_SIZE
+
+  rule <k> #app_global_put APP => panic(GLOBAL_INTS_EXCEEDED) ... </k>
+       <stack> (NEWVAL:Int) : (KEY:Bytes) : _ </stack>
+       <app>
+         <appID> APP </appID>
+         <globalState>
+           <globalInts> M </globalInts>
+           <globalNumInts>    GLOBAL_INTS </globalNumInts>
+           <globalNumBytes>   _ </globalNumBytes>
+           ...
+         </globalState>
+         ...
+       </app>
+    requires size(M[KEY <- NEWVAL]) >Int GLOBAL_INTS
+
+  rule <k> #app_global_put APP => panic(GLOBAL_BYTES_EXCEEDED) ... </k>
+       <stack> (NEWVAL:Bytes) : (KEY:Bytes) : _ </stack>
+       <app>
+         <appID> APP </appID>
+         <globalState>
+           <globalBytes> M </globalBytes>
+           <globalNumInts>    _ </globalNumInts>
+           <globalNumBytes>   GLOBAL_BYTES </globalNumBytes>
+           ...
+         </globalState>
+         ...
+       </app>
+    requires size(M[KEY <- NEWVAL]) >Int GLOBAL_BYTES
 
   // if the app doesn't exist, do nothing
   rule <k> #app_global_put APP => .K ... </k>
@@ -1669,14 +1811,15 @@ Stateful TEAL Operations
 
   syntax KItem ::= "#app_global_del" TValue
   //---------------------------------------
-  rule <k> #app_global_put APP => .K ... </k>
+  rule <k> #app_global_del APP => .K ... </k>
        <stack> (KEY:Bytes) : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
        <appsCreated>
          <app>
            <appID> APP </appID>
            <globalState>
-             <globalStorage> M => M[KEY <- undef] </globalStorage>
+             <globalInts> MI => MI[KEY <- undef] </globalInts>
+             <globalBytes> MB => MB[KEY <- undef] </globalBytes>
              ...
            </globalState>
            ...

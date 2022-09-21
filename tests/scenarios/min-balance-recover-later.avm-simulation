@@ -1,11 +1,13 @@
-declareTealSource "arithmetic-add-overflow.teal";
+declareTealSource "clear-basic.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 200000 </balance>;
+addAccount <address> b"1" </address> <balance> 100000 </balance>;
+addAccount <address> b"2" </address> <balance> 100000000 </balance>;
 
 #initTxGroup();
 
-// Add app
+// Add app, bringing min balance to 200000. This is higher than the current balance, but it is still OK if we
+// fund our account later in the transaction group.
 addAppCallTx <txID> 0 </txID>
              <sender>            b"1"        </sender>
              <applicationID>     0           </applicationID>
@@ -21,5 +23,11 @@ addAppCallTx <txID> 0 </txID>
              <extraProgramPages> 0           </extraProgramPages>
              <approvalPgmIdx>    0           </approvalPgmIdx>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
+
+// Pay b"1", bringing their balance up to the new minimum.
+addPaymentTx <txID>     1     </txID>
+             <sender>   b"2"  </sender>
+             <receiver> b"1"  </receiver>
+             <amount>   100000 </amount>;
 
 #initGlobals(); #evalTxGroup(); .AS

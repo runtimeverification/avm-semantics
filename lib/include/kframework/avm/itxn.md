@@ -353,9 +353,6 @@ module ALGO-ITXN
                <localNbs> 0 </localNbs>
              </localStateSchema>
              <extraProgramPages>    0                    </extraProgramPages>
-             <txScratch>            .Map                 </txScratch>
-             <logs>                 .TValueList          </logs>
-             <logSize>               0                   </logSize>
            </appCallTxFields>
            ...
          </transaction>)

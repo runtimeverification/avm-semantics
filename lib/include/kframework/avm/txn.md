@@ -82,9 +82,6 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
           <localNbs> NoTValue </localNbs>
         </localStateSchema>
         <extraProgramPages> NoTValue </extraProgramPages>
-        <txScratch>         .Map        </txScratch>
-        <logs>              .TValueList </logs>
-        <logSize>           0:TValue    </logSize>
       </appCallTxFields>
 ```
 
@@ -163,6 +160,8 @@ Transaction Group State Representation
 module ALGO-TXN
   imports TXN-FIELDS
   imports TEAL-TYPES
+  imports SET
+  imports LIST
 ```
 
 *Transaction Group Configuration*
@@ -189,6 +188,15 @@ module ALGO-TXN
             <assetTransferTxFields/>
             <assetFreezeTxFields/>
           </txnTypeSpecificFields>
+          <applyData>
+            <txScratch>       .Map  </txScratch>
+            <txConfigAsset>   0     </txConfigAsset>
+            <txApplicationID> 0     </txApplicationID>
+            <log>
+              <logData> .TValueList </logData>
+              <logSize> 0:TValue    </logSize>
+            </log>
+          </applyData>
           <txnExecutionContext> .K </txnExecutionContext>
           <resume> false </resume>
         </transaction>
@@ -773,7 +781,7 @@ module ALGO-TXN
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
-         <logs> _ MSG:TBytes </logs>
+         <logData> _ MSG:TBytes </logData>
          ...
        </transaction>
     requires #isValidForTxnType(Assets, TYPE)
@@ -782,7 +790,7 @@ module ALGO-TXN
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
-         <logs> MSG:TBytes </logs>
+         <logData> MSG:TBytes </logData>
          ...
        </transaction>
     requires #isValidForTxnType(Assets, TYPE)
@@ -791,7 +799,7 @@ module ALGO-TXN
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
-         <logs> LOGS </logs>
+         <logData> LOGS </logData>
          ...
        </transaction>
     requires #isValidForTxnType(Assets, TYPE)
@@ -800,7 +808,7 @@ module ALGO-TXN
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
-         <logs> LOGS </logs>
+         <logData> LOGS </logData>
          ...
        </transaction>
     requires #isValidForTxnType(Assets, TYPE)
@@ -809,7 +817,7 @@ module ALGO-TXN
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
-         <logs> LOGS </logs>
+         <logData> LOGS </logData>
          ...
        </transaction>
     requires #isValidForTxnType(Assets, TYPE)
