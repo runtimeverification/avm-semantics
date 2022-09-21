@@ -143,10 +143,19 @@ class KAVMApplication:
             extra_pages=int(subst['EXTRAPAGES_CELL'].token),
         )
 
-    def dictify(self) -> Dict[str, Union[str, int]]:
+    def dictify(self) -> Dict[str, Any]:
         """
         Return a dictified representation of the application cell to pass to py-algorand-sdk
         """
         return {
             'index': str(self._app_id),
+            'params': {
+                'creator': '',
+                'approval-progam': self._approval_pgm,
+                'clear-state-program': self._clear_state_pgm,
+                'extra-program-pages': self._extra_pages,
+                'local-state-schema': {},
+                'global-state-schema': {},
+                'global-state': {},
+            },
         }

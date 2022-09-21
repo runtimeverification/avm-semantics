@@ -120,6 +120,12 @@ class KAVMClient(algod.AlgodClient):
             address = params[0]
             return self.kavm.accounts[address].dictify()
 
+        elif endpoint == 'applications':
+            (config, subst) = split_config_from(self.kavm.current_config)
+
+            app_id = params[0]
+            return self.kavm.apps[app_id].dictify()
+
         else:
             self.algodLogger.debug(requrl.split('/'))
             raise NotImplementedError(f'Endpoint not implemented: {requrl}')
