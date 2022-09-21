@@ -421,7 +421,7 @@ Create asset
        <transaction>
          <txID>                TXN_ID         </txID>
          <sender>              SENDER         </sender>
-         <configAsset>         NoTValue       </configAsset>
+         <configAsset>         0              </configAsset>
          <configTotal>         TOTAL          </configTotal>
          <configDecimals>      DECIMALS       </configDecimals>
          <configDefaultFrozen> DEFAULT_FROZEN </configDefaultFrozen>
@@ -441,7 +441,7 @@ Create asset
          <address> SENDER </address>
          <assetsCreated>
            ASSETS =>
-           <asset>
+           (<asset>
              <assetID>            ASSET_ID       </assetID>
              <assetName>          NAME           </assetName>
              <assetUnitName>      UNIT_NAME      </assetUnitName>
@@ -455,7 +455,7 @@ Create asset
              <assetFreezeAddr>    FREEZE_ADDR    </assetFreezeAddr>
              <assetClawbackAddr>  CLAWB_ADDR     </assetClawbackAddr>
            </asset>
-           ASSETS
+           ASSETS)
          </assetsCreated>
          <assetsOptedIn>
            ASSETS_OPTED_IN =>

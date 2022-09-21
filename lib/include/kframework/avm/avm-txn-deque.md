@@ -100,6 +100,7 @@ we will know immediately, since `#pushTxnFront()`/`#pushTxnBack()` would panic.
        <deque> ListItem(TXN_ID) TXNS </deque>
        <currentTx> _ => TXN_ID </currentTx>
 
+
   rule <k> #getNextTxn() => #internalPanic(TXN_DEQUE_ERROR) ... </k>
        <deque> .List </deque>
 

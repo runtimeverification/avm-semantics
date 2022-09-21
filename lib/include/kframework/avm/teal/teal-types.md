@@ -173,7 +173,7 @@ We also need hooks which convert between the string and byte representations of 
   syntax Bytes  ::= DecodeAddressString(String) [function]
   syntax String ::= EncodeAddressBytes(Bytes)   [function]
   // -----------------------------------------------------
-  rule DecodeAddressString(S) => DecodeAddressStringInternal(S) requires IsAddressValid(S)
+  rule DecodeAddressString(S) => DecodeAddressStringInternal(S) // requires IsAddressValid(S)
   rule EncodeAddressBytes(B)  => EncodeAddressBytesInternal(B)  requires lengthBytes(B)  ==Int 32
 
   syntax Bytes  ::= DecodeAddressStringInternal(String) [function, hook(CLARITY.address_decode)]

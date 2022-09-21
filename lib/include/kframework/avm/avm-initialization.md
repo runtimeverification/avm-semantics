@@ -35,7 +35,7 @@ The transaction is initialized first.
 ### Transaction Group Initialization
 ```k
   rule <k> #initTxGroup() => .K ... </k>
-       <nextGroupID> GROUP_ID => GROUP_ID +Int 1 </nextGroupID>
+//       <nextGroupID> GROUP_ID => GROUP_ID +Int 1 </nextGroupID>
 ```
 
 ### Transactions

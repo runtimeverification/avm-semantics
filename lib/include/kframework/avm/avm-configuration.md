@@ -57,6 +57,9 @@ module AVM-CONFIGURATION
           // its effects will be applied onto the `<blockchain>` cell.
           // TODO: how to represent effects? We need to track changes to accounts, assets and apps.
           <effects> .List </effects>
+
+          <lastTxnGroupID> 0 </lastTxnGroupID>
+
         </currentTxnExecution>
 
         <innerTransactions> .List </innerTransactions>

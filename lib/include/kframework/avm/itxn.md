@@ -69,8 +69,8 @@ module ALGO-ITXN
          <transaction>
            .PayTxFieldsCell =>
            <payTxFields>
-             <receiver> .Bytes </receiver>
-             <amount> 0 </amount>
+             <receiver>         .Bytes </receiver>
+             <amount>           0      </amount>
              <closeRemainderTo> .Bytes </closeRemainderTo>
            </payTxFields>
            ...
@@ -102,12 +102,12 @@ module ALGO-ITXN
          <transaction>
            .KeyRegTxFieldsCell =>
            <keyRegTxFields>
-             <votePk> .Bytes </votePk>
-             <selectionPK> .Bytes </selectionPK>
-             <voteFirst> 0 </voteFirst>
-             <voteLast> 0 </voteLast>
-             <voteKeyDilution> 0 </voteKeyDilution>
-             <nonparticipation> 0 </nonparticipation>
+             <votePk>           .Bytes </votePk>
+             <selectionPK>      .Bytes </selectionPK>
+             <voteFirst>        0      </voteFirst>
+             <voteLast>         0      </voteLast>
+             <voteKeyDilution>  0      </voteKeyDilution>
+             <nonparticipation> 0      </nonparticipation>
            </keyRegTxFields>
            ...
          </transaction>)
@@ -158,17 +158,17 @@ module ALGO-ITXN
            <assetConfigTxFields>
              <configAsset> 0 </configAsset>
              <assetParams>
-               <configTotal> 0 </configTotal>
-               <configDecimals> 0 </configDecimals>
-               <configDefaultFrozen> 0 </configDefaultFrozen>
-               <configUnitName> .Bytes </configUnitName>
-               <configAssetName> .Bytes </configAssetName>
-               <configAssetURL> .Bytes </configAssetURL>
-               <configMetaDataHash> .Bytes </configMetaDataHash>
-               <configManagerAddr> .Bytes </configManagerAddr>
-               <configReserveAddr> .Bytes </configReserveAddr>
-               <configFreezeAddr> .Bytes </configFreezeAddr>
-               <configClawbackAddr> .Bytes </configClawbackAddr>
+               <configTotal>         0                           </configTotal>
+               <configDecimals>      0                           </configDecimals>
+               <configDefaultFrozen> 0                           </configDefaultFrozen>
+               <configUnitName>      .Bytes                      </configUnitName>
+               <configAssetName>     .Bytes                      </configAssetName>
+               <configAssetURL>      .Bytes                      </configAssetURL>
+               <configMetaDataHash>  .Bytes                      </configMetaDataHash>
+               <configManagerAddr>   getGlobalField(ZeroAddress) </configManagerAddr>
+               <configReserveAddr>   getGlobalField(ZeroAddress) </configReserveAddr>
+               <configFreezeAddr>    getGlobalField(ZeroAddress) </configFreezeAddr>
+               <configClawbackAddr>  getGlobalField(ZeroAddress) </configClawbackAddr>
              </assetParams>
            </assetConfigTxFields>
            ...
@@ -254,11 +254,11 @@ module ALGO-ITXN
          <transaction>
            .AssetTransferTxFieldsCell =>
            <assetTransferTxFields>
-             <xferAsset> 0 </xferAsset>
-             <assetAmount> 0 </assetAmount>
-             <assetReceiver> .Bytes </assetReceiver>
-             <assetASender> .Bytes </assetASender>
-             <assetCloseTo> .Bytes </assetCloseTo>
+             <xferAsset>     0                           </xferAsset>
+             <assetAmount>   0                           </assetAmount>
+             <assetReceiver> getGlobalField(ZeroAddress) </assetReceiver>
+             <assetASender>  getGlobalField(ZeroAddress) </assetASender>
+             <assetCloseTo>  getGlobalField(ZeroAddress) </assetCloseTo>
            </assetTransferTxFields>
            ...
          </transaction>)
@@ -301,9 +301,9 @@ module ALGO-ITXN
          <transaction>
            .AssetFreezeTxFieldsCell =>
            <assetFreezeTxFields>
-             <freezeAccount> .Bytes </freezeAccount>
-             <freezeAsset> 0 </freezeAsset>
-             <assetFrozen> 0 </assetFrozen>
+             <freezeAccount> getGlobalField(ZeroAddress) </freezeAccount>
+             <freezeAsset>   0                           </freezeAsset>
+             <assetFrozen>   0                           </assetFrozen>
            </assetFreezeTxFields>
            ...
          </transaction>)
@@ -334,16 +334,16 @@ module ALGO-ITXN
          <transaction>
            .AppCallTxFieldsCell =>
            <appCallTxFields>
-             <applicationID> 0 </applicationID>
-             <onCompletion> 0 </onCompletion>
-             <accounts> .TValueList </accounts>
-             <approvalProgramSrc> (int 0):TealInputPgm </approvalProgramSrc>
+             <applicationID>        0                    </applicationID>
+             <onCompletion>         0                    </onCompletion>
+             <accounts>             .TValueList          </accounts>
+             <approvalProgramSrc>   (int 0):TealInputPgm </approvalProgramSrc>
              <clearStateProgramSrc> (int 0):TealInputPgm </clearStateProgramSrc>
-             <approvalProgram> .Bytes </approvalProgram>
-             <clearStateProgram> .Bytes </clearStateProgram>
-             <applicationArgs> .TValueList </applicationArgs>
-             <foreignApps> .TValueList </foreignApps>
-             <foreignAssets> .TValueList </foreignAssets>
+             <approvalProgram>      .Bytes               </approvalProgram>
+             <clearStateProgram>    .Bytes               </clearStateProgram>
+             <applicationArgs>      .TValueList          </applicationArgs>
+             <foreignApps>          .TValueList          </foreignApps>
+             <foreignAssets>        .TValueList          </foreignAssets>
              <globalStateSchema>
                <globalNui> 0 </globalNui>
                <globalNbs> 0 </globalNbs>
@@ -352,10 +352,10 @@ module ALGO-ITXN
                <localNui> 0 </localNui>
                <localNbs> 0 </localNbs>
              </localStateSchema>
-             <extraProgramPages> 0 </extraProgramPages>
-             <txScratch> .Map </txScratch>
-             <logs> .TValueList </logs>
-             <logSize> 0 </logSize>
+             <extraProgramPages>    0                    </extraProgramPages>
+             <txScratch>            .Map                 </txScratch>
+             <logs>                 .TValueList          </logs>
+             <logSize>               0                   </logSize>
            </appCallTxFields>
            ...
          </transaction>)
@@ -530,12 +530,11 @@ module ALGO-ITXN
   //---------------------------
 
   rule <k> #pushItxns() => (#pushTxnFront(<txID> TXN_ID </txID>) ~> #pushItxns()) ...</k>
-       <innerTransactions> OTHER_ITXNS (ListItem(
+       <innerTransactions> OTHER_ITXNS:List (ListItem(
          <transaction>
            <txID> _ </txID>
            <txHeader>
              <groupID> GROUP_ID </groupID>
-             <groupIdx> _ </groupIdx>
              TX_HEADER
            </txHeader>
            TXN_BODY
@@ -548,7 +547,6 @@ module ALGO-ITXN
            <txID> TXN_ID </txID>
            <txHeader>
              <groupID> GROUP_ID </groupID>
-             <groupIdx> size(OTHER_ITXNS) </groupIdx>
              TX_HEADER
            </txHeader>
            TXN_BODY
@@ -572,6 +570,33 @@ module ALGO-ITXN
          </txnExecutionContext>
          ...
        </transaction>
+
+  syntax KItem ::= #loadFromGroupInner(Int, TxnField)
+  syntax KItem ::= #loadFromGroupInner(Int, TxnaFieldExt, Int)
+
+  rule <k> #loadFromGroupInner(GROUP_IDX, FIELD) => . ...</k>
+       <lastTxnGroupID> LAST_GROUP </lastTxnGroupID>
+       <stack> XS => ({getTxnField(TX_ID, FIELD)}:>TValue : XS) </stack>
+       <stacksize> SS => SS +Int 1 </stacksize>
+       <transaction>
+         <txID> TX_ID </txID>
+         <groupID> LAST_GROUP </groupID>
+         <groupIdx> GROUP_IDX </groupIdx>
+         ...
+       </transaction>
+    requires isTValue(getTxnField(TX_ID, FIELD))
+
+  rule <k> #loadFromGroupInner(GROUP_IDX, FIELD, IDX) => . ...</k>
+       <lastTxnGroupID> LAST_GROUP </lastTxnGroupID>
+       <stack> XS => ({getTxnField(TX_ID, FIELD, IDX)}:>TValue : XS) </stack>
+       <stacksize> SS => SS +Int 1 </stacksize>
+       <transaction>
+         <txID> TX_ID </txID>
+         <groupID> LAST_GROUP </groupID>
+         <groupIdx> GROUP_IDX </groupIdx>
+         ...
+       </transaction>
+    requires isTValue(getTxnField(TX_ID, FIELD, IDX))
 
 endmodule
 ```

@@ -55,6 +55,7 @@ there may be some remaining artefacts of the previous transaction's TEAL.
        <currentApplicationID> _ => APP_ID </currentApplicationID>
        <currentApplicationAddress> _ => getAppAddress(APP_ID)       </currentApplicationAddress>
        <activeApps> (.Set => SetItem(APP_ID)) REST </activeApps>
+       <lastTxnGroupID> _ => 0 </lastTxnGroupID>
        <mode> _ => stateful </mode>
     requires notBool(APP_ID in REST)
 ```

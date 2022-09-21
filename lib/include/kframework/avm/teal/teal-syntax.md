@@ -338,9 +338,9 @@ module TEAL-OPCODES
                          | "itxn_field" TxnFieldTop
                          | "itxn_next"
                          | "itxn" TxnField
-                         | "itxna" TxnField Int
+                         | "itxna" TxnaField Int
                          | "gitxn" Int TxnField
-                         | "gitxna" Int TxnField Int
+                         | "gitxna" Int TxnaField Int
 ```
 
 ```k

@@ -10,9 +10,6 @@ itxn_begin
 int acfg
 itxn_field TypeEnum
 
-global CurrentApplicationAddress
-itxn_field Sender
-
 int 1000000
 itxn_field ConfigAssetTotal
 

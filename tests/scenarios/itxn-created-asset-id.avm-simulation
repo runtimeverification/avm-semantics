@@ -23,13 +23,13 @@ addAppCallTx <txID> 0 </txID>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 // Fund app 1 account
-addPaymentTx <txID> 2 </txID>
+addPaymentTx <txID> 1 </txID>
              <sender>   b"1"            </sender>
              <receiver> b"application1" </receiver>
              <amount>   500000          </amount>;
 
 // Call app 1
-addAppCallTx <txID> 4 </txID>
+addAppCallTx <txID> 2 </txID>
              <sender>            b"1"        </sender>
              <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>

@@ -1902,18 +1902,34 @@ Stateful TEAL Operations
          .List => 
          ListItem(<transaction>
            <txID> -1 </txID>
-           <groupID> GROUP_ID </groupID>
+           <txHeader>
+             // TODO Fee is calculated dynamically
+             <fee>         0                                         </fee>
+             <sender>      getGlobalField(CurrentApplicationAddress) </sender>
+             <firstValid>  getTxnField(getCurrentTxn(), FirstValid)  </firstValid>
+             <lastValid>   getTxnField(getCurrentTxn(), FirstValid)  </lastValid>
+             <genesisHash> .Bytes                                    </genesisHash>
+             <txType>       "unknown"                                </txType>
+             <typeEnum>     0                                        </typeEnum>
+             <groupID>      GROUP_ID +Int 1                          </groupID>
+             <groupIdx>     0                                        </groupIdx>
+             <genesisID>    .Bytes                                   </genesisID>
+             <lease>        .Bytes                                   </lease>
+             <note>         .Bytes                                   </note>
+             <rekeyTo>      getGlobalField(ZeroAddress)              </rekeyTo>
+           </txHeader>
            <txnTypeSpecificFields>
              .AssetTransferTxFieldsCell
            </txnTypeSpecificFields>
            ...
          </transaction>)
        </innerTransactions>
-       <nextGroupID> GROUP_ID </nextGroupID>
+       <nextGroupID> GROUP_ID => GROUP_ID +Int 1 </nextGroupID>
 
   rule <k> itxn_submit => #incrementPC() ~> #checkItxns(T) ~> #executeItxnGroup()...</k>
        <innerTransactions> T </innerTransactions>
-       <nextGroupID> GROUP_ID => GROUP_ID +Int 1 </nextGroupID>
+       <lastTxnGroupID> _ => GROUP_ID </lastTxnGroupID>
+       <nextGroupID> GROUP_ID </nextGroupID>
 
   rule <k> itxn_field FIELD => #setItxnField(FIELD, VAL) ...</k>
        <stack> VAL : XS => XS </stack>
@@ -1925,7 +1941,22 @@ Stateful TEAL Operations
          (.List =>
          ListItem(<transaction>
            <txID> -1 </txID>
-           <groupID> GROUP_ID </groupID>
+           <txHeader>
+             // TODO Fee is calculated dynamically
+             <fee>         0                                         </fee>
+             <sender>      getGlobalField(CurrentApplicationAddress) </sender>
+             <firstValid>  getTxnField(getCurrentTxn(), FirstValid)  </firstValid>
+             <lastValid>   getTxnField(getCurrentTxn(), FirstValid)  </lastValid>
+             <genesisHash> .Bytes                                    </genesisHash>
+             <txType>       "unknown"                                </txType>
+             <typeEnum>     0                                        </typeEnum>
+             <groupID>      GROUP_ID                                 </groupID>
+             <groupIdx>     size(REST)                               </groupIdx>
+             <genesisID>    .Bytes                                   </genesisID>
+             <lease>        .Bytes                                   </lease>
+             <note>         .Bytes                                   </note>
+             <rekeyTo>      getGlobalField(ZeroAddress)              </rekeyTo>
+           </txHeader>
            <txnTypeSpecificFields>
              .AssetTransferTxFieldsCell
            </txnTypeSpecificFields>
@@ -1935,13 +1966,13 @@ Stateful TEAL Operations
        <nextGroupID> GROUP_ID </nextGroupID>
     requires size(REST) >=Int 1
 
-  rule <k> itxn FIELD => . ...</k>
+  rule <k> itxn FIELD => gitxn getTxnGroupIndex(getCurrentTxn()) FIELD ...</k>
 
-  rule <k> itxna FIELD IDX => . ...</k>
+  rule <k> itxna FIELD IDX => gitxna getTxnGroupIndex(getCurrentTxn()) FIELD IDX ...</k>
 
-  rule <k> gitxn GROUP_IDX FIELD => . ...</k>
+  rule <k> gitxn GROUP_IDX FIELD => #loadFromGroupInner(GROUP_IDX, FIELD) ...</k>
 
-  rule <k> gitxna GROUP_IDX FIELD IDX => . ...</k>
+  rule <k> gitxna GROUP_IDX FIELD IDX => #loadFromGroupInner(GROUP_IDX, FIELD, IDX) ...</k>
 ```
 
 

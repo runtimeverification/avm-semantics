@@ -250,6 +250,7 @@ avm_files    :=                            \
                 avm/blockchain.md          \
                 avm/constants.md           \
                 avm/txn.md                 \
+                avm/itxn.md                \
                 avm/avm-configuration.md   \
                 avm/avm-execution.md       \
                 avm/avm-initialization.md  \
