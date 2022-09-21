@@ -1373,7 +1373,7 @@ Stateful TEAL Operations
        <currentTx> TX_ID </currentTx>
        <transaction>
          <txID> TX_ID </txID>
-         <logs> LOG => append(MSG, LOG) </logs>
+         <logData> LOG => append(MSG, LOG) </logData>
          <logSize> SIZE => SIZE +Int lengthBytes({MSG}:>Bytes) </logSize>
          ...
        </transaction>
@@ -1386,7 +1386,7 @@ Stateful TEAL Operations
        <currentTx> TX_ID </currentTx>
        <transaction>
          <txID> TX_ID </txID>
-         <logs> LOG </logs>
+         <logData> LOG </logData>
          ...
        </transaction>
     requires size(LOG) >=Int PARAM_MAX_LOG_CALLS

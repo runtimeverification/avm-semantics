@@ -445,6 +445,7 @@ Create asset
          <configReserveAddr>   RESERVE_ADDR   </configReserveAddr>
          <configFreezeAddr>    FREEZE_ADDR    </configFreezeAddr>
          <configClawbackAddr>  CLAWB_ADDR     </configClawbackAddr>
+         <txConfigAsset>       _ => ASSET_ID  </txConfigAsset>
          ...
        </transaction>
 
@@ -737,6 +738,7 @@ App create
          <localNui>             LOCAL_INTS          </localNui>
          <localNbs>             LOCAL_BYTES         </localNbs>
          <extraProgramPages>    EXTRA_PAGES         </extraProgramPages>
+         <txApplicationID>      _ => APP_ID         </txApplicationID>
          ...
        </transaction>
        <accountsMap>
