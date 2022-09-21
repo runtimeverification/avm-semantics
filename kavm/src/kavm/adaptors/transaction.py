@@ -61,6 +61,12 @@ class KAVMTransaction:
                 'LEASE_CELL': maybe_tvalue(txn.lease),
                 'NOTE_CELL': maybe_tvalue(txn.note),
                 'REKEYTO_CELL': maybe_tvalue(txn.rekey_to),
+                'TXCONFIGASSET_CELL': tvalue(0),
+                'TXAPPLICATIONID_CELL': tvalue(0),
+                'INNERTXNS_CELL': KApply('.List'),
+                'LOGSIZE_CELL': tvalue(0),
+                'LOGDATA_CELL': tvalue_list([]),
+                'TXSCRATCH_CELL': KApply('.Map'),
             }
         )
         type_specific_subst = None
@@ -108,9 +114,6 @@ class KAVMTransaction:
                     'EXTRAPROGRAMPAGES_CELL': maybe_tvalue(txn.extra_pages)
                     if txn.extra_pages is not None
                     else maybe_tvalue(0),
-                    'LOGS_CELL': tvalue_list([]),
-                    'LOGSIZE_CELL': tvalue(0),
-                    'TXSCRATCH_CELL': KApply('.Map'),
                 }
             )
         if type_specific_subst is None:
@@ -134,7 +137,7 @@ class KAVMTransaction:
             }
         )
         empty_service_fields_subst = Subst(
-            {'LOGS_CELL': tvalue_list([]), 'LOGSIZE_CELL': tvalue(0), 'TXSCRATCH_CELL': KApply('.Map')}
+            {'LOGDATA_CELL': tvalue_list([]), 'LOGSIZE_CELL': tvalue(0), 'TXSCRATCH_CELL': KApply('.Map')}
         )
         transaction_cell = fields_subst.apply(empty_transaction_cell)
         empty_fields_subst = Subst({k: maybe_tvalue(None) for k in free_vars(empty_transaction_cell)})
