@@ -73,7 +73,7 @@ module TEAL-FIELDS
 ```k
 
   syntax TxnFieldTop ::= TxnField
-                       | TxnaFieldExt
+                       | TxnaField
 
   syntax TxnField ::= TxnStaticField
                     | TxnDynamicField
@@ -157,10 +157,6 @@ module TEAL-FIELDS
                            | "Assets"
 
   syntax TxnaDynamicField ::= "Logs"
-
-  syntax TxnaFieldExt ::= TxnaField
-//                        | "Applications"
-//                        | "Assets"
 ```
 
 ### `acct_params` fields
