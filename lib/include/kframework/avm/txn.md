@@ -784,7 +784,7 @@ module ALGO-TXN
          <logData> _ MSG:TBytes </logData>
          ...
        </transaction>
-    requires #isValidForTxnType(Assets, TYPE)
+    requires #isValidForTxnType(LastLog, TYPE)
 
   rule [[ getTxnField(I, LastLog) => MSG ]]
        <transaction>
@@ -793,7 +793,7 @@ module ALGO-TXN
          <logData> MSG:TBytes </logData>
          ...
        </transaction>
-    requires #isValidForTxnType(Assets, TYPE)
+    requires #isValidForTxnType(LastLog, TYPE)
 
   rule [[ getTxnField(I, NumLogs) => size(LOGS) ]]
        <transaction>
@@ -802,7 +802,7 @@ module ALGO-TXN
          <logData> LOGS </logData>
          ...
        </transaction>
-    requires #isValidForTxnType(Assets, TYPE)
+    requires #isValidForTxnType(NumLogs, TYPE)
 
   rule [[ getTxnField(I, Logs, J) => normalize(getTValueAt(J, LOGS)) ]]
        <transaction>
@@ -811,7 +811,7 @@ module ALGO-TXN
          <logData> LOGS </logData>
          ...
        </transaction>
-    requires #isValidForTxnType(Assets, TYPE)
+    requires #isValidForTxnType(Logs, TYPE)
 
   rule [[ getTxnField(I, Logs) => LOGS ]]
        <transaction>
@@ -820,7 +820,25 @@ module ALGO-TXN
          <logData> LOGS </logData>
          ...
        </transaction>
-    requires #isValidForTxnType(Assets, TYPE)
+    requires #isValidForTxnType(Logs, TYPE)
+
+  rule [[ getTxnField(I, CreatedApplicationID) => CREATED_APP ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <txApplicationID> CREATED_APP </txApplicationID>
+         ...
+       </transaction>
+    requires #isValidForTxnType(CreatedApplicationID, TYPE)
+
+  rule [[ getTxnField(I, CreatedAssetID) => CREATED_ASSET ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <txConfigAsset> CREATED_ASSET </txConfigAsset>
+         ...
+       </transaction>
+    requires #isValidForTxnType(CreatedAssetID, TYPE)
 ```
 
 *Failure*
@@ -922,20 +940,22 @@ module ALGO-TXN
   syntax Bool ::= #isValidForTxnType(TxnaFieldExt, Int) [function]
   // -------------------------------------------------------------
   // all transaction types
-  rule #isValidForTxnType(_:TxnHeaderField, I)    => 1 <=Int I andBool I <=Int 6
+  rule #isValidForTxnType(_:TxnHeaderField  , I)    => 1 <=Int I andBool I <=Int 6
+  rule #isValidForTxnType(_:TxnaDynamicField, I)    => 1 <=Int I andBool I <=Int 6
+  rule #isValidForTxnType(_:TxnDynamicField , I)    => 1 <=Int I andBool I <=Int 6
   // the pay transaction type
-  rule #isValidForTxnType(_:TxnPayField   , I)    => I ==Int 1
+  rule #isValidForTxnType(_:TxnPayField     , I)    => I ==Int 1
   // the keyreg transaction type
-  rule #isValidForTxnType(_:TxnKeyregField, I)    => I ==Int 2
+  rule #isValidForTxnType(_:TxnKeyregField  , I)    => I ==Int 2
   // the config asset transaction type
-  rule #isValidForTxnType(_:TxnAcfgField  , I)    => I ==Int 3
+  rule #isValidForTxnType(_:TxnAcfgField    , I)    => I ==Int 3
   // the asset transfer transaction type
-  rule #isValidForTxnType(_:TxnAxferField , I)    => I ==Int 4
+  rule #isValidForTxnType(_:TxnAxferField   , I)    => I ==Int 4
   // the asset freeze transaction type
-  rule #isValidForTxnType(_:TxnAfrzField  , I)    => I ==Int 5
+  rule #isValidForTxnType(_:TxnAfrzField    , I)    => I ==Int 5
   // the application call transaction type
-  rule #isValidForTxnType(_:TxnApplField  , I)    => I ==Int 6
-  rule #isValidForTxnType(_:TxnaFieldExt  , I)    => I ==Int 6
+  rule #isValidForTxnType(_:TxnApplField    , I)    => I ==Int 6
+  rule #isValidForTxnType(_:TxnaFieldExt    , I)    => I ==Int 6
 
 endmodule
 ```

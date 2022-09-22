@@ -2109,9 +2109,9 @@ Stateful TEAL Operations
        <nextGroupID> GROUP_ID </nextGroupID>
     requires size(REST) >=Int 1
 
-  rule <k> itxn FIELD => gitxn getTxnGroupIndex(getCurrentTxn()) FIELD ...</k>
+  rule <k> itxn FIELD => gitxn getTxnGroupIndex(getLastItxnGroupIdx()) FIELD ...</k>
 
-  rule <k> itxna FIELD IDX => gitxna getTxnGroupIndex(getCurrentTxn()) FIELD IDX ...</k>
+  rule <k> itxna FIELD IDX => gitxna getTxnGroupIndex(getLastItxnGroupIdx()) FIELD IDX ...</k>
 
   rule <k> gitxn GROUP_IDX FIELD => #loadFromGroupInner(GROUP_IDX, FIELD) ...</k>
 

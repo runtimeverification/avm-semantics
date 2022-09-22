@@ -3,6 +3,3 @@ tests/scenarios/loads-uninitialized.avm-simulation
 tests/scenarios/multi-app.avm-simulation
 tests/scenarios/opcode-budget-test.avm-simulation
 tests/scenarios/uncover.avm-simulation
-tests/scenarios/itxn-created-asset-id.avm-simulation
-tests/scenarios/itxn-logging.avm-simulation
-tests/scenarios/itxn-lookup.avm-simulation

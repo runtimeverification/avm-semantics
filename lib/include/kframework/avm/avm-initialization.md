@@ -161,6 +161,17 @@ To now the group size, we need to count the transactions in the group:
        => 1 +Int countTxns(<transactions> REST </transactions>)
   rule countTxns(<transactions> .Bag </transactions>)
        => 0
+
+  syntax Int ::= countTxnsInGroup(TransactionsCell, Int) [function, functional]
+  // --------------------------------------------------------------------------
+
+  rule countTxnsInGroup(<transactions> <transaction> <groupID> GROUP </groupID> ... </transaction> REST </transactions>, GROUP)
+       => 1 +Int countTxnsInGroup(<transactions> REST </transactions>, GROUP)
+  rule countTxnsInGroup(<transactions> <transaction> <groupID> GROUP' </groupID> ... </transaction> REST </transactions>, GROUP)
+       => countTxnsInGroup(<transactions> REST </transactions>, GROUP)
+    requires GROUP' =/=K GROUP
+  rule countTxnsInGroup(<transactions> .Bag </transactions>, _)
+       => 0
 ```
 
 The semantics does not currently care about block production, therefore the `<globalRound> `

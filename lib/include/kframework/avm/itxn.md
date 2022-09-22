@@ -3,6 +3,7 @@ requires "avm/txn.md"
 requires "avm/avm-configuration.md"
 requires "avm/avm-txn-deque.md"
 requires "avm/avm-execution.md"
+requires "avm/avm-initialization.md"
 requires "avm/teal/teal-types.md"
 requires "avm/teal/teal-fields.md"
 requires "avm/teal/teal-execution.md"
@@ -10,6 +11,7 @@ requires "avm/teal/teal-execution.md"
 module ALGO-ITXN
   imports ALGO-TXN
   imports AVM-CONFIGURATION
+  imports AVM-INITIALIZATION
   imports AVM-TXN-DEQUE
   imports TEAL-TYPES
   imports TEAL-FIELDS
@@ -581,7 +583,7 @@ module ALGO-ITXN
          <groupIdx> GROUP_IDX </groupIdx>
          ...
        </transaction>
-    requires isTValue(getTxnField(TX_ID, FIELD))
+//    requires isTValue(getTxnField(TX_ID, FIELD))
 
   rule <k> #loadFromGroupInner(GROUP_IDX, FIELD, IDX) => . ...</k>
        <lastTxnGroupID> LAST_GROUP </lastTxnGroupID>
@@ -594,6 +596,12 @@ module ALGO-ITXN
          ...
        </transaction>
     requires isTValue(getTxnField(TX_ID, FIELD, IDX))
+
+  syntax Int ::= getLastItxnGroupIdx()  [function]
+
+  rule [[ getLastItxnGroupIdx() => countTxnsInGroup(<transactions> TXNS </transactions>, GROUP) -Int 1 ]]
+       <transactions> TXNS </transactions>
+       <lastTxnGroupID> GROUP </lastTxnGroupID>
 
 endmodule
 ```
