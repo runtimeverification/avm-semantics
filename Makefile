@@ -62,6 +62,8 @@ export K_OPTS
 
 all: deps build test
 
+deps: libsecp256k1 libff plugin-deps k-deps
+
 # Non-K Dependencies
 # ------------------
 
@@ -94,8 +96,6 @@ $(libff_out): $(PLUGIN_SUBMODULE)/deps/libff/CMakeLists.txt
 # K Dependencies
 # --------------
 
-deps: k-deps
-
 ifneq ($(RELEASE),)
     K_BUILD_TYPE := FastBuild
     SEMANTICS_BUILD_TYPE := Release
@@ -125,15 +125,15 @@ $(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
 
 HOOK_NAMESPACES   := KRYPTO CLARITY
 
-plugin_include    := $(abspath $(KAVM_LIB)/blockchain-k-plugin/include)
+plugin_include    := $(KAVM_LIB)/blockchain-k-plugin/include
 plugin_k          := krypto.md
 plugin_c          := plugin_util.cpp crypto.cpp blake2.cpp plugin_util.h blake2.h
 plugin_includes   := $(patsubst %, $(plugin_include)/kframework/%, $(plugin_k))
 plugin_c_includes := $(patsubst %, $(plugin_include)/c/%,          $(plugin_c))
 
-HOOK_PLUGIN_FILES := $(plugin_include)/c/plugin_util.cpp \
-                     $(plugin_include)/c/crypto.cpp      \
-                     $(plugin_include)/c/blake2.cpp
+HOOK_PLUGIN_FILES := $(realpath $(plugin_include)/c/plugin_util.cpp) \
+                     $(realpath $(plugin_include)/c/crypto.cpp)      \
+                     $(realpath $(plugin_include)/c/blake2.cpp)
 
 $(plugin_include)/c/%: $(PLUGIN_SUBMODULE)/plugin-c/%
 	@mkdir -p $(dir $@)
@@ -180,9 +180,8 @@ endif
 
 
 HOOK_KOMPILE_OPTS := --hook-namespaces "$(HOOK_NAMESPACES)"                     \
-                     $(addprefix -ccopt , $(HOOK_PLUGIN_FILES) $(HOOK_CC_OPTS))
-
-AVM_HOOK_KOMPILE_OPTS  := $(addprefix -ccopt , $(HOOK_ALGO_FILES))
+                     $(addprefix -ccopt=, $(HOOK_PLUGIN_FILES) $(HOOK_CC_OPTS)) \
+                     $(addprefix -ccopt=, $(HOOK_ALGO_FILES))
 
 ifneq ($(COVERAGE),)
     COVERAGE_OPTS := --coverage
@@ -272,8 +271,6 @@ ifeq ($(K_BACKEND),)
   K_BACKEND := llvm
 endif
 
-KOMPILE_AVM := $(KAVM) kompile
-
 avm_dir           := avm-llvm
 avm_main_module   := AVM-EXECUTION
 avm_syntax_module := TEAL-PARSER-SYNTAX
@@ -284,14 +281,15 @@ avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled/
 build-avm: $(KAVM_LIB)/$(avm_kompiled)
 
 $(KAVM_LIB)/$(avm_kompiled): $(avm_includes) $(KAVM_LIB)/version $(libff_out)
-	@mkdir -p $(dir $@)
+	@mkdir -p $(KAVM_DEFINITION_DIR)
 	$(VENV_ACTIVATE) && $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file) \
                             -I "${KAVM_INCLUDE}/kframework"                             \
                             -I "${plugin_include}/kframework"                           \
                             --definition-dir "${KAVM_LIB}/${avm_kompiled}"              \
                             --main-module $(avm_main_module)                            \
                             --syntax-module $(avm_syntax_module)                        \
-                            $(AVM_KOMPILE_OPTS)
+	                    $(HOOK_KOMPILE_OPTS)
+
 
 clean-avm:
 	rm -rf $(KAVM_LIB)/$(avm_kompiled)

@@ -90,6 +90,7 @@ class KAVM(KRun):
         syntax_module_name: Optional[str] = None,
         md_selector: Optional[str] = None,
         hook_namespaces: Optional[List[str]] = None,
+        ccopts: Optional[List[str]] = None,
         concrete_rules_file: Optional[Path] = None,
         verbose: bool = True,
     ) -> CompletedProcess:
@@ -107,6 +108,7 @@ class KAVM(KRun):
         command += ['--md-selector', md_selector] if md_selector else []
         command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
         command += [arg for include in includes for arg in ['-I', include]] if includes else []
+        command += [arg for opt in ccopts for arg in ['-ccopt', opt]] if ccopts else []
 
         return subprocess.run(command, check=True, text=True)
 

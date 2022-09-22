@@ -22,6 +22,8 @@ def exec_kompile(
     main_module: Optional[str],
     syntax_module: Optional[str],
     includes: List[str],
+    hook_namespaces: List[str],
+    ccopts: List[str],
     verbose: bool,
     **kwargs: Any,
 ) -> None:
@@ -31,6 +33,8 @@ def exec_kompile(
         main_module_name=main_module,
         syntax_module_name=syntax_module,
         includes=includes,
+        hook_namespaces=hook_namespaces,
+        ccopts=ccopts,
         verbose=True,
     )
     exit(proc_result.returncode)
@@ -137,16 +141,36 @@ def create_argument_parser() -> ArgumentParser:
     command_parser = parser.add_subparsers(dest='command', required=True, help='Command to execute')
 
     # kompile
-    kompile_subparser = command_parser.add_parser('kompile', help='Kompile KAVM', parents=[shared_args])
-    kompile_subparser.add_argument(
-        '--definition-dir', dest='definition_dir', type=dir_path, help='Path to store the kompiled definition'
+    kompile_subparser = command_parser.add_parser(
+        'kompile',
+        help='Kompile KAVM',
+        parents=[shared_args],
+        allow_abbrev=False,
     )
     kompile_subparser.add_argument(
-        '-I', type=str, dest='includes', default=[], action='append', help='Directories to lookup K definitions in.'
+        '--definition-dir', dest='definition_dir', type=dir_path, help='Path to store the kompiled definition'
     )
     kompile_subparser.add_argument('main_file', type=file_path, help='Path to the main file')
     kompile_subparser.add_argument('--main-module', type=str)
     kompile_subparser.add_argument('--syntax-module', type=str)
+    kompile_subparser.add_argument(
+        '-I', type=str, dest='includes', default=[], action='append', help='Directories to lookup K definitions in.'
+    )
+    kompile_subparser.add_argument(
+        '--hook-namespaces',
+        type=str,
+        dest='hook_namespaces',
+        default=[],
+        help='A whitespace-separated list of namespaces to include in the hooks defined in the definition.',
+    )
+    kompile_subparser.add_argument(
+        '-ccopt',
+        type=str,
+        dest='ccopts',
+        default=[],
+        action='append',
+        help='Add a command line option to the compiler invocation for the llvm backend.',
+    )
 
     # kast
     kast_subparser = command_parser.add_parser('kast', help='Kast a term', parents=[shared_args])
