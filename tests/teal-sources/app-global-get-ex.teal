@@ -1,0 +1,51 @@
+#pragma version 5
+
+txn ApplicationArgs 0
+btoi
+int 1
+==
+bnz phase1
+
+txn ApplicationArgs 0
+btoi
+int 2
+==
+bnz phase2
+
+err
+
+phase1:
+//**********************
+// Called from inside app 1
+
+byte "test_key"
+byte "test_val"
+app_global_put
+
+b end
+//**********************
+
+phase2:
+//**********************
+// Called from inside app 2
+
+txn Applications 0
+byte "test_key"
+app_global_get_ex
+assert
+
+byte "test_val"
+==
+assert
+
+txn Applications 0
+byte "unset_key"
+app_global_get_ex
+!
+assert
+
+//**********************
+b end
+end:
+int 1
+return

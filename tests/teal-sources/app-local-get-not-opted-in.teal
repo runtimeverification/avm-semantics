@@ -1,0 +1,8 @@
+#pragma version 5
+
+int 1
+byte "test_key"
+app_local_get
+
+int 1
+return

@@ -1,0 +1,16 @@
+#pragma version 5
+
+txna ApplicationArgs 0
+btoi
+int 0
+==
+bnz end
+
+gload 2 0
+int 0
+==
+assert
+
+end:
+int 1
+return

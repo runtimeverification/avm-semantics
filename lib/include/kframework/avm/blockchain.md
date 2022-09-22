@@ -6,6 +6,7 @@ requires "avm/teal/teal-constants.md"
 requires "avm/teal/teal-fields.md"
 requires "avm/additional-fields.md"
 requires "avm/txn.md"
+requires "constants.md"
 ```
 
 Global Field State Representation
@@ -16,6 +17,7 @@ module GLOBALS
   imports TEAL-CONSTANTS
   imports TEAL-FIELDS
   imports ALGO-TXN
+  imports AVM-CONSTANTS
 ```
 
 *Global Accessors*
@@ -23,9 +25,9 @@ module GLOBALS
 ```k
   syntax TValue ::= getGlobalField(GlobalField) [function]
   // ----------------------------------------------------
-  rule getGlobalField(MinTxnFee)       => 1000
-  rule getGlobalField(MinBalance)      => 100000
-  rule getGlobalField(MaxTxnLife)      => 1000
+  rule getGlobalField(MinTxnFee)       => PARAM_MIN_TXN_FEE
+  rule getGlobalField(MinBalance)      => PARAM_MIN_BALANCE
+  rule getGlobalField(MaxTxnLife)      => PARAM_MAX_TXN_LIFE
   rule getGlobalField(ZeroAddress)     => DecodeAddressString("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ")
   rule getGlobalField(LogicSigVersion) => 2
 ```
@@ -98,20 +100,22 @@ module APPLICATIONS
   configuration
     <appsCreated>
       <app multiplicity="*" type="Map">
-        <appID>           NoTValue </appID>
-        <approvalPgm>     #pragma mode stateful
-                          int 1
-        </approvalPgm>
+        <appID>           NoTValue  </appID>
+        <approvalPgmSrc>     (int 0):TealInputPgm </approvalPgmSrc>
+        <clearStatePgmSrc>   (int 1):TealInputPgm </clearStatePgmSrc>
+        <approvalPgm>     NoTValue </approvalPgm>
         <clearStatePgm>   NoTValue </clearStatePgm>
         <globalState>
-          <globalInts>    NoTValue </globalInts>
-          <globalBytes>   NoTValue </globalBytes>
-          <globalStorage> .Map    </globalStorage>
+          <globalNumInts>     NoTValue </globalNumInts>
+          <globalNumBytes>    NoTValue </globalNumBytes>
+          <globalBytes>  .Map     </globalBytes>
+          <globalInts>  .Map     </globalInts>
         </globalState>
         <localState>
-          <localInts>     NoTValue </localInts>
-          <localBytes>    NoTValue </localBytes>
+          <localNumInts>      NoTValue </localNumInts>
+          <localNumBytes>     NoTValue </localNumBytes>
         </localState>
+        <extraPages>       NoTValue </extraPages>
       </app>
     </appsCreated>
 ```
@@ -123,7 +127,8 @@ module APPLICATIONS
     <appsOptedIn>
       <optInApp multiplicity="*" type="Map">
         <optInAppID>   NoTValue </optInAppID>
-        <localStorage> .Map    </localStorage>
+        <localInts> .Map    </localInts>
+        <localBytes> .Map    </localBytes>
       </optInApp>
     </appsOptedIn>
 
@@ -190,6 +195,7 @@ module ALGO-BLOCKCHAIN
   imports APPLICATIONS
   imports ASSETS
   imports ADDITIONAL-FIELDS
+  imports TEAL-TYPES-SYNTAX
 
   // Note: An address is the base32 encoding of a {pub key + 4-byte checksum}
   // Note: There are three ways in which an account may be created:
@@ -202,14 +208,14 @@ module ALGO-BLOCKCHAIN
     <blockchain>
       <accountsMap>
         <account multiplicity="*" type="Map">
-          <address>    .Bytes  </address>
-          <balance>    0       </balance>
-          <minBalance> 100000  </minBalance> // the default min balance is 0.1 Algo
-          <round>      0       </round>
-          <preRewards> 0       </preRewards>
-          <rewards>    0       </rewards>
-          <status>     0       </status>
-          <key>        .Bytes  </key>
+          <address>    "":TBytes </address>
+          <balance>    0                  </balance>
+          <minBalance> PARAM_MIN_BALANCE  </minBalance> // the default min balance is 0.1 Algo
+          <round>      0                  </round>
+          <preRewards> 0                  </preRewards>
+          <rewards>    0                  </rewards>
+          <status>     0                  </status>
+          <key>        "":TBytes </key>
           <appsCreated/>
           <appsOptedIn/>
           <assetsCreated/>
@@ -219,7 +225,9 @@ module ALGO-BLOCKCHAIN
       <appCreator>   .Map </appCreator>   // AppID |-> Creator's address
       <assetCreator> .Map </assetCreator> // AssetID |-> Creator's address
       <blocks>       .Map </blocks>       // Int -> Block (Unused)
-      <blockheight>  0 </blockheight>
+      <blockheight>  0    </blockheight>
+      <nextAssetID>  1    </nextAssetID>
+      <nextAppID>    1    </nextAppID>
     </blockchain>
 ```
 
@@ -229,24 +237,36 @@ Accessor functions
 ### Account State Accessors
 
 ```k
-  syntax Int ::= getBalance(TValue) [function]
-  // ----------------------------------------
-  rule [[ getBalance(ADDR) => V ]]
+  syntax MaybeTValue ::= getAccountParamsField(AccountParamsField, TValue)  [function, functional]
+  //----------------------------------------------------------------------------------------------
+  rule [[ getAccountParamsField(AcctBalance, ADDR) => BAL ]]
        <account>
          <address> ADDR </address>
-         <balance> V </balance>
+         <balance> BAL </balance>
          ...
        </account>
 
-  rule [[ getBalance(ADDR) => 0 ]]
-       <accountsMap> AMAP </accountsMap>
-    requires notBool ( ADDR in_accounts (<accountsMap> AMAP </accountsMap>) )
+  rule [[ getAccountParamsField(AcctMinBalance, ADDR) => MIN_BAL ]]
+       <account>
+         <address> ADDR </address>
+         <minBalance> MIN_BAL </minBalance>
+         ...
+       </account>
+
+  rule [[ getAccountParamsField(AcctAuthAddr, ADDR) => KEY ]]
+       <account>
+         <address> ADDR </address>
+         <key> KEY </key>
+         ...
+       </account>
+
+  rule getAccountParamsField(_, _) => NoTValue  [owise]
 
   //TODO: In all accessors below, handle the case when NoTValue is returned
 
-  syntax Int ::= getAccountField(AccountField, TValue) [function]
+  syntax MaybeTValue ::= getAccountField(AccountField, TValue) [function]
   // -----------------------------------------------------------
-  rule getAccountField(Amount, ADDR) => getBalance(ADDR)
+  rule getAccountField(Amount, ADDR) => getAccountParamsField(AcctBalance, ADDR)
 
   rule [[ getAccountField(Round, ADDR) => V ]]
        <account>
@@ -285,7 +305,7 @@ Accessor functions
 ### Asset State Accessors
 
 ```k
-  syntax Bool ::= hasOptedInAsset(TValue, TValue) [function]
+  syntax Bool ::= hasOptedInAsset(TValue, TValue) [function, functional]
   // -----------------------------------------------------
   rule [[ hasOptedInAsset(ASSET, ADDR) => true ]]
        <account>
@@ -297,9 +317,7 @@ Accessor functions
          </assetsOptedIn> ...
        </account>
 
-  rule [[ hasOptedInAsset(ASSET, _) => false ]]
-       <accountsMap> AMAP </accountsMap>
-    requires notBool (ASSET in_assets(<accountsMap> AMAP </accountsMap>))
+  rule hasOptedInAsset(_, _) => false [owise]
 
   syntax TValue ::= getOptInAssetField(AssetHoldingField, TValue, TValue) [function]
   // ----------------------------------------------------------------------------
@@ -446,6 +464,9 @@ Accessor functions
          </asset> ...
        </assetsCreated>
 
+  rule [[ getAssetParamsField(AssetCreator, ASSET) => V ]]
+       <assetCreator> ASSET |-> V ...</assetCreator>
+
   rule [[ getAssetParamsField(_, ASSET) => -1 ]]
       <accountsMap> AMAP </accountsMap>
     requires notBool ( ASSET in_assets(<accountsMap> AMAP </accountsMap>) )
@@ -472,7 +493,7 @@ Accessor functions
     requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
 
 
-  syntax TValue ::= getAppLocal(TValue, TValue, TValue) [function]
+  syntax MaybeTValue ::= getAppLocal(TValue, TValue, TValue) [function, functional]
   // ---------------------------------------------------------
   rule [[ getAppLocal(ADDR, APP, KEY) => V ]]
        <account>
@@ -480,36 +501,41 @@ Accessor functions
          <appsOptedIn>
            <optInApp>
              <optInAppID> APP </optInAppID>
-             <localStorage> KEY |-> V ... </localStorage> ...
+             <localInts> KEY |-> V ... </localInts>
+             ...
            </optInApp> ...
          </appsOptedIn> ...
        </account>
 
+  rule [[ getAppLocal(ADDR, APP, KEY) => V ]]
+       <account>
+         <address> ADDR </address>
+         <appsOptedIn>
+           <optInApp>
+             <optInAppID> APP </optInAppID>
+             <localBytes> KEY |-> V ... </localBytes>
+             ...
+           </optInApp> ...
+         </appsOptedIn> ...
+       </account>
+
+  // If the key isn't set, return -1
   rule [[ getAppLocal(ADDR, APP, KEY) => -1 ]]
        <account>
          <address> ADDR </address>
          <appsOptedIn>
            <optInApp>
              <optInAppID> APP </optInAppID>
-             <localStorage> M </localStorage> ...
+             <localInts> MI </localInts>
+             <localBytes> MB </localBytes>
+             ...
            </optInApp> ...
          </appsOptedIn> ...
        </account>
-    requires notBool (KEY in_keys(M))
+    requires notBool ((KEY in_keys(MI)) orBool (KEY in_keys(MB)))
 
-  // if the account exists but is not opted in, return -1
-  rule [[ getAppLocal(ADDR, APP, _) => -1 ]]
-       <account>
-         <address> ADDR </address>
-         <appsOptedIn> OA </appsOptedIn> ...
-       </account>
-    requires notBool (APP in_optedInApps(<appsOptedIn> OA </appsOptedIn>))
-
-  // if the account doesn't exist, return -1
-  rule [[ getAppLocal(ADDR, _, _) => -1 ]]
-       <accountsMap> AMAP  </accountsMap>
-    requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
-
+  // if the account exists but is not opted in, or does not exist, return NoTValue
+  rule getAppLocal(_, _, _) => NoTValue [owise]
 
   syntax TValue ::= getAppGlobal(TValue, TValue) [function]
   // ---------------------------------------------------
@@ -518,7 +544,19 @@ Accessor functions
          <app>
            <appID> APP </appID>
            <globalState>
-             <globalStorage> KEY |-> V ... </globalStorage>
+             <globalInts> KEY |-> V ... </globalInts>
+             ...
+           </globalState>
+           ...
+         </app>
+         ...
+       </appsCreated>
+  rule [[ getAppGlobal(APP, KEY) => V ]]
+       <appsCreated>
+         <app>
+           <appID> APP </appID>
+           <globalState>
+             <globalBytes> KEY |-> V ... </globalBytes>
              ...
            </globalState>
            ...
@@ -532,14 +570,15 @@ Accessor functions
          <app>
            <appID> APP </appID>
            <globalState>
-             <globalStorage> M </globalStorage>
+             <globalInts> MI </globalInts>
+             <globalBytes> MB </globalBytes>
              ...
            </globalState>
            ...
          </app>
          ...
        </appsCreated>
-    requires notBool (KEY in_keys(M))
+    requires notBool ((KEY in_keys (MI)) orBool (KEY in_keys(MB)))
 
   // if the app doesn't exist, return -1
   rule [[ getAppGlobal(APP, _) => -1 ]]
@@ -649,8 +688,8 @@ Accessor functions
 
   rule _ in_assets(<assetsCreated> .Bag </assetsCreated>) => false
 
-  syntax Bool ::= TValue "in_apps" "(" AccountsMapCell ")" [function]
-  // ---------------------------------------------------------------
+  syntax Bool ::= TValue "in_apps" "(" AccountsMapCell ")" [function, functional]
+  // ----------------------------------------------------------------------------
   rule APP in_apps(<accountsMap>
                      <account>
                        <appsCreated> APPS </appsCreated> ...
@@ -661,8 +700,8 @@ Accessor functions
 
   rule _ in_apps( <accountsMap> .Bag </accountsMap> ) => false
 
-  syntax Bool ::= TValue "in_apps" "(" AppsCreatedCell ")" [function]
-  // -----------------------------------------------------------------
+  syntax Bool ::= TValue "in_apps" "(" AppsCreatedCell ")" [function, functional]
+  // ----------------------------------------------------------------------------
   rule APP in_apps(<appsCreated>
                      <app>
                        <appID> APP </appID> ...
@@ -678,6 +717,77 @@ Accessor functions
     requires APP =/=K APP'
 
   rule _ in_apps(<appsCreated> .Bag </appsCreated>) => false
+```
+
+### Resource referencing
+
+When referring to accounts, applications, and ASAs, certain opcodes allow not just offsets in the foreign array
+fields and addresses (in the case of accounts), application/ASA IDs (in the case of applications and ASAs).
+The purpose of `accountReference()`, `appReference()`, and `asaReference()` is to disambiguate these types of
+references and also to check that a resource is available.
+
+```k
+  syntax MaybeTValue ::= accountReference(TValue) [function, functional]
+  //--------------------------------------------------------------------
+  rule accountReference(A:TBytes ) => A requires accountAvailable(A)
+  rule accountReference(I:Int    ) => getTxnField(getCurrentTxn(), Accounts, I)
+  rule accountReference(_        ) => NoTValue  [owise]
+
+  syntax MaybeTValue ::= appReference(TUInt64)  [function, functional]
+  //-----------------------------------------------------------------
+  rule appReference(I) => I requires applicationAvailable(I)
+  rule appReference(I) => getTxnField(getCurrentTxn(), Applications, I)  [owise]
+
+  syntax MaybeTValue ::= asaReference(TUInt64)  [function, functional]
+  //------------------------------------------------------------------
+  rule asaReference(I) => I requires assetAvailable(I)
+  rule asaReference(I) => getTxnField(getCurrentTxn(), Assets, I)  [owise]
+```
+
+### Resource Availability
+
+```k
+// TODO the associated account of a contract that was created earlier in the group should be available (v 6)
+// TODO the associated account of a contract present in the txn.ForeignApplications field should be available (v7)
+
+  syntax Bool ::= accountAvailable(TBytes) [function, functional]
+  //---------------------------------------------------------------
+
+  rule accountAvailable(A) => true
+    requires contains(getTxnField(getCurrentTxn(), Accounts), A)
+
+  rule accountAvailable(A) => true
+    requires A ==K getTxnField(getCurrentTxn(), Sender)
+
+  rule accountAvailable(A) => true
+    requires A ==K getGlobalField(CurrentApplicationAddress)
+
+  rule accountAvailable(_) => false [owise]
+
+  
+// TODO any contract that was created earlier in the same transaction group should be available (v6)
+
+  syntax Bool ::= applicationAvailable(TUInt64) [function, functional]
+  //------------------------------------------------------------------
+
+  rule applicationAvailable(A) => true
+    requires contains(getTxnField(getCurrentTxn(), Applications), A)
+
+  rule applicationAvailable(A) => true
+    requires A ==K getGlobalField(CurrentApplicationID)
+
+  rule applicationAvailable(_) => false [owise]
+
+
+// TODO any asset that was created earlier in the same transaction group should be available (v6)
+
+  syntax Bool ::= assetAvailable(TUInt64) [function, functional]
+  //------------------------------------------------------------
+
+  rule assetAvailable(A) => true
+    requires contains(getTxnField(getCurrentTxn(), Assets), A)
+
+  rule assetAvailable(_) => false [owise]
 
 endmodule
 ```

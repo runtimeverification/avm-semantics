@@ -1,0 +1,8 @@
+#pragma version 5
+
+// Load dummy address
+byte "2"
+balance
+
+int 1
+return

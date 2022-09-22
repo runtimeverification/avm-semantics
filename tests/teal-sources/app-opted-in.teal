@@ -1,0 +1,16 @@
+#pragma version 5
+
+txna Accounts 1
+global CurrentApplicationID
+app_opted_in
+!
+assert
+
+txna Accounts 0
+global CurrentApplicationID
+
+app_opted_in
+assert
+
+int 1
+return

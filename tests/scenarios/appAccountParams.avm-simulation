@@ -1,32 +1,60 @@
+declareTealSource "appAccountsParams.teal";
+declareTealSource "clear-basic.teal";
+
 addAccount <address> b"1" </address> <balance> 1500000 </balance>;
 addAccount <address> b"2" </address> <balance> 3000000 </balance>;
 
-declareTealSource "./tests/teal-sources/appAccountsParams.teal";
-
-addApp <appID> 1 </appID> <address> b"1" </address> 0;
-
-optinApp <appID> 1 </appID> <address> b"1" </address>;
-optinApp <appID> 1 </appID> <address> b"2" </address>;
-
 #initTxGroup();
 
-addPaymentTx <txID>     0       </txID>
-             <sender>   b"1" </sender>
-             <receiver> b"2" </receiver>
+// Add app 1 and opt in b"1"
+addAppCallTx <txID> 0 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     0           </applicationID>
+             <onCompletion>      @ OptIn     </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   .TValueList </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          1           </localNui>
+             <localNbs>          2           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
+
+// Opt in b"2"
+addAppCallTx <txID>              1           </txID>
+             <sender>            b"2"        </sender>
+             <applicationID>     1           </applicationID>
+             <onCompletion>      @ OptIn     </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   .TValueList </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         NoTValue    </globalNui>
+             <globalNbs>         NoTValue    </globalNbs>
+             <localNui>          NoTValue    </localNui>
+             <localNbs>          NoTValue    </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  0           </clearStatePgmIdx>;
+
+addPaymentTx <txID>     2     </txID>
+             <sender>   b"1"  </sender>
+             <receiver> b"2"  </receiver>
              <amount>   50000 </amount>;
 
-addPaymentTx <txID>     1       </txID>
-             <sender>   b"2" </sender>
-             <receiver> b"1" </receiver>
-             <amount>   50005 </amount>;
+addPaymentTx <txID>     3       </txID>
+             <sender>   b"2"    </sender>
+             <receiver> b"1"    </receiver>
+             <amount>   50005   </amount>;
 
-addAppCallTx <txID>            2        </txID>
-             <sender>          b"1" </sender>
-             <applicationID>   1        </applicationID>
-             <onCompletion>    0        </onCompletion>
-             <accounts>        b"1"
-                               b"2"
-             </accounts>
+addAppCallTx <txID>              4           </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     1           </applicationID>
+             <onCompletion>      @ NoOp      </onCompletion>
+             <accounts>          b"2"        </accounts>
              <applicationArgs>
                  Int2Bytes(39, BE, Unsigned)
                  Int2Bytes(100, BE, Unsigned)
@@ -36,7 +64,16 @@ addAppCallTx <txID>            2        </txID>
                  normalize("USD")
                  Int2Bytes(4, BE, Unsigned)
                  Int2Bytes(50, BE, Unsigned)
-             </applicationArgs>;
+             </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         NoTValue    </globalNui>
+             <globalNbs>         NoTValue    </globalNbs>
+             <localNui>          NoTValue    </localNui>
+             <localNbs>          NoTValue    </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 #initGlobals();
 #evalTxGroup();

@@ -1,0 +1,17 @@
+#pragma version 6
+
+itxn_begin
+
+int appl  // this is an application call transaction
+itxn_field TypeEnum
+
+int 2     // attempt to call other application
+itxn_field ApplicationID
+
+int NoOp
+itxn_field OnCompletion
+
+itxn_submit
+
+int 1
+return

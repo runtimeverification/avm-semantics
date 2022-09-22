@@ -1,0 +1,37 @@
+#pragma version 5
+
+int 1
+int 2
+int 3
+int 4
+int 5
+int 6
+
+uncover 3
+
+int 3
+==
+assert 
+
+int 6
+==
+assert 
+
+int 5
+==
+assert 
+
+int 4
+==
+assert 
+
+int 2
+==
+assert 
+
+int 1
+==
+assert 
+
+int 1
+return

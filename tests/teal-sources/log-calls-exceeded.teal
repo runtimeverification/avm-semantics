@@ -1,0 +1,71 @@
+#pragma version 6
+
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+byte "a"
+log
+
+int 1
+return

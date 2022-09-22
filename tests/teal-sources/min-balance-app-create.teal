@@ -1,0 +1,39 @@
+#pragma version 5
+
+txn Sender
+min_balance
+
+// Default min-balance
+int 100000
+
+// Cost per page
+int 100000
+
+int 1
+// Num extra pages
+int 3
++
+*
++
+
+int 25000
+int 3500
++
+// Num global ints
+int 4
+*
++
+
+int 25000
+int 25000
++
+// Num global byte slices
+int 5
+*
++
+
+==
+assert
+
+int 1
+return

@@ -1,0 +1,42 @@
+declareTealSource "app-local-get-ex.teal";
+declareTealSource "clear-basic.teal";
+
+addAccount <address> b"1" </address> <balance> 550000 </balance>;
+
+#initTxGroup();
+
+// Add app 0 and opt in b"1". Call stage 1.
+addAppCallTx <txID> 0 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     0           </applicationID>
+             <onCompletion>      @ OptIn     </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   1           </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          1           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
+
+// Add app 1 and opt in b"1". Call stage 2 and pass in app 0 as foreign app.
+addAppCallTx <txID> 1 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     0           </applicationID>
+             <onCompletion>      @ OptIn     </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   2           </applicationArgs>
+             <foreignApps>       1           </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
+
+#initGlobals(); #evalTxGroup(); .AS

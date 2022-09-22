@@ -1,5 +1,4 @@
 #pragma version 3
-#pragma mode stateful
 
 txn OnCompletion
 int NoOp

@@ -1,0 +1,8 @@
+#pragma version 5
+
+txna Accounts 1
+int 5
+app_opted_in
+
+int 1
+return

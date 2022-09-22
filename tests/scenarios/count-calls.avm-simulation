@@ -12,42 +12,65 @@
 //   (Global 0, Local [(account 1, 0), (account 2, 0)]) =>
 //   (Global 3, Local [(account 1, 2), (account 2, 1)])
 
-addAccount <address> b"1" </address> <balance> 10000 </balance>;
-addAccount <address> b"2" </address> <balance> 10000 </balance>;
+declareTealSource "count_calls.teal";
+declareTealSource "clear-basic.teal";
 
-declareTealSource "./tests/teal-sources/count_calls.teal";
-
-addApp <appID> 1 </appID> <address> b"1" </address> 0;
-
-optinApp <appID> 1 </appID> <address> b"1" </address>;
-optinApp <appID> 1 </appID> <address> b"2" </address>;
+addAccount <address> b"1" </address> <balance> 357000 </balance>;
+addAccount <address> b"2" </address> <balance> 228500 </balance>;
 
 #initTxGroup();
 
-addAppCallTx <txID>            0        </txID>
-             <sender>          b"1"     </sender>
-             <applicationID>   1        </applicationID>
-             <onCompletion>    0        </onCompletion>
-             <accounts>        b"1"     </accounts>
-             <applicationArgs> .TValueList </applicationArgs>;
+// Add app and opt in b"1"
+addAppCallTx <txID> 0 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     0           </applicationID>
+             <onCompletion>      @ OptIn     </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   .TValueList </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         1           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          1           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
-addAppCallTx <txID>            1        </txID>
-             <sender>          b"2"     </sender>
-             <applicationID>   1        </applicationID>
-             <onCompletion>    0        </onCompletion>
-             <accounts>        b"2"     </accounts>
-             <applicationArgs> .TValueList </applicationArgs>;
+// Opt in b"2"
+addAppCallTx <txID> 1 </txID>
+             <sender>            b"2"        </sender>
+             <applicationID>     1           </applicationID>
+             <onCompletion>      @ OptIn     </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   .TValueList </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
-addAppCallTx <txID>            2        </txID>
-             <sender>          b"1"     </sender>
-             <applicationID>   1        </applicationID>
-             <onCompletion>    0        </onCompletion>
-             <accounts>        b"1"     </accounts>
-             <applicationArgs> .TValueList </applicationArgs>;
+// Call app from b"1"
+addAppCallTx <txID> 2 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     1           </applicationID>
+             <onCompletion>      @ NoOp      </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   .TValueList </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 #initGlobals();
 #evalTxGroup();
 .AS
-
-
-

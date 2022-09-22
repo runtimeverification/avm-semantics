@@ -1,0 +1,12 @@
+#pragma version 5
+
+int 654321
+
+int 0
+balance
+==
+
+assert
+
+int 1
+return

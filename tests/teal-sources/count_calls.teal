@@ -4,7 +4,6 @@
 // * tracks haw many times the app was called overall
 //   by incrementing a counter in the app's global state
 #pragma version 4
-#pragma mode stateful
 
 // Handle each possible OnCompletion type. We don't have to worry about
 // handling ClearState, because the ClearStateProgram will execute in that
@@ -38,6 +37,8 @@ bnz handle_deleteapp
 // Unexpected OnCompletion value. Should be unreachable.
 err
 
+handle_optin:
+// Handle OptIn
 handle_noop:
 // Increment the global calls counter
 byte "TimesCalled"
@@ -56,9 +57,6 @@ int 1
 +
 app_local_put
 b accept
-
-handle_optin:
-// Handle OptIn
 
 handle_closeout:
 // Handle CloseOut

@@ -60,7 +60,7 @@ The `TValue` sort represents all possible TEAL values.
 ```k
   syntax TValue ::= TUInt64 | TBytes
   syntax TValueNeList ::= TValue | TValue TValueNeList
-  syntax TValueList ::= ".TValueList" | TValueNeList
+  syntax TValueList ::= ".TValueList" [klabel(.TValueList), symbol] | TValueNeList
   syntax MaybeTValue ::= "NoTValue" [klabel(NoTValue), symbol] | TValue
 
   syntax TValuePair ::= "(" TValue "," TValue ")"
@@ -204,6 +204,13 @@ We expose several functions for working with lists.
   rule size(_:TValue       ) => 1
   rule size(.TValueList    ) => 0
 
+  syntax Bool ::= contains(TValueList, TValue) [function, functional]
+  // ----------------------------------------------------------------
+  rule contains(V1:TValue  _:TValueNeList, V1:TValue) => true
+  rule contains(V1:TValue VL:TValueNeList, V2:TValue) => contains(VL, V2) requires V1 =/=K V2
+  rule contains(V1:TValue                , V2:TValue) => V1 ==K V2
+  rule contains(              .TValueList,  _:TValue) => false 
+
   syntax TValueNeList ::= reverse(TValueNeList) [function]
   // -----------------------------------------------------
   rule reverse(V:TValue VL) => append(V, reverse(VL))
@@ -224,6 +231,19 @@ We expose several functions for working with lists.
   // ----------------------------------------------------------------------
   rule append(V, V':TValuePair VL) => V' append(V, VL)
   rule append(V, V':TValuePair   ) => V' V
+
+  syntax TValueList ::= convertToBytes(TValueList) [function, functional]
+  //---------------------------------------------------------------------
+  rule convertToBytes(.TValueList) => .TValueList
+  rule convertToBytes(B:TBytes) => B
+  rule convertToBytes(I:TUInt64) => Int2Bytes({I}:>Int, BE, Unsigned)
+  rule convertToBytes(B:TBytes L:TValueNeList) => (B {convertToBytes(L)}:>TValueNeList)
+  rule convertToBytes(I:TUInt64 L:TValueNeList) => (Int2Bytes({I}:>Int, BE, Unsigned) {convertToBytes(L)}:>TValueNeList)
+
+  syntax Int ::= sizeInBytes(TValue) [function, functional]
+  //--------------------------------
+  rule sizeInBytes(_:TUInt64) => 64
+  rule sizeInBytes(B:TBytes) => lengthBytes({B}:>Bytes)
 ```
 
 TValue normaliziation converts higher-level type representations in TEAL into

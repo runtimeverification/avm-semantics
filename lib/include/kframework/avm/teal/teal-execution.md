@@ -19,13 +19,35 @@ Before starting the execution of a TEAL progam, the `<teal>` cell needs to be (r
 there may be some remaining artefacts of the previous transaction's TEAL.
 
 ```k
-  rule <k> #cleanUp() => .K ... </k>
+  rule <k> #initApp(APP_ID) => . ...</k>
+       <currentApplicationID> _ => APP_ID </currentApplicationID>
+       <currentApplicationAddress> _ => getAppAddress(APP_ID)       </currentApplicationAddress>
+       <teal>
+         _ => (
+           <pc> 0 </pc>
+           <program> .Map </program>
+           <mode> stateful </mode>
+           <version> 1 </version>
+           <stack> .TStack </stack>
+           <stacksize> 0 </stacksize>
+           <jumped> false </jumped>
+           <labels> .Map </labels>
+           <callStack> .List </callStack>
+           <scratch> .Map </scratch>
+           <intcblock> .Map </intcblock>
+           <bytecblock> .Map </bytecblock>
+         )
+       </teal>
+```
+
+```k
+  rule <k> #initSmartSig() => .K ... </k>
        <teal>
          _ => (
            <pc> 0 </pc>
            <program> .Map </program>
            <mode> stateless </mode>
-           <version> 4 </version>
+           <version> 1 </version>
            <stack> .TStack </stack>
            <stacksize> 0 </stacksize>
            <jumped> false </jumped>
@@ -57,14 +79,8 @@ Pragmas are applied directly, and then the `#LoadPgm` performs program pre-proce
   rule <k> Rs:TealPragmas P:TealPgm => Rs ~> #LoadPgm(P, 0) ... </k>
   rule <k> R:TealPragma Rs:TealPragmas => R ~> Rs ... </k>
 
-  rule <k> #pragma mode M:TealMode => .K ...  </k>
-       <mode> _ => M </mode>
-
   rule <k> #pragma version V => . ... </k>
        <version> _ => V </version>
-
-  // legacy pseudo pragma for setting up current transaction --- now noop
-  rule <k> #pragma txn _ => .K ... </k>
 
   // Load the teal program into the `<progam>` cell (program memory)
   syntax KItem ::= #LoadPgm(TealPgm, Int)
@@ -192,30 +208,52 @@ teal, failure means undoing changes made to the state (for more details, see
        <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
     requires I >Int 0 andBool SIZE ==Int 1
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
        <stack> I : .TStack => I : .TStack </stack>
        <stacksize> _ </stacksize>
        <returncode> 4 => 1 </returncode>
        <returnstatus> _ => "Failure - zero-valued singleton stack" </returnstatus>
     requires I <=Int 0
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
        <stack> _ </stack>
        <stacksize> SIZE </stacksize>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - stack size greater than 1" </returnstatus>
     requires SIZE >Int 1
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
        <stack> .TStack </stack>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - empty stack" </returnstatus>
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
        <stack> (_:Bytes) : .TStack </stack>
        <stacksize> _ </stacksize>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - singleton stack with byte array type" </returnstatus>
+
+  // Consume the rest of the K cell if the execution terminated with an error
+  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
+       <returncode> RETURN_CODE </returncode>
+    requires RETURN_CODE =/=Int 0 andBool RETURN_CODE =/=Int 4
+
+  rule <k> #finalizeExecution() => .K </k>
+       <returncode> RETURN_CODE </returncode>
+    requires RETURN_CODE =/=Int 0 andBool RETURN_CODE =/=Int 4
+```
+
+```k
+  syntax KItem ::= #saveScratch()
+  //-----------------------------
+  rule <k> #saveScratch() => . ...</k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID> TXN_ID </txID>
+         <txScratch> _ => SCRATCH </txScratch>
+         ...
+       </transaction>
+       <scratch> SCRATCH </scratch>
 ```
 
 Panic Behaviors
@@ -297,9 +335,17 @@ return code to 3 (see return codes below).
   syntax String ::= "BYTES_OVERFLOW"             [macro]
   syntax String ::= "TXN_ACCESS_FAILED"          [macro]
   syntax String ::= "INVALID_SCRATCH_LOC"        [macro]
+  syntax String ::= "TXN_OUT_OF_BOUNDS"          [macro]
+  syntax String ::= "FUTURE_TXN"                 [macro]
   syntax String ::= "INDEX_OUT_OF_BOUNDS"        [macro]
   syntax String ::= "ILLEGAL_JUMP"               [macro]
   syntax String ::= "ILL_TYPED_STACK"            [macro]
+  syntax String ::= "LOG_CALLS_EXCEEDED"         [macro]
+  syntax String ::= "LOG_SIZE_EXCEEDED"          [macro]
+  syntax String ::= "GLOBAL_BYTES_EXCEEDED"      [macro]
+  syntax String ::= "GLOBAL_INTS_EXCEEDED"       [macro]
+  syntax String ::= "LOCAL_BYTES_EXCEEDED"       [macro]
+  syntax String ::= "LOCAL_INTS_EXCEEDED"        [macro]
   syntax String ::= "STACK_OVERFLOW"             [macro]
   syntax String ::= "STACK_UNDERFLOW"            [macro]
   syntax String ::= "ASSERTION_VIOLATION"        [macro]
@@ -309,35 +355,50 @@ return code to 3 (see return codes below).
   syntax String ::= "CALLSTACK_OVERFLOW"         [macro]
   syntax String ::= "INVALID_ARGUMENT"           [macro]
   syntax String ::= "MATH_BYTES_ARG_TOO_LONG"    [macro]
+  syntax String ::= "INSUFFICIENT_FUNDS"         [macro]
+  syntax String ::= "KEY_TOO_LARGE"              [macro]
+  syntax String ::= "BYTE_VALUE_TOO_LARGE"       [macro]
+  syntax String ::= "KEY_VALUE_TOO_LARGE"        [macro]
   //----------------------------------------------------
   rule INVALID_OP_FOR_MODE => "invalid opcode for current execution mode"
   rule ERR_OPCODE          => "err opcode encountered"
   rule INT_OVERFLOW        => "integer overflow"
   rule INT_UNDERFLOW       => "integer underflow"
-  rule DIV_BY_ZERO         => "Division by zero"
-  rule BYTES_OVERFLOW      => "Resulting byte array too large"
-  rule TXN_ACCESS_FAILED   => "Transaction field access failed"
-  rule INVALID_SCRATCH_LOC => "Invalid scratch space location"
+  rule DIV_BY_ZERO         => "division by zero"
+  rule BYTES_OVERFLOW      => "resulting byte array too large"
+  rule TXN_ACCESS_FAILED   => "transaction field access failed"
+  rule INVALID_SCRATCH_LOC => "invalid scratch space location"
+  rule TXN_OUT_OF_BOUNDS   => "transaction index out of bounds"
+  rule FUTURE_TXN          => "tried to access transaction that hasn't executed yet"
   rule INDEX_OUT_OF_BOUNDS => "array index out of bounds"
   rule ILLEGAL_JUMP        => "illegal branch to a non-existing label"
   rule ILL_TYPED_STACK     => "wrong argument type(s) for opcode"
+  rule LOG_CALLS_EXCEEDED  => "too many log calls in transaction"
+  rule LOG_SIZE_EXCEEDED   => "total size of log calls in transaction is too large"
+  rule GLOBAL_BYTES_EXCEEDED => "tried to store too many byte values in global storage"
+  rule GLOBAL_INTS_EXCEEDED => "tried to store too many int values in global storage"
+  rule LOCAL_BYTES_EXCEEDED => "tried to store too many byte values in local storage"
+  rule LOCAL_INTS_EXCEEDED => "tried to store too many int values in local storage"
   rule INVALID_ARGUMENT    => "wrong argument range(s) for opcode"
   rule STACK_OVERFLOW      => "stack overflow"
   rule STACK_UNDERFLOW     => "stack underflow"
   rule ASSERTION_VIOLATION => "assertion violation"
   rule DUPLICATE_LABEL     => "duplicate label"
-  rule IMPOSSIBLE_NEGATIVE_NUMBER => "Impossible happened: negative number on stack"
+  rule IMPOSSIBLE_NEGATIVE_NUMBER => "impossible happened: negative number on stack"
   rule CALLSTACK_UNDERFLOW => "call stack underflow: illegal retsub"
   rule CALLSTACK_OVERFLOW  => "call stack overflow: recursion is too deep"
   rule MATH_BYTES_ARG_TOO_LONG => "math attempted on large byte-array"
+  rule INSUFFICIENT_FUNDS  => "negative balance reached"
+  rule KEY_TOO_LARGE       => "key is too long"
+  rule BYTE_VALUE_TOO_LARGE => "tried to store too large of a byte value"
+  rule KEY_VALUE_TOO_LARGE => "sum of key length and value length is too high"
   rule ASSERTION_VIOLATION => "assertion violation"
-  rule IMPOSSIBLE_NEGATIVE_NUMBER => "Impossible happened: negative number on stack"
   //--------------------------------------------------------------------------------
 
   syntax KItem ::= panic(String)
   // ---------------------------
   rule <k> panic(S) ~> _ => .K </k>
-       <returncode> 4 => 3 </returncode>
+       <returncode> _ => 3 </returncode>
        <returnstatus> _ => "Failure - panic: " +String S </returnstatus>
 ```
 

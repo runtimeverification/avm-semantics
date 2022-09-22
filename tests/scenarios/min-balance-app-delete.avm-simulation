@@ -1,0 +1,77 @@
+declareTealSource "min-balance-app-delete.teal";
+declareTealSource "clear-basic.teal";
+
+addAccount <address> b"1" </address> <balance> 300000 </balance>;
+addAccount <address> b"2" </address> <balance> 864000 </balance>;
+
+#initTxGroup();
+
+// Add app 1 from b"1" and opt in
+addAppCallTx <txID> 0 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     0           </applicationID>
+             <onCompletion>      @ OptIn     </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   .TValueList </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
+
+// Add app 2 (trivial) from b"2"
+addAppCallTx <txID> 1 </txID>
+             <sender>            b"2"        </sender>
+             <applicationID>     0           </applicationID>
+             <onCompletion>      @ NoOp      </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   .TValueList </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         4           </globalNui>
+             <globalNbs>         5           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 3           </extraProgramPages>
+             <approvalPgmIdx>    1           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
+
+// Delete app 2
+addAppCallTx <txID> 2 </txID>
+             <sender>            b"2"                </sender>
+             <applicationID>     2                   </applicationID>
+             <onCompletion>      @ DeleteApplication </onCompletion>
+             <accounts>          .TValueList         </accounts>
+             <applicationArgs>   .TValueList         </applicationArgs>
+             <foreignApps>       .TValueList         </foreignApps>
+             <foreignAssets>     .TValueList         </foreignAssets>
+             <globalNui>         NoTValue            </globalNui>
+             <globalNbs>         NoTValue            </globalNbs>
+             <localNui>          NoTValue            </localNui>
+             <localNbs>          NoTValue            </localNbs>
+             <extraProgramPages> 0                   </extraProgramPages>
+             <approvalPgmIdx>    0                   </approvalPgmIdx>
+             <clearStatePgmIdx>  0                   </clearStatePgmIdx>;
+
+// Call app 1 from b"2" to check min balance
+addAppCallTx <txID> 3 </txID>
+             <sender>            b"2"                </sender>
+             <applicationID>     1                   </applicationID>
+             <onCompletion>      @ DeleteApplication </onCompletion>
+             <accounts>          .TValueList         </accounts>
+             <applicationArgs>   .TValueList         </applicationArgs>
+             <foreignApps>       .TValueList         </foreignApps>
+             <foreignAssets>     .TValueList         </foreignAssets>
+             <globalNui>         NoTValue            </globalNui>
+             <globalNbs>         NoTValue            </globalNbs>
+             <localNui>          NoTValue            </localNui>
+             <localNbs>          NoTValue            </localNbs>
+             <extraProgramPages> 0                   </extraProgramPages>
+             <approvalPgmIdx>    0                   </approvalPgmIdx>
+             <clearStatePgmIdx>  0                   </clearStatePgmIdx>;
+
+#initGlobals(); #evalTxGroup(); .AS

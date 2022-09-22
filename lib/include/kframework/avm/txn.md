@@ -12,6 +12,8 @@ Transaction State Representation
 ```k
 module TXN-FIELDS
   imports TEAL-FIELDS
+  imports TEAL-SYNTAX
+  imports BYTES
 ```
 
 *Pseudo fields*
@@ -60,14 +62,16 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
 ```k
   configuration
       <appCallTxFields multiplicity="?">
-        <applicationID>     NoTValue    </applicationID>
-        <onCompletion>      NoTValue    </onCompletion>
-        <accounts>          .TValueList </accounts>
-        <approvalProgram>   NoTValue    </approvalProgram>
-        <clearStateProgram> NoTValue    </clearStateProgram>
-        <applicationArgs>   .TValueList </applicationArgs> // maximum size is 2KB, and all args are internally byte strings
-        <foreignApps>       .TValueList </foreignApps>
-        <foreignAssets>     .TValueList </foreignAssets>
+        <applicationID>        NoTValue    </applicationID>
+        <onCompletion>         NoTValue    </onCompletion>
+        <accounts>             .TValueList </accounts>
+        <approvalProgramSrc>     (int 0):TealInputPgm </approvalProgramSrc>
+        <clearStateProgramSrc>   (int 1):TealInputPgm </clearStateProgramSrc>
+        <approvalProgram>      NoTValue      </approvalProgram>
+        <clearStateProgram>    NoTValue      </clearStateProgram>
+        <applicationArgs>      .TValueList </applicationArgs> // maximum size is 2KB, and all args are internally byte strings
+        <foreignApps>          .TValueList </foreignApps>
+        <foreignAssets>        .TValueList </foreignAssets>
         <globalStateSchema>
           <globalNui> NoTValue </globalNui>
           <globalNbs> NoTValue </globalNbs>
@@ -76,6 +80,7 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
           <localNui> NoTValue </localNui>
           <localNbs> NoTValue </localNbs>
         </localStateSchema>
+        <extraProgramPages> NoTValue </extraProgramPages>
       </appCallTxFields>
 ```
 
@@ -154,6 +159,8 @@ Transaction Group State Representation
 module ALGO-TXN
   imports TXN-FIELDS
   imports TEAL-TYPES
+  imports SET
+  imports LIST
 ```
 
 *Transaction Group Configuration*
@@ -175,15 +182,36 @@ module ALGO-TXN
           <transaction multiplicity="*" type="Map">
             <txID> 0 </txID>
             <txHeader/>
-            <payTxFields/>
-            <appCallTxFields/>
-            <keyRegTxFields/>
-            <assetConfigTxFields/>
-            <assetTransferTxFields/>
-            <assetFreezeTxFields/>
+            <txnTypeSpecificFields>
+              <payTxFields/>
+              <appCallTxFields/>
+              <keyRegTxFields/>
+              <assetConfigTxFields/>
+              <assetTransferTxFields/>
+              <assetFreezeTxFields/>
+            </txnTypeSpecificFields>
+            <applyData>
+              <txScratch>       .Map  </txScratch>
+              <innerTxns>       .List </innerTxns>
+              <txConfigAsset>   0     </txConfigAsset>
+              <txApplicationID> 0     </txApplicationID>
+              <log>
+                <logData> .TValueList </logData>
+                <logSize> 0:TValue    </logSize>
+              </log>
+            </applyData>
           </transaction>
         </transactions>
+        <touchedAccounts> .Set </touchedAccounts>
       </txGroup>
+```
+
+*Transaction ID Getter*
+
+```k
+  syntax Int ::= getTxID(TransactionCell) [function, functional]
+  //-------------------------------------------------------------
+  rule getTxID(<transaction> <txID> ID </txID> ... </transaction>) => ID
 ```
 
 *Transaction Group Accessors*
@@ -201,6 +229,7 @@ module ALGO-TXN
 
   syntax MaybeTValue ::= getTxnField(Int, TxnField)          [function, functional]
   syntax MaybeTValue ::= getTxnField(Int, TxnaFieldExt, Int) [function, functional]
+  syntax TValueList  ::= getTxnField(Int, TxnaFieldExt)      [function, functional]
   //-------------------------------------------------------------------------------
   rule [[ getTxnField(I, TxID) => normalize(I) ]]
        <transaction>
@@ -451,6 +480,15 @@ module ALGO-TXN
     requires #isValidForTxnType(ApplicationArgs, TYPE)
      andBool 0 <=Int J andBool J <Int size(X)
 
+  rule [[ getTxnField(I, ApplicationArgs) => X ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <applicationArgs> X </applicationArgs>
+         ...
+       </transaction>
+    requires #isValidForTxnType(ApplicationArgs, TYPE)
+
   rule [[ getTxnField(I, NumAppArgs) => size(X) ]]
        <transaction>
          <txID> I </txID>
@@ -477,7 +515,17 @@ module ALGO-TXN
          ...
        </transaction>
     requires #isValidForTxnType(Accounts, TYPE)
-     andBool 0 <Int J andBool J <Int size(X)
+     andBool 0 <Int J andBool J <=Int size(X)
+
+  rule [[ getTxnField(I, Accounts) => (A X) ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <sender> A </sender>
+         <accounts> X </accounts>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Accounts, TYPE)
 
   rule [[ getTxnField(I, NumAccounts) => size(X) ]]
        <transaction>
@@ -488,7 +536,7 @@ module ALGO-TXN
        </transaction>
     requires #isValidForTxnType(NumAccounts, TYPE)
 
-  rule [[ getTxnField(I, ApprovalProgram) => normalize(X) ]]
+  rule [[ getTxnField(I, ApprovalProgram) => X ]]
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
@@ -497,7 +545,7 @@ module ALGO-TXN
        </transaction>
     requires #isValidForTxnType(ApprovalProgram, TYPE)
 
-  rule [[ getTxnField(I, ClearStateProgram) => normalize(X) ]]
+  rule [[ getTxnField(I, ClearStateProgram) => X ]]
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
@@ -641,31 +689,95 @@ module ALGO-TXN
        </transaction>
     requires #isValidForTxnType(FreezeAssetFrozen, TYPE)
 
-  rule [[ getTxnField(I, ForeignApps, J) => normalize(getTValueAt(J, X)) ]]
+  rule [[ getTxnField(I, Applications, J) => normalize(getTValueAt(J, X)) ]]
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
          <foreignApps> X </foreignApps>
          ...
        </transaction>
-    requires #isValidForTxnType(ForeignApps, TYPE)
+    requires #isValidForTxnType(Applications, TYPE)
      andBool 0 <=Int J andBool J <Int size(X)
 
-  rule [[ getTxnField(I, ForeignAssets, J) => normalize(getTValueAt(J, X)) ]]
+  rule [[ getTxnField(I, Applications) => X ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <foreignApps> X </foreignApps>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Applications, TYPE)
+
+  rule [[ getTxnField(I, Assets, J) => normalize(getTValueAt(J, X)) ]]
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
          <foreignAssets> X </foreignAssets>
          ...
        </transaction>
-    requires #isValidForTxnType(ForeignAssets, TYPE)
+    requires #isValidForTxnType(Assets, TYPE)
      andBool 0 <=Int J andBool J <Int size(X)
+
+  rule [[ getTxnField(I, Assets) => X ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <foreignAssets> X </foreignAssets>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, LastLog) => MSG ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logData> _ MSG:TBytes </logData>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, LastLog) => MSG ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logData> MSG:TBytes </logData>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, NumLogs) => size(LOGS) ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logData> LOGS </logData>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, Logs, J) => normalize(getTValueAt(J, LOGS)) ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logData> LOGS </logData>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, Logs) => LOGS ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <logData> LOGS </logData>
+         ...
+       </transaction>
+    requires #isValidForTxnType(Assets, TYPE)
 ```
 
 *Failure*
 ```k
-  rule getTxnField(_, _   ) => NoTValue [owise]
-  rule getTxnField(_, _, _) => NoTValue [owise]
+  rule getTxnField(_, _:TxnaFieldExt) => .TValueList [owise]
+  rule getTxnField(_, _:TxnField    ) => NoTValue    [owise]
+  rule getTxnField(_, _, _          ) => NoTValue    [owise]
 ```
 
 *Other Helper Functions*
@@ -677,11 +789,17 @@ module ALGO-TXN
 
   syntax MaybeTValue ::= getForeignAppAt(Int) [function]
   //----------------------------------------------------
-  rule getForeignAppAt(I) => getTxnField(getCurrentTxn(), ForeignApps, I)
+  rule getForeignAppAt(I) => getTxnField(getCurrentTxn(), Applications, I)
 
   syntax MaybeTValue ::= getForeignAssetAt(Int) [function]
   //------------------------------------------------------
-  rule getForeignAssetAt(I) => getTxnField(getCurrentTxn(), ForeignAssets, I)
+  rule getForeignAssetAt(I) => getTxnField(getCurrentTxn(), Assets, I)
+```
+
+```k
+  syntax Bytes ::= getAppAddress(Int) [function, functional]
+  //---------------------------------------------------------
+  rule getAppAddress(APP_ID) => b"application" +Bytes String2Bytes(Int2String(APP_ID))
 ```
 
 ```k

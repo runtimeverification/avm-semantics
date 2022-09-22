@@ -8,6 +8,7 @@ RUN    apt-get update            \
             curl                 \
             debhelper            \
             default-jdk-headless \
+            graphviz             \
             libcrypto++-dev      \
             libcurl4-openssl-dev \
             libmsgpack-dev       \
@@ -25,7 +26,7 @@ RUN pip3 install virtualenv
 
 RUN    git clone 'https://github.com/z3prover/z3' --branch=z3-4.8.11 \
     && cd z3                                                         \
-    && python scripts/mk_make.py                                     \
+    && python3 scripts/mk_make.py                                    \
     && cd build                                                      \
     && make -j8                                                      \
     && make install                                                  \
@@ -33,6 +34,8 @@ RUN    git clone 'https://github.com/z3prover/z3' --branch=z3-4.8.11 \
     && rm -rf z3
 
 RUN curl -sSL https://get.haskellstack.org/ | sh
+
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/usr python3 - && poetry --version
 
 ARG USER_ID=1000
 ARG GROUP_ID=1000

@@ -1,0 +1,24 @@
+#pragma version 5
+
+txn Sender
+byte "test_key"
+app_local_get
+int 0
+==
+assert
+
+txn Sender
+byte "test_key"
+int 123
+app_local_put 
+
+
+txn Sender
+byte "test_key"
+app_local_get
+int 123
+==
+assert
+
+int 1
+return

@@ -1,16 +1,6 @@
 #pragma version 4
-#pragma mode stateful
-
-txn OnCompletion
-int NoOp
-==
-bnz handle_noop
-
-// OnCompletetion actions other than NoOp are denied
-err
 
 // Test arithemtic
-handle_noop:
 int 1
 int 2
 +
@@ -32,6 +22,5 @@ int 1
 ==
 assert
 
-accept:
 int 1
 return

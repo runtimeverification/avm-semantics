@@ -1,0 +1,11 @@
+#pragma version 5
+
+// load from the 56th scratch space value. Should load a 0.
+int 56
+loads
+int 0
+==
+assert
+
+int 1
+return

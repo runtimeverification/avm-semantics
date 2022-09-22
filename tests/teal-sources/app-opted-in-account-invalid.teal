@@ -1,0 +1,8 @@
+#pragma version 5
+
+int 5
+global CurrentApplicationID
+app_opted_in
+
+int 1
+return

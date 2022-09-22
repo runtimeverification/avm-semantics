@@ -1,0 +1,19 @@
+#pragma version 5
+
+int 654321
+
+txn Sender
+balance
+==
+assert
+
+int 123456
+
+txn Sender
+balance
+==
+!
+assert
+
+int 1
+return

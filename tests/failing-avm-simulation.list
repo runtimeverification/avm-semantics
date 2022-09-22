@@ -1,0 +1,5 @@
+tests/scenarios/app-params-get.avm-simulation
+tests/scenarios/loads-uninitialized.avm-simulation
+tests/scenarios/multi-app.avm-simulation
+tests/scenarios/opcode-budget-test.avm-simulation
+tests/scenarios/uncover.avm-simulation

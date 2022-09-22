@@ -1,0 +1,8 @@
+#pragma version 5
+
+int 3
+byte "test_key"
+app_global_get_ex
+
+int 1
+return

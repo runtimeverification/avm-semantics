@@ -1,5 +1,6 @@
 ```k
 requires "avm/blockchain.md"
+requires "avm/constants.md"
 requires "avm/txn.md"
 requires "avm/teal/teal-syntax.md"
 requires "avm/teal/teal-driver.md"
@@ -11,6 +12,7 @@ module AVM-EXECUTION-SYNTAX
   imports INT
   imports LIST
   imports BYTES
+  imports AVM-CONSTANTS
   imports ALGO-BLOCKCHAIN
   imports ALGO-TXN
   imports AVM-CONFIGURATION
@@ -43,6 +45,7 @@ endmodule
 module AVM-EXECUTION
   imports AVM-EXECUTION-SYNTAX
   imports AVM-TXN-DEQUE
+  imports ALGO-TXN
 ```
 
 Transaction Group Evaluation
@@ -50,7 +53,7 @@ Transaction Group Evaluation
 
 ### Transaction execution pipeline
 
-The `#evalTxGroup()` rule calls the `#evalTx()` rule until the transaction deque is empty.
+The `#evalTxs()` rule calls the `#evalTx()` rule until the transaction deque is empty.
 The transactions can push new (inner) transactions into the front of `txnDeque` and they
 will be executed immediately after their parent transaction, provided it has been accepted.
 
@@ -58,6 +61,11 @@ If one of the transactions is denied (including the inner ones), the group evalu
 and the current configuration is frozen for examination.
 
 ```k
+  syntax AlgorandCommand ::= #setMode(TealMode)
+  //-------------------------------------------
+  rule <k> #setMode(MODE) => . ...</k>
+       <mode> _ => MODE </mode>
+  
   syntax AlgorandCommand ::= #evalTxGroup()
   //---------------------------------------
 
@@ -65,7 +73,8 @@ and the current configuration is frozen for examination.
        <deque> TXN_DEQUE </deque>
     requires TXN_DEQUE =/=K .List
 
-  rule <k> #evalTxGroup() => .K ... </k>
+  // Minimum balances are only checked at the conclusion of the outer-level group.
+  rule <k> #evalTxGroup() => #checkSufficientBalance() ... </k>
       <returncode> _ => 0 </returncode>
       <returnstatus> _ => "Success - transaction group accepted"
       </returnstatus>
@@ -88,13 +97,19 @@ the attached stateless TEAL if the transaction is logicsig-signed.
 ```k
   syntax AlgorandCommand ::= #evalTx()
   //----------------------------------
-  rule <k> #evalTx() => #checkTxnSignature() ~> #executeTxn(TXN_TYPE) ... </k>
+  rule <k> #evalTx() => 
+             #checkTxnSignature() 
+          ~> #executeTxn(TXN_TYPE) 
+       ... 
+       </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID> TXN_ID </txID>
          <typeEnum> TXN_TYPE </typeEnum>
+         <sender> SENDER_ADDR </sender>
          ...
        </transaction>
+       <touchedAccounts> .Set => SetItem(SENDER_ADDR) ...</touchedAccounts>
 
 ```
 
@@ -119,6 +134,196 @@ TODO: augment the configuration in `modules/common/txn.md` to support signed tra
 For now, we do not check signatures *here*, hence this operation is noop.
 We check logic signatures in an ad-hoc way for payments and asset transfers at a later step.
 
+#### Post-evaluation operations
+
+Clear local state
+
+case 1: clear state from own created app
+
+```k
+  syntax AlgorandCommand ::= #clearState( TValue, TValue )
+  //------------------------------------------------------
+
+  rule <k> #clearState(APP_ID, ADDR) => . ...</k>
+       <account>
+         <address> ADDR </address>
+         <appsOptedIn>
+           (<optInApp>
+             <optInAppID> APP_ID </optInAppID>
+             ...
+           </optInApp>) => .Bag
+           ...
+         </appsOptedIn>
+         <appsCreated>
+           <appID> APP_ID </appID>
+           <localNumInts>     LOCAL_INTS      </localNumInts>
+           <localNumBytes>    LOCAL_BYTES     </localNumBytes>
+           ...
+         </appsCreated>
+         <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                -Int (PARAM_APP_OPTIN_FLAT 
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
+                                  *Int LOCAL_INTS)
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE) 
+                                  *Int LOCAL_BYTES))
+         </minBalance>
+         ...
+       </account>
+```
+
+case 1: clear state from other's created app
+
+```k
+  rule <k> #clearState(APP_ID, ADDR) => . ...</k>
+       <account>
+         <address> ADDR </address>
+         <appsOptedIn>
+           (<optInApp>
+             <optInAppID> APP_ID </optInAppID>
+             ...
+           </optInApp>) => .Bag
+           ...
+         </appsOptedIn>
+         <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                -Int (PARAM_APP_OPTIN_FLAT 
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
+                                  *Int LOCAL_INTS)
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE) 
+                                  *Int LOCAL_BYTES))
+         </minBalance>
+         ...
+       </account>
+       <appsCreated>
+         <appID> APP_ID </appID>
+         <localNumInts>     LOCAL_INTS      </localNumInts>
+         <localNumBytes>    LOCAL_BYTES     </localNumBytes>
+         ...
+       </appsCreated>
+
+```
+
+Update application programs
+
+```k
+  syntax AlgorandCommand ::= #updatePrograms( TValue, KItem, KItem )
+  //----------------------------------------------------------------
+
+  rule <k> #updatePrograms(APP_ID, APPROVAL_PGM, CLEAR_STATE_PGM) => . ...</k>
+       <app>
+         <appID> APP_ID </appID>
+         <approvalPgmSrc> _ => APPROVAL_PGM </approvalPgmSrc>
+         <clearStatePgmSrc> _ => CLEAR_STATE_PGM </clearStatePgmSrc>
+         ...
+       </app>
+```
+
+Delete application
+
+```k
+  syntax AlgorandCommand ::= #deleteApplication( TValue )
+  //------------------------------------------------------
+
+  rule <k> #deleteApplication(APP_ID) => . ...</k>
+       <account>
+         <appsCreated>
+           ((<app>
+             <appID> APP_ID </appID>
+             <globalNumInts>    GLOBAL_INTS     </globalNumInts>
+             <globalNumBytes>   GLOBAL_BYTES    </globalNumBytes>
+             <extraPages>    EXTRA_PAGES     </extraPages>
+             ...
+           </app>) => .Bag) ...
+         </appsCreated>
+         <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                -Int (((1 +Int EXTRA_PAGES) *Int PARAM_APP_PAGE_FLAT) 
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
+                                  *Int GLOBAL_INTS)
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE) 
+                                  *Int GLOBAL_BYTES))
+         </minBalance>
+         ...
+       </account>
+```
+
+Close asset account to
+
+```k
+  syntax AlgorandCommand ::= #closeTo(TValue, TValue, TValue)
+  //---------------------------------------------------------
+  rule <k> #closeTo(ASSET_ID, FROM, CLOSE_TO) => . ...</k>
+       <account>
+         <address> FROM </address>
+         <assetsOptedIn>
+           (<optInAsset>
+             <optInAssetID> ASSET_ID </optInAssetID>
+             <optInAssetBalance> BALANCE </optInAssetBalance>
+             ...
+           </optInAsset>) => .Bag
+           ...
+         </assetsOptedIn>
+         <minBalance> MIN_BALANCE => MIN_BALANCE -Int PARAM_MIN_BALANCE </minBalance>
+         ...
+       </account>
+       <account>
+         <address> CLOSE_TO </address>
+         <optInAsset>
+           <optInAssetID> ASSET_ID </optInAssetID>
+           <optInAssetBalance> PREV_BALANCE => PREV_BALANCE +Int BALANCE </optInAssetBalance>
+           ...
+         </optInAsset>
+           ...
+       </account>
+```
+
+Add asset to account
+
+```k
+  syntax AlgorandCommand ::= #giveAsset(TValue, TValue, TValue)
+  //-----------------------------------------------------------
+  rule <k> #giveAsset(ASSET_ID, ACCOUNT, AMOUNT) => . ...</k>
+       <account>
+         <address> ACCOUNT </address>
+         <optInAsset>
+           <optInAssetID> ASSET_ID </optInAssetID>
+           <optInAssetBalance> BALANCE => BALANCE +Int AMOUNT </optInAssetBalance>
+           <optInAssetFrozen> 0 </optInAssetFrozen>
+         </optInAsset>
+         ...
+       </account>
+       requires (BALANCE +Int AMOUNT) >=Int 0
+```
+
+```k
+  syntax AlgorandCommand ::= #checkSufficientBalance()
+  //--------------------------------------------------
+  rule <k> #checkSufficientBalance() => (#checkSufficientBalance(ADDR) ~> #checkSufficientBalance()) ...</k>
+       <touchedAccounts> (SetItem(ADDR) => .Set) ...</touchedAccounts>
+
+  rule <k> #checkSufficientBalance() => . ...</k>
+       <touchedAccounts> .Set </touchedAccounts>
+  
+  syntax AlgorandCommand ::= #checkSufficientBalance(Bytes)
+  //-------------------------------------------------------
+  rule <k> #checkSufficientBalance(ADDR) => . ...</k>
+       <account>
+         <address> ADDR </address>
+         <balance> BALANCE </balance>
+         <minBalance> MIN_BALANCE </minBalance>
+         ...
+       </account>
+    requires BALANCE >=Int MIN_BALANCE
+
+  rule <k> #checkSufficientBalance(ADDR) => #avmPanic(TX_ID, MIN_BALANCE_VIOLATION) ...</k>
+       <currentTx> TX_ID </currentTx>
+       <account>
+         <address> ADDR </address>
+         <balance> BALANCE </balance>
+         <minBalance> MIN_BALANCE </minBalance>
+         ...
+       </account>
+    requires BALANCE <Int MIN_BALANCE
+```
+
 #### (Optional) Eval TEAL
 
 There are two types of TEAL programs:
@@ -133,19 +338,11 @@ We do not consider the special case of contract creation (deployment) here, it w
 TODO: address contact creation.
 
 ```k
-  syntax AlgorandCommand ::= #evalTeal()
+  syntax AlgorandCommand ::= #evalTeal( TealInputPgm )
 
-  rule <k> #evalTeal() => #cleanUp() ~> APPROVAL_PGM ~> #startExecution() ... </k>
+  rule <k> #evalTeal( PGM ) => PGM ~> #startExecution() ~> #saveScratch() ... </k>
        <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
        <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
-       <currentTx>           TXN_ID                            </currentTx>
-       <currentApplicationID> _ => APP_ID                    </currentApplicationID>
-       <app>
-         <appID>       APP_ID       </appID>
-         <approvalPgm> APPROVAL_PGM </approvalPgm>
-         ...
-       </app>
-   requires APP_ID ==K getTxnField(TXN_ID, ApplicationID)
 ```
 
 ##### Stateless
@@ -177,7 +374,6 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
        <account>
          <address> SENDER </address>
          <balance> SENDER_BALANCE => SENDER_BALANCE -Int AMOUNT </balance>
-         <minBalance> SENDER_MIN_BALANCE </minBalance>
          ...
        </account>
        <account>
@@ -185,9 +381,9 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
          <balance> RECEIVER_BALANCE => RECEIVER_BALANCE +Int AMOUNT </balance>
          ...
        </account>
-    requires SENDER_BALANCE -Int AMOUNT >=Int SENDER_MIN_BALANCE
+       <touchedAccounts> (.Set => SetItem(RECEIVER)) ...</touchedAccounts>
 
-  rule <k> #executeTxn(@pay) => #avmPanic(TXN_ID, MIN_BALANCE_VIOLATION) ... </k>
+  rule <k> #executeTxn(@pay) => panic(INSUFFICIENT_FUNDS) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>     TXN_ID   </txID>
@@ -198,10 +394,24 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
        <account>
          <address> SENDER </address>
          <balance> SENDER_BALANCE </balance>
-         <minBalance> SENDER_MIN_BALANCE </minBalance>
          ...
        </account>
-    requires SENDER_BALANCE -Int AMOUNT <Int SENDER_MIN_BALANCE
+    requires SENDER_BALANCE -Int AMOUNT <Int 0
+
+  rule <k> #executeTxn(@pay) => #avmPanic(TXN_ID, UNKNOWN_ADDRESS) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>     TXN_ID   </txID>
+         <sender>   SENDER   </sender>
+         <amount>   _AMOUNT   </amount>
+         <receiver> RECEIVER </receiver>
+         ...
+       </transaction>
+       <accountsMap>
+         AMAP
+       </accountsMap>
+    requires notBool ( SENDER in_accounts (<accountsMap> AMAP </accountsMap>) )
+      orBool notBool ( RECEIVER in_accounts (<accountsMap> AMAP </accountsMap>) )
 ```
 
 * **Key Registration**
@@ -214,9 +424,155 @@ Not supported.
 ```
 
 * **Asset Configuration**
+
+Create asset
+
 ```k
-  rule <k> #executeTxn(@acfg) => #avmPanic(TXN_ID, UNSUPPORTED_TXN_TYPE) ... </k>
+  rule <k> #executeTxn(@acfg) => . ...</k>
        <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>                TXN_ID         </txID>
+         <sender>              SENDER         </sender>
+         <configAsset>         NoTValue       </configAsset>
+         <configTotal>         TOTAL          </configTotal>
+         <configDecimals>      DECIMALS       </configDecimals>
+         <configDefaultFrozen> DEFAULT_FROZEN </configDefaultFrozen>
+         <configUnitName>      UNIT_NAME      </configUnitName>
+         <configAssetName>     NAME           </configAssetName>
+         <configAssetURL>      ASSET_URL      </configAssetURL>
+         <configMetaDataHash>  METADATA_HASH  </configMetaDataHash>
+         <configManagerAddr>   MANAGER_ADDR   </configManagerAddr>
+         <configReserveAddr>   RESERVE_ADDR   </configReserveAddr>
+         <configFreezeAddr>    FREEZE_ADDR    </configFreezeAddr>
+         <configClawbackAddr>  CLAWB_ADDR     </configClawbackAddr>
+         <txConfigAsset>       _ => ASSET_ID  </txConfigAsset>
+         ...
+       </transaction>
+
+       <nextAssetID> ASSET_ID => ASSET_ID +Int 1 </nextAssetID>
+       <account>
+         <address> SENDER </address>
+         <assetsCreated>
+           ASSETS =>
+           <asset>
+             <assetID>            ASSET_ID       </assetID>
+             <assetName>          NAME           </assetName>
+             <assetUnitName>      UNIT_NAME      </assetUnitName>
+             <assetTotal>         TOTAL          </assetTotal>
+             <assetDecimals>      DECIMALS       </assetDecimals>
+             <assetDefaultFrozen> DEFAULT_FROZEN </assetDefaultFrozen>
+             <assetURL>           ASSET_URL      </assetURL>
+             <assetMetaDataHash>  METADATA_HASH  </assetMetaDataHash>
+             <assetManagerAddr>   MANAGER_ADDR   </assetManagerAddr>
+             <assetReserveAddr>   RESERVE_ADDR   </assetReserveAddr>
+             <assetFreezeAddr>    FREEZE_ADDR    </assetFreezeAddr>
+             <assetClawbackAddr>  CLAWB_ADDR     </assetClawbackAddr>
+           </asset>
+           ASSETS
+         </assetsCreated>
+         <assetsOptedIn>
+           ASSETS_OPTED_IN =>
+           <optInAsset>
+             <optInAssetID>      ASSET_ID       </optInAssetID>
+             <optInAssetBalance> TOTAL          </optInAssetBalance>
+             <optInAssetFrozen>  DEFAULT_FROZEN </optInAssetFrozen>
+           </optInAsset>
+           ASSETS_OPTED_IN
+         </assetsOptedIn>
+         <minBalance> MIN_BALANCE => MIN_BALANCE +Int PARAM_MIN_BALANCE </minBalance>
+         ...
+       </account>
+       <assetCreator> .Map => (ASSET_ID |-> SENDER) ...</assetCreator>
+```
+
+Modify asset
+
+```k
+  rule <k> #executeTxn(@acfg) => . ...</k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>                TXN_ID          </txID>
+         <sender>              SENDER          </sender>
+         <configAsset>         ASSET_ID:TValue </configAsset>
+         <configManagerAddr>   MANAGER_ADDR    </configManagerAddr>
+         <configReserveAddr>   RESERVE_ADDR    </configReserveAddr>
+         <configFreezeAddr>    FREEZE_ADDR     </configFreezeAddr>
+         <configClawbackAddr>  CLAWB_ADDR      </configClawbackAddr>
+         ...
+       </transaction>
+       <asset>
+         <assetID>            ASSET_ID               </assetID>
+         <assetManagerAddr>   SENDER => MANAGER_ADDR </assetManagerAddr>
+         <assetReserveAddr>   _ => RESERVE_ADDR      </assetReserveAddr>
+         <assetFreezeAddr>    _ => FREEZE_ADDR       </assetFreezeAddr>
+         <assetClawbackAddr>  _ => CLAWB_ADDR        </assetClawbackAddr>
+         ...
+       </asset>
+    requires isTValue(MANAGER_ADDR) 
+      orBool isTValue(RESERVE_ADDR) 
+      orBool isTValue(FREEZE_ADDR) 
+      orBool isTValue(CLAWB_ADDR)
+```
+
+Destroy asset
+
+"A Destroy Transaction is issued to remove an asset from the Algorand ledger. To destroy an existing asset on
+Algorand, the original creator must be in possession of all units of the asset and the manager must send and
+therefore authorize the transaction."
+
+"This transaction differentiates itself from an Asset Creation transaction in that it contains an asset ID
+(caid) pointing to the asset to be destroyed. It differentiates itself from an Asset Reconfiguration
+transaction by the lack of any asset parameters.""
+
+```k
+  rule <k> #executeTxn(@acfg) => . ...</k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>                TXN_ID          </txID>
+         <sender>              SENDER          </sender>
+         <configAsset>         ASSET_ID:TValue </configAsset>
+         <configManagerAddr>   NoTValue        </configManagerAddr>
+         <configReserveAddr>   NoTValue        </configReserveAddr>
+         <configFreezeAddr>    NoTValue        </configFreezeAddr>
+         <configClawbackAddr>  NoTValue        </configClawbackAddr>
+         ...
+       </transaction>
+       <account>
+         <address> CREATOR </address>
+         <assetsCreated>
+           (<asset>
+             <assetID>            ASSET_ID </assetID>
+             <assetManagerAddr>   SENDER   </assetManagerAddr>
+             <assetTotal>         BALANCE  </assetTotal>
+             ...
+           </asset>) => .Bag
+           ...
+         </assetsCreated>
+         <assetsOptedIn>
+           (<optInAsset>
+             <optInAssetID>      ASSET_ID </optInAssetID>
+             <optInAssetBalance> BALANCE  </optInAssetBalance>
+             ...
+           </optInAsset>) => .Bag
+           ...
+         </assetsOptedIn>
+         <minBalance> MIN_BALANCE => MIN_BALANCE -Int PARAM_MIN_BALANCE </minBalance>
+         ...
+       </account>
+       <assetCreator> (ASSET_ID |-> CREATOR) => .Map ...</assetCreator>
+```
+
+Modify/delete asset no permission case
+
+TODO split into other cases?
+  - user or asset doesn't exist
+  - sender not manager of the asset
+  - Original creator doesn't have all the funds when trying to delete
+  - Maybe more?
+
+```k
+  rule <k> #executeTxn(@acfg) => #avmPanic(TXN_ID, ASSET_NO_PERMISSION) ...</k>
+       <currentTx> TXN_ID </currentTx> [owise]
 ```
 
 * **Asset Transfer**
@@ -227,7 +583,12 @@ Asset transfer goes through if:
 - sender's holdings are not frozen
 
 ```k
-  rule <k> #executeTxn(@axfer) => .K ... </k>
+
+  rule <k> #executeTxn(@axfer) => 
+                #giveAsset(ASSET_ID, SENDER, 0 -Int AMOUNT) 
+             ~> #giveAsset(ASSET_ID, RECEIVER, AMOUNT) 
+           ... 
+       </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID   </txID>
@@ -235,34 +596,10 @@ Asset transfer goes through if:
          <xferAsset>     ASSET_ID </xferAsset>
          <assetReceiver> RECEIVER </assetReceiver>
          <assetAmount>   AMOUNT   </assetAmount>
+         <assetCloseTo>  NoTValue </assetCloseTo>
          ...
        </transaction>
-       <account>
-         <address> SENDER </address>
-         <optInAsset>
-           <optInAssetID>      ASSET_ID       </optInAssetID>
-           <optInAssetBalance> SENDER_BALANCE
-                            => SENDER_BALANCE -Int AMOUNT
-           </optInAssetBalance>
-           ...
-         </optInAsset>
-         ...
-       </account>
-       <account>
-         <address> RECEIVER </address>
-         <optInAsset>
-           <optInAssetID>      ASSET_ID       </optInAssetID>
-           <optInAssetBalance> RECEIVER_BALANCE
-                            => RECEIVER_BALANCE +Int AMOUNT
-           </optInAssetBalance>
-           ...
-         </optInAsset>
-         ...
-       </account>
     requires hasOptedInAsset(ASSET_ID, SENDER)
-     andBool SENDER_BALANCE -Int AMOUNT >=Int 0
-     andBool (getOptInAssetField(AssetFrozen, SENDER, ASSET_ID) ==K 0)
-     andBool hasOptedInAsset(ASSET_ID, RECEIVER)
 ```
 
 Asset transfer with a non-zero amount fails if:
@@ -276,6 +613,7 @@ Asset transfer with a non-zero amount fails if:
          <txID>          TXN_ID   </txID>
          <sender>        SENDER   </sender>
          <xferAsset>     ASSET_ID </xferAsset>
+         <assetCloseTo>  NoTValue </assetCloseTo>
          ...
        </transaction>
        <account>
@@ -326,7 +664,8 @@ Asset opt-in goes through if:
          <sender>        SENDER   </sender>
          <xferAsset>     ASSET_ID </xferAsset>
          <assetReceiver> SENDER   </assetReceiver>
-         <assetAmount>   AMOUNT   </assetAmount>
+         <assetAmount>   0        </assetAmount>
+         <assetCloseTo>  NoTValue </assetCloseTo>
          ...
        </transaction>
        <account>
@@ -342,11 +681,32 @@ Asset opt-in goes through if:
            </optInAsset>
            ASSETS_OPTED_IN
          </assetsOptedIn>
+         <minBalance> MIN_BALANCE => MIN_BALANCE +Int PARAM_MIN_BALANCE </minBalance>
          ...
        </account>
     requires assetCreated(ASSET_ID)
      andBool notBool hasOptedInAsset(ASSET_ID, SENDER)
-     andBool AMOUNT ==Int 0
+```
+
+**Asset opt-out** is a special case of asset transfer: a transfer with the AssetCloseTo field set.
+
+```k
+  rule <k> #executeTxn(@axfer) => 
+                #giveAsset(ASSET_ID, SENDER, 0 -Int AMOUNT) 
+             ~> #giveAsset(ASSET_ID, RECEIVER, AMOUNT) 
+             ~> #closeTo(ASSET_ID, SENDER, CLOSE_TO)
+           ... 
+       </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID          </txID>
+         <sender>        SENDER          </sender>
+         <xferAsset>     ASSET_ID        </xferAsset>
+         <assetReceiver> RECEIVER        </assetReceiver>
+         <assetAmount>   AMOUNT          </assetAmount>
+         <assetCloseTo>  CLOSE_TO:TValue </assetCloseTo>
+         ...
+       </transaction>
 ```
 
 * **Asset Freeze**
@@ -359,8 +719,328 @@ Not supported.
 ```
 
 * **Application Call**
+
+App create
+
 ```k
-  rule <k> #executeTxn(@appl) => #evalTeal() ... </k>
+  rule <k> #executeTxn(@appl) => #executeAppl(APP_ID) ...</k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>                 TXN_ID              </txID>
+         <sender>               SENDER              </sender>
+         <applicationID>        0                   </applicationID>
+         <approvalProgramSrc>   APPROVAL_PGM_SRC    </approvalProgramSrc>
+         <clearStateProgramSrc> CLEAR_STATE_PGM_SRC </clearStateProgramSrc>
+         <approvalProgram>      APPROVAL_PGM        </approvalProgram>
+         <clearStateProgram>    CLEAR_STATE_PGM     </clearStateProgram>
+         <globalNui>            GLOBAL_INTS         </globalNui>
+         <globalNbs>            GLOBAL_BYTES        </globalNbs>
+         <localNui>             LOCAL_INTS          </localNui>
+         <localNbs>             LOCAL_BYTES         </localNbs>
+         <extraProgramPages>    EXTRA_PAGES         </extraProgramPages>
+         <txApplicationID>      _ => APP_ID         </txApplicationID>
+         ...
+       </transaction>
+       <accountsMap>
+         <account>
+           <address> SENDER </address>
+           <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                  +Int ((1 +Int EXTRA_PAGES) *Int PARAM_APP_PAGE_FLAT) 
+                                  +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
+                                    *Int GLOBAL_INTS)
+                                  +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE)
+                                    *Int GLOBAL_BYTES)
+           </minBalance>
+           <appsCreated>
+             APPS =>
+             <app>
+               <appID>            APP_ID              </appID>
+               <approvalPgmSrc>   APPROVAL_PGM_SRC    </approvalPgmSrc>
+               <clearStatePgmSrc> CLEAR_STATE_PGM_SRC </clearStatePgmSrc>
+               <approvalPgm>      APPROVAL_PGM        </approvalPgm>
+               <clearStatePgm>    CLEAR_STATE_PGM     </clearStatePgm>
+               <globalNumInts>       GLOBAL_INTS         </globalNumInts>
+               <globalNumBytes>      GLOBAL_BYTES        </globalNumBytes>
+               <localNumInts>        LOCAL_INTS          </localNumInts>
+               <localNumBytes>       LOCAL_BYTES         </localNumBytes>
+               <extraPages>       EXTRA_PAGES         </extraPages>
+               ...
+             </app>
+             APPS
+           </appsCreated>
+           ...
+         </account>
+         (.Bag =>
+         (<account>
+           <address> getAppAddress(APP_ID) </address>
+           ...
+         </account>))
+         ...
+       </accountsMap>
+       <appCreator> (.Map => (APP_ID |-> SENDER)) ... </appCreator>
+       <nextAppID> APP_ID => APP_ID +Int 1 </nextAppID>
+    requires notBool(APP_ID in_apps(<appsCreated> APPS </appsCreated>))
+     andBool GLOBAL_INTS +Int GLOBAL_BYTES <=Int PARAM_MAX_GLOBAL_KEYS
+     andBool LOCAL_INTS  +Int LOCAL_BYTES  <=Int PARAM_MAX_LOCAL_KEYS
+
+  rule <k> #executeTxn(@appl) => #executeAppl(APP_ID) ...</k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>                 TXN_ID              </txID>
+         <applicationID>        APP_ID:TValue       </applicationID>
+         ...
+       </transaction>
+  requires APP_ID =/=K 0
+```
+
+NoOp
+
+```k
+  syntax AlgorandCommand ::= #executeAppl(TValue)
+
+  rule <k> #executeAppl(APP_ID) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID        </txID>
+         <onCompletion>  @ NoOp        </onCompletion>
+         ...
+       </transaction>
+       <app>
+         <appID>          APP_ID       </appID>
+         <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
+         ...
+       </app>
+```
+
+OptIn
+
+```k
+
+// Case 1: user different from app creator is opting in
+
+  rule <k> #executeAppl(APP_ID) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID  </txID>
+         <sender>        SENDER  </sender>
+         <onCompletion>  @ OptIn </onCompletion>
+         ...
+       </transaction>
+       <account>
+         <address> SENDER </address>
+         <appsOptedIn>
+           OPTED_IN_APPS =>
+           <optInApp>
+             <optInAppID>   APP_ID </optInAppID>
+             <localInts> .Map   </localInts>
+             <localBytes> .Map   </localBytes>
+           </optInApp>
+           OPTED_IN_APPS
+         </appsOptedIn>
+         <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                +Int PARAM_APP_OPTIN_FLAT
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE)
+                                      *Int LOCAL_INTS)
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE)
+                                      *Int LOCAL_BYTES)
+         </minBalance>
+         ...
+       </account>
+       <app>
+         <appID>          APP_ID       </appID>
+         <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
+         <localNumInts>      LOCAL_INTS   </localNumInts>
+         <localNumBytes>     LOCAL_BYTES  </localNumBytes>
+         ...
+       </app>
+     requires notBool hasOptedInApp(APP_ID, SENDER)
+
+// Case 2: app creator is opting in to their own app
+
+  rule <k> #executeAppl(APP_ID) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID  </txID>
+         <sender>        SENDER  </sender>
+         <onCompletion>  @ OptIn </onCompletion>
+         ...
+       </transaction>
+       <account>
+         <address> SENDER </address>
+         <appsCreated>
+           <app>
+             <appID>          APP_ID       </appID>
+             <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
+             <localNumInts>      LOCAL_INTS   </localNumInts>
+             <localNumBytes>     LOCAL_BYTES  </localNumBytes>
+             ...
+           </app>
+           ...
+         </appsCreated>
+         <appsOptedIn>
+           OPTED_IN_APPS =>
+           <optInApp>
+             <optInAppID>   APP_ID </optInAppID>
+             <localInts> .Map        </localInts>
+             <localBytes> .Map        </localBytes>
+           </optInApp>
+           OPTED_IN_APPS
+         </appsOptedIn>
+         <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                +Int PARAM_APP_OPTIN_FLAT 
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
+                                  *Int LOCAL_INTS)
+                                +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE) 
+                                  *Int LOCAL_BYTES)
+         </minBalance>
+         ...
+       </account>
+     requires notBool hasOptedInApp(APP_ID, SENDER)
+
+// Case 3: needed because of bug?
+
+  rule <k> #executeAppl(APP_ID) => #initApp(APP_ID) ~> #evalTeal(APPROVAL_PGM) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID  </txID>
+         <sender>        SENDER  </sender>
+         <onCompletion>  @ OptIn </onCompletion>
+         ...
+       </transaction>
+         <accountsMap>
+         <account>
+           <address> SENDER </address>
+           <appsCreated>
+             <app>
+               <appID>          APP_ID       </appID>
+               <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
+               <localNumInts>      LOCAL_INTS   </localNumInts>
+               <localNumBytes>     LOCAL_BYTES  </localNumBytes>
+               ...
+             </app>
+             ...
+           </appsCreated>
+           <appsOptedIn>
+             OPTED_IN_APPS =>
+             <optInApp>
+               <optInAppID>   APP_ID </optInAppID>
+               <localInts> .Map   </localInts>
+               <localBytes> .Map   </localBytes>
+             </optInApp>
+             OPTED_IN_APPS
+           </appsOptedIn>
+           <minBalance> MIN_BALANCE => MIN_BALANCE 
+                                  +Int PARAM_APP_OPTIN_FLAT 
+                                  +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
+                                    *Int LOCAL_INTS)
+                                  +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE) 
+                                    *Int LOCAL_BYTES)
+           </minBalance>
+           ...
+         </account>
+       </accountsMap>
+     requires notBool hasOptedInApp(APP_ID, SENDER)
+
+```
+
+
+CloseOut
+
+```k
+  rule <k>
+         #executeAppl(APP_ID) => 
+              #initApp(APP_ID)
+           ~> #evalTeal(APPROVAL_PGM) 
+           ~> #clearState(APP_ID, SENDER)
+         ... 
+       </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID        </txID>
+         <sender>        SENDER        </sender>
+         <onCompletion>  @ CloseOut    </onCompletion>
+         ...
+       </transaction>
+       <app>
+         <appID>          APP_ID       </appID>
+         <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
+         ...
+       </app>
+```
+
+ClearState
+
+TODO make sure `#clearState` runs even when a panic is generated
+
+```k
+  rule <k>
+         #executeAppl(APP_ID) => 
+              #initApp(APP_ID)
+           ~> #evalTeal(CLEAR_STATE_PGM) 
+           ~> #clearState(APP_ID, SENDER)
+         ... 
+       </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID        </txID>
+         <sender>        SENDER        </sender>
+         <onCompletion> @ ClearState   </onCompletion>
+         ...
+       </transaction>
+       <app>
+         <appID>            APP_ID          </appID>
+         <clearStatePgmSrc> CLEAR_STATE_PGM </clearStatePgmSrc>
+         ...
+       </app>
+```
+
+UpdateApplication
+
+```k
+  rule <k>
+         #executeAppl(APP_ID) => 
+              #initApp(APP_ID)
+           ~> #evalTeal(APPROVAL_PGM) 
+           ~> #updatePrograms(APP_ID, NEW_APPROVAL_PGM, NEW_CLEAR_STATE_PGM)
+         ... 
+       </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>                 TXN_ID              </txID>
+         <onCompletion>         @ UpdateApplication </onCompletion>
+         <approvalProgramSrc>   NEW_APPROVAL_PGM    </approvalProgramSrc>
+         <clearStateProgramSrc> NEW_CLEAR_STATE_PGM </clearStateProgramSrc>
+         ...
+       </transaction>
+       <app>
+         <appID>          APP_ID       </appID>
+         <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
+         ...
+       </app>
+```
+
+DeleteApplication
+
+```k
+  rule <k>
+         #executeAppl(APP_ID) => 
+              #initApp(APP_ID)
+           ~> #evalTeal(APPROVAL_PGM) 
+           ~> #deleteApplication(APP_ID)
+         ... 
+       </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID              </txID>
+         <onCompletion>  @ DeleteApplication </onCompletion>
+         ...
+       </transaction>
+       <app>
+         <appID>          APP_ID       </appID>
+         <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
+         ...
+       </app>
+       <appCreator> (APP_ID |-> _) => .Map ... </appCreator>
 ```
 
 * **Layer-2 transactions**

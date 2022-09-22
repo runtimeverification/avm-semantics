@@ -1,0 +1,42 @@
+declareTealSource "gload-future-txn.teal";
+declareTealSource "clear-basic.teal";
+
+addAccount <address> b"1" </address> <balance> 1500000 </balance>;
+
+#initTxGroup();
+
+addAppCallTx <txID> 0 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     0           </applicationID>
+             <onCompletion>      @ NoOp      </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   0           </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
+
+addAppCallTx <txID> 1 </txID>
+             <sender>            b"1"        </sender>
+             <applicationID>     1           </applicationID>
+             <onCompletion>      @ NoOp      </onCompletion>
+             <accounts>          .TValueList </accounts>
+             <applicationArgs>   1           </applicationArgs>
+             <foreignApps>       .TValueList </foreignApps>
+             <foreignAssets>     .TValueList </foreignAssets>
+             <globalNui>         0           </globalNui>
+             <globalNbs>         0           </globalNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
+             <extraProgramPages> 0           </extraProgramPages>
+             <approvalPgmIdx>    0           </approvalPgmIdx>
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
+
+#initGlobals();
+#evalTxGroup();
+.AS

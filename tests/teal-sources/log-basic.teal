@@ -1,0 +1,7 @@
+#pragma version 6
+
+byte "123"
+log
+
+int 1
+return

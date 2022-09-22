@@ -1,0 +1,43 @@
+#pragma version 5
+
+int OptIn
+txn OnCompletion
+==
+bnz handle_optin
+
+int NoOp
+txn OnCompletion
+==
+bnz handle_noop
+
+err
+
+handle_optin:
+
+txn ApplicationID
+int 0
+==
+assert
+
+global CurrentApplicationID
+int 1
+==
+assert
+
+b end
+handle_noop:
+
+txn ApplicationID
+int 0
+>
+assert
+
+global CurrentApplicationID
+int 0
+>
+assert
+
+b end
+end:
+int 1
+return

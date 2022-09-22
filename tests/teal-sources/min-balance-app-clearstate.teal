@@ -1,0 +1,21 @@
+#pragma version 5
+
+int OptIn
+txn OnCompletion
+==
+bnz accept
+
+int ClearState
+txn OnCompletion
+==
+bnz accept
+
+txn Sender
+min_balance
+int 100000
+==
+assert
+
+accept:
+int 1
+return

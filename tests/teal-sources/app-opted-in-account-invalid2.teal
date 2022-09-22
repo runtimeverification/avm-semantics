@@ -1,0 +1,8 @@
+#pragma version 5
+
+byte "fake_account"
+global CurrentApplicationID
+app_opted_in
+
+int 1
+return
