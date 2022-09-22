@@ -355,10 +355,13 @@ avm_prove_tests := $(wildcard tests/specs/*-spec.k) $(wildcard tests/specs/*/*-s
 test-avm-semantics-prove: $(avm_prove_tests:=.prove)
 
 tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
-	$(KAVM) prove --directory tests/specs tests/specs/$*-spec.k
+	$(VENV_ACTIVATE) && $(KAVM) prove tests/specs/$*-spec.k --definition tests/specs/verification-kompiled
 
 tests/specs/verification-kompiled/timestamp: tests/specs/verification.k
-	$(KAVM) kompile $< --backend haskell --directory tests/specs
+	mkdir -p tests/specs/verification-kompiled
+	$(VENV_ACTIVATE) && $(KAVM) kompile $< --backend haskell --definition-dir tests/specs/verification-kompiled \
+                      -I "${KAVM_INCLUDE}/kframework"                                                         \
+											-I "${plugin_include}/kframework"                           
 
 #######
 ## kavm

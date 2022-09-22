@@ -22,6 +22,7 @@ def exec_kompile(
     main_module: Optional[str],
     syntax_module: Optional[str],
     includes: List[str],
+    backend: Optional[str],
     verbose: bool,
     **kwargs: Any,
 ) -> None:
@@ -31,10 +32,21 @@ def exec_kompile(
         main_module_name=main_module,
         syntax_module_name=syntax_module,
         includes=includes,
+        backend=backend,
         verbose=True,
     )
     exit(proc_result.returncode)
 
+def exec_prove(
+    definition: Path,
+    main_file: Path,
+    **kwargs: Any,
+) -> None:
+    proc_result = KAVM.prove(
+        definition,
+        main_file,
+    )
+    exit(proc_result.returncode)
 
 def exec_kast(
     definition_dir: Path,
@@ -111,7 +123,7 @@ def main() -> None:
     args = parser.parse_args()
     logging.basicConfig(level=_loglevel(args), format=_LOG_FORMAT)
 
-    if not args.definition_dir:
+    if (not 'definition_dir' in vars(args)) or (not args.definition_dir):
         env_definition_dir = os.environ.get('KAVM_DEFINITION_DIR')
         if env_definition_dir:
             args.definition_dir = Path(env_definition_dir)
@@ -147,6 +159,12 @@ def create_argument_parser() -> ArgumentParser:
     kompile_subparser.add_argument('main_file', type=file_path, help='Path to the main file')
     kompile_subparser.add_argument('--main-module', type=str)
     kompile_subparser.add_argument('--syntax-module', type=str)
+    kompile_subparser.add_argument('--backend', type=str)
+
+    # prove
+    prove_subparser = command_parser.add_parser('prove', help='Prove claims', parents=[shared_args])
+    prove_subparser.add_argument('main_file', type=file_path, help='Path to the main file')
+    prove_subparser.add_argument('--definition', type=dir_path)
 
     # kast
     kast_subparser = command_parser.add_parser('kast', help='Kast a term', parents=[shared_args])
