@@ -40,11 +40,15 @@ def exec_kompile(
 def exec_prove(
     definition: Path,
     main_file: Path,
+    debugger: bool,
+    debug_script: Path,
     **kwargs: Any,
 ) -> None:
     proc_result = KAVM.prove(
         definition,
         main_file,
+        debugger,
+        debug_script,
     )
     exit(proc_result.returncode)
 
@@ -165,6 +169,8 @@ def create_argument_parser() -> ArgumentParser:
     prove_subparser = command_parser.add_parser('prove', help='Prove claims', parents=[shared_args])
     prove_subparser.add_argument('main_file', type=file_path, help='Path to the main file')
     prove_subparser.add_argument('--definition', type=dir_path)
+    prove_subparser.add_argument('--debugger', default=False, action='store_true')
+    prove_subparser.add_argument('--debug-script', type=file_path)
 
     # kast
     kast_subparser = command_parser.add_parser('kast', help='Kast a term', parents=[shared_args])

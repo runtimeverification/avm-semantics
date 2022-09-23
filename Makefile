@@ -51,12 +51,12 @@ export K_OPTS
 
 .PHONY: all clean distclean install uninstall                                         \
         deps k-deps libsecp256k1 libff plugin-deps hook-deps                          \
-        build build-avm build-kavm py-kavm                                            \
+        build build-avm build-kavm                                                    \
         test test-avm-semantics test-avm-semantics-prove                              \
         test-kavm test-kavm-kast test-kavm-kast-avm-scenario test-kavm-kast-teal      \
         clean-avm clean-kavm                                                          \
         module-imports-graph module-imports-graph-dot                                 \
-        venv venv-clean
+        venv-clean
 
 .SECONDARY:
 
@@ -207,7 +207,7 @@ venv: $(VENV_DIR)/pyvenv.cfg
 venv-clean:
 	rm -rf $(VENV_DIR)
 
-py-kavm:
+py-kavm: $(PY_KAVM_DIR)/README.md
 	$(MAKE) build -C $(PY_KAVM_DIR)
 
 includes := $(avm_includes) $(plugin_includes) $(plugin_c_includes) $(hook_includes)
@@ -357,11 +357,14 @@ test-avm-semantics-prove: $(avm_prove_tests:=.prove)
 tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
 	$(VENV_ACTIVATE) && $(KAVM) prove tests/specs/$*-spec.k --definition tests/specs/verification-kompiled
 
-tests/specs/verification-kompiled/timestamp: tests/specs/verification.k
+tests/specs/verification-kompiled/timestamp: tests/specs/verification.k venv $(avm_includes) 
 	mkdir -p tests/specs/verification-kompiled
 	$(VENV_ACTIVATE) && $(KAVM) kompile $< --backend haskell --definition-dir tests/specs/verification-kompiled \
                       -I "${KAVM_INCLUDE}/kframework"                                                         \
 											-I "${plugin_include}/kframework"                           
+
+clean-verification:
+	rm -rf tests/specs/verification-kompiled
 
 #######
 ## kavm
@@ -396,7 +399,7 @@ module-imports-graph: module-imports-graph-dot
 module-imports-graph-dot: venv
 	$(VENV_ACTIVATE) && pyk graph-imports $(KAVM_LIB)/$(avm_kompiled)
 
-clean: clean-avm clean-kavm venv-clean
+clean: clean-avm clean-kavm venv-clean clean-verification
 
 distclean: clean
 	rm -rf $(BUILD_DIR)

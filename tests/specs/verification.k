@@ -19,8 +19,8 @@ module VERIFICATION
   // For example: 1 >>Int 1 ==Int 0;
   //              (3 >>Int 2 ==Int 1) andBool (3 >>Int 3 ==Int 0), etc.
   rule (I >>Int B) => 0
-    requires (0 <Int I andBool I <=Int MAX_UINT64)
-     andBool (log2Int(I) <Int B andBool B <Int 64)
+    requires (I >Int 0 andBool MAX_UINT64 >=Int I)
+     andBool (B >Int log2Int(I) andBool 64 >Int B)
     [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ module VERIFICATION
   // Normalize Maps
   rule M:Map [ K <- _ ] [ K <- V ] => M [ K <- V ]  [simplification]
   rule M:Map [ K1 <- V1 ] [ K2 <- V2 ] => M [ K2 <- V2 ] [ K1 <- V1 ]
-    requires K2 <Int K1 [simplification]
+    requires K1 >Int K2 [simplification]
 
   // in_keys
   rule X:Label in_keys( M:Map [Y:Label <- _] ) => false
@@ -73,14 +73,14 @@ module VERIFICATION
   rule #sizeTStack(_) >=Int 0 => true  [simplification]
   rule #sizeTStack(_, 0) >=Int 0 => true  [simplification]
   
-  rule L <Int #sizeTStack(_, N) +Int M => true
-    requires L <Int (N +Int M)  [simplification]
+  rule #sizeTStack(_, N) +Int M >Int L => true
+    requires (N +Int M) >Int L [simplification]
 
-  rule L <Int #sizeTStack(_, M) => true
-    requires L <Int M  [simplification]
+  rule #sizeTStack(_, M) >Int L => true
+    requires M >Int L  [simplification]
 
-  rule L <Int #sizeTStack(_) +Int M => true
-    requires L <Int M  [simplification]
+  rule #sizeTStack(_) +Int M >Int L => true
+    requires M >Int L  [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Int and Byte conversions
@@ -96,23 +96,23 @@ module VERIFICATION
 // Int and Bool conversions
 ////////////////////////////////////////////////////////////////////////////////
 
-  rule bool2Int(B)  <=Int 0 => notBool B  [simplification]
-  rule bool2Int(B)   >Int 0 =>         B  [simplification]
+  rule 0            >=Int bool2Int(B) => notBool B  [simplification]
+  rule bool2Int(B)   >Int 0           =>         B  [simplification]
 
-  rule bool2Int(_) <=Int A => true requires A >=Int 1 [simplification]
-  rule bool2Int(_) >=Int A => true requires A <=Int 0 [simplification]
+  rule A           >=Int bool2Int(_) => true requires A >=Int 1 [simplification]
+  rule bool2Int(_) >=Int A           => true requires 0 >=Int A [simplification]
 
   rule int2Bool(bool2Int(I)) => I [simplification]
   rule bool2Int(int2Bool(B)) => B [simplification]
 
-  rule A >=Int bool2Int(_) => true requires A >=Int 1 [simplification]
-  rule A <=Int bool2Int(_) => true requires A <=Int 0 [simplification]
+  rule A           >=Int bool2Int(_) => true requires A >=Int 1 [simplification]
+  rule bool2Int(_) >=Int A           => true requires 0 >=Int A [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // #if #then #else #fi
 ////////////////////////////////////////////////////////////////////////////////
 
-  rule #if COND #then 1 #else 0 #fi <=Int 0 => notBool (COND) [simplification]
+  rule 0 >=Int #if COND #then 1 #else 0 #fi => notBool (COND) [simplification]
   rule #if COND #then 1 #else 0 #fi  >Int 0 =>          COND  [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -123,5 +123,15 @@ module VERIFICATION
     requires M =/=Int 0 [simplification, concrete(M)]
 
   rule N:Int /Int N:Int => 1 requires N =/=Int 0 [simplification]
+
+////////////////////////////////////////////////////////////////////////////////
+// Comparisons
+////////////////////////////////////////////////////////////////////////////////
+
+  rule N  <Int M => M  >Int N [simplification]
+  rule N <=Int M => M >=Int N [simplification]
+
+  rule notBool (N  >Int M) => M >=Int N  [simplification]
+  rule notBool (N >=Int M) => M  >Int N  [simplification]
 
 endmodule

@@ -31,7 +31,7 @@ module MAX-INT-SPEC
         <mode> stateless </mode>
         <version> 2 </version>
         <stack> INITIAL_STACK => ?MAX:Int : INITIAL_STACK </stack>
-        <stacksize> #sizeTStack(INITIAL_STACK) => #sizeTStack(INITIAL_STACK) +Int 1 </stacksize>
+        <stacksize> #sizeTStack(INITIAL_STACK) => 1 +Int #sizeTStack(INITIAL_STACK) </stacksize>
         <scratch> M => M </scratch>
         <labels> LL => ?_ </labels>
         <returncode> 4 => ?RETURN_CODE </returncode>

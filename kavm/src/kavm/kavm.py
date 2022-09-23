@@ -116,6 +116,8 @@ class KAVM(KRun):
     def prove(
         definition: Path,
         main_file: Path,
+        debugger: bool,
+        debug_script: Path,
     ) -> CompletedProcess:
         command = [
             'kprove',
@@ -123,6 +125,9 @@ class KAVM(KRun):
             str(definition),
             str(main_file),
         ]
+
+        command += ['--debugger'] if debugger else []
+        command += ['--debug-script', str(debug_script)] if debug_script else []
 
         return subprocess.run(command, check=True, text=True)
 
