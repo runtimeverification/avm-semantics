@@ -71,7 +71,7 @@ module TEAL-FIELDS
 ### `txn`/`gtxn` fields
 
 ```k
-
+// Needed because itxn_field accepts both singular and array fields as arguments
   syntax TxnFieldTop ::= TxnField
                        | TxnaField
 
