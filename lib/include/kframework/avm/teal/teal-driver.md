@@ -1285,7 +1285,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <stack> _ : I : _ </stack>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
-  rule <k> _:ScratchOpCode => panic(STACK_OVERFLOW) ... </k>
+  rule <k> _:LoadOpCode => panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 ```

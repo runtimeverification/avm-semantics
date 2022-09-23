@@ -234,29 +234,256 @@ module OPCODES-V1-SPEC
         <stacksize> _ </stacksize>
 
 // intcblock 	1 	heavy_check_mark 	1
+  claim <k> intcblock 3 4 5 6 => . </k>
+        <intcblock> _ => 
+                   (0 |-> 4
+                    1 |-> 5
+                    2 |-> 6)
+        </intcblock>
 // intc i 	1 	heavy_check_mark 	1
-// intc_0 i 	1 	heavy_check_mark 	1
+  claim <k> intc 1 => . </k>
+        <stack> XS => 5 : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+        <intcblock> 0 |-> 4
+                    1 |-> 5
+                    2 |-> 6
+        </intcblock>
+    requires S <Int 1000
+
+// intc_0 	1 	heavy_check_mark 	1
+  claim <k> intc_0 => . </k>
+        <stack> XS => 4 : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+        <intcblock> 0 |-> 4
+                    1 |-> 5
+                    2 |-> 6
+                    3 |-> 7
+        </intcblock>
+    requires S <Int 1000
+
 // intc_1 	1 	heavy_check_mark 	1
+  claim <k> intc_1 => . </k>
+        <stack> XS => 5 : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+        <intcblock> 0 |-> 4
+                    1 |-> 5
+                    2 |-> 6
+                    3 |-> 7
+        </intcblock>
+    requires S <Int 1000
+
 // intc_2 	1 	heavy_check_mark 	1
+  claim <k> intc_2 => . </k>
+        <stack> XS => 6 : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+        <intcblock> 0 |-> 4
+                    1 |-> 5
+                    2 |-> 6
+                    3 |-> 7
+        </intcblock>
+    requires S <Int 1000
+
 // intc_3 	1 	heavy_check_mark 	1
+  claim <k> intc_3 => . </k>
+        <stack> XS => 7 : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+        <intcblock> 0 |-> 4
+                    1 |-> 5
+                    2 |-> 6
+                    3 |-> 7
+        </intcblock>
+    requires S <Int 1000
+
 // bytecblock 	1 	heavy_check_mark 	1
+  claim <k> bytecblock 3 (1, "1") (1, "2") (1,"3") => . </k>
+        <bytecblock> _ => 
+                   (0 |-> "1"
+                    1 |-> "2"
+                    2 |-> "3")
+        </bytecblock>
+
 // bytec i 	1 	heavy_check_mark 	1
+  claim <k> bytec 1 => . </k>
+        <stack> XS => "2" : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+        <bytecblock> 0 |-> "1"
+                    1 |-> "2"
+                    2 |-> "3"
+        </bytecblock>
+    requires S <Int 1000
+
 // bytec_0 	1 	heavy_check_mark 	1
+  claim <k> bytec_0 => . </k>
+        <stack> XS => "1" : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+        <bytecblock> 0 |-> "1"
+                    1 |-> "2"
+                    2 |-> "3"
+                    3 |-> "4"
+        </bytecblock>
+    requires S <Int 1000
+
 // bytec_1 	1 	heavy_check_mark 	1
+  claim <k> bytec_1 => . </k>
+        <stack> XS => "2" : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+        <bytecblock> 0 |-> "1"
+                    1 |-> "2"
+                    2 |-> "3"
+                    3 |-> "4"
+        </bytecblock>
+    requires S <Int 1000
+
 // bytec_2 	1 	heavy_check_mark 	1
+  claim <k> bytec_2 => . </k>
+        <stack> XS => "3" : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+        <bytecblock> 0 |-> "1"
+                    1 |-> "2"
+                    2 |-> "3"
+                    3 |-> "4"
+        </bytecblock>
+    requires S <Int 1000
+
 // bytec_3 	1 	heavy_check_mark 	1
-// arg n 	1 	heavy_check_mark 	1
-// arg_0 	1 	heavy_check_mark 	1
-// arg_1 	1 	heavy_check_mark 	1
-// arg_2 	1 	heavy_check_mark 	1
-// arg_3 	1 	heavy_check_mark 	1
+  claim <k> bytec_3 => . </k>
+        <stack> XS => "4" : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+        <bytecblock> 0 |-> "1"
+                    1 |-> "2"
+                    2 |-> "3"
+                    3 |-> "4"
+        </bytecblock>
+    requires S <Int 1000
+
+// // arg n 	1 	heavy_check_mark 	1
+//   claim <k> arg 2 => . </k>
+//         <stack> XS => 6 : XS </stack>
+//         <stacksize> S => S +Int 1 </stacksize>
+//         <args> 0 |-> 4
+//                1 |-> 5
+//                2 |-> 6
+//                3 |-> 7
+//         </args>
+//     requires S <Int 1000
+// 
+// // arg_0 	1 	heavy_check_mark 	1
+//   claim <k> arg_0 => . </k>
+//         <stack> XS => 4 : XS </stack>
+//         <stacksize> S => S +Int 1 </stacksize>
+//         <args> 0 |-> 4
+//                1 |-> 5
+//                2 |-> 6
+//                3 |-> 7
+//         </args>
+//     requires S <Int 1000
+// 
+// // arg_1 	1 	heavy_check_mark 	1
+//   claim <k> arg_1 => . </k>
+//         <stack> XS => 5 : XS </stack>
+//         <stacksize> S => S +Int 1 </stacksize>
+//         <args> 0 |-> 4
+//                1 |-> 5
+//                2 |-> 6
+//                3 |-> 7
+//         </args>
+//     requires S <Int 1000
+// 
+// // arg_2 	1 	heavy_check_mark 	1
+//   claim <k> arg_2 => . </k>
+//         <stack> XS => 6 : XS </stack>
+//         <stacksize> S => S +Int 1 </stacksize>
+//         <args> 0 |-> 4
+//                1 |-> 5
+//                2 |-> 6
+//                3 |-> 7
+//         </args>
+//     requires S <Int 1000
+// 
+// // arg_3 	1 	heavy_check_mark 	1
+//   claim <k> arg_3 => . </k>
+//         <stack> XS => 7 : XS </stack>
+//         <stacksize> S => S +Int 1 </stacksize>
+//         <args> 0 |-> 4
+//                1 |-> 5
+//                2 |-> 6
+//                3 |-> 7
+//         </args>
+//     requires S <Int 1000
 
 // txn f 	1 	heavy_check_mark 	1
+  claim <k> txn Sender => . </k>
+        <stack> XS => SENDER : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+        <currentTx> TX_ID </currentTx>
+        <transactions>
+          <transaction>
+            <txID> TX_ID </txID>
+            <group> TX_ID </group>
+            <sender> SENDER:Bytes </sender>
+            <typeEnum> @ appl </typeEnum>
+            ...
+          </transaction>
+        </transactions>
+    requires S <Int 1000
+
 // global f 	1 	heavy_check_mark 	1
+  claim <k> global MinBalance => . </k>
+        <stack> XS => 100000 : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+    requires S <Int 1000
+
 // gtxn t f 	1 	heavy_check_mark 	1
+  claim <k> gtxn 0 Sender => . </k>
+        <stack> XS => SENDER : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+        <currentTx> 1 </currentTx>
+        <transactions>
+          <transaction>
+            <txID> 0 </txID>
+            <group> 0 </group>
+            <sender> SENDER:Bytes </sender>
+            <typeEnum> @ appl </typeEnum>
+            ...
+          </transaction>
+          <transaction>
+            <txID> 1 </txID>
+            <group> 1 </group>
+            <sender> SENDER:Bytes </sender>
+            <typeEnum> @ appl </typeEnum>
+            ...
+          </transaction>
+        </transactions>
+    requires S <Int 1000
+
 // load i 	1 	heavy_check_mark 	1
+  claim <k> load 1 => . </k>
+        <stack> XS => VALUE : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+        <scratch> (2 |-> _) (1 |-> VALUE) (4 |-> _) </scratch>
+    requires S <Int 1000
+
+  claim <k> load 3 => . </k>
+        <stack> XS => 0 : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+        <scratch> (2 |-> _) (1 |-> _) (4 |-> _) (.Map => (3 |-> 0)) </scratch>
+    requires S <Int 1000
+
 // store i 	1 	heavy_check_mark 	1
+  claim <k> store 1 => . </k>
+        <stack> VALUE : XS => XS </stack>
+        <stacksize> S => S -Int 1 </stacksize>
+        <scratch> (2 |-> _) (1 |-> (_ => VALUE)) (4 |-> _) </scratch>
+
 // pop 	1 	heavy_check_mark 	1
+  claim <k> pop => . </k>
+        <stack> _ : XS => XS </stack>
+        <stacksize> S => S -Int 1 </stacksize>
+
 // dup 	1 	heavy_check_mark 	1 
+  claim <k> dup => . </k>
+        <stack> VAL : XS => VAL : VAL : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+    requires S <Int 1000
 
 endmodule
