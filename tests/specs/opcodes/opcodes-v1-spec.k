@@ -449,8 +449,7 @@ module OPCODES-V1-SPEC
           <transaction>
             <txID> 1 </txID>
             <group> 1 </group>
-            <sender> SENDER:Bytes </sender>
-            <typeEnum> @ appl </typeEnum>
+            <typeEnum> @ appl </typeEnum> //TODO this shouldn't be required
             ...
           </transaction>
         </transactions>

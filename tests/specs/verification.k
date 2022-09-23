@@ -137,5 +137,9 @@ module VERIFICATION
   ////////////
 
   rule true orElseBool _ => true  [simplification]
+  
+  ////////////
+
+  rule lengthBytes(B1) +Int lengthBytes(B2) => lengthBytes(B1 +Bytes B2)  [simplification]
 
 endmodule

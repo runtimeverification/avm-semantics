@@ -405,6 +405,7 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
   rule <k> concat => .K ... </k>
        <stack> B2 : B1 : XS => (B1 +Bytes B2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
+    requires lengthBytes(B1 +Bytes B2) <=Int MAX_BYTEARRAY_LEN
 
   rule <k> concat => panic(BYTES_OVERFLOW) ... </k>
        <stack> B2 : B1 : _ </stack>
