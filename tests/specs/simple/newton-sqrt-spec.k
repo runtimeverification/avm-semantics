@@ -46,7 +46,7 @@ module NEWTON-SQRT-SPEC
         <jumped> false </jumped>
         <mode> stateful </mode>
         <version> 5 </version>
-        <stack> INITIAL_STACK => ?SQRT : INITIAL_STACK </stack>
+        <stack> INITIAL_STACK => 4 : INITIAL_STACK </stack>
         <stacksize> #sizeTStack(INITIAL_STACK) => #sizeTStack(INITIAL_STACK) +Int 1 </stacksize>
         <scratch> _ => ?_ </scratch>
         <labels> LL => ?_ </labels>
@@ -55,27 +55,25 @@ module NEWTON-SQRT-SPEC
           "Failure - program is stuck" => ?RETURN_STATUS
         </returnstatus>
         <globals> _ </globals>
-        <txGroup> 
-          <txGroupID> _ </txGroupID>
-          <currentTx> TX_ID </currentTx>
-          <transactions>
-            <transaction>
-              <txID> TX_ID </txID>
-              <appCallTxFields>
-                <applicationArgs>
-                  Int2Bytes(N, BE, Unsigned)
-                </applicationArgs>
-                ...
-              </appCallTxFields>
-              <txHeader>
-                <typeEnum> @ appl </typeEnum>
-                ...
-              </txHeader>
+        <currentTx> TX_ID </currentTx>
+        <transactions>
+          <transaction>
+            <txID> TX_ID </txID>
+            <appCallTxFields>
+              <applicationArgs>
+                Int2Bytes(16, BE, Unsigned)
+              </applicationArgs>
               ...
-            </transaction>
+            </appCallTxFields>
+            <txHeader>
+              <typeEnum> @ appl </typeEnum>
+              <group> TX_ID </group>
+              ...
+            </txHeader>
             ...
-          </transactions>
-        </txGroup>
+          </transaction>
+          ...
+        </transactions>
         <blockchain> _ </blockchain>
     requires  notBool (LOOP_BEGIN in_labels LL)
       andBool (notBool (LOOP_END in_labels LL))
@@ -88,7 +86,5 @@ module NEWTON-SQRT-SPEC
       andBool (?RETURN_STATUS =/=String "Failure - panic: " +String ILLEGAL_JUMP)
       andBool (?RETURN_STATUS =/=String "Failure - panic: " +String STACK_OVERFLOW)
       andBool (?RETURN_STATUS =/=String "Failure - panic: " +String STACK_UNDERFLOW)
-//      andBool (?SQRT ^Int 2) <=Int N
-//      andBool ((?SQRT +Int 1) ^Int 2) >Int N
 
 endmodule

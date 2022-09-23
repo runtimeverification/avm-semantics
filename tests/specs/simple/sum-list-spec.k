@@ -55,30 +55,27 @@ module SUM-LIST-SPEC
         <returnstatus>
           "Failure - program is stuck" => ?RETURN_STATUS
         </returnstatus>
-        <globals> _ </globals>
-        <txGroup> 
-          <txGroupID> _ </txGroupID>
-          <currentTx> TX_ID </currentTx>
-          <transactions>
-            <transaction>
-              <txID> TX_ID </txID>
-              <appCallTxFields>
-                <applicationArgs>
-                  Int2Bytes(ARG1, BE, Unsigned)
-                  Int2Bytes(ARG2, BE, Unsigned)
-                  Int2Bytes(ARG3, BE, Unsigned)
-                </applicationArgs>
-                ...
-              </appCallTxFields>
-              <txHeader>
-                <typeEnum> @ appl </typeEnum>
-                ...
-              </txHeader>
+        <currentTx> TX_ID </currentTx>
+        <transactions>
+          <transaction>
+            <txID> TX_ID </txID>
+            <appCallTxFields>
+              <applicationArgs>
+                Int2Bytes(ARG1, BE, Unsigned)
+                Int2Bytes(ARG2, BE, Unsigned)
+                Int2Bytes(ARG3, BE, Unsigned)
+              </applicationArgs>
               ...
-            </transaction>
+            </appCallTxFields>
+            <txHeader>
+              <typeEnum> @ appl </typeEnum>
+              <group> TX_ID </group>
+              ...
+            </txHeader>
             ...
-          </transactions>
-        </txGroup>
+          </transaction>
+          ...
+        </transactions>
         <blockchain> _ </blockchain>
     requires  notBool (LOOP_BEGIN in_labels LL)
       andBool (notBool (LOOP_END in_labels LL))

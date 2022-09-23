@@ -134,4 +134,8 @@ module VERIFICATION
   rule notBool (N  >Int M) => M >=Int N  [simplification]
   rule notBool (N >=Int M) => M  >Int N  [simplification]
 
+  ////////////
+
+  rule true orElseBool _ => true  [simplification]
+
 endmodule

@@ -68,29 +68,27 @@ module MAX-LIST-SPEC
           "Failure - program is stuck" => ?RETURN_STATUS
         </returnstatus>
         <globals> _ </globals>
-        <txGroup> 
-          <txGroupID> _ </txGroupID>
-          <currentTx> TX_ID </currentTx>
-          <transactions>
-            <transaction>
-              <txID> TX_ID </txID>
-              <appCallTxFields>
-                <applicationArgs>
-                  Int2Bytes(ARG1, BE, Unsigned)
-                  Int2Bytes(ARG2, BE, Unsigned)
-                  Int2Bytes(ARG3, BE, Unsigned)
-                </applicationArgs>
-                ...
-              </appCallTxFields>
-              <txHeader>
-                <typeEnum> @ appl </typeEnum>
-                ...
-              </txHeader>
+        <currentTx> TX_ID </currentTx>
+        <transactions>
+          <transaction>
+            <txID> TX_ID </txID>
+            <appCallTxFields>
+              <applicationArgs>
+                Int2Bytes(ARG1, BE, Unsigned)
+                Int2Bytes(ARG2, BE, Unsigned)
+                Int2Bytes(ARG3, BE, Unsigned)
+              </applicationArgs>
               ...
-            </transaction>
+            </appCallTxFields>
+            <txHeader>
+              <typeEnum> @ appl </typeEnum>
+              <group> TX_ID </group>
+              ...
+            </txHeader>
             ...
-          </transactions>
-        </txGroup>
+          </transaction>
+          ...
+        </transactions>
         <blockchain> _ </blockchain>
     requires  notBool (LOOP_BEGIN in_labels LL)
       andBool (notBool (LOOP_END in_labels LL))
@@ -101,7 +99,7 @@ module MAX-LIST-SPEC
       andBool ARG2 >Int 0
       andBool ARG3 >Int 0
 
-      andBool #sizeTStack(INITIAL_STACK) +Int 4 <Int MAX_STACK_DEPTH // at least 2 more free slots on stack
+      andBool MAX_STACK_DEPTH >Int #sizeTStack(INITIAL_STACK) +Int 4 // at least 4 more free slots on stack
     ensures   (?RETURN_CODE =/=Int 3)
       andBool (?RETURN_STATUS =/=String "Failure - panic: " +String ILLEGAL_JUMP)
       andBool (?RETURN_STATUS =/=String "Failure - panic: " +String STACK_OVERFLOW)
