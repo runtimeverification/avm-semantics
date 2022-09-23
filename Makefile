@@ -54,6 +54,7 @@ export K_OPTS
         build build-avm build-kavm py-kavm                                            \
         test test-avm-semantics test-avm-semantics-prove                              \
         test-kavm test-kavm-kast test-kavm-kast-avm-scenario test-kavm-kast-teal      \
+        test-kavm-hooks build-kavm-hooks-tests                                        \
         clean-avm clean-kavm                                                          \
         module-imports-graph module-imports-graph-dot                                 \
         venv venv-clean
@@ -123,8 +124,6 @@ $(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
 	@mkdir -p $(dir $@)
 	install $< $@
 
-HOOK_NAMESPACES   := KRYPTO CLARITY
-
 plugin_include    := $(KAVM_LIB)/blockchain-k-plugin/include
 plugin_k          := krypto.md
 plugin_c          := plugin_util.cpp crypto.cpp blake2.cpp plugin_util.h blake2.h
@@ -144,12 +143,13 @@ $(plugin_include)/kframework/%: $(PLUGIN_SUBMODULE)/plugin/%
 	install $< $@
 
 plugin-deps: $(plugin_includes) $(plugin_c_includes)
+HOOK_NAMESPACES   := KAVM
 
 hook_include  := $(abspath $(KAVM_LIB)/include/c)
 hook_c        := algorand.cpp base.cpp hooks.cpp mnemonic.cpp algorand.h base.h mnemonic.h
 hook_includes := $(patsubst %, $(hook_include)/%, $(hook_c))
 
-HOOK_ALGO_FILES := $(hook_include)/algorand.cpp \
+HOOK_KAVM_FILES := $(hook_include)/algorand.cpp \
                    $(hook_include)/base.cpp     \
                    $(hook_include)/mnemonic.cpp \
                    $(hook_include)/hooks.cpp
@@ -179,15 +179,9 @@ HOOK_CC_OPTS      += -lprocps
 endif
 
 
-HOOK_KOMPILE_OPTS := --hook-namespaces "$(HOOK_NAMESPACES)"                     \
-                     $(addprefix -ccopt=, $(HOOK_PLUGIN_FILES) $(HOOK_CC_OPTS)) \
-                     $(addprefix -ccopt=, $(HOOK_ALGO_FILES))
-
-ifneq ($(COVERAGE),)
-    COVERAGE_OPTS := --coverage
-else
-    COVERAGE_OPTS :=
-endif
+HOOK_KOMPILE_OPTS := --hook-namespaces "$(HOOK_NAMESPACES)"  \
+                     $(addprefix -ccopt=, $(HOOK_CC_OPTS))   \
+                     $(addprefix -ccopt=, $(HOOK_KAVM_FILES))
 
 ## * kavm --- Python library and CLI app
 
@@ -325,7 +319,17 @@ uninstall:
 
 KAVM_OPTIONS :=
 
-test: test-kavm test-kavm-algod test-avm-semantics
+test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics
+
+##########################################
+## Standalone AVM LLVM Backend hooks tests
+##########################################
+
+test-kavm-hooks: build-kavm-hooks-tests
+	cd $(CURDIR)/tests/hooks; pytest
+
+build-kavm-hooks-tests: $(HOOK_KAVM_FILES)
+	cd $(CURDIR)/tests/hooks; ./generate-interpreter.sh $(HOOK_KAVM_FILES)
 
 #################
 ## AVM Unit Tests
