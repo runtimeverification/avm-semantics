@@ -58,7 +58,7 @@ def generate_interpreter(
     hook_cpp_files: Optional[List[Path]] = None,
     hook_clang_flags: Optional[List[str]] = None,
 ) -> None:
-    '''Kompile KAVM to produce an LLVM-based interpterer'''
+    '''Kompile KAVM to produce an LLVM-based interpreter'''
 
     def _kompile_partial() -> None:
         command = [
@@ -84,16 +84,16 @@ def generate_interpreter(
 
     def _llvm_kompile(
         interpreter_object_file: Path,
-        interpteter_executable_file: Path,
+        interpreter_executable_file: Path,
         hook_cpp_files: Optional[List[Path]] = None,
         includes: Optional[List[Path]] = None,
         hook_clang_flags: Optional[List[str]] = None,
     ) -> None:
-        command = ['llvm-kompile', str(interpreter_object_file), 'main']
+        command = ['llvm-kompilex', str(interpreter_object_file), 'main', '--']
 
         command += [str(path) for path in hook_cpp_files] if hook_cpp_files else []
         # command += [f'-I{str(path)}' for path in includes] if includes else []
-        command += ['-o', str(interpteter_executable_file)]
+        command += ['-o', str(interpreter_executable_file)]
         command += [flag.strip() for flag in hook_clang_flags] if hook_clang_flags else []
 
         try:
@@ -106,7 +106,7 @@ def generate_interpreter(
     _kompile_partial()
     _llvm_kompile(
         interpreter_object_file=definition_dir / 'partial.o',
-        interpteter_executable_file=definition_dir / 'interpreter',
+        interpreter_executable_file=definition_dir / 'interpreter',
         hook_cpp_files=hook_cpp_files,
         # includes=includes,
         hook_clang_flags=hook_clang_flags,
