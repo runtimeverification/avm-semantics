@@ -28,18 +28,6 @@ class KAVM(KRun):
     Interact with the K semantics of AVM: evaluate Algorand transaction groups
     """
 
-    # def __init__(
-    #     self,
-    #     definition_dir: Path,
-    #     use_directory: Any = None,
-    #     logger: Optional[logging.Logger] = None,
-    # ) -> None:
-    #     super().__init__(definition_dir, use_directory=use_directory)
-    #     if not logger:
-    #         self._logger = _LOGGER
-    #     else:
-    #         self._logger = logger
-
     def __init__(
         self,
         definition_dir: Path,

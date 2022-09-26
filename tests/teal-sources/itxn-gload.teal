@@ -1,0 +1,59 @@
+#pragma version 6
+
+txn ApplicationID
+int 0
+==
+bnz handle_init
+
+b handle_run
+
+handle_init:
+
+int 3
+store 5
+
+int 2
+store 7
+
+int 1
+store 9
+
+b end
+handle_run:
+
+itxn_begin
+
+global CurrentApplicationAddress
+itxn_field Sender
+
+txn Sender
+itxn_field Receiver
+
+int 100
+itxn_field Amount
+
+int pay
+itxn_field TypeEnum
+
+itxn_submit
+
+gload 0 5
+int 3
+==
+assert
+
+gload 0 7
+int 2
+==
+assert
+
+gload 0 9
+int 1
+==
+assert
+
+b end
+end:
+
+int 1
+return
