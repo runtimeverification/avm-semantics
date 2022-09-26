@@ -11,6 +11,7 @@ from typing import Any, Final, List, Optional
 from pyk.cli_utils import dir_path, file_path
 
 from .kavm import KAVM
+from kavm.kompile import kompile
 
 _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
@@ -21,23 +22,22 @@ def exec_kompile(
     main_file: Path,
     main_module: Optional[str],
     syntax_module: Optional[str],
-    includes: List[str],
+    includes: List[Path],
     hook_namespaces: List[str],
-    ccopts: List[str],
-    verbose: bool,
+    hook_cpp_files: List[Path],
+    hook_clang_flags: List[str],
     **kwargs: Any,
 ) -> None:
-    proc_result = KAVM.kompile(
+    kompile(
         definition_dir=definition_dir,
         main_file=main_file,
         main_module_name=main_module,
         syntax_module_name=syntax_module,
         includes=includes,
         hook_namespaces=hook_namespaces,
-        ccopts=ccopts,
-        verbose=True,
+        hook_cpp_files=hook_cpp_files,
+        hook_clang_flags=hook_clang_flags,
     )
-    exit(proc_result.returncode)
 
 
 def exec_kast(
@@ -153,23 +153,38 @@ def create_argument_parser() -> ArgumentParser:
     kompile_subparser.add_argument('main_file', type=file_path, help='Path to the main file')
     kompile_subparser.add_argument('--main-module', type=str)
     kompile_subparser.add_argument('--syntax-module', type=str)
+    kompile_subparser.add_argument('--backend', type=str)
     kompile_subparser.add_argument(
-        '-I', type=str, dest='includes', default=[], action='append', help='Directories to lookup K definitions in.'
+        '-I',
+        type=dir_path,
+        dest='includes',
+        default=[],
+        action='append',
+        help='Directories to lookup K definitions in.',
     )
     kompile_subparser.add_argument(
         '--hook-namespaces',
         type=str,
+        nargs='*',
         dest='hook_namespaces',
         default=[],
         help='A whitespace-separated list of namespaces to include in the hooks defined in the definition.',
     )
     kompile_subparser.add_argument(
-        '-ccopt',
-        type=str,
-        dest='ccopts',
+        '--hook-cpp-files',
+        type=Path,
+        nargs='*',
+        dest='hook_cpp_files',
         default=[],
-        action='append',
-        help='Add a command line option to the compiler invocation for the llvm backend.',
+        help='C++ source files of hooked functions to compile and link into the interpreter',
+    )
+    kompile_subparser.add_argument(
+        '--hook-clang-flags',
+        type=str,
+        nargs='*',
+        dest='hook_clang_flags',
+        default=[],
+        help='A whitespace-separated list of flags to pass to clang when calling llvm-kompile',
     )
 
     # kast
