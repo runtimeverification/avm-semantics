@@ -351,8 +351,8 @@ test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics
 test-kavm-hooks: build-kavm-hooks-tests
 	cd $(CURDIR)/tests/hooks; pytest
 
-build-kavm-hooks-tests: $(HOOK_KAVM_FILES)
-	cd $(CURDIR)/tests/hooks; ./generate-interpreter.sh $(HOOK_KAVM_FILES)
+build-kavm-hooks-tests: $(HOOK_KAVM_FILES) plugin-deps
+	cd $(CURDIR)/tests/hooks; ./generate-interpreter.sh
 
 #################
 ## AVM Unit Tests
