@@ -1,11 +1,11 @@
 declareTealSource "stack-ill-typed.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 10000 </balance>;
+addAccount <address> b"1" </address> <balance> 200000 </balance>;
 
 #initTxGroup();
 
-// Add app and opt in b"1"
+// Add app 
 addAppCallTx <txID> 0 </txID>
              <sender>            b"1"        </sender>
              <applicationID>     0           </applicationID>

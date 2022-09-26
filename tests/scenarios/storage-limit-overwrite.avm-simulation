@@ -1,7 +1,7 @@
 declareTealSource "storage-limit-overwrite.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 12345 </balance>;
+addAccount <address> b"1" </address> <balance> 457000 </balance>;
 
 #initTxGroup();
 

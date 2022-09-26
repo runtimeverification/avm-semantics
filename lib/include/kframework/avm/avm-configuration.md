@@ -111,7 +111,7 @@ These are AVM-specific panic behaviors, caused by issues like depleted balances,
   //---------------------------------------------------
   syntax AvmPanic ::= "ASSET_NO_PERMISSION"     [macro]
   //------------------------------------------------
-  rule MIN_BALANCE_VIOLATION   => "sender account's balance falls below its allowed minimum balance"
+  rule MIN_BALANCE_VIOLATION   => "account's balance falls below its allowed minimum balance"
   rule UNSUPPORTED_TXN_TYPE    => "attempt to execute an unsupported transaction type"
   rule ASSET_FROZEN_FOR_SENDER => "attempt to send frozen asset holdings"
   rule ASSET_NOT_OPT_IN        => "either sender or receiver have not opted into asset"
@@ -121,7 +121,7 @@ These are AVM-specific panic behaviors, caused by issues like depleted balances,
   syntax AlgorandCommand ::= #avmPanic(Int, AvmPanic)
   //-------------------------------------------
   rule <k> #avmPanic(TXN_ID, S) ~> _ => .K </k>
-       <returncode> 4 => 3 </returncode>
+       <returncode> _ => 3 </returncode>
        <returnstatus> _ => "Failure - when executing transaction " +String Int2String(TXN_ID)
                            +String ": " +String S
        </returnstatus>

@@ -1,7 +1,7 @@
 declareTealSource "asset-holding-get-asset-invalid.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 100000 </balance>;
+addAccount <address> b"1" </address> <balance> 300000 </balance>;
 
 #initTxGroup();
 
@@ -31,8 +31,8 @@ addAppCallTx <txID> 1 </txID>
              <foreignAssets>     0           </foreignAssets>
              <globalNui>         0           </globalNui>
              <globalNbs>         0           </globalNbs>
-             <localNui>          1           </localNui>
-             <localNbs>          2           </localNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          0           </localNbs>
              <extraProgramPages> 0           </extraProgramPages>
              <approvalPgmIdx>    0           </approvalPgmIdx>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
