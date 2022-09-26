@@ -203,63 +203,6 @@ HOOK_KOMPILE_OPTS := --hook-namespaces "$(HOOK_NAMESPACES)"  \
                      $(addprefix -ccopt=, $(HOOK_CC_OPTS))   \
                      $(addprefix -ccopt=, $(HOOK_KAVM_FILES))
 
-# * avm-semantics --- the K semantics of AVM
-
-avm_files    :=                            \
-                avm/additional-fields.md   \
-                avm/args.md                \
-                avm/blockchain.md          \
-                avm/constants.md           \
-                avm/txn.md                 \
-                avm/avm-configuration.md   \
-                avm/avm-execution.md       \
-                avm/avm-initialization.md  \
-                avm/avm-limits.md          \
-                avm/avm-txn-deque.md       \
-                avm/teal/teal-constants.md \
-                avm/teal/teal-driver.md    \
-                avm/teal/teal-execution.md \
-                avm/teal/teal-fields.md    \
-                avm/teal/teal-stack.md     \
-                avm/teal/teal-syntax.md    \
-                avm/teal/teal-types.md
-
-avm_includes := $(patsubst %, $(KAVM_INCLUDE)/kframework/%, $(avm_files))
-
-AVM_KOMPILE_OPTS += --verbose $(COVERAGE_OPTS)
-tangle_avm            := k & ((! type) | exec)
-
-ifeq ($(K_BACKEND),)
-  K_BACKEND := llvm
-endif
-
-avm_dir           := avm-llvm
-avm_main_module   := AVM-EXECUTION
-avm_syntax_module := TEAL-PARSER-SYNTAX
-avm_main_file     := avm/avm-execution.md
-avm_main_filename := $(basename $(notdir $(avm_main_file)))
-avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled/
-
-build-avm: $(KAVM_LIB)/$(avm_kompiled)
-
-$(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM_LIB)/version
-	@mkdir -p $(KAVM_DEFINITION_DIR)
-	$(VENV_ACTIVATE) && $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file) \
-                            -I "${KAVM_INCLUDE}/kframework"                             \
-                            -I "${plugin_include}/kframework"                           \
-                            --definition-dir "${KAVM_LIB}/${avm_kompiled}"              \
-                            --main-module $(avm_main_module)                            \
-                            --syntax-module $(avm_syntax_module)                        \
-                            --hook-namespaces KRYPTO KAVM                               \
-                            --hook-cpp-files $(HOOK_KAVM_FILES) $(PLUGIN_CPP_FILES)     \
-                            --hook-clang-flags $(HOOK_CC_OPTS)
-
-
-
-clean-avm:
-	rm -rf $(KAVM_LIB)/$(avm_kompiled)
-	rm -rf $(KAVM_INCLUDE)
-
 ## * kavm --- Python library and CLI app
 
 PY_KAVM_DIR := ./kavm
@@ -311,6 +254,65 @@ $(KAVM_INCLUDE)/kframework/modules/%:
 
 clean-kavm: venv-clean
 	rm -f $(KAVM_LIB)/version
+
+# * avm-semantics --- the K semantics of AVM
+
+avm_files    :=                            \
+                avm/additional-fields.md   \
+                avm/args.md                \
+                avm/blockchain.md          \
+                avm/constants.md           \
+                avm/txn.md                 \
+                avm/avm-configuration.md   \
+                avm/avm-execution.md       \
+                avm/avm-initialization.md  \
+                avm/avm-limits.md          \
+                avm/avm-txn-deque.md       \
+                avm/teal/teal-constants.md \
+                avm/teal/teal-driver.md    \
+                avm/teal/teal-execution.md \
+                avm/teal/teal-fields.md    \
+                avm/teal/teal-stack.md     \
+                avm/teal/teal-syntax.md    \
+                avm/teal/teal-types.md
+
+avm_includes := $(patsubst %, $(KAVM_INCLUDE)/kframework/%, $(avm_files))
+
+AVM_KOMPILE_OPTS += --verbose $(COVERAGE_OPTS)
+tangle_avm            := k & ((! type) | exec)
+
+ifeq ($(K_BACKEND),)
+  K_BACKEND := llvm
+endif
+
+avm_dir           := avm-llvm
+avm_main_module   := AVM-EXECUTION
+avm_syntax_module := TEAL-PARSER-SYNTAX
+avm_main_file     := avm/avm-execution.md
+avm_main_filename := $(basename $(notdir $(avm_main_file)))
+avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled/
+
+build-avm: $(KAVM_LIB)/$(avm_kompiled)
+
+$(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM_LIB)/version
+	@mkdir -p $(KAVM_DEFINITION_DIR)
+	@rm -f $(KAVM_DEFINITION_DIR)/interpreter.o # make sure the llvm interpreter gets rebuilt
+	@rm -f $(KAVM_DEFINITION_DIR)/interpreter
+	$(VENV_ACTIVATE) && $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file) \
+                            -I "${KAVM_INCLUDE}/kframework"                             \
+                            -I "${plugin_include}/kframework"                           \
+                            --definition-dir "${KAVM_LIB}/${avm_kompiled}"              \
+                            --main-module $(avm_main_module)                            \
+                            --syntax-module $(avm_syntax_module)                        \
+                            --hook-namespaces KRYPTO KAVM                               \
+                            --hook-cpp-files $(HOOK_KAVM_FILES) $(PLUGIN_CPP_FILES)     \
+                            --hook-clang-flags $(HOOK_CC_OPTS)
+
+
+
+clean-avm:
+	rm -rf $(KAVM_LIB)/$(avm_kompiled)
+	rm -rf $(KAVM_INCLUDE)
 
 # Installation
 # ------------
