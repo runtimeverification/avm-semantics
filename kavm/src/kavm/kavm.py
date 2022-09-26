@@ -69,36 +69,36 @@ class KAVM(KRun):
         """Return a txid consequative to the last commited one"""
         return self._committed_txn_ids[-1] if len(self._committed_txn_ids) > 0 else 0
 
-    @staticmethod
-    def kompile(
-        definition_dir: Path,
-        main_file: Path,
-        includes: Optional[List[str]] = None,
-        main_module_name: Optional[str] = None,
-        syntax_module_name: Optional[str] = None,
-        md_selector: Optional[str] = None,
-        hook_namespaces: Optional[List[str]] = None,
-        concrete_rules_file: Optional[Path] = None,
-        backend: Optional[str] = 'llvm',
-        verbose: bool = True,
-    ) -> CompletedProcess:
-        command = [
-            'kompile',
-            '--output-definition',
-            str(definition_dir),
-            str(main_file),
-        ]
-
-        command += ['--verbose']
-        command += ['--emit-json'] 
-        command += ['--backend', backend] if backend else []
-        command += ['--main-module', main_module_name] if main_module_name else []
-        command += ['--syntax-module', syntax_module_name] if syntax_module_name else []
-        command += ['--md-selector', md_selector] if md_selector else []
-        command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
-        command += [arg for include in includes for arg in ['-I', include]] if includes else []
-
-        return subprocess.run(command, check=True, text=True)
+#      @staticmethod
+#      def kompile(
+#          definition_dir: Path,
+#          main_file: Path,
+#          includes: Optional[List[str]] = None,
+#          main_module_name: Optional[str] = None,
+#          syntax_module_name: Optional[str] = None,
+#          md_selector: Optional[str] = None,
+#          hook_namespaces: Optional[List[str]] = None,
+#          concrete_rules_file: Optional[Path] = None,
+#          backend: Optional[str] = 'llvm',
+#          verbose: bool = True,
+#      ) -> CompletedProcess:
+#          command = [
+#              'kompile',
+#              '--output-definition',
+#              str(definition_dir),
+#              str(main_file),
+#          ]
+#  
+#          command += ['--verbose']
+#          command += ['--emit-json'] 
+#          command += ['--backend', backend] if backend else []
+#          command += ['--main-module', main_module_name] if main_module_name else []
+#          command += ['--syntax-module', syntax_module_name] if syntax_module_name else []
+#          command += ['--md-selector', md_selector] if md_selector else []
+#          command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
+#          command += [arg for include in includes for arg in ['-I', include]] if includes else []
+#  
+#          return subprocess.run(command, check=True, text=True)
 
     @staticmethod
     def prove(
