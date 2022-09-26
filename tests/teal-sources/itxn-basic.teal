@@ -1,0 +1,60 @@
+#pragma version 6
+
+txn ApplicationID
+int 0
+==
+bnz end
+
+int 3
+store 5
+int 4
+store 6
+
+global CurrentApplicationID
+global CurrentApplicationAddress
+
+itxn_begin
+
+global CurrentApplicationAddress
+itxn_field Sender
+
+txn Sender
+itxn_field Receiver
+
+int 100
+itxn_field Amount
+
+int pay
+itxn_field TypeEnum
+
+itxn_submit
+
+txn Sender
+balance
+int 99500100
+==
+assert
+
+// Check global fields are restored
+global CurrentApplicationAddress
+==
+assert
+
+global CurrentApplicationID
+==
+assert
+
+load 5
+int 3
+==
+assert
+
+load 6
+int 4
+==
+assert
+
+end:
+
+int 1
+return
