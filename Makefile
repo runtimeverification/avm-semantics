@@ -143,10 +143,12 @@ k-deps:
 
 plugin_include    := $(abspath $(KAVM_LIB)/blockchain-k-plugin/include)
 plugin_k          := krypto.md
-# plugin_c          := plugin_util.cpp crypto.cpp blake2.cpp plugin_util.h blake2.h
-plugin_c          := plugin_util.cpp crypto.cpp blake2.cpp
+plugin_c          := plugin_util.cpp crypto.cpp blake2.cpp plugin_util.h blake2.h
 plugin_includes   := $(patsubst %, $(plugin_include)/kframework/%, $(plugin_k))
 plugin_c_includes := $(patsubst %, $(plugin_include)/c/%,          $(plugin_c))
+PLUGIN_CPP_FILES := $(plugin_include)/c/plugin_util.cpp \
+                    $(plugin_include)/c/crypto.cpp      \
+                    $(plugin_include)/c/blake2.cpp
 
 $(plugin_include)/c/%: $(PLUGIN_SUBMODULE)/plugin-c/%
 	@mkdir -p $(dir $@)
@@ -156,7 +158,7 @@ $(plugin_include)/kframework/%: $(PLUGIN_SUBMODULE)/plugin/%
 	@mkdir -p $(dir $@)
 	install $< $@
 
-plugin-deps: $(plugin_includes) $(plugin_c_includes)
+plugin-deps: libsecp256k1 libff libcryptopp $(plugin_includes) $(plugin_c_includes)
 # --------
 
 build: build-kavm build-avm
@@ -164,9 +166,6 @@ build: build-kavm build-avm
 $(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
 	@mkdir -p $(dir $@)
 	install $< $@
-
-# HOOK_NAMESPACES := KRYPTO KAVM
-HOOK_NAMESPACES := KAVM
 
 hook_include  := $(abspath $(KAVM_LIB)/include/c)
 hook_c        := algorand.cpp base.cpp hooks.cpp mnemonic.cpp algorand.h base.h mnemonic.h
@@ -180,8 +179,6 @@ HOOK_KAVM_FILES := $(hook_include)/algorand.cpp \
 $(hook_include)/%: $(CURDIR)/hooks/%
 	@mkdir -p $(dir $@)
 	install $< $@
-
-hook-deps: $(hook_includes)
 
 HOOK_CC_OPTS      := " -g" " -std=c++14"                                     \
                      " -L$(CURDIR)/$(KAVM_LIB)/libff/lib"                 \
@@ -245,7 +242,7 @@ avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled/
 
 build-avm: $(KAVM_LIB)/$(avm_kompiled)
 
-$(KAVM_LIB)/$(avm_kompiled): $(avm_includes) $(KAVM_LIB)/version $(libff_out)
+$(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM_LIB)/version
 	@mkdir -p $(KAVM_DEFINITION_DIR)
 	$(VENV_ACTIVATE) && $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file) \
                             -I "${KAVM_INCLUDE}/kframework"                             \
@@ -254,7 +251,7 @@ $(KAVM_LIB)/$(avm_kompiled): $(avm_includes) $(KAVM_LIB)/version $(libff_out)
                             --main-module $(avm_main_module)                            \
                             --syntax-module $(avm_syntax_module)                        \
                             --hook-namespaces KRYPTO KAVM                               \
-                            --hook-cpp-files $(HOOK_KAVM_FILES) $(plugin_c_includes)    \
+                            --hook-cpp-files $(HOOK_KAVM_FILES) $(PLUGIN_CPP_FILES)     \
                             --hook-clang-flags $(HOOK_CC_OPTS)
 
 
