@@ -299,6 +299,7 @@ $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM
 	@rm -f $(KAVM_DEFINITION_DIR)/interpreter.o # make sure the llvm interpreter gets rebuilt
 	@rm -f $(KAVM_DEFINITION_DIR)/interpreter
 	$(VENV_ACTIVATE) && $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file) \
+		                        --backend llvm                                              \
                             -I "${KAVM_INCLUDE}/kframework"                             \
                             -I "${plugin_include}/kframework"                           \
                             --definition-dir "${KAVM_LIB}/${avm_kompiled}"              \
@@ -344,7 +345,7 @@ uninstall:
 
 KAVM_OPTIONS :=
 
-test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics
+test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics test-avm-semantics-prove
 
 ##########################################
 ## Standalone AVM LLVM Backend hooks tests
@@ -353,7 +354,7 @@ test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics
 test-kavm-hooks: build-kavm-hooks-tests
 	cd $(CURDIR)/tests/hooks; pytest
 
-build-kavm-hooks-tests: $(HOOK_KAVM_FILES) plugin-deps
+build-kavm-hooks-tests: $(hook_includes) plugin-deps
 	cd $(CURDIR)/tests/hooks; ./generate-interpreter.sh
 
 #################
