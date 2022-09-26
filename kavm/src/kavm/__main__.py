@@ -11,6 +11,7 @@ from typing import Any, Final, List, Optional
 from pyk.cli_utils import dir_path, file_path
 
 from .kavm import KAVM
+from kavm.kompile import kompile
 
 _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
@@ -21,19 +22,22 @@ def exec_kompile(
     main_file: Path,
     main_module: Optional[str],
     syntax_module: Optional[str],
-    includes: List[str],
-    verbose: bool,
+    includes: List[Path],
+    hook_namespaces: List[str],
+    hook_cpp_files: List[Path],
+    hook_clang_flags: List[str],
     **kwargs: Any,
 ) -> None:
-    proc_result = KAVM.kompile(
+    kompile(
         definition_dir=definition_dir,
         main_file=main_file,
         main_module_name=main_module,
         syntax_module_name=syntax_module,
         includes=includes,
-        verbose=True,
+        hook_namespaces=hook_namespaces,
+        hook_cpp_files=hook_cpp_files,
+        hook_clang_flags=hook_clang_flags,
     )
-    exit(proc_result.returncode)
 
 
 def exec_kast(
@@ -137,16 +141,51 @@ def create_argument_parser() -> ArgumentParser:
     command_parser = parser.add_subparsers(dest='command', required=True, help='Command to execute')
 
     # kompile
-    kompile_subparser = command_parser.add_parser('kompile', help='Kompile KAVM', parents=[shared_args])
-    kompile_subparser.add_argument(
-        '--definition-dir', dest='definition_dir', type=dir_path, help='Path to store the kompiled definition'
+    kompile_subparser = command_parser.add_parser(
+        'kompile',
+        help='Kompile KAVM',
+        parents=[shared_args],
+        allow_abbrev=False,
     )
     kompile_subparser.add_argument(
-        '-I', type=str, dest='includes', default=[], action='append', help='Directories to lookup K definitions in.'
+        '--definition-dir', dest='definition_dir', type=dir_path, help='Path to store the kompiled definition'
     )
     kompile_subparser.add_argument('main_file', type=file_path, help='Path to the main file')
     kompile_subparser.add_argument('--main-module', type=str)
     kompile_subparser.add_argument('--syntax-module', type=str)
+    kompile_subparser.add_argument('--backend', type=str)
+    kompile_subparser.add_argument(
+        '-I',
+        type=dir_path,
+        dest='includes',
+        default=[],
+        action='append',
+        help='Directories to lookup K definitions in.',
+    )
+    kompile_subparser.add_argument(
+        '--hook-namespaces',
+        type=str,
+        nargs='*',
+        dest='hook_namespaces',
+        default=[],
+        help='A whitespace-separated list of namespaces to include in the hooks defined in the definition.',
+    )
+    kompile_subparser.add_argument(
+        '--hook-cpp-files',
+        type=Path,
+        nargs='*',
+        dest='hook_cpp_files',
+        default=[],
+        help='C++ source files of hooked functions to compile and link into the interpreter',
+    )
+    kompile_subparser.add_argument(
+        '--hook-clang-flags',
+        type=str,
+        nargs='*',
+        dest='hook_clang_flags',
+        default=[],
+        help='A whitespace-separated list of flags to pass to clang when calling llvm-kompile',
+    )
 
     # kast
     kast_subparser = command_parser.add_parser('kast', help='Kast a term', parents=[shared_args])

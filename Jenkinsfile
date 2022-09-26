@@ -34,6 +34,7 @@ pipeline {
           options { timeout(time: 20, unit: 'MINUTES') }
           parallel {
             stage('Test kavm.algod') { steps { sh 'make -j4 test-kavm-algod' } }
+            stage('Test KAVM hooks') { steps { sh 'make build-kavm-hooks-tests' } }
             stage('AVM tests') { steps { sh 'make -j4 test-avm-semantics' } }
             stage('Module Imports Graph') { steps { sh 'make module-imports-graph' } }
           }
