@@ -64,16 +64,17 @@ class KAVMApplication:
                 KApply(
                     '<globalState>',
                     [
-                        KApply('<globalInts>', [intToken(self._global_ints)]),
-                        KApply('<globalBytes>', [intToken(self._global_bytes)]),
-                        KApply('<globalStorage>', [KApply('.Map')]),
+                        KApply('<globalNumInts>', [intToken(self._global_ints)]),
+                        KApply('<globalNumBytes>', [intToken(self._global_bytes)]),
+                        KApply('<globalInts>', [KApply('.Map')]),
+                        KApply('<globalBytes>', [KApply('.Map')]),
                     ],
                 ),
                 KApply(
                     '<localState>',
                     [
-                        KApply('<localInts>', [intToken(self._local_ints)]),
-                        KApply('<localBytes>', [intToken(self._local_bytes)]),
+                        KApply('<localNumInts>', [intToken(self._local_ints)]),
+                        KApply('<localNumBytes>', [intToken(self._local_bytes)]),
                     ],
                 ),
                 KApply('<extraPages>', [intToken(self._extra_pages)]),
@@ -136,10 +137,10 @@ class KAVMApplication:
             clear_state_pgm_src=subst['CLEARSTATEPGMSRC_CELL'],
             approval_pgm=b64decode(subst['APPROVALPGM_CELL'].token),
             clear_state_pgm=b64decode(subst['CLEARSTATEPGM_CELL'].token),
-            global_ints=int(subst['GLOBALINTS_CELL'].token),
-            global_bytes=int(subst['GLOBALBYTES_CELL'].token),
-            local_ints=int(subst['LOCALINTS_CELL'].token),
-            local_bytes=int(subst['LOCALBYTES_CELL'].token),
+            global_ints=int(subst['GLOBALNUMINTS_CELL'].token),
+            global_bytes=int(subst['GLOBALNUMBYTES_CELL'].token),
+            local_ints=int(subst['LOCALNUMINTS_CELL'].token),
+            local_bytes=int(subst['LOCALNUMBYTES_CELL'].token),
             extra_pages=int(subst['EXTRAPAGES_CELL'].token),
         )
 
