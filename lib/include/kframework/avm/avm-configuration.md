@@ -94,7 +94,6 @@ module AVM-CONFIGURATION
 ## Lookup for kavm configuration
 
 ```k
-//  syntax Int ::= getCurrentTxn() [function]
   //--------------------------------------
   rule [[ getCurrentTxn() => I ]]
     <currentTx> I </currentTx>
