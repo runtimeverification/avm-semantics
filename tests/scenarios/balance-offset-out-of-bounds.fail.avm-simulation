@@ -1,10 +1,10 @@
 declareTealSource "balance-offset-out-of-bounds.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 12345 </balance>;
-addAccount <address> b"2" </address> <balance> 12345 </balance>;
-addAccount <address> b"3" </address> <balance> 12345 </balance>;
-addAccount <address> b"4" </address> <balance> 12345 </balance>;
+addAccount <address> b"1" </address> <balance> 654321 </balance>;
+addAccount <address> b"2" </address> <balance> 654321 </balance>;
+addAccount <address> b"3" </address> <balance> 654321 </balance>;
+addAccount <address> b"4" </address> <balance> 654321 </balance>;
 
 #initTxGroup();
 

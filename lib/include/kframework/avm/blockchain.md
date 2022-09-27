@@ -106,13 +106,14 @@ module APPLICATIONS
         <approvalPgm>     NoTValue </approvalPgm>
         <clearStatePgm>   NoTValue </clearStatePgm>
         <globalState>
-          <globalInts>     NoTValue </globalInts>
-          <globalBytes>    NoTValue </globalBytes>
-          <globalStorage>  .Map     </globalStorage>
+          <globalNumInts>     NoTValue </globalNumInts>
+          <globalNumBytes>    NoTValue </globalNumBytes>
+          <globalBytes>  .Map     </globalBytes>
+          <globalInts>  .Map     </globalInts>
         </globalState>
         <localState>
-          <localInts>      NoTValue </localInts>
-          <localBytes>     NoTValue </localBytes>
+          <localNumInts>      NoTValue </localNumInts>
+          <localNumBytes>     NoTValue </localNumBytes>
         </localState>
         <extraPages>       NoTValue </extraPages>
       </app>
@@ -126,7 +127,8 @@ module APPLICATIONS
     <appsOptedIn>
       <optInApp multiplicity="*" type="Map">
         <optInAppID>   NoTValue </optInAppID>
-        <localStorage> .Map    </localStorage>
+        <localInts> .Map    </localInts>
+        <localBytes> .Map    </localBytes>
       </optInApp>
     </appsOptedIn>
 
@@ -500,7 +502,20 @@ Accessor functions
          <appsOptedIn>
            <optInApp>
              <optInAppID> APP </optInAppID>
-             <localStorage> KEY |-> V ... </localStorage> ...
+             <localInts> KEY |-> V ... </localInts>
+             ...
+           </optInApp> ...
+         </appsOptedIn> ...
+       </account>
+
+  rule [[ getAppLocal(ADDR, APP, KEY) => V ]]
+       <account>
+         <address> ADDR </address>
+         <appsOptedIn>
+           <optInApp>
+             <optInAppID> APP </optInAppID>
+             <localBytes> KEY |-> V ... </localBytes>
+             ...
            </optInApp> ...
          </appsOptedIn> ...
        </account>
@@ -512,11 +527,13 @@ Accessor functions
          <appsOptedIn>
            <optInApp>
              <optInAppID> APP </optInAppID>
-             <localStorage> M </localStorage> ...
+             <localInts> MI </localInts>
+             <localBytes> MB </localBytes>
+             ...
            </optInApp> ...
          </appsOptedIn> ...
        </account>
-    requires notBool (KEY in_keys(M))
+    requires notBool ((KEY in_keys(MI)) orBool (KEY in_keys(MB)))
 
   // if the account exists but is not opted in, or does not exist, return NoTValue
   rule getAppLocal(_, _, _) => NoTValue [owise]
@@ -528,7 +545,19 @@ Accessor functions
          <app>
            <appID> APP </appID>
            <globalState>
-             <globalStorage> KEY |-> V ... </globalStorage>
+             <globalInts> KEY |-> V ... </globalInts>
+             ...
+           </globalState>
+           ...
+         </app>
+         ...
+       </appsCreated>
+  rule [[ getAppGlobal(APP, KEY) => V ]]
+       <appsCreated>
+         <app>
+           <appID> APP </appID>
+           <globalState>
+             <globalBytes> KEY |-> V ... </globalBytes>
              ...
            </globalState>
            ...
@@ -542,14 +571,15 @@ Accessor functions
          <app>
            <appID> APP </appID>
            <globalState>
-             <globalStorage> M </globalStorage>
+             <globalInts> MI </globalInts>
+             <globalBytes> MB </globalBytes>
              ...
            </globalState>
            ...
          </app>
          ...
        </appsCreated>
-    requires notBool (KEY in_keys(M))
+    requires notBool ((KEY in_keys (MI)) orBool (KEY in_keys(MB)))
 
   // if the app doesn't exist, return -1
   rule [[ getAppGlobal(APP, _) => -1 ]]

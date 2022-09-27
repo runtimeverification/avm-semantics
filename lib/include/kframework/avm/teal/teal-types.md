@@ -176,14 +176,14 @@ We also need hooks which convert between the string and byte representations of 
   rule DecodeAddressString(S) => DecodeAddressStringInternal(S) requires IsAddressValid(S)
   rule EncodeAddressBytes(B)  => EncodeAddressBytesInternal(B)  requires lengthBytes(B)  ==Int 32
 
-  syntax Bytes  ::= DecodeAddressStringInternal(String) [function, hook(CLARITY.address_decode)]
-  syntax String ::= EncodeAddressBytesInternal(Bytes)   [function, hook(CLARITY.address_encode)]
+  syntax Bytes  ::= DecodeAddressStringInternal(String) [function, hook(KAVM.address_decode)]
+  syntax String ::= EncodeAddressBytesInternal(Bytes)   [function, hook(KAVM.address_encode)]
 ```
 
 We also have a hook just for checking whether an address is valid.
 
 ```k
-  syntax Bool ::= IsAddressValid(String) [function, hook(CLARITY.check_address)]
+  syntax Bool ::= IsAddressValid(String) [function, hook(KAVM.check_address)]
 ```
 
 ### TEAL Value Processing
@@ -239,6 +239,11 @@ We expose several functions for working with lists.
   rule convertToBytes(I:TUInt64) => Int2Bytes({I}:>Int, BE, Unsigned)
   rule convertToBytes(B:TBytes L:TValueNeList) => (B {convertToBytes(L)}:>TValueNeList)
   rule convertToBytes(I:TUInt64 L:TValueNeList) => (Int2Bytes({I}:>Int, BE, Unsigned) {convertToBytes(L)}:>TValueNeList)
+
+  syntax Int ::= sizeInBytes(TValue) [function, functional]
+  //--------------------------------
+  rule sizeInBytes(_:TUInt64) => 64
+  rule sizeInBytes(B:TBytes) => lengthBytes({B}:>Bytes)
 ```
 
 TValue normaliziation converts higher-level type representations in TEAL into

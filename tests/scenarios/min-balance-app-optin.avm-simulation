@@ -1,8 +1,8 @@
 declareTealSource "min-balance-app-optin.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 100000 </balance>;
-addAccount <address> b"2" </address> <balance> 100000 </balance>;
+addAccount <address> b"1" </address> <balance> 564000 </balance>;
+addAccount <address> b"2" </address> <balance> 664000 </balance>;
 
 #initTxGroup();
 

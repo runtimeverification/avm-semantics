@@ -81,35 +81,6 @@ class KAVM(KRun):
         """Return an app id consequative to the last created one"""
         return sorted(self.apps.keys())[-1] + 1 if len(self.apps) > 0 else 1
 
-    @staticmethod
-    def kompile(
-        definition_dir: Path,
-        main_file: Path,
-        includes: Optional[List[str]] = None,
-        main_module_name: Optional[str] = None,
-        syntax_module_name: Optional[str] = None,
-        md_selector: Optional[str] = None,
-        hook_namespaces: Optional[List[str]] = None,
-        concrete_rules_file: Optional[Path] = None,
-        verbose: bool = True,
-    ) -> CompletedProcess:
-        command = [
-            'kompile',
-            '--output-definition',
-            str(definition_dir),
-            str(main_file),
-        ]
-
-        command += ['--verbose']
-        command += ['--emit-json', '--backend', 'llvm']
-        command += ['--main-module', main_module_name] if main_module_name else []
-        command += ['--syntax-module', syntax_module_name] if syntax_module_name else []
-        command += ['--md-selector', md_selector] if md_selector else []
-        command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
-        command += [arg for include in includes for arg in ['-I', include]] if includes else []
-
-        return subprocess.run(command, check=True, text=True)
-
     def run_avm_simulation(
         self,
         input_file: Path,
@@ -342,6 +313,9 @@ class KAVM(KRun):
                     'TXGROUPID_CELL': intToken(0),  # TODO: revise
                     # TODO: CURRENTTX_CELL should be of sort String in the semantics
                     'CURRENTTX_CELL': intToken(0),
+                    'TOUCHEDACCOUNTS_CELL': KApply('.Set'),
+                    'RETURNCODE_CELL': intToken(4),
+                    'RETURNSTATUS_CELL': stringToken('Failure - program is stuck'),
                     'GLOBALROUND_CELL': intToken(6),
                     'LATESTTIMESTAMP_CELL': intToken(50),
                     'CURRENTAPPLICATIONID_CELL': intToken(-1),
@@ -412,6 +386,10 @@ class KAVM(KRun):
                 'GROUPSIZE_CELL': intToken(len(transactions)),
                 'TXGROUPID_CELL': intToken(0),  # TODO: revise
                 'CURRENTTX_CELL': intToken(transactions[0].txid),
+                'TOUCHEDACCOUNTS_CELL': KApply('.Set'),
+                'K_CELL': KApply(
+                    '#evalTxGroup()_AVM-EXECUTION_AlgorandCommand',
+                ),
                 'DEQUE_CELL': build_cons(
                     KApply('.List'),
                     KLabel('_List_'),

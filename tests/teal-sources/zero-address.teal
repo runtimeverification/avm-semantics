@@ -1,0 +1,9 @@
+#pragma version 6
+
+global ZeroAddress
+addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+==
+assert
+
+int 1
+return
