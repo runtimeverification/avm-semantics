@@ -610,7 +610,7 @@ module TEAL-UNPARSER
                   | TealField2String(AssetParamsField)   [function]
                   | TealField2String(AppParamsField)     [function]
                   | TealField2String(TxnField)           [function]
-                  | TealField2String(TxnaFieldExt)       [function]
+                  | TealField2String(TxnaField)          [function]
                   | TealField2String(AccountParamsField) [function]
   // ---------------------------------------------------------------------------------------
   rule TealField2String(MinTxnFee)                => "MinTxnFee"

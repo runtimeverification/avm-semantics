@@ -28,18 +28,6 @@ class KAVM(KRun):
     Interact with the K semantics of AVM: evaluate Algorand transaction groups
     """
 
-    # def __init__(
-    #     self,
-    #     definition_dir: Path,
-    #     use_directory: Any = None,
-    #     logger: Optional[logging.Logger] = None,
-    # ) -> None:
-    #     super().__init__(definition_dir, use_directory=use_directory)
-    #     if not logger:
-    #         self._logger = _LOGGER
-    #     else:
-    #         self._logger = logger
-
     def __init__(
         self,
         definition_dir: Path,
@@ -80,35 +68,6 @@ class KAVM(KRun):
     def next_valid_txid(self) -> int:
         """Return a txid consequative to the last commited one"""
         return self._committed_txn_ids[-1] if len(self._committed_txn_ids) > 0 else 0
-
-    @staticmethod
-    def kompile(
-        definition_dir: Path,
-        main_file: Path,
-        includes: Optional[List[str]] = None,
-        main_module_name: Optional[str] = None,
-        syntax_module_name: Optional[str] = None,
-        md_selector: Optional[str] = None,
-        hook_namespaces: Optional[List[str]] = None,
-        concrete_rules_file: Optional[Path] = None,
-        verbose: bool = True,
-    ) -> CompletedProcess:
-        command = [
-            'kompile',
-            '--output-definition',
-            str(definition_dir),
-            str(main_file),
-        ]
-
-        command += ['--verbose']
-        command += ['--emit-json', '--backend', 'llvm']
-        command += ['--main-module', main_module_name] if main_module_name else []
-        command += ['--syntax-module', syntax_module_name] if syntax_module_name else []
-        command += ['--md-selector', md_selector] if md_selector else []
-        command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
-        command += [arg for include in includes for arg in ['-I', include]] if includes else []
-
-        return subprocess.run(command, check=True, text=True)
 
     def run_avm_simulation(
         self,

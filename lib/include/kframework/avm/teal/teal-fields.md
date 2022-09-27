@@ -71,9 +71,10 @@ module TEAL-FIELDS
 ### `txn`/`gtxn` fields
 
 ```k
+// Needed because itxn_field accepts both singular and array fields as arguments
   syntax TxnFieldTop ::= TxnField
-                       | TxnaFieldExt
-  
+                       | TxnaField
+
   syntax TxnField ::= TxnStaticField
                     | TxnDynamicField
 
@@ -159,10 +160,6 @@ module TEAL-FIELDS
                            | "Assets"
 
   syntax TxnaDynamicField ::= "Logs"
-
-  syntax TxnaFieldExt ::= TxnaField
-//                        | "Applications"
-//                        | "Assets"
 ```
 
 ### `acct_params` fields

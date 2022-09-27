@@ -45,7 +45,7 @@ addPaymentTx <txID> 2 </txID>
              <receiver> b"application1" </receiver>
              <amount>   500000          </amount>;
 
-// Fund app 1 account
+// Fund app 2 account
 addPaymentTx <txID> 3 </txID>
              <sender>   b"1"            </sender>
              <receiver> b"application2" </receiver>

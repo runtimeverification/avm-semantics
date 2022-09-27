@@ -843,7 +843,7 @@ module ALGO-TXN
 
 *Failure*
 ```k
-  rule getTxnField(_, _:TxnaFieldExt) => .TValueList [owise]
+  rule getTxnField(_, _:TxnaField)    => .TValueList [owise]
   rule getTxnField(_, _:TxnField    ) => NoTValue    [owise]
   rule getTxnField(_, _, _          ) => NoTValue    [owise]
 ```
@@ -937,7 +937,7 @@ module ALGO-TXN
 
 
   syntax Bool ::= #isValidForTxnType(TxnField,     Int) [function]
-  syntax Bool ::= #isValidForTxnType(TxnaFieldExt, Int) [function]
+  syntax Bool ::= #isValidForTxnType(TxnaField,    Int) [function]
   // -------------------------------------------------------------
   // all transaction types
   rule #isValidForTxnType(_:TxnHeaderField  , I)    => 1 <=Int I andBool I <=Int 6
@@ -954,8 +954,8 @@ module ALGO-TXN
   // the asset freeze transaction type
   rule #isValidForTxnType(_:TxnAfrzField    , I)    => I ==Int 5
   // the application call transaction type
-  rule #isValidForTxnType(_:TxnApplField    , I)    => I ==Int 6
-  rule #isValidForTxnType(_:TxnaFieldExt    , I)    => I ==Int 6
+  rule #isValidForTxnType(_:TxnApplField  , I)    => I ==Int 6
+  rule #isValidForTxnType(_:TxnaField     , I)    => I ==Int 6
 
 endmodule
 ```
