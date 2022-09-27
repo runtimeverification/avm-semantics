@@ -1,5 +1,5 @@
 from base64 import b64decode
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 from algosdk.constants import APPCALL_TXN, ASSETTRANSFER_TXN, PAYMENT_TXN
 from algosdk.future.transaction import (
@@ -18,6 +18,50 @@ from pyk.prelude import intToken
 from kavm.pyk_utils import maybe_tvalue, tvalue, tvalue_list
 
 
+class KAVMApplyData:
+    '''
+    KAVM encoding of transaction apply data: effects of an approved transaction
+
+    See avm-semantics/lib/include/kframework/avm/txn.md for the K configuration
+    '''
+
+    def __init__(
+        self,
+        tx_scratch: Optional[Dict[int, Any]] = None,
+        inner_txns: Optional[List[int]] = None,
+        tx_config_asset: int = 0,
+        tx_application_id: int = 0,
+        log_size: int = 0,
+        log_data: Optional[List[Any]] = None,
+    ):
+        self._tx_scratch: Dict[int, Any] = tx_scratch if tx_scratch else {}
+        self._inner_txns: List[int] = inner_txns if inner_txns else []
+        self._tx_config_asset = tx_config_asset
+        self._tx_application_id = tx_application_id
+        self._log_size = log_size
+        self._log_data: List[Any] = log_data if log_data else []
+
+    @staticmethod
+    def from_k(kast_term: KAst) -> 'KAVMApplyData':
+        """
+        Construct an instance of KAVMApplyData from a K <applyData> cell
+
+        Raise ValueError if the term is marformed
+        """
+        (_, subst) = split_config_from(kast_term)
+        return KAVMApplyData(
+            tx_scratch=subst['TXSCRATCH_CELL'],
+            inner_txns=subst['INNERTXNS_CELL'],
+            tx_config_asset=subst['TXCONFIGASSET_CELL'],
+            tx_application_id=subst['TXAPPLICATIONID_CELL'],
+            log_size=subst['LOGSIZE_CELL'],
+            log_data=subst['LOGDATA_CELL'],
+        )
+
+    def to_k(self):
+        raise NotImplementedError("KAVMApplyData.to_k must not be implemented")
+
+
 class KAVMTransaction:
     """
     Convenience class represenring an Algorandtransaction in KAVM
@@ -32,6 +76,7 @@ class KAVMTransaction:
 
         self._transaction_cell = KAVMTransaction.transaction_to_k(kavm, txn, txid)
         self._txid = txid
+        self._apply_data = KAVMApplyData()
 
     @property
     def txid(self) -> int:
