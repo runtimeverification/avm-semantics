@@ -583,7 +583,7 @@ module ALGO-ITXN
          <groupIdx> GROUP_IDX </groupIdx>
          ...
        </transaction>
-//    requires isTValue(getTxnField(TX_ID, FIELD))
+    requires isTValue(getTxnField(TX_ID, FIELD))
 
   rule <k> #loadFromGroupInner(GROUP_IDX, FIELD, IDX) => . ...</k>
        <lastTxnGroupID> LAST_GROUP </lastTxnGroupID>

@@ -1158,10 +1158,6 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
 ### Blockchain State Accessors
 
 ```k
-//  syntax Int ::= getCurrentTxn() [function]
-```
-
-```k
   rule <k> txn I => gtxn getTxnGroupIndex(getCurrentTxn()) I ... </k>
 
   rule <k> txn I J => txna I J ... </k>
