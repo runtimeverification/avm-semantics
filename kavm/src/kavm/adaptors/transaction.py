@@ -57,7 +57,8 @@ class KAVMTransaction:
                 'SENDER_CELL': KToken(txn.sender.strip("'"), KSort('TAddressLiteral')),
                 'TXTYPE_CELL': maybe_tvalue(txn.type),
                 'TYPEENUM_CELL': maybe_tvalue(txn_type_to_type_enum(txn.type)),
-                'GROUP_CELL': maybe_tvalue(txn.group),
+                'GROUPIDX_CELL': maybe_tvalue(txn.group),
+                'GROUPID_CELL': maybe_tvalue(0),
                 'LEASE_CELL': maybe_tvalue(txn.lease),
                 'NOTE_CELL': maybe_tvalue(txn.note),
                 'REKEYTO_CELL': maybe_tvalue(txn.rekey_to),
@@ -66,6 +67,7 @@ class KAVMTransaction:
                 'INNERTXNS_CELL': KApply('.List'),
                 'LOGSIZE_CELL': tvalue(0),
                 'LOGDATA_CELL': tvalue_list([]),
+                'RESUME_CELL': KToken('false', KSort('Bool')),
                 'TXSCRATCH_CELL': KApply('.Map'),
             }
         )
@@ -126,6 +128,7 @@ class KAVMTransaction:
                 'APPLICATIONARGS_CELL': tvalue_list([]),
                 'FOREIGNAPPS_CELL': tvalue_list([]),
                 'FOREIGNASSETS_CELL': tvalue_list([]),
+                'TXNEXECUTIONCONTEXT_CELL': KToken('.K', KSort('K')), 
             }
         )
         empty_pgm_fileds_subst = Subst(

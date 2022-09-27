@@ -232,11 +232,11 @@ module ALGO-TXN
          ...
        </transaction>
 
-  syntax MaybeTValue ::= getGroupTxnField(Int, Int, TxnField)          [function, functional]
-  syntax MaybeTValue ::= getGroupTxnField(Int, Int, TxnaFieldExt, Int) [function, functional]
-  syntax MaybeTValue ::= getTxnField(Int, TxnField)                    [function, functional]
-  syntax MaybeTValue ::= getTxnField(Int, TxnaFieldExt, Int)           [function, functional]
-  syntax TValueList  ::= getTxnField(Int, TxnaFieldExt)                [function, functional]
+  syntax MaybeTValue ::= getGroupTxnField(Int, Int, TxnField)       [function, functional]
+  syntax MaybeTValue ::= getGroupTxnField(Int, Int, TxnaField, Int) [function, functional]
+  syntax MaybeTValue ::= getTxnField(Int, TxnField)                 [function, functional]
+  syntax MaybeTValue ::= getTxnField(Int, TxnaField, Int)           [function, functional]
+  syntax TValueList  ::= getTxnField(Int, TxnaField)                [function, functional]
   //-----------------------------------------------------------------------------------------
   rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD) => getTxnField(TXN_ID, FIELD)]]
        <transaction>

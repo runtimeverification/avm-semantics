@@ -571,7 +571,7 @@ module ALGO-ITXN
        </transaction>
 
   syntax KItem ::= #loadFromGroupInner(Int, TxnField)
-  syntax KItem ::= #loadFromGroupInner(Int, TxnaFieldExt, Int)
+  syntax KItem ::= #loadFromGroupInner(Int, TxnaField, Int)
 
   rule <k> #loadFromGroupInner(GROUP_IDX, FIELD) => . ...</k>
        <lastTxnGroupID> LAST_GROUP </lastTxnGroupID>

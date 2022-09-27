@@ -238,7 +238,6 @@ class KAVM(KRun):
                     # 'ACCOUNTSMAP_CELL': KAVM.accounts_cell([]),
                     'TRANSACTIONS_CELL': KAVM.transactions_cell([]),
                     'GROUPSIZE_CELL': intToken(0),
-                    'TXGROUPID_CELL': intToken(0),  # TODO: revise
                     # TODO: CURRENTTX_CELL should be of sort String in the semantics
                     'CURRENTTX_CELL': intToken(0),
                     'TOUCHEDACCOUNTS_CELL': KApply('.Set'),
@@ -251,6 +250,9 @@ class KAVM(KRun):
                     'APPCREATOR_CELL': KApply('.Map'),
                     'ASSETCREATOR_CELL': KApply('.Map'),
                     'EFFECTS_CELL': KApply('.List'),
+                    'LASTTXNGROUPID_CELL': intToken(0),
+                    'ACTIVEAPPS_CELL': KApply('.Set'),
+                    'INNERTRANSACTIONS_CELL': KApply('.List'),
                     'BLOCKS_CELL': KApply('.Map'),
                     'BLOCKHEIGHT_CELL': intToken(0),
                     'TEALPROGRAMS_CELL': KApply('.TealPrograms'),
@@ -268,8 +270,10 @@ class KAVM(KRun):
                         [],
                     ),
                     'GENERATEDCOUNTER_CELL': intToken(0),
-                    'NEXTAPPID_CELL': intToken(0),
-                    'NEXTASSETID_CELL': intToken(0),
+                    'NEXTAPPID_CELL': intToken(1),
+                    'NEXTASSETID_CELL': intToken(1),
+                    'NEXTTXNID_CELL': intToken(1000),
+                    'NEXTGROUPID_CELL': intToken(1),
                 }
             )
         ).apply(config)
@@ -293,11 +297,10 @@ class KAVM(KRun):
                 'ACCOUNTSMAP_CELL': KAVM.accounts_cell(list(self.accounts.values())),
                 'TRANSACTIONS_CELL': KAVM.transactions_cell(transactions),
                 'GROUPSIZE_CELL': intToken(len(transactions)),
-                'TXGROUPID_CELL': intToken(0),  # TODO: revise
                 'CURRENTTX_CELL': intToken(transactions[0].txid),
                 'TOUCHEDACCOUNTS_CELL': KApply('.Set'),
                 'K_CELL': KApply(
-                    '#evalTxGroup()_AVM-EXECUTION_AlgorandCommand',
+                    '#evalTxGroup()_ALGO-ITXN_AlgorandCommand',
                 ),
                 'DEQUE_CELL': build_cons(
                     KApply('.List'),
