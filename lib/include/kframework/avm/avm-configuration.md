@@ -37,6 +37,8 @@ module AVM-CONFIGURATION
         // The ID of the transaction currently being executed
         <currentTx> "0" </currentTx>
 
+        // The top of the deque is the currently executing transaction, followed by the next transaction which will be 
+        // executed when this one is (completely) finished, etc.
         <txnDeque>
           <deque>         .List </deque>
           <dequeIndexSet> .Set  </dequeIndexSet>
