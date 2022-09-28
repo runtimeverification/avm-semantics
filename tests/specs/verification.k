@@ -19,19 +19,23 @@ module VERIFICATION
   // For example: 1 >>Int 1 ==Int 0;
   //              (3 >>Int 2 ==Int 1) andBool (3 >>Int 3 ==Int 0), etc.
   rule (I >>Int B) => 0
-    requires (0 <Int I andBool I <=Int MAX_UINT64)
-     andBool (log2Int(I) <Int B andBool B <Int 64)
+    requires (I >Int 0 andBool MAX_UINT64 >=Int I)
+     andBool (B >Int log2Int(I) andBool 64 >Int B)
     [simplification]
 
-  syntax Int ::= sum(MaybeTValue) [function]
+////////////////////////////////////////////////////////////////////////////////
+// Map reasoning
+////////////////////////////////////////////////////////////////////////////////
 
-  rule sum(N:TBytes REST:TValueList) => Bytes2Int(normalizeB(N), BE, Unsigned) +Int sum(REST)
-  rule sum(N:TBytes) => Bytes2Int(normalizeB(N), BE, Unsigned)
-  rule sum(_) => 0 [owise]
-//  rule sum({N:TUInt64}:>Int REST:TValueList) => N +Int sum(REST)
-//  rule sum({N:TUInt64}:>Int) => N
-//  rule sum(NoTValue) => 0
+  rule _:Map [X <- N] [X] => N                        [simplification]
+  rule M:Map [X <- _] [Y] => M [Y]  requires X =/=K Y [simplification]
     
+  // Normalize Maps
+  rule M:Map [ K <- _ ] [ K <- V ] => M [ K <- V ]  [simplification]
+  rule M:Map [ K1 <- V1 ] [ K2 <- V2 ] => M [ K2 <- V2 ] [ K1 <- V1 ]
+    requires K1 >Int K2 [simplification]
+
+  // in_keys
   rule X:Label in_keys( M:Map [Y:Label <- _] ) => false
     requires (notBool (X in_keys ( M ))) andBool (X =/=K Y)  [simplification]
 
@@ -39,37 +43,101 @@ module VERIFICATION
   rule X in_keys( M:Map [Y <- _] ) => X in_keys(M) 
     requires X =/=K Y [simplification]
 
-  rule _:Map [X <- N] [X] => N  [simplification]
-  rule M:Map [X <- _] [Y] => M [Y]  
-    requires X =/=K Y [simplification]
-
-  rule size( _:Map [_ <- _] ) >Int 0 => true  [simplification]
+  // size
+  rule size( _:Map [_ <- _] )  >Int 0 => true   [simplification]
   rule size( _:Map [_ <- _] ) ==Int 0 => false  [simplification]
   rule { size( _:Map [_ <- _] ) #Equals 0 } => #Bottom  [simplification]
 
-  rule N:Int +Int M:Int >Int M:Int => N:Int >Int 0
-    requires M =/=Int 0 [simplification]
+  // Subterm equality
+  rule { M1:Map [ K <- V1 ] #Equals M2:Map [ K <- V2 ] } => { M1 #Equals M2 } #And { V1 #Equals V2 } [simplification]
+  rule { M1:Map [ K <- V  ] #Equals M2:Map [ K <- V  ] } => { M1 #Equals M2 }
+    requires notBool (K in_keys(M1) orBool K in_keys (M1)) [simplification]
 
+////////////////////////////////////////////////////////////////////////////////
+// TStack
+////////////////////////////////////////////////////////////////////////////////
+
+  // #sizeTStack
   rule #sizeTStack( S:TStack ) => 0
-    requires S ==K .TStack  [simplification, smt-lemma]
+    requires S ==K .TStack  [simplification]
 
   rule #sizeTStack( S:TStack, N:Int ) => N
-    requires S ==K .TStack  [simplification, smt-lemma]
+    requires S ==K .TStack  [simplification]
 
   rule #sizeTStack( S:TStack ) >Int 0 => true
-    requires S =/=K .TStack  [simplification, smt-lemma]
+    requires S =/=K .TStack  [simplification]
 
   rule #sizeTStack( S:TStack, N:Int ) >Int 0 => N >=Int 0
-    requires S =/=K .TStack  [simplification, smt-lemma]
+    requires S =/=K .TStack  [simplification]
 
-  rule #if COND #then 1 #else 0 #fi <=Int 0 => notBool ( COND ) [simplification]
-  rule #if COND #then 1 #else 0 #fi >Int 0 => COND [simplification]
+  rule #sizeTStack(_) >=Int 0 => true  [simplification]
+  rule #sizeTStack(_, 0) >=Int 0 => true  [simplification]
+  
+  rule #sizeTStack(_, N) +Int M >Int L => true
+    requires (N +Int M) >Int L [simplification]
+
+  rule #sizeTStack(_, M) >Int L => true
+    requires M >Int L  [simplification]
+
+  rule #sizeTStack(_) +Int M >Int L => true
+    requires M >Int L  [simplification]
+
+////////////////////////////////////////////////////////////////////////////////
+// Int and Byte conversions
+////////////////////////////////////////////////////////////////////////////////
 
   rule Bytes2Int ( Int2Bytes ( X, BYTE_ORDER, SIGNEDNESS ), BYTE_ORDER, SIGNEDNESS ) => X [simplification]
+  rule Bytes2Int ( Int2Bytes ( (log2Int(X) +Int 8) /Int 8, X, BYTE_ORDER ), BYTE_ORDER, Unsigned ) => X [simplification]
 
-//   rule #Not ( { true #Equals X:Int <=Int Y:Int } ) => { true #Equals X >Int Y } [simplification]
+  // Subterm equality
+  rule { Int2Bytes( I1, BYTE_ORDER:Endianness, SIGNEDNESS:Signedness ) #Equals Int2Bytes( I2, BYTE_ORDER, SIGNEDNESS ) } => { I1 #Equals I2 } [simplification]
 
-//   rule {X <=Int 0} #And {X >Int 0} => #Bottom [simplification]
-//   rule {X <Int 0} #And {X >=Int 0} => #Bottom [simplification]
+////////////////////////////////////////////////////////////////////////////////
+// Int and Bool conversions
+////////////////////////////////////////////////////////////////////////////////
+
+  rule 0            >=Int bool2Int(B) => notBool B  [simplification]
+  rule bool2Int(B)   >Int 0           =>         B  [simplification]
+
+  rule A           >=Int bool2Int(_) => true requires A >=Int 1 [simplification]
+  rule bool2Int(_) >=Int A           => true requires 0 >=Int A [simplification]
+
+  rule int2Bool(bool2Int(I)) => I [simplification]
+  rule bool2Int(int2Bool(B)) => B [simplification]
+
+  rule A           >=Int bool2Int(_) => true requires A >=Int 1 [simplification]
+  rule bool2Int(_) >=Int A           => true requires 0 >=Int A [simplification]
+
+////////////////////////////////////////////////////////////////////////////////
+// #if #then #else #fi
+////////////////////////////////////////////////////////////////////////////////
+
+  rule 0 >=Int #if COND #then 1 #else 0 #fi => notBool (COND) [simplification]
+  rule #if COND #then 1 #else 0 #fi  >Int 0 =>          COND  [simplification]
+
+////////////////////////////////////////////////////////////////////////////////
+// Arithmetic
+////////////////////////////////////////////////////////////////////////////////
+
+  rule N:Int +Int M:Int >Int M:Int => N:Int >Int 0
+    requires M =/=Int 0 [simplification, concrete(M)]
+
+  rule N:Int /Int N:Int => 1 requires N =/=Int 0 [simplification]
+
+////////////////////////////////////////////////////////////////////////////////
+// Comparisons
+////////////////////////////////////////////////////////////////////////////////
+
+  rule N  <Int M => M  >Int N [simplification]
+  rule N <=Int M => M >=Int N [simplification]
+
+  rule notBool (N  >Int M) => M >=Int N  [simplification]
+  rule notBool (N >=Int M) => M  >Int N  [simplification]
+
+////////////////////////////////////////////////////////////////////////////////
+// LengthBytes
+////////////////////////////////////////////////////////////////////////////////
+
+  rule lengthBytes(B1) +Int lengthBytes(B2) => lengthBytes(B1 +Bytes B2)  [simplification]
 
 endmodule

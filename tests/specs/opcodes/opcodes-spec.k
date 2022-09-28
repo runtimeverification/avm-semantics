@@ -67,8 +67,8 @@ module OPCODES-SPEC
         <stack> B : I : _ => 0 : ?_ </stack>
         <stacksize> S => S -Int 1 </stacksize>
     // TODO: this should be `I >=Int 0`, but I can't make the proof go through
-    requires (I >Int 0 andBool I <=Int MAX_UINT64)
-     andBool (0 <Int B andBool log2Int(I) <Int B andBool B <Int 64)
+    requires (I >Int 0 andBool MAX_UINT64 >=Int I)
+     andBool (B >Int 0 andBool B >Int log2Int(I) andBool 64 >Int B)
 
   // // All bits in one-byte arrayt 0xff are 1
   // claim <k> getbit => . ... </k>

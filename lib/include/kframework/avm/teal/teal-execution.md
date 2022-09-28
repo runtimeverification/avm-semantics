@@ -208,26 +208,26 @@ teal, failure means undoing changes made to the state (for more details, see
        <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
     requires I >Int 0 andBool SIZE ==Int 1
 
-  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
-       <stack> I : .TStack => I : .TStack </stack>
+  rule <k> #finalizeExecution() ~> .K ... </k>
+       <stack> I : .TStack </stack>
        <stacksize> _ </stacksize>
        <returncode> 4 => 1 </returncode>
        <returnstatus> _ => "Failure - zero-valued singleton stack" </returnstatus>
-    requires I <=Int 0
+    requires 0 >=Int I
 
-  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
+  rule <k> #finalizeExecution() ~> .K ... </k>
        <stack> _ </stack>
        <stacksize> SIZE </stacksize>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - stack size greater than 1" </returnstatus>
     requires SIZE >Int 1
 
-  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
+  rule <k> #finalizeExecution() ~> .K ... </k>
        <stack> .TStack </stack>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - empty stack" </returnstatus>
 
-  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
+  rule <k> #finalizeExecution() ~> .K ... </k>
        <stack> (_:Bytes) : .TStack </stack>
        <stacksize> _ </stacksize>
        <returncode> 4 => 2 </returncode>
