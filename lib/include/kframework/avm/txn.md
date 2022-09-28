@@ -38,7 +38,7 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
         <sender>      NoTValue </sender>
         <txType>      NoTValue </txType>
         <typeEnum>    NoTValue </typeEnum>
-        <groupID>     NoTValue </groupID>
+        <groupID>     ""       </groupID>
         <groupIdx>    NoTValue </groupIdx>
         <genesisID>   NoTValue </genesisID>        // a human-readable name: does not necessarily uniquely identify the network
         <lease>       NoTValue </lease>
@@ -178,7 +178,7 @@ module ALGO-TXN
   configuration
       <transactions>
         <transaction multiplicity="*" type="Map">
-          <txID> 0 </txID>
+          <txID> "" </txID>
           <txHeader/>
           <txnTypeSpecificFields>
             <payTxFields/>
@@ -206,7 +206,7 @@ module ALGO-TXN
 *Transaction ID Getter*
 
 ```k
-  syntax Int ::= getTxID(TransactionCell) [function, functional]
+  syntax String ::= getTxID(TransactionCell) [function, functional]
   //-------------------------------------------------------------
   rule getTxID(<transaction> <txID> ID </txID> ... </transaction>) => ID
 ```
@@ -214,7 +214,7 @@ module ALGO-TXN
 *Transaction Group Accessors*
 
 ```k
-  syntax Int ::= getTxnGroupID(Int) [function]
+  syntax String ::= getTxnGroupID(String) [function]
   //---------------------------------------------
   rule [[ getTxnGroupID(TXN_ID) => I ]]
        <transaction> 
@@ -223,7 +223,7 @@ module ALGO-TXN
          ...
        </transaction>
 
-  syntax Int ::= getTxnGroupIndex(Int) [function]
+  syntax Int ::= getTxnGroupIndex(String) [function]
   //---------------------------------------------
   rule [[ getTxnGroupIndex(TXN_ID) => I ]]
        <transaction> 
@@ -232,11 +232,11 @@ module ALGO-TXN
          ...
        </transaction>
 
-  syntax MaybeTValue ::= getGroupTxnField(Int, Int, TxnField)       [function, functional]
-  syntax MaybeTValue ::= getGroupTxnField(Int, Int, TxnaField, Int) [function, functional]
-  syntax MaybeTValue ::= getTxnField(Int, TxnField)                 [function, functional]
-  syntax MaybeTValue ::= getTxnField(Int, TxnaField, Int)           [function, functional]
-  syntax TValueList  ::= getTxnField(Int, TxnaField)                [function, functional]
+  syntax MaybeTValue ::= getGroupTxnField(String, Int, TxnField)       [function, functional]
+  syntax MaybeTValue ::= getGroupTxnField(String, Int, TxnaField, Int) [function, functional]
+  syntax MaybeTValue ::= getTxnField(String, TxnField)                 [function, functional]
+  syntax MaybeTValue ::= getTxnField(String, TxnaField, Int)           [function, functional]
+  syntax TValueList  ::= getTxnField(String, TxnaField)                [function, functional]
   //-----------------------------------------------------------------------------------------
   rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD) => getTxnField(TXN_ID, FIELD)]]
        <transaction>
@@ -888,7 +888,7 @@ module ALGO-TXN
 ```
 
 ```k
-  syntax Int ::= groupSize(Int, TransactionsCell) [function]
+  syntax Int ::= groupSize(String, TransactionsCell) [function]
   //------------------------------------------------
   rule groupSize( GROUP_ID,
                   <transactions>
@@ -916,7 +916,7 @@ module ALGO-TXN
 
 
 ```k
-  syntax Bool ::= Int "in_txns" "(" TransactionsCell ")" [function]
+  syntax Bool ::= String "in_txns" "(" TransactionsCell ")" [function]
   // --------------------------------------------------------------
   rule I in_txns( <transactions>
                     <transaction>

@@ -34,7 +34,7 @@ module AVM-CONFIGURATION
       // starting from `MaxTxGroupSize` (currently 16).
       <avmExecution>
 
-        <currentTx> 0 </currentTx>
+        <currentTx> "0" </currentTx>
 
         <txnDeque>
           <deque>         .List </deque>
@@ -58,7 +58,7 @@ module AVM-CONFIGURATION
           // TODO: how to represent effects? We need to track changes to accounts, assets and apps.
           <effects> .List </effects>
 
-          <lastTxnGroupID> 0 </lastTxnGroupID>
+          <lastTxnGroupID> "" </lastTxnGroupID>
 
         </currentTxnExecution>
 
@@ -141,11 +141,11 @@ These are AVM-specific panic behaviors, caused by issues like depleted balances,
   rule UNKNOWN_ADDRESS         => "address is not in the <accountsMap>"
   rule ASSET_NO_PERMISSION     => "sender does not have permission to modify asset"
 
-  syntax AlgorandCommand ::= #avmPanic(Int, AvmPanic)
+  syntax AlgorandCommand ::= #avmPanic(String, AvmPanic)
   //-------------------------------------------
   rule <k> #avmPanic(TXN_ID, S) ~> _ => .K </k>
        <returncode> _ => 3 </returncode>
-       <returnstatus> _ => "Failure - when executing transaction " +String Int2String(TXN_ID)
+       <returnstatus> _ => "Failure - when executing transaction " +String TXN_ID
                            +String ": " +String S
        </returnstatus>
 

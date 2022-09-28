@@ -8,13 +8,11 @@ addAccount <address> b"2" </address> <balance> 10000000 </balance>;
 
 // Pay b"2". This should fail even though later in the same group the funds are given back, because it would
 // cause b"1"'s balance to go negative.
-addPaymentTx <txID>     0     </txID>
-             <sender>   b"1"  </sender>
+addPaymentTx <sender>   b"1"  </sender>
              <receiver> b"2"  </receiver>
              <amount>   300000 </amount>;
 
-addPaymentTx <txID>     1     </txID>
-             <sender>   b"2"  </sender>
+addPaymentTx <sender>   b"2"  </sender>
              <receiver> b"1"  </receiver>
              <amount>   300000 </amount>;
 

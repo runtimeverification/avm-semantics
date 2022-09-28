@@ -1909,29 +1909,29 @@ Stateful TEAL Operations
 
 ```k
   rule <k> gaid T => .K ... </k>
-       <stack> XS => ({getTxnField(T, ApplicationID)}:>TValue) : XS </stack>
+       <stack> XS => ({getTxnField(Int2String(T), ApplicationID)}:>TValue) : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
-     andBool T <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
-     andBool ({getTxnField(T, TypeEnum)}:>Int) ==Int (@ appl)
+     andBool T <Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
+     andBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) ==Int (@ appl)
 
   rule <k> gaid T => panic(FUTURE_TXN) ... </k>
-    requires T >=Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
-     orBool ({getTxnField(T, TypeEnum)}:>Int) =/=Int (@ appl)
+    requires T >=Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
+     orBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) =/=Int (@ appl)
 ```
 
 *gaids*
 
 ```k
   rule <k> gaids => .K ... </k>
-       <stack> T : XS => ({getTxnField(T, ApplicationID)}:>TValue) : XS </stack>
-    requires T <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
-     andBool ({getTxnField(T, TypeEnum)}:>Int) ==Int (@ appl)
+       <stack> T : XS => ({getTxnField(Int2String(T), ApplicationID)}:>TValue) : XS </stack>
+    requires T <Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
+     andBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) ==Int (@ appl)
 
   rule <k> gaids => panic(FUTURE_TXN) ... </k>
        <stack> T : _ </stack>
-    requires T >=Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
-     orBool ({getTxnField(T, TypeEnum)}:>Int) =/=Int (@ appl)
+    requires T >=Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
+     orBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) =/=Int (@ appl)
 ```
 
 *gload, gloads, & gloadss*
@@ -2040,7 +2040,7 @@ Stateful TEAL Operations
        <innerTransactions>
          .List => 
          ListItem(<transaction>
-           <txID> -1 </txID>
+           <txID> "" </txID>
            <txHeader>
              // TODO Fee is calculated dynamically
              <fee>         0                                         </fee>
@@ -2050,7 +2050,7 @@ Stateful TEAL Operations
              <genesisHash> .Bytes                                    </genesisHash>
              <txType>       "unknown"                                </txType>
              <typeEnum>     0                                        </typeEnum>
-             <groupID>      GROUP_ID +Int 1                          </groupID>
+             <groupID>      Int2String(GROUP_ID +Int 1)              </groupID>
              <groupIdx>     0                                        </groupIdx>
              <genesisID>    .Bytes                                   </genesisID>
              <lease>        .Bytes                                   </lease>
@@ -2067,7 +2067,7 @@ Stateful TEAL Operations
 
   rule <k> itxn_submit => #incrementPC() ~> #checkItxns(T) ~> #executeItxnGroup()...</k>
        <innerTransactions> T </innerTransactions>
-       <lastTxnGroupID> _ => GROUP_ID </lastTxnGroupID>
+       <lastTxnGroupID> _ => Int2String(GROUP_ID) </lastTxnGroupID>
        <nextGroupID> GROUP_ID </nextGroupID>
 
   rule <k> itxn_field FIELD => #setItxnField(FIELD, VAL) ...</k>
@@ -2076,10 +2076,10 @@ Stateful TEAL Operations
 
   rule <k> itxn_next => . ...</k>
        <innerTransactions>
-         REST
+         REST:List
          (.List =>
          ListItem(<transaction>
-           <txID> -1 </txID>
+           <txID> "" </txID>
            <txHeader>
              // TODO Fee is calculated dynamically
              <fee>         0                                         </fee>
@@ -2089,7 +2089,7 @@ Stateful TEAL Operations
              <genesisHash> .Bytes                                    </genesisHash>
              <txType>       "unknown"                                </txType>
              <typeEnum>     0                                        </typeEnum>
-             <groupID>      GROUP_ID                                 </groupID>
+             <groupID>      Int2String(GROUP_ID)                     </groupID>
              <groupIdx>     size(REST)                               </groupIdx>
              <genesisID>    .Bytes                                   </genesisID>
              <lease>        .Bytes                                   </lease>
@@ -2105,9 +2105,9 @@ Stateful TEAL Operations
        <nextGroupID> GROUP_ID </nextGroupID>
     requires size(REST) >=Int 1
 
-  rule <k> itxn FIELD => gitxn getTxnGroupIndex(getLastItxnGroupIdx()) FIELD ...</k>
+  rule <k> itxn FIELD => gitxn getLastItxnGroupIdx() FIELD ...</k>
 
-  rule <k> itxna FIELD IDX => gitxna getTxnGroupIndex(getLastItxnGroupIdx()) FIELD IDX ...</k>
+  rule <k> itxna FIELD IDX => gitxna getLastItxnGroupIdx() FIELD IDX ...</k>
 
   rule <k> gitxn GROUP_IDX FIELD => #loadFromGroupInner(GROUP_IDX, FIELD) ...</k>
 

@@ -528,7 +528,7 @@ module ALGO-ITXN
   syntax KItem ::= #pushItxns()
   //---------------------------
 
-  rule <k> #pushItxns() => (#pushTxnFront(<txID> TXN_ID </txID>) ~> #pushItxns()) ...</k>
+  rule <k> #pushItxns() => (#pushTxnFront(<txID> Int2String(TXN_ID) </txID>) ~> #pushItxns()) ...</k>
        <innerTransactions> OTHER_ITXNS:List (ListItem(
          <transaction>
            <txID> _ </txID>
@@ -543,7 +543,7 @@ module ALGO-ITXN
        <transactions>
          (.Bag =>
          <transaction>
-           <txID> TXN_ID </txID>
+           <txID> Int2String(TXN_ID) </txID>
            <txHeader>
              <groupID> GROUP_ID </groupID>
              TX_HEADER

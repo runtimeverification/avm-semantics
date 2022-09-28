@@ -58,7 +58,7 @@ class KAVMTransaction:
                 'TXTYPE_CELL': maybe_tvalue(txn.type),
                 'TYPEENUM_CELL': maybe_tvalue(txn_type_to_type_enum(txn.type)),
                 'GROUPIDX_CELL': maybe_tvalue(txn.group),
-                'GROUPID_CELL': maybe_tvalue(0),
+                'GROUPID_CELL': KToken('"0"', KSort('String')),
                 'LEASE_CELL': maybe_tvalue(txn.lease),
                 'NOTE_CELL': maybe_tvalue(txn.note),
                 'REKEYTO_CELL': maybe_tvalue(txn.rekey_to),
@@ -121,7 +121,7 @@ class KAVMTransaction:
         if type_specific_subst is None:
             raise ValueError(f'Transaction object {txn} is invalid')
 
-        fields_subst = Subst({'TXID_CELL': intToken(txid)}).compose(header_subst).compose(type_specific_subst)
+        fields_subst = Subst({'TXID_CELL': KToken('"' + str(txid) + '"', KSort('String'))}).compose(header_subst).compose(type_specific_subst)
         empty_array_fields_subst = Subst(
             {
                 'ACCOUNTS_CELL': tvalue_list([]),

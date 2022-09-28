@@ -239,7 +239,7 @@ class KAVM(KRun):
                     'TRANSACTIONS_CELL': KAVM.transactions_cell([]),
                     'GROUPSIZE_CELL': intToken(0),
                     # TODO: CURRENTTX_CELL should be of sort String in the semantics
-                    'CURRENTTX_CELL': intToken(0),
+                    'CURRENTTX_CELL': KToken('"0"', KSort('String')),
                     'TOUCHEDACCOUNTS_CELL': KApply('.Set'),
                     'RETURNCODE_CELL': intToken(4),
                     'RETURNSTATUS_CELL': stringToken('Failure - program is stuck'),
@@ -250,7 +250,7 @@ class KAVM(KRun):
                     'APPCREATOR_CELL': KApply('.Map'),
                     'ASSETCREATOR_CELL': KApply('.Map'),
                     'EFFECTS_CELL': KApply('.List'),
-                    'LASTTXNGROUPID_CELL': intToken(0),
+                    'LASTTXNGROUPID_CELL': KToken('"0"', KSort('String')),
                     'ACTIVEAPPS_CELL': KApply('.Set'),
                     'INNERTRANSACTIONS_CELL': KApply('.List'),
                     'BLOCKS_CELL': KApply('.Map'),
@@ -297,7 +297,7 @@ class KAVM(KRun):
                 'ACCOUNTSMAP_CELL': KAVM.accounts_cell(list(self.accounts.values())),
                 'TRANSACTIONS_CELL': KAVM.transactions_cell(transactions),
                 'GROUPSIZE_CELL': intToken(len(transactions)),
-                'CURRENTTX_CELL': intToken(transactions[0].txid),
+                'CURRENTTX_CELL': KToken('"' + str(transactions[0].txid) + '"', KSort('String')),
                 'TOUCHEDACCOUNTS_CELL': KApply('.Set'),
                 'K_CELL': KApply(
                     '#evalTxGroup()_ALGO-ITXN_AlgorandCommand',

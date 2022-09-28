@@ -7,8 +7,7 @@ addAccount <address> b"2" </address> <balance> 300000 </balance>;
 #initTxGroup();
 
 // Add asset
-addAssetConfigTx <txID> 0 </txID>
-                 <sender>              b"1"        </sender>
+addAssetConfigTx <sender>              b"1"        </sender>
                  <configAsset>         0           </configAsset>
                  <configTotal>         500         </configTotal>
                  <configDecimals>      0           </configDecimals>
@@ -23,8 +22,7 @@ addAssetConfigTx <txID> 0 </txID>
                  <configClawbackAddr>  NoTValue    </configClawbackAddr>;
 
 // Destroy asset
-addAssetConfigTx <txID> 1 </txID>
-                 <sender>              b"1"     </sender>
+addAssetConfigTx <sender>              b"1"     </sender>
                  <configAsset>         1        </configAsset>
                  <configTotal>         NoTValue </configTotal>
                  <configDecimals>      NoTValue </configDecimals>
@@ -39,8 +37,7 @@ addAssetConfigTx <txID> 1 </txID>
                  <configClawbackAddr>  NoTValue </configClawbackAddr>;
 
 // Create app 1
-addAppCallTx <txID> 2 </txID>
-             <sender>            b"2"        </sender>
+addAppCallTx <sender>            b"2"        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
@@ -56,8 +53,7 @@ addAppCallTx <txID> 2 </txID>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 // Call test code
-addAppCallTx <txID> 3 </txID>
-             <sender>            b"1"        </sender>
+addAppCallTx <sender>            b"1"        </sender>
              <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>

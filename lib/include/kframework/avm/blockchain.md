@@ -228,13 +228,13 @@ module ALGO-BLOCKCHAIN
       <blockheight>  0    </blockheight>
       <nextAssetID>  1    </nextAssetID>
       <nextAppID>    1    </nextAppID>
-      <nextTxnID>    1000 </nextTxnID>
+      <nextTxnID>    0    </nextTxnID>
       <nextGroupID>  1    </nextGroupID>
     </blockchain>
 ```
 
 ```k
-  syntax Int ::= getCurrentTxn() [function]
+  syntax String ::= getCurrentTxn() [function]
 ```
 
 Accessor functions
