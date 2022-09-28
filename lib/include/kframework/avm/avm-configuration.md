@@ -58,6 +58,7 @@ module AVM-CONFIGURATION
           // TODO: how to represent effects? We need to track changes to accounts, assets and apps.
           <effects> .List </effects>
 
+          // The group ID of the last inner transaction group that was (directly) executed by the current transaction
           <lastTxnGroupID> "" </lastTxnGroupID>
 
         </currentTxnExecution>
