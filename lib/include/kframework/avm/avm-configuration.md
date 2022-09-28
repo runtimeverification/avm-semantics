@@ -34,6 +34,7 @@ module AVM-CONFIGURATION
       // starting from `MaxTxGroupSize` (currently 16).
       <avmExecution>
 
+        // The ID of the transaction currently being executed
         <currentTx> "0" </currentTx>
 
         <txnDeque>
