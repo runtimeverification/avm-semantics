@@ -66,6 +66,9 @@ module AVM-CONFIGURATION
         // which has not yet been executed using `itxn_submit`
         <innerTransactions> .List </innerTransactions>
 
+        // Applications which are currently on the call stack. This cell is needed so that we can check for re-entrant
+        // app calls. The `<txnDeque>` is not sufficient for this because it contains transactions that were not yet called but 
+        // will be called further back in the call stack. 
         <activeApps> .Set </activeApps>
 
         <touchedAccounts> .Set </touchedAccounts>
