@@ -34,8 +34,11 @@ module AVM-CONFIGURATION
       // starting from `MaxTxGroupSize` (currently 16).
       <avmExecution>
 
+        // The ID of the transaction currently being executed
         <currentTx> "0" </currentTx>
 
+        // The top of the deque is the currently executing transaction, followed by the next transaction which will be 
+        // executed when this one is (completely) finished, etc.
         <txnDeque>
           <deque>         .List </deque>
           <dequeIndexSet> .Set  </dequeIndexSet>
@@ -58,14 +61,22 @@ module AVM-CONFIGURATION
           // TODO: how to represent effects? We need to track changes to accounts, assets and apps.
           <effects> .List </effects>
 
+          // The group ID of the last inner transaction group that was (directly) executed by the current transaction
           <lastTxnGroupID> "" </lastTxnGroupID>
 
         </currentTxnExecution>
 
+        // The inner transaction group that is currently being constructed using `itxn_begin`, `itxn_next`, `itxn_field`, but
+        // which has not yet been executed using `itxn_submit`
         <innerTransactions> .List </innerTransactions>
 
+        // Applications which are currently on the call stack. This cell is needed so that we can check for re-entrant
+        // app calls. The `<txnDeque>` is not sufficient for this because it contains transactions that were not yet called but 
+        // will be called further back in the call stack. 
         <activeApps> .Set </activeApps>
 
+        // Accounts for which a check will be made at the end of the top-level transaction group to ensure their balance is at 
+        // or above their minimum balance
         <touchedAccounts> .Set </touchedAccounts>
 
       </avmExecution>
