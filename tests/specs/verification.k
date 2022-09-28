@@ -134,11 +134,9 @@ module VERIFICATION
   rule notBool (N  >Int M) => M >=Int N  [simplification]
   rule notBool (N >=Int M) => M  >Int N  [simplification]
 
-  ////////////
-
-  rule true orElseBool _ => true  [simplification]
-  
-  ////////////
+////////////////////////////////////////////////////////////////////////////////
+// LengthBytes
+////////////////////////////////////////////////////////////////////////////////
 
   rule lengthBytes(B1) +Int lengthBytes(B2) => lengthBytes(B1 +Bytes B2)  [simplification]
 
