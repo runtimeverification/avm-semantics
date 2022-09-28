@@ -66,8 +66,9 @@ class KAVMApplication:
                     [
                         KApply('<globalNumInts>', [intToken(self._global_ints)]),
                         KApply('<globalNumBytes>', [intToken(self._global_bytes)]),
-                        KApply('<globalInts>', [KApply('.Map')]),
-                        KApply('<globalBytes>', [KApply('.Map')]),
+                        # NOTE: these two cells MUST BE in the same order as they are declared in the K configuration
+                        KApply('<globalBytes>', KApply('.Map')),
+                        KApply('<globalInts>', KApply('.Map')),
                     ],
                 ),
                 KApply(
