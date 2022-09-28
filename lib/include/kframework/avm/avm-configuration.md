@@ -62,6 +62,8 @@ module AVM-CONFIGURATION
 
         </currentTxnExecution>
 
+        // The inner transaction group that is currently being constructed using `itxn_begin`, `itxn_next`, `itxn_field`, but
+        // which has not yet been executed using `itxn_submit`
         <innerTransactions> .List </innerTransactions>
 
         <activeApps> .Set </activeApps>
