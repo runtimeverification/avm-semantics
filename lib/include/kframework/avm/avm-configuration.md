@@ -71,6 +71,8 @@ module AVM-CONFIGURATION
         // will be called further back in the call stack. 
         <activeApps> .Set </activeApps>
 
+        // Accounts for which a check will be made at the end of the top-level transaction group to ensure their balance is at 
+        // or above their minimum balance
         <touchedAccounts> .Set </touchedAccounts>
 
       </avmExecution>
