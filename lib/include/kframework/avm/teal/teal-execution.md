@@ -223,11 +223,11 @@ teal, failure means undoing changes made to the state (for more details, see
     requires I >Int 0 andBool SIZE ==Int 1
 
   rule <k> #calcReturn() => .K </k>
-       <stack> I : .TStack => I : .TStack </stack>
+       <stack> I : .TStack </stack>
        <stacksize> _ </stacksize>
        <returncode> 4 => 1 </returncode>
        <returnstatus> _ => "Failure - zero-valued singleton stack" </returnstatus>
-    requires I <=Int 0
+    requires 0 >=Int I
 
   rule <k> #calcReturn() => .K </k>
        <stack> _ </stack>

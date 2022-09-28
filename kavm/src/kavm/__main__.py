@@ -22,6 +22,8 @@ def exec_kompile(
     main_file: Path,
     main_module: Optional[str],
     syntax_module: Optional[str],
+    backend: Optional[str],
+    verbose: bool,
     includes: List[Path],
     hook_namespaces: List[str],
     hook_cpp_files: List[Path],
@@ -34,11 +36,27 @@ def exec_kompile(
         main_module_name=main_module,
         syntax_module_name=syntax_module,
         includes=includes,
+        backend=backend,
+        verbose=True,
         hook_namespaces=hook_namespaces,
         hook_cpp_files=hook_cpp_files,
         hook_clang_flags=hook_clang_flags,
     )
 
+def exec_prove(
+    definition: Path,
+    main_file: Path,
+    debugger: bool,
+    debug_script: Path,
+    **kwargs: Any,
+) -> None:
+    proc_result = KAVM.prove(
+        definition,
+        main_file,
+        debugger,
+        debug_script,
+    )
+    exit(proc_result.returncode)
 
 def exec_kast(
     definition_dir: Path,
@@ -115,7 +133,7 @@ def main() -> None:
     args = parser.parse_args()
     logging.basicConfig(level=_loglevel(args), format=_LOG_FORMAT)
 
-    if not args.definition_dir:
+    if (not 'definition_dir' in vars(args)) or (not args.definition_dir):
         env_definition_dir = os.environ.get('KAVM_DEFINITION_DIR')
         if env_definition_dir:
             args.definition_dir = Path(env_definition_dir)
@@ -186,6 +204,13 @@ def create_argument_parser() -> ArgumentParser:
         default=[],
         help='A whitespace-separated list of flags to pass to clang when calling llvm-kompile',
     )
+
+    # prove
+    prove_subparser = command_parser.add_parser('prove', help='Prove claims', parents=[shared_args])
+    prove_subparser.add_argument('main_file', type=file_path, help='Path to the main file')
+    prove_subparser.add_argument('--definition', type=dir_path)
+    prove_subparser.add_argument('--debugger', default=False, action='store_true')
+    prove_subparser.add_argument('--debug-script', type=file_path)
 
     # kast
     kast_subparser = command_parser.add_parser('kast', help='Kast a term', parents=[shared_args])

@@ -300,6 +300,7 @@ $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM
 	@rm -f $(KAVM_DEFINITION_DIR)/interpreter.o # make sure the llvm interpreter gets rebuilt
 	@rm -f $(KAVM_DEFINITION_DIR)/interpreter
 	$(VENV_ACTIVATE) && $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file) \
+		                        --backend llvm                                              \
                             -I "${KAVM_INCLUDE}/kframework"                             \
                             -I "${plugin_include}/kframework"                           \
                             --definition-dir "${KAVM_LIB}/${avm_kompiled}"              \
@@ -345,7 +346,7 @@ uninstall:
 
 KAVM_OPTIONS :=
 
-test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics
+test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics test-avm-semantics-prove
 
 ##########################################
 ## Standalone AVM LLVM Backend hooks tests
@@ -354,7 +355,7 @@ test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics
 test-kavm-hooks: build-kavm-hooks-tests
 	cd $(CURDIR)/tests/hooks; pytest
 
-build-kavm-hooks-tests: $(HOOK_KAVM_FILES) plugin-deps
+build-kavm-hooks-tests: $(hook_includes) plugin-deps
 	cd $(CURDIR)/tests/hooks; ./generate-interpreter.sh
 
 #################
@@ -378,15 +379,21 @@ tests/scenarios/%.avm-simulation.unit: tests/scenarios/%.avm-simulation
 ## AVM Symbolic Proof Tests
 ###########################
 
-avm_prove_tests := $(wildcard tests/specs/*-spec.k)
+avm_prove_tests := $(wildcard tests/specs/*-spec.k) $(wildcard tests/specs/*/*-spec.k)
 
 test-avm-semantics-prove: $(avm_prove_tests:=.prove)
 
 tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
-	$(KAVM) prove --directory tests/specs tests/specs/$*-spec.k
+	$(VENV_ACTIVATE) && $(KAVM) prove tests/specs/$*-spec.k --definition tests/specs/verification-kompiled
 
-tests/specs/verification-kompiled/timestamp: tests/specs/verification.k
-	$(KAVM) kompile $< --backend haskell --directory tests/specs
+tests/specs/verification-kompiled/timestamp: tests/specs/verification.k $(VENV_DIR)/pyvenv.cfg $(avm_includes) 
+	mkdir -p tests/specs/verification-kompiled
+	$(VENV_ACTIVATE) && $(KAVM) kompile $< --backend haskell --definition-dir tests/specs/verification-kompiled \
+                      -I "${KAVM_INCLUDE}/kframework"                                                         \
+											-I "${plugin_include}/kframework"                           
+
+clean-verification:
+	rm -rf tests/specs/verification-kompiled
 
 #######
 ## kavm
@@ -421,7 +428,7 @@ module-imports-graph: module-imports-graph-dot
 module-imports-graph-dot: venv
 	$(VENV_ACTIVATE) && pyk graph-imports $(KAVM_LIB)/$(avm_kompiled)
 
-clean: clean-avm clean-kavm venv-clean
+clean: clean-avm clean-kavm venv-clean clean-verification
 
 distclean: clean
 	rm -rf $(BUILD_DIR)
