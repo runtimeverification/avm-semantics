@@ -2058,7 +2058,7 @@ Stateful TEAL Operations
              <rekeyTo>      getGlobalField(ZeroAddress)              </rekeyTo>
            </txHeader>
            <txnTypeSpecificFields>
-             .AssetTransferTxFieldsCell
+             .Bag
            </txnTypeSpecificFields>
            ...
          </transaction>)
