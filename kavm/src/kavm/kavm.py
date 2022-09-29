@@ -76,6 +76,25 @@ class KAVM(KRun):
         """Return a txid consequative to the last commited one"""
         return sorted(self._committed_txns.keys())[-1] + 1 if len(self._committed_txns) > 0 else 0
 
+    @staticmethod
+    def prove(
+        definition: Path,
+        main_file: Path,
+        debugger: bool,
+        debug_script: Path,
+    ) -> CompletedProcess:
+        command = [
+            'kprove',
+            '--definition',
+            str(definition),
+            str(main_file),
+        ]
+
+        command += ['--debugger'] if debugger else []
+        command += ['--debug-script', str(debug_script)] if debug_script else []
+
+        return subprocess.run(command, check=True, text=True)
+
     def run_avm_simulation(
         self,
         input_file: Path,

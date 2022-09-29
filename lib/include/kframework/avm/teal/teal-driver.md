@@ -405,6 +405,7 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
   rule <k> concat => .K ... </k>
        <stack> B2 : B1 : XS => (B1 +Bytes B2) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
+    requires lengthBytes(B1 +Bytes B2) <=Int MAX_BYTEARRAY_LEN
 
   rule <k> concat => panic(BYTES_OVERFLOW) ... </k>
        <stack> B2 : B1 : _ </stack>
@@ -1285,7 +1286,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <stack> _ : I : _ </stack>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
-  rule <k> _:ScratchOpCode => panic(STACK_OVERFLOW) ... </k>
+  rule <k> _:LoadOpCode => panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 ```
