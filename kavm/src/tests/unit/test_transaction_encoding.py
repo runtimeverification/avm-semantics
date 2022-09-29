@@ -2,7 +2,7 @@ import pytest
 from algosdk import account
 from algosdk.future.transaction import ApplicationCreateTxn, OnComplete, PaymentTxn, StateSchema, SuggestedParams
 
-from kavm.adaptors.transaction import KAVMTransaction, transaction_from_k
+from kavm.adaptors.transaction import KAVMTransaction
 from kavm.kavm import KAVM
 
 
@@ -13,7 +13,7 @@ def test_payment_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams
     amount = 10000
     txn = PaymentTxn(sender, suggested_params, receiver, amount)
     kavm_transaction = KAVMTransaction(kavm, txn, 0)
-    parsed_txn = transaction_from_k(kavm_transaction.transaction_cell)
+    parsed_txn = KAVMTransaction.transaction_from_k(kavm, kavm_transaction.transaction_cell).sdk_txn
     assert parsed_txn.dictify() == txn.dictify()
 
 
@@ -101,8 +101,9 @@ def test_application_create_txn_encode_decode(kavm: KAVM, suggested_params: Sugg
         local_schema,
     )
     kavm_transaction = KAVMTransaction(kavm, txn, 0)
-    parsed_txn = transaction_from_k(kavm_transaction.transaction_cell)
-    assert parsed_txn.dictify() == txn.dictify()
+    parsed_txn = KAVMTransaction.transaction_from_k(kavm, kavm_transaction.transaction_cell)
+    apply_data = parsed_txn._apply_data
+    assert parsed_txn.sdk_txn.dictify() == txn.dictify()
 
 
 @pytest.mark.skip(reason="ApplicationUpdateTxn is not yet supported")

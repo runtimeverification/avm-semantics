@@ -165,6 +165,27 @@ class KCellMap(MutableMapping):
             )
 
 
+class TransactionCellMap(KCellMap):
+    '''Python-friendly access to <transactions> cell'''
+
+    def __init__(
+        self,
+        kavm: Any,
+        term: Optional[KAst] = None,
+    ):
+        from kavm.adaptors.transaction import KAVMTransaction
+
+        super().__init__(
+            unit_klabel='.TransactionCellMap',
+            cons_klabel='_TransactionCellMap_',
+            key_klabel='<txID>',
+            key_type=str,
+            value_initializer=lambda x: KAVMTransaction.transaction_from_k(kavm, x),
+            value_k_cell=lambda x: x.transaction_cell,
+            term=term,
+        )
+
+
 class AccountCellMap(KCellMap):
     '''Python-friendly access to <accounts> cell'''
 

@@ -69,22 +69,34 @@ class KAVMTransaction:
 
     # TODO: figure out how to easily remove the `kavm` argument, since this definition must be static.
     #       Currently, access to the K definition is required to figure out which cells are empty and put nothing into them
-    def __init__(self, kavm: Any, txn: Transaction, txid: int) -> None:
+    def __init__(self, kavm: Any, txn: Transaction, txid: int, apply_data: Optional[KAVMApplyData] = None) -> None:
         """
         Create a KAVM transaction cell.
         """
 
+        self._txn = txn
         self._transaction_cell = KAVMTransaction.transaction_to_k(kavm, txn, txid)
         self._txid = txid
-        self._apply_data = KAVMApplyData()
+        self._apply_data = apply_data if apply_data else KAVMApplyData()
 
     @property
     def txid(self) -> int:
         return self._txid
 
     @property
+    def sdk_txn(self) -> Transaction:
+        '''The underlying py-algorand-sdk Transaction object'''
+        return self._txn
+
+    @property
     def transaction_cell(self) -> KInner:
+        '''The Kast term of the KAVM <transaction> cell'''
         return self._transaction_cell
+
+    @property
+    def apply_data(self) -> KAVMApplyData:
+        '''The apply data of the transaction'''
+        return self._apply_data
 
     # TODO: txid must be assigned by KAVM itslef and must be str
     @staticmethod
@@ -195,6 +207,83 @@ class KAVMTransaction:
             empty_service_fields_subst.compose(empty_array_fields_subst.compose(empty_pgm_fileds_subst))
         ).apply(transaction_cell)
 
+    @staticmethod
+    def transaction_from_k(kavm: Any, kast_term: KAst) -> 'KAVMTransaction':
+        """
+        Covert a Kast term to one of the subclasses of the algosdk.Transaction
+
+        Raise ValueError if the transaction is marformed
+        """
+        (_, tx_cell_subst) = split_config_from(kast_term)
+
+        apply_data = None
+        txid = int(tx_cell_subst['TXID_CELL'].token)
+
+        sp = SuggestedParams(
+            int(tx_cell_subst['FEE_CELL'].token),
+            int(tx_cell_subst['FIRSTVALID_CELL'].token),
+            int(tx_cell_subst['LASTVALID_CELL'].token),
+            tx_cell_subst['GENESISHASH_CELL'].token,
+            flat_fee=True,
+        )
+
+        tx_type = tx_cell_subst['TXTYPE_CELL'].token.strip('"')
+        result = None
+        if tx_type == PAYMENT_TXN:
+            result = PaymentTxn(
+                sender=tx_cell_subst['SENDER_CELL'].token.strip('"'),
+                sp=sp,
+                receiver=tx_cell_subst['RECEIVER_CELL'].token.strip('"'),
+                amt=int(tx_cell_subst['AMOUNT_CELL'].token),
+            )
+        elif tx_type == ASSETTRANSFER_TXN:
+            result = AssetTransferTxn(
+                sender=tx_cell_subst['SENDER_CELL'].token.strip('"'),
+                sp=sp,
+                receiver=tx_cell_subst['ASSETRECEIVER_CELL'].token.strip('"'),
+                amt=int(tx_cell_subst['ASSETAMOUNT_CELL'].token.strip('"')),
+                index=int(tx_cell_subst['XFERASSET_CELL'].token.strip('"')),
+            )
+        elif tx_type == APPCALL_TXN:
+            result = ApplicationCallTxn(
+                sender=tx_cell_subst['SENDER_CELL'].token.strip('"'),
+                sp=sp,
+                index=int(tx_cell_subst['APPLICATIONID_CELL'].token.strip('"')),
+                on_complete=OnComplete(int(tx_cell_subst['ONCOMPLETION_CELL'].token.strip('"'))),
+                local_schema=StateSchema(
+                    int(tx_cell_subst['LOCALNUI_CELL'].token.strip('"')),
+                    int(tx_cell_subst['LOCALNBS_CELL'].token.strip('"')),
+                ),
+                global_schema=StateSchema(
+                    int(tx_cell_subst['GLOBALNUI_CELL'].token.strip('"')),
+                    int(tx_cell_subst['GLOBALNBS_CELL'].token.strip('"')),
+                ),
+                approval_program=b64decode(
+                    tx_cell_subst['APPROVALPROGRAM_CELL'].token.strip('"')
+                    if hasattr(tx_cell_subst['APPROVALPROGRAM_CELL'], 'token')
+                    else ''
+                ),
+                clear_program=b64decode(
+                    tx_cell_subst['CLEARSTATEPROGRAM_CELL'].token.strip('"')
+                    if hasattr(tx_cell_subst['CLEARSTATEPROGRAM_CELL'], 'token')
+                    else ''
+                ),
+                # TODO: handle array fields
+                app_args=None,
+                accounts=None,
+                foreign_apps=None,
+                foreign_assets=None,
+                extra_pages=0,
+            )
+            apply_data = KAVMApplyData(
+                tx_config_asset=int(tx_cell_subst['TXCONFIGASSET_CELL'].token.strip('"')),
+                tx_application_id=int(tx_cell_subst['TXAPPLICATIONID_CELL'].token.strip('"')),
+            )
+        else:
+            raise ValueError(f'Cannot instantiate a Transaction of an unexpected type {tx_type}')
+
+        return KAVMTransaction(kavm, result, txid, apply_data)
+
 
 def txn_type_to_type_enum(txn_type: str) -> int:
     if txn_type == 'unknown':
@@ -213,76 +302,3 @@ def txn_type_to_type_enum(txn_type: str) -> int:
         return 6
     else:
         raise ValueError(f'unknown transaction type {txn_type}')
-
-
-def transaction_from_k(kast_term: KAst) -> Transaction:
-    """
-    Covert a Kast term to one of the subclasses of the algosdk.Transaction
-
-    Raise ValueError if the transaction is marformed
-    """
-    (_, tx_header) = split_config_from(kast_term)
-
-    sp = SuggestedParams(
-        int(tx_header['FEE_CELL'].token),
-        int(tx_header['FIRSTVALID_CELL'].token),
-        int(tx_header['LASTVALID_CELL'].token),
-        tx_header['GENESISHASH_CELL'].token,
-        flat_fee=True,
-    )
-
-    tx_type = tx_header['TXTYPE_CELL'].token.strip('"')
-    result = None
-    if tx_type == PAYMENT_TXN:
-        (_, pay_tx_fields) = split_config_from(kast_term)
-        result = PaymentTxn(
-            sender=tx_header['SENDER_CELL'].token.strip('"'),
-            sp=sp,
-            receiver=pay_tx_fields['RECEIVER_CELL'].token.strip('"'),
-            amt=int(pay_tx_fields['AMOUNT_CELL'].token),
-        )
-    elif tx_type == ASSETTRANSFER_TXN:
-        (_, asset_transfer_tx_fields) = split_config_from(kast_term)
-        result = AssetTransferTxn(
-            sender=tx_header['SENDER_CELL'].token.strip('"'),
-            sp=sp,
-            receiver=asset_transfer_tx_fields['ASSETRECEIVER_CELL'].token.strip('"'),
-            amt=int(asset_transfer_tx_fields['ASSETAMOUNT_CELL'].token.strip('"')),
-            index=int(asset_transfer_tx_fields['XFERASSET_CELL'].token.strip('"')),
-        )
-    elif tx_type == APPCALL_TXN:
-        (_, appcall_tx_fields) = split_config_from(kast_term)
-        result = ApplicationCallTxn(
-            sender=tx_header['SENDER_CELL'].token.strip('"'),
-            sp=sp,
-            index=int(appcall_tx_fields['APPLICATIONID_CELL'].token.strip('"')),
-            on_complete=OnComplete(int(appcall_tx_fields['ONCOMPLETION_CELL'].token.strip('"'))),
-            local_schema=StateSchema(
-                int(appcall_tx_fields['LOCALNUI_CELL'].token.strip('"')),
-                int(appcall_tx_fields['LOCALNBS_CELL'].token.strip('"')),
-            ),
-            global_schema=StateSchema(
-                int(appcall_tx_fields['GLOBALNUI_CELL'].token.strip('"')),
-                int(appcall_tx_fields['GLOBALNBS_CELL'].token.strip('"')),
-            ),
-            approval_program=b64decode(
-                appcall_tx_fields['APPROVALPROGRAM_CELL'].token.strip('"')
-                if hasattr(appcall_tx_fields['APPROVALPROGRAM_CELL'], 'token')
-                else ''
-            ),
-            clear_program=b64decode(
-                appcall_tx_fields['CLEARSTATEPROGRAM_CELL'].token.strip('"')
-                if hasattr(appcall_tx_fields['CLEARSTATEPROGRAM_CELL'], 'token')
-                else ''
-            ),
-            # TODO: handle array fields
-            app_args=None,
-            accounts=None,
-            foreign_apps=None,
-            foreign_assets=None,
-            extra_pages=0,
-        )
-    else:
-        raise ValueError(f'Cannot instantiate a Transaction of an unexpected type {tx_type}')
-
-    return result

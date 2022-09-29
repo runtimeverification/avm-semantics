@@ -19,8 +19,8 @@ from pyk.prelude import Sorts, build_assoc, build_cons, intToken, stringToken
 
 from kavm import constants
 from kavm.adaptors.account import KAVMAccount
-from kavm.adaptors.transaction import KAVMTransaction, transaction_from_k
-from kavm.pyk_utils import AccountCellMap, AppCellMap, carefully_split_config_from
+from kavm.adaptors.transaction import KAVMApplyData, KAVMTransaction
+from kavm.pyk_utils import AccountCellMap, AppCellMap, TransactionCellMap, carefully_split_config_from
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -75,11 +75,6 @@ class KAVM(KRun):
     def next_valid_txid(self) -> int:
         """Return a txid consequative to the last commited one"""
         return sorted(self._committed_txns.keys())[-1] + 1 if len(self._committed_txns) > 0 else 0
-
-    @property
-    def next_valid_appid(self) -> int:
-        """Return an app id consequative to the last created one"""
-        return sorted(self.apps.keys())[-1] + 1 if len(self.apps) > 0 else 1
 
     def run_avm_simulation(
         self,
@@ -244,12 +239,9 @@ class KAVM(KRun):
         if isinstance(output, KAst) and krun_return_code == 0:
             # Finilize successful evaluation
             self.current_config = output
-            (_, subst) = split_config_from(self.current_config)
+            (_, subst) = carefully_split_config_from(cast(KInner, self.current_config), ignore_cells={'<transaction>'})
             # * update self.accounts with the new configuration cells
             modified_accounts = AccountCellMap(subst['ACCOUNTSMAP_CELL'])
-            ## NEED ApplyData! can't reasonably infer the appid here because one sender may have created multiple apps.
-            ## For now, let's assube the sender has been creating them in sequence.
-            next_app_id = self.next_valid_appid
             for address in self.accounts.keys():
                 self.accounts[address] = modified_accounts[address]
                 # * update self.apps with the new configuration cells
@@ -257,27 +249,21 @@ class KAVM(KRun):
                     self.apps[appid] = app
             # * TODO: update self.assets with the new configuration cells
             # * save committed txns
-            for txn in txns:
-                self._committed_txns[txn.txid] = self._commit_transaction(txn, next_app_id)
-                try:
-                    if self._committed_txns[txn.txid]['application-index']:
-                        next_app_id += 1
-                except Exception:
-                    pass
+            post_txns = TransactionCellMap(self, subst['TRANSACTIONS_CELL'])
+            for txn in post_txns.values():
+                self._committed_txns[txn.txid] = self._commit_transaction(txn)
             return {'txId': f'{txns[0].txid}'}
         else:
             self.logger.critical(output)
             exit(krun_return_code)
 
-    def _commit_transaction(self, txn: KAVMTransaction, next_app_id: int) -> Dict[str, Any]:
+    def _commit_transaction(self, txn: KAVMTransaction) -> Dict[str, Any]:
         '''Convert an accepted KAVMTransaction into a py-algorand-sdk friendly representation'''
-        committed_txn: Transaction = transaction_from_k(txn.transaction_cell)
+        committed_txn: Transaction = txn.sdk_txn
         common_fields = {'confirmed-round': 1}
         app_call_fields = {}
-        if committed_txn.type == 'appl' and committed_txn.index == 0:
-            ## NEED ApplyData! can't reasonably infer the appid here because one sender may have created multiple apps.
-            ## For now, let's assube the sender has been creating them in sequence.
-            app_call_fields['application-index'] = next_app_id
+        if committed_txn.type == 'appl':
+            app_call_fields['application-index'] = txn.apply_data._tx_application_id
         return {**common_fields, **app_call_fields}
 
     def _initial_config(self) -> KAst:
