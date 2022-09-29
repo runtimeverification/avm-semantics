@@ -238,27 +238,35 @@ module ALGO-TXN
   syntax MaybeTValue ::= getTxnField(String, TxnaField, Int)           [function, functional]
   syntax TValueList  ::= getTxnField(String, TxnaField)                [function, functional]
   //-----------------------------------------------------------------------------------------
-  rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD) => getTxnField(TXN_ID, FIELD)]]
+//  rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD) => getTxnField(TXN_ID, FIELD)]]
+  rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD) => 0]]
        <transaction>
-         <txID> CURRENT_TX_ID </txID>
-         <groupID> GROUP_ID </groupID>
-         ...
+//         <txID> CURRENT_TX_ID </txID>
+//         <groupID> GROUP_ID </groupID>
+//         ...
+_
        </transaction>
        <transaction>
-         <txID> TXN_ID </txID>
-         <groupID> GROUP_ID </groupID>
-         <groupIdx> GROUP_INDEX </groupIdx>
-         ...
-       </transaction>
-
-  rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD) => getTxnField(CURRENT_TX_ID, FIELD)]]
-       <transaction>
-         <txID> CURRENT_TX_ID </txID>
-         <groupIdx> GROUP_INDEX </groupIdx>
-         ...
+//         <txID> TXN_ID </txID>
+//         <groupID> GROUP_ID' </groupID>
+//         <groupIdx> GROUP_INDEX </groupIdx>
+//         ...
+_
        </transaction>
 
-  rule getGroupTxnField(_, _, _) => NoTValue  [owise]
+//  rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD) => getTxnField(CURRENT_TX_ID, FIELD)]]
+//       <transaction>
+//         <txID> CURRENT_TX_ID </txID>
+//         <groupIdx> GROUP_INDEX </groupIdx>
+//         ...
+//       </transaction>
+
+//  rule getGroupTxnField(_, _, _) => NoTValue  [owise]
+
+  syntax KItem ::= runLemma(KItem)
+               | doneLemma(KItem)
+
+  rule runLemma(X) => doneLemma(X)
 
   rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD, IDX) => getTxnField(TXN_ID, FIELD, IDX)]]
        <transaction>

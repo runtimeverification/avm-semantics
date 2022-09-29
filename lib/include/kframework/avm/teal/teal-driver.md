@@ -1201,20 +1201,21 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
   rule <k> loadFromGroup(GROUP_IDX, FIELD) => . ...</k>
        <stack> XS => {getGroupTxnField(getCurrentTxn(), GROUP_IDX, FIELD)}:>TValue : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
-    requires   isTValue(getGroupTxnField(getCurrentTxn(), GROUP_IDX, FIELD))
-    andBool    S <Int MAX_STACK_DEPTH
-    andBool    (notBool(isTxnDynamicField(FIELD))
-    orElseBool GROUP_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int))
+//    requires   isTValue(getGroupTxnField(getCurrentTxn(), GROUP_IDX, FIELD))
+//    andBool    S <Int MAX_STACK_DEPTH
+//    andBool    notBool(isTxnDynamicField(FIELD))
+//    andBool    (notBool(isTxnDynamicField(FIELD))
+//    orElseBool GROUP_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int))
 
-  rule <k> loadFromGroup(GROUP_IDX, _:TxnDynamicField) => panic(FUTURE_TXN) ...</k>
-    requires GROUP_IDX >=Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
+//  rule <k> loadFromGroup(GROUP_IDX, _:TxnDynamicField) => panic(FUTURE_TXN) ...</k>
+//    requires GROUP_IDX >=Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
 
-  rule <k> loadFromGroup(_, _) => panic(STACK_OVERFLOW) ...</k>
-       <stacksize> S </stacksize>
-    requires S >=Int MAX_STACK_DEPTH
+//  rule <k> loadFromGroup(_, _) => panic(STACK_OVERFLOW) ...</k>
+//       <stacksize> S </stacksize>
+//    requires S >=Int MAX_STACK_DEPTH
 
-  rule <k> loadFromGroup(GROUP_IDX, FIELD) => panic(TXN_ACCESS_FAILED) ...</k>
-    requires   notBool(isTValue(getGroupTxnField(getCurrentTxn(), GROUP_IDX, FIELD)))
+//  rule <k> loadFromGroup(GROUP_IDX, FIELD) => panic(TXN_ACCESS_FAILED) ...</k>
+//    requires   notBool(isTValue(getGroupTxnField(getCurrentTxn(), GROUP_IDX, FIELD)))
 
   syntax KItem ::= loadFromGroup(Int, TxnaField, Int)
   //-------------------------------------------------
