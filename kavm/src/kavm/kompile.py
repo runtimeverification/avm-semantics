@@ -78,7 +78,7 @@ def kompile_haskell(
         str(main_file),
     ]
 
-    command += ['--verbose']
+    command += ['--verbose'] if verbose else []
     command += ['--emit-json']
     command += ['--backend', backend] if backend else []
     command += ['--main-module', main_module_name] if main_module_name else []
