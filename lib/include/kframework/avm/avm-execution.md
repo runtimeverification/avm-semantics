@@ -340,7 +340,7 @@ TODO: address contact creation.
 ```k
   syntax AlgorandCommand ::= #evalTeal( TealInputPgm )
 
-  rule <k> #evalTeal( PGM ) => PGM ~> #startExecution() ~> #saveScratch() ... </k>
+  rule <k> #evalTeal( PGM ) => OpaqueTeal(PGM) ~> #startExecution() ~> #saveScratch() ... </k
        <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
        <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
 ```
