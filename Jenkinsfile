@@ -4,7 +4,7 @@ pipeline {
     VERSION   = '0.1.0'
     LONG_REV  = """${sh(returnStdout: true, script: 'git rev-parse HEAD').trim()}"""
     SHORT_REV = """${sh(returnStdout: true, script: 'git rev-parse --short=7 HEAD').trim()}"""
-    K_VERSION = """${sh(returnStdout: true, script: 'cd deps/k && git tag --points-at HEAD | cut --characters=2-').trim()}"""
+    K_VERSION = """${sh(returnStdout: true, script: 'cd deps/k && git tag --points-at HEAD | cut --characters=2- | head -n 1').trim()}"""
   }
   options { ansiColor('xterm') }
   stages {
