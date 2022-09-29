@@ -174,7 +174,7 @@ class KAVMClient(algod.AlgodClient):
             return self.kavm.eval_transactions(kavm_txns, known_addresses)
         elif requrl == '/teal/compile':
             assert data is not None, 'attempt to compile an empty TEAL program!'
-            # we do not actually compile therogram since KAVM needs the source code
+            # we do not actually compile the program since KAVM needs the source code
             return {'result': b64encode(data)}
         else:
             raise NotImplementedError(f'Endpoint not implemented: {requrl}')

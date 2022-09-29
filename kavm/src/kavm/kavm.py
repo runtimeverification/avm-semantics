@@ -291,9 +291,7 @@ class KAVM(KRun):
         return teal_cell_subst.compose(
             Subst(
                 {
-                    # 'ACCOUNTSMAP_CELL': KAVM.accounts_cell(list(self.accounts.values())),
                     'ACCOUNTSMAP_CELL': cast(KInner, self.accounts.k_cell),
-                    # 'ACCOUNTSMAP_CELL': KAVM.accounts_cell([]),
                     'TRANSACTIONS_CELL': KAVM.transactions_cell([]),
                     'GROUPSIZE_CELL': intToken(0),
                     'TXGROUPID_CELL': intToken(0),  # TODO: revise
@@ -361,12 +359,8 @@ class KAVM(KRun):
             }
         )
 
-        # for address in self.accounts.keys():
-        #     self.accounts[address]._apps_created = AppCellMap()
-
         txns_and_accounts_subst = Subst(
             {
-                # 'ACCOUNTSMAP_CELL': KAVM.accounts_cell(list(self.accounts.values())),
                 'ACCOUNTSMAP_CELL': cast(KInner, self.accounts.k_cell),
                 'TRANSACTIONS_CELL': KAVM.transactions_cell(transactions),
                 'GROUPSIZE_CELL': intToken(len(transactions)),

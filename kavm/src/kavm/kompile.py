@@ -86,13 +86,11 @@ def generate_interpreter(
         interpreter_object_file: Path,
         interpteter_executable_file: Path,
         hook_cpp_files: Optional[List[Path]] = None,
-        includes: Optional[List[Path]] = None,
         hook_clang_flags: Optional[List[str]] = None,
     ) -> None:
         command = ['llvm-kompile', str(interpreter_object_file), 'main']
 
         command += [str(path) for path in hook_cpp_files] if hook_cpp_files else []
-        # command += [f'-I{str(path)}' for path in includes] if includes else []
         command += ['-o', str(interpteter_executable_file)]
         command += [flag.strip() for flag in hook_clang_flags] if hook_clang_flags else []
 

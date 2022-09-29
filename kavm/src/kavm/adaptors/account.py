@@ -100,7 +100,6 @@ class KAVMAccount:
         """
         Parse a KAVMAccount instance from a Kast term
         """
-        # (_, subst) = split_config_from(term)
         (_, subst) = split_direct_subcells_from(term)
         return KAVMAccount(
             address=subst['ADDRESS_CELL'].token,

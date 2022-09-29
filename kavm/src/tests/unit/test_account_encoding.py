@@ -49,7 +49,7 @@ def test_init(account: KAVMAccount) -> None:
 
 def test_account_k_encoding(account: KAVMAccount) -> None:
     rountrip_account = KAVMAccount.from_account_cell(account.account_cell)
-    # travers attributes of KAVMAccount and assert that the ones starting with _ are the same,
+    # traverse attributes of KAVMAccount and assert that the ones starting with _ are the same,
     # ignoring the __ ones
     for attr in [a for a in dir(account) if a.startswith('_') and not a.startswith('__')]:
         assert getattr(account, attr) == getattr(rountrip_account, attr)

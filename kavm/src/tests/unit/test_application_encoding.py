@@ -19,7 +19,7 @@ def application(kavm: KAVM, request: Any) -> KAVMApplication:
 
 def test_application_k_encoding(application: KAVMApplication) -> None:
     rountrip_application = KAVMApplication.from_app_cell(application.app_cell)
-    # travers attributes of KAVMAccount and assert that the ones starting with _ are the same,
+    # traverse attributes of KAVMAccount and assert that the ones starting with _ are the same,
     # ignoring the __ ones
     for attr in [a for a in dir(application) if a.startswith('_') and not a.startswith('__')]:
         assert getattr(application, attr) == getattr(rountrip_application, attr)
