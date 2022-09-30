@@ -84,7 +84,7 @@ Pragmas are applied directly, and then the `#LoadPgm` performs program pre-proce
 
 ```k
   rule <k> OpaqueTeal(Rs:TealPragmas P:TealPgm) => Rs ~> #LoadPgm(P, 0) ... </k>
-  rule <k> OpaqueTeal(P:TealPgm)                => Rs ~> #LoadPgm(P, 0) ... </k>
+  rule <k> OpaqueTeal(P:TealPgm)                => #LoadPgm(P, 0) ... </k>
   rule <k> R:TealPragma Rs:TealPragmas          => R ~> Rs ... </k>
 
   rule <k> #pragma version V => . ... </k>
