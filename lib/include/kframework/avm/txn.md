@@ -232,62 +232,45 @@ module ALGO-TXN
          ...
        </transaction>
 
-  syntax MaybeTValue ::= getGroupTxnField(String, Int, TxnField)       [function, functional]
+//  syntax MaybeTValue ::= getGroupFieldByIdx(String, Int, TxnField) [function]
+  syntax MaybeTValue ::= getGroupFieldByIdx(String, Int) [function]
+//  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD) => getTxnField(TX_ID, FIELD) ]]
+
+  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX) => 0 ]]
+//       <transactions>
+       <transaction>
+//         <txID> TX_ID </txID>
+         <groupID> GROUP_ID </groupID>
+         <groupIdx> GROUP_INDEX </groupIdx>
+         ...
+       </transaction>
+//       ...
+//       </transactions>
+
+  syntax MaybeTValue ::= getGroupFieldByIdx(String, Int, TxnaField, Int) [function]
+//  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD, INDEX) => getTxnField(TX_ID, FIELD, INDEX) ]]
+  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD, INDEX) => 0 ]]
+       <transaction>
+//         <txID> TX_ID </txID>
+         <groupID> GROUP_ID </groupID>
+         <groupIdx> GROUP_INDEX </groupIdx>
+//         <groupIdx> _ </groupIdx>
+         ...
+       </transaction>
+
+//  syntax MaybeTValue ::= getGroupTxnField(String, Int, TxnField)       [function, functional]
+  syntax MaybeTValue ::= getGroupTxnField(String, Int)       [function, functional]
   syntax MaybeTValue ::= getGroupTxnField(String, Int, TxnaField, Int) [function, functional]
   syntax MaybeTValue ::= getTxnField(String, TxnField)                 [function, functional]
   syntax MaybeTValue ::= getTxnField(String, TxnaField, Int)           [function, functional]
   syntax TValueList  ::= getTxnField(String, TxnaField)                [function, functional]
   //-----------------------------------------------------------------------------------------
-//  rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD) => getTxnField(TXN_ID, FIELD)]]
-  rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD) => 0]]
-       <transaction>
-//         <txID> CURRENT_TX_ID </txID>
-//         <groupID> GROUP_ID </groupID>
-//         ...
-_
-       </transaction>
-       <transaction>
-//         <txID> TXN_ID </txID>
-//         <groupID> GROUP_ID' </groupID>
-//         <groupIdx> GROUP_INDEX </groupIdx>
-//         ...
-_
-       </transaction>
+  rule getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX) =>
+//       getGroupFieldByIdx(getTxnGroupID(CURRENT_TX_ID), GROUP_INDEX, FIELD)
+       getGroupFieldByIdx("0", GROUP_INDEX)
 
-//  rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD) => getTxnField(CURRENT_TX_ID, FIELD)]]
-//       <transaction>
-//         <txID> CURRENT_TX_ID </txID>
-//         <groupIdx> GROUP_INDEX </groupIdx>
-//         ...
-//       </transaction>
-
-//  rule getGroupTxnField(_, _, _) => NoTValue  [owise]
-
-  syntax KItem ::= runLemma(KItem)
-               | doneLemma(KItem)
-
-  rule runLemma(X) => doneLemma(X)
-
-  rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD, IDX) => getTxnField(TXN_ID, FIELD, IDX)]]
-       <transaction>
-         <txID> CURRENT_TX_ID </txID>
-         <groupID> GROUP_ID </groupID>
-         ...
-       </transaction>
-       <transaction>
-         <txID> TXN_ID </txID>
-         <groupID> GROUP_ID </groupID>
-         <groupIdx> GROUP_INDEX </groupIdx>
-         ...
-       </transaction>
-
-  rule [[ getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD, IDX) => getTxnField(CURRENT_TX_ID, FIELD, IDX)]]
-       <transaction>
-         <txID> CURRENT_TX_ID </txID>
-         <groupIdx> GROUP_INDEX </groupIdx>
-         ...
-       </transaction>
-  rule getGroupTxnField(_, _, _, _) => NoTValue  [owise]
+  rule getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD, INDEX) => 
+       getGroupFieldByIdx(getTxnGroupID(CURRENT_TX_ID), GROUP_INDEX, FIELD, INDEX)
 
   rule [[ getTxnField(I, TxID) => normalize(I) ]]
        <transaction>
