@@ -15,6 +15,7 @@ readme = "README.md"
 python = "^3.8"
 py-algorand-sdk = "1.15.0"
 pyk = { git = "https://github.com/runtimeverification/pyk.git", tag="v0.1.0" }
+pyteal = "*"
 
 [tool.poetry.dev-dependencies]
 autoflake = "*"

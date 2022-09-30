@@ -247,6 +247,8 @@ class KAVM(KRun):
 
         self.current_config = self.simulation_config(txns)
 
+        print(self._current_config)
+
         # construct the KAVM configuration and run it via krun
         try:
             (krun_return_code, output) = self._run_with_current_config()
@@ -457,8 +459,21 @@ class KAVM(KRun):
         try:
             return run_process(krun_command, env=command_env, logger=self._logger, profile=True)
         except CalledProcessError as err:
+
+            with tempfile.NamedTemporaryFile('w+t', delete=True) as tmp_kast_json_file:
+                tmp_kast_json_file.write(err.stdout)
+                tmp_kast_json_file.seek(0)
+                kore_term = self.kast(
+                    input_file=Path(tmp_kast_json_file.name),
+                    module='AVM-EXECUTION',
+                    sort=KSort('GeneratedTopCell'),
+                    input='json',
+                    output='kast',
+                ).stdout
+                self.pretty_print(kore_term)
+
             raise RuntimeError(
                 f'Command krun exited with code {err.returncode} for: {kore_file_name}',
-                err.stdout,
+                self.pretty_print(err.stdout),
                 err.stderr,
             ) from err
