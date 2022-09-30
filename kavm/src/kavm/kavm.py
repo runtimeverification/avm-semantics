@@ -45,7 +45,7 @@ class KAVM(KRun):
         KAVM._patch_symbol_table(self.symbol_table)
         self._accounts = AccountCellMap()
         self._apps = AppCellMap()
-        self._committed_txns: Dict[int, Dict[str, Any]] = {}
+        self._committed_txns: Dict[str, Dict[str, Any]] = {}
         if faucet_address is not None:
             self._faucet = KAVMAccount(faucet_address, constants.FAUCET_ALGO_SUPPLY)
             # TODO: possible bug in pyk, if a Map cell only contains one item,
@@ -72,9 +72,9 @@ class KAVM(KRun):
         return self._faucet
 
     @property
-    def next_valid_txid(self) -> int:
+    def next_valid_txid(self) -> str:
         """Return a txid consequative to the last commited one"""
-        return sorted(self._committed_txns.keys())[-1] + 1 if len(self._committed_txns) > 0 else 0
+        return str(int(sorted(self._committed_txns.keys())[-1]) + 1) if len(self._committed_txns) > 0 else str(0)
 
     @staticmethod
     def prove(
@@ -387,7 +387,7 @@ class KAVM(KRun):
                 'ACCOUNTSMAP_CELL': cast(KInner, self.accounts.k_cell),
                 'TRANSACTIONS_CELL': KAVM.transactions_cell(transactions),
                 'GROUPSIZE_CELL': intToken(len(transactions)),
-                'CURRENTTX_CELL': KToken('"' + str(transactions[0].txid) + '"', KSort('String')),
+                'CURRENTTX_CELL': KToken('"' + transactions[0].txid + '"', KSort('String')),
                 'TOUCHEDACCOUNTS_CELL': KApply('.Set'),
                 'K_CELL': KApply(
                     '#evalTxGroup()_ALGO-ITXN_AlgorandCommand',
@@ -395,12 +395,12 @@ class KAVM(KRun):
                 'DEQUE_CELL': build_cons(
                     KApply('.List'),
                     KLabel('_List_'),
-                    [KApply(KLabel('ListItem'), intToken(x)) for x in txids],
+                    [KApply(KLabel('ListItem'), stringToken(x)) for x in txids],
                 ),
                 'DEQUEINDEXSET_CELL': build_cons(
                     KApply('.Set'),
                     KLabel('_Set_', KSort('Set')),
-                    [KApply(KLabel('SetItem'), intToken(x)) for x in txids],
+                    [KApply(KLabel('SetItem'), stringToken(x)) for x in txids],
                 ),
                 'CURRENTAPPLICATIONID_CELL': intToken(-1),
                 'CURRENTAPPLICATIONADDRESS_CELL': KToken('b"-1"', KSort('Bytes')),
