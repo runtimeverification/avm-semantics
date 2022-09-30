@@ -27,7 +27,7 @@ there may be some remaining artefacts of the previous transaction's TEAL.
            <pc> 0 </pc>
            <program> .Map </program>
            <mode> stateful </mode>
-           <version> 1 </version>
+           <version> 4 </version>
            <stack> .TStack </stack>
            <stacksize> 0 </stacksize>
            <jumped> false </jumped>
@@ -63,7 +63,14 @@ there may be some remaining artefacts of the previous transaction's TEAL.
 ### Program initialization
 
 The parsed TEAL pragmas and program are initially supplied on the `<k>` cell as
-`TealPragmas` and `TealInputPgm`.
+`TealPragmas` and `TealInputPgm`, wrapped into an `OpaqueTeal` constructor.
+
+```k
+  syntax KItem ::= OpaqueTeal(TealInputPgm)
+```
+
+The `OpaqueTeal` wraps the program source to prevent undesired triggering of program loading
+when naked opcodes are placed onto the `<k>` cell.
 
 Pragmas are applied directly, and then the `#LoadPgm` performs program pre-processing:
 
@@ -76,8 +83,9 @@ Pragmas are applied directly, and then the `#LoadPgm` performs program pre-proce
 * if a label is encountered twice, the `panic(DUPLICATE_LABEL)` computation is triggered.
 
 ```k
-  rule <k> Rs:TealPragmas P:TealPgm => Rs ~> #LoadPgm(P, 0) ... </k>
-  rule <k> R:TealPragma Rs:TealPragmas => R ~> Rs ... </k>
+  rule <k> OpaqueTeal(Rs:TealPragmas P:TealPgm) => Rs ~> #LoadPgm(P, 0) ... </k>
+  rule <k> OpaqueTeal(P:TealPgm)                => #LoadPgm(P, 0) ... </k>
+  rule <k> R:TealPragma Rs:TealPragmas          => R ~> Rs ... </k>
 
   rule <k> #pragma version V => . ... </k>
        <version> _ => V </version>
