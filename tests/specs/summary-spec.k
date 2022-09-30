@@ -2,8 +2,7 @@ module SUMMARY-SPEC
     imports VERIFICATION
 
 // Start with claim of no-op:
-//    claim <k> #pragma version 2
-//              #pragma mode stateless
+//    claim <k> #LoadPgm(
 //              int 18446744073709551615
 //              int 18446744073709551615
 //              mulw
@@ -19,15 +18,15 @@ module SUMMARY-SPEC
 //              mulw
 //              store 4
 //              store 5
-//              int 1
+//              int 1, 0)
+//            ~> #startExecution()
 //           => . </k>
 //          <stacksize> SS </stacksize>
 //      requires SS <=Int 10
 
 // From counterexample, prove summary:
 // Note that you can not read `SS +Int 2 <Int MAX_STACK_DEPTH` off directly from the counterexample.
-    claim <k> 
-              #pragma version 2
+    claim <k> #LoadPgm(
               int 18446744073709551615
               int 18446744073709551615
               mulw
@@ -43,7 +42,7 @@ module SUMMARY-SPEC
               mulw
               store 4
               store 5
-              int 1
+              int 1, 0)
             ~> #startExecution()
            => . </k>
           <currentApplicationID> APP_ID => ?_ </currentApplicationID>

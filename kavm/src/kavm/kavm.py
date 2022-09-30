@@ -9,16 +9,18 @@ from pathlib import Path
 from subprocess import CalledProcessError, CompletedProcess
 from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Set, Tuple, Union, cast
 
+from algosdk.future.transaction import Transaction
 from pyk.cli_utils import run_process
 from pyk.kast import KApply, KAst, KInner, KLabel, KSort, KToken, Subst
 from pyk.kastManip import free_vars, inline_cell_maps, split_config_from
-from pyk.ktool import KRun
 from pyk.ktool.kprint import paren
+from pyk.ktool.krun import KRun
 from pyk.prelude import Sorts, build_assoc, build_cons, intToken, stringToken
 
 from kavm import constants
-from kavm.adaptors.account import KAVMAccount, get_account
-from kavm.adaptors.transaction import KAVMTransaction
+from kavm.adaptors.account import KAVMAccount
+from kavm.adaptors.transaction import KAVMApplyData, KAVMTransaction
+from kavm.pyk_utils import AccountCellMap, AppCellMap, TransactionCellMap, carefully_split_config_from
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -41,8 +43,9 @@ class KAVM(KRun):
         else:
             self._logger = logger
         KAVM._patch_symbol_table(self.symbol_table)
-        self._accounts: Dict[str, KAVMAccount] = {}
-        self._committed_txn_ids: List[int] = []
+        self._accounts = AccountCellMap()
+        self._apps = AppCellMap()
+        self._committed_txns: Dict[int, Dict[str, Any]] = {}
         if faucet_address is not None:
             self._faucet = KAVMAccount(faucet_address, constants.FAUCET_ALGO_SUPPLY)
             # TODO: possible bug in pyk, if a Map cell only contains one item,
@@ -57,8 +60,12 @@ class KAVM(KRun):
         return self._logger
 
     @property
-    def accounts(self) -> Dict[str, KAVMAccount]:
+    def accounts(self) -> AccountCellMap:
         return self._accounts
+
+    @property
+    def apps(self) -> AppCellMap:
+        return self._apps
 
     @property
     def faucet(self) -> KAVMAccount:
@@ -67,7 +74,7 @@ class KAVM(KRun):
     @property
     def next_valid_txid(self) -> int:
         """Return a txid consequative to the last commited one"""
-        return self._committed_txn_ids[-1] if len(self._committed_txn_ids) > 0 else 0
+        return sorted(self._committed_txns.keys())[-1] + 1 if len(self._committed_txns) > 0 else 0
 
     @staticmethod
     def prove(
@@ -142,6 +149,44 @@ class KAVM(KRun):
         command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
         return run_process(kast_command, env=command_env, logger=self._logger, profile=True)
 
+    def kast_expr(
+        self,
+        expr: str,
+        input: str = 'json',
+        output: str = 'kore',
+        module: str = 'AVM-EXECUTION',
+        sort: Union[KSort, str] = Sorts.K,
+        args: Iterable[str] = (),
+    ) -> CompletedProcess:
+        kast_command = ['kast', '--definition', str(self.definition_dir)]
+        kast_command += ['--input', input, '--output', output]
+        kast_command += ['--module', module]
+        kast_command += ['--sort', sort.name if isinstance(sort, KSort) else sort]
+        kast_command += ['--expression', expr]
+        command_env = os.environ.copy()
+        command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
+        return run_process(kast_command, env=command_env, logger=self._logger, profile=True)
+
+    def parse_teal(self, teal_expr: str, input: str = 'program', output: str = 'json') -> KAst:
+        """Parse a TEAL progam from the provided input string"""
+        kast_command = ['kast', '--definition', str(self.definition_dir)]
+        kast_command += ['--input', input, '--output', output]
+        kast_command += ['--module', 'TEAL-PARSER-SYNTAX']
+        kast_command += ['--sort', 'TealInputPgm']
+        kast_command += ['--expression', teal_expr]
+        command_env = os.environ.copy()
+        command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
+        proc_result = run_process(kast_command, env=command_env, logger=self._logger, profile=True)
+        try:
+            output_kast_term = KAst.from_dict(json.loads(proc_result.stdout)['term'])
+            return output_kast_term
+        except json.JSONDecodeError:
+            logging.critical(
+                proc_result.returncode,
+                proc_result.stderr.decode(sys.getfilesystemencoding()),
+            )
+            raise
+
     @staticmethod
     def _patch_symbol_table(symbol_table: Dict[str, Callable[..., str]]) -> None:
         symbol_table['_+Int_'] = paren(symbol_table['_+Int_'])
@@ -159,15 +204,6 @@ class KAVM(KRun):
     @current_config.setter
     def current_config(self, new_config: KAst) -> None:
         self._current_config = new_config
-
-    @staticmethod
-    def accounts_cell(accts: List[KAVMAccount]) -> KInner:
-        """Concatenate several accounts"""
-        return build_assoc(
-            KApply('.AccountCellMap'),
-            KLabel('_AccountCellMap_'),
-            [acc.account_cell for acc in accts],
-        )
 
     @staticmethod
     def transactions_cell(txns: List[KAVMTransaction]) -> KInner:
@@ -212,21 +248,42 @@ class KAVM(KRun):
         self.current_config = self.simulation_config(txns)
 
         # construct the KAVM configuration and run it via krun
-        (krun_return_code, output) = self._run_with_current_config()
+        try:
+            (krun_return_code, output) = self._run_with_current_config()
+        except Exception:
+            self.logger.critical(
+                f'Transaction group evaluation failed, last configuration was: {self.pretty_print(self._current_config)}'
+            )
+            raise
         if isinstance(output, KAst) and krun_return_code == 0:
-            # Finilize successful evaluation: self._current_config and self._accounts
+            # Finilize successful evaluation
             self.current_config = output
-            (_, subst) = split_config_from(self.current_config)
+            (_, subst) = carefully_split_config_from(cast(KInner, self.current_config), ignore_cells={'<transaction>'})
+            # * update self.accounts with the new configuration cells
+            modified_accounts = AccountCellMap(subst['ACCOUNTSMAP_CELL'])
             for address in self.accounts.keys():
-                self.accounts[address] = KAVMAccount.from_account_cell(get_account(address, subst['ACCOUNTSMAP_CELL']))
-            # save committed txn ids into a sorterd list
-            # TODO: ids must be strings, but that needs changing in KAVM
-            self._committed_txn_ids += sorted([int(txn.txid) for txn in txns])
-            # TODO: update self.accounts
+                self.accounts[address] = modified_accounts[address]
+                # * update self.apps with the new configuration cells
+                for appid, app in self.accounts[address]._apps_created.items():
+                    self.apps[appid] = app
+            # * TODO: update self.assets with the new configuration cells
+            # * save committed txns
+            post_txns = TransactionCellMap(self, subst['TRANSACTIONS_CELL'])
+            for txn in post_txns.values():
+                self._committed_txns[txn.txid] = self._commit_transaction(txn)
             return {'txId': f'{txns[0].txid}'}
         else:
             self.logger.critical(output)
             exit(krun_return_code)
+
+    def _commit_transaction(self, txn: KAVMTransaction) -> Dict[str, Any]:
+        '''Convert an accepted KAVMTransaction into a py-algorand-sdk friendly representation'''
+        committed_txn: Transaction = txn.sdk_txn
+        common_fields = {'confirmed-round': 1}
+        app_call_fields = {}
+        if committed_txn.type == 'appl':
+            app_call_fields['application-index'] = txn.apply_data._tx_application_id
+        return {**common_fields, **app_call_fields}
 
     def _initial_config(self) -> KAst:
         """
@@ -253,8 +310,7 @@ class KAVM(KRun):
         return teal_cell_subst.compose(
             Subst(
                 {
-                    'ACCOUNTSMAP_CELL': KAVM.accounts_cell(list(self.accounts.values())),
-                    # 'ACCOUNTSMAP_CELL': KAVM.accounts_cell([]),
+                    'ACCOUNTSMAP_CELL': cast(KInner, self.accounts.k_cell),
                     'TRANSACTIONS_CELL': KAVM.transactions_cell([]),
                     'GROUPSIZE_CELL': intToken(0),
                     # TODO: CURRENTTX_CELL should be of sort String in the semantics
@@ -275,6 +331,8 @@ class KAVM(KRun):
                     'BLOCKS_CELL': KApply('.Map'),
                     'BLOCKHEIGHT_CELL': intToken(0),
                     'TEALPROGRAMS_CELL': KApply('.TealPrograms'),
+                    'RETURNCODE_CELL': intToken(4),
+                    'RETURNSTATUS_CELL': stringToken('Failure - program is stuck'),
                     'K_CELL': KApply(
                         '.AS_AVM-EXECUTION-SYNTAX_AVMSimulation',
                     ),
@@ -308,12 +366,25 @@ class KAVM(KRun):
         TRANSACTIONS_CELL for transactions and ACCOUNTSMAP_CELL for self.accounts.values()
         """
         txids = [txn.txid for txn in transactions]
+        self.logger.debug(f'Preparing simulation config for txn ids: {txids}')
 
-        (current_symbolic_config, current_subst) = split_config_from(self._initial_config())
+        (current_symbolic_config, current_subst) = carefully_split_config_from(
+            cast(KInner, self._current_config), ignore_cells={'<transaction>'}
+        )
+
+        control_subst = Subst(
+            {
+                'RETURNCODE_CELL': intToken(4),
+                'RETURNSTATUS_CELL': stringToken('Failure - program is stuck'),
+                'K_CELL': KApply(
+                    '#evalTxGroup()_AVM-EXECUTION_AlgorandCommand',
+                ),
+            }
+        )
 
         txns_and_accounts_subst = Subst(
             {
-                'ACCOUNTSMAP_CELL': KAVM.accounts_cell(list(self.accounts.values())),
+                'ACCOUNTSMAP_CELL': cast(KInner, self.accounts.k_cell),
                 'TRANSACTIONS_CELL': KAVM.transactions_cell(transactions),
                 'GROUPSIZE_CELL': intToken(len(transactions)),
                 'CURRENTTX_CELL': KToken('"' + str(transactions[0].txid) + '"', KSort('String')),
@@ -331,10 +402,14 @@ class KAVM(KRun):
                     KLabel('_Set_', KSort('Set')),
                     [KApply(KLabel('SetItem'), intToken(x)) for x in txids],
                 ),
+                'CURRENTAPPLICATIONID_CELL': intToken(-1),
+                'CURRENTAPPLICATIONADDRESS_CELL': KToken('b"-1"', KSort('Bytes')),
             }
         )
 
-        return Subst(current_subst).compose(txns_and_accounts_subst).apply(current_symbolic_config)
+        return (
+            Subst(current_subst).compose(control_subst).compose(txns_and_accounts_subst).apply(current_symbolic_config)
+        )
 
     def _run_with_current_config(self) -> Tuple[int, Union[KAst, str]]:
         """

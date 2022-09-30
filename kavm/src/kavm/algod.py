@@ -73,9 +73,9 @@ class KAVMClient(algod.AlgodClient):
         self,
         method: str,
         requrl: str,
-        params: List[str] = None,
+        params: Optional[List[str]] = None,
         data: Optional[bytes] = None,
-        headers: List[str] = None,
+        headers: Optional[List[str]] = None,
         response_format: str = 'Json',
     ) -> Dict[str, Any]:
         """
@@ -110,21 +110,37 @@ class KAVMClient(algod.AlgodClient):
                     'min-fee': 1000,
                 }
             elif params[0] == 'pending':
-                # PendingTransactionResponse https://github.com/algorand/go-algorand/blob/87867c9381260dc4efb5a42abaeb9e038b1c10af/daemon/algod/api/algod.oas2.json#L2600
-                # fow now we return return any transction as confirmed
-                # TODO: track accepted transctions in a set
-                return {'confirmed-round': 1}
+                txid = int(params[1])
+                return self.kavm._committed_txns[txid]
             else:
                 raise NotImplementedError(f'Endpoint not implemented: {requrl}')
         elif endpoint == 'accounts':
             (config, subst) = split_config_from(self.kavm.current_config)
 
             address = params[0]
-            return KAVMAccount.from_account_cell(get_account(address, subst['ACCOUNTSMAP_CELL'])).dictify()
+            return self.kavm.accounts[address].dictify()
+
+        elif endpoint == 'applications':
+            (config, subst) = split_config_from(self.kavm.current_config)
+
+            app_id = params[0]
+            return self.kavm.apps[app_id].dictify()
 
         else:
             self.algodLogger.debug(requrl.split('/'))
             raise NotImplementedError(f'Endpoint not implemented: {requrl}')
+
+    def _pending_transaction_info(self, txid: int) -> Dict[str, Any]:
+        """
+        Fetch info about a pending transaction from KAVM
+
+        Fow now, we return any transction as confirmed
+
+        returns:
+            PendingTransactionResponse https://github.com/algorand/go-algorand/tree/master/daemon/algod/api/algod.oas2.json#L2600
+
+        """
+        return {'confirmed-round': 1}
 
     def _handle_post_requests(self, requrl: str, data: Optional[bytes]) -> Dict[str, Any]:
         """
@@ -151,11 +167,14 @@ class KAVMClient(algod.AlgodClient):
                 if hasattr(signed_txn.transaction, 'receiver'):
                     known_addresses.add(signed_txn.transaction.receiver)
                 txid = self.kavm.next_valid_txid + txid_offset
-                kavm_txns.append(KAVMTransaction(self.kavm, signed_txn.transaction, txid))
+                kavm_txn = KAVMTransaction(self.kavm, signed_txn.transaction, txid)
+                self.algodLogger.debug(f'Submitting txn with id: {kavm_txn.txid}')
+                kavm_txns.append(kavm_txn)
 
             return self.kavm.eval_transactions(kavm_txns, known_addresses)
         elif requrl == '/teal/compile':
             assert data is not None, 'attempt to compile an empty TEAL program!'
+            # we do not actually compile the program since KAVM needs the source code
             return {'result': b64encode(data)}
         else:
             raise NotImplementedError(f'Endpoint not implemented: {requrl}')

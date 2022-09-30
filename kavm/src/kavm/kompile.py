@@ -47,46 +47,48 @@ def kompile(
         )
     elif backend == 'haskell':
         kompile_haskell(
-            definition_dir = definition_dir,
-            main_file = main_file,
-            includes = includes,
-            main_module_name = main_module_name,
-            syntax_module_name = syntax_module_name,
-            md_selector = md_selector,
-            hook_namespaces = hook_namespaces,
-            backend = backend,
-            verbose = verbose,
+            definition_dir=definition_dir,
+            main_file=main_file,
+            includes=includes,
+            main_module_name=main_module_name,
+            syntax_module_name=syntax_module_name,
+            md_selector=md_selector,
+            hook_namespaces=hook_namespaces,
+            backend=backend,
+            verbose=verbose,
         )
     return KAVM(definition_dir)
 
+
 def kompile_haskell(
-  definition_dir: Path,
-  main_file: Path,
-  includes: Optional[List[str]] = None,
-  main_module_name: Optional[str] = None,
-  syntax_module_name: Optional[str] = None,
-  md_selector: Optional[str] = None,
-  hook_namespaces: Optional[List[str]] = None,
-  backend: Optional[str] = 'llvm',
-  verbose: bool = True,
+    definition_dir: Path,
+    main_file: Path,
+    includes: Optional[List[str]] = None,
+    main_module_name: Optional[str] = None,
+    syntax_module_name: Optional[str] = None,
+    md_selector: Optional[str] = None,
+    hook_namespaces: Optional[List[str]] = None,
+    backend: Optional[str] = 'llvm',
+    verbose: bool = True,
 ) -> CompletedProcess:
-  command = [
-      'kompile',
-      '--output-definition',
-      str(definition_dir),
-      str(main_file),
-  ]
+    command = [
+        'kompile',
+        '--output-definition',
+        str(definition_dir),
+        str(main_file),
+    ]
 
-  command += ['--verbose']
-  command += ['--emit-json']
-  command += ['--backend', backend] if backend else []
-  command += ['--main-module', main_module_name] if main_module_name else []
-  command += ['--syntax-module', syntax_module_name] if syntax_module_name else []
-  command += ['--md-selector', md_selector] if md_selector else []
-  command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
-  command += [arg for include in includes for arg in ['-I', include]] if includes else []
+    command += ['--verbose'] if verbose else []
+    command += ['--emit-json']
+    command += ['--backend', backend] if backend else []
+    command += ['--main-module', main_module_name] if main_module_name else []
+    command += ['--syntax-module', syntax_module_name] if syntax_module_name else []
+    command += ['--md-selector', md_selector] if md_selector else []
+    command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
+    command += [arg for include in includes for arg in ['-I', include]] if includes else []
 
-  return subprocess.run(command, check=True, text=True)
+    return subprocess.run(command, check=True, text=True)
+
 
 def generate_interpreter(
     definition_dir: Path,
@@ -127,13 +129,11 @@ def generate_interpreter(
         interpreter_object_file: Path,
         interpreter_executable_file: Path,
         hook_cpp_files: Optional[List[Path]] = None,
-        includes: Optional[List[Path]] = None,
         hook_clang_flags: Optional[List[str]] = None,
     ) -> None:
         command = ['llvm-kompilex', str(interpreter_object_file), 'main', '--']
 
         command += [str(path) for path in hook_cpp_files] if hook_cpp_files else []
-        # command += [f'-I{str(path)}' for path in includes] if includes else []
         command += ['-o', str(interpreter_executable_file)]
         command += [flag.strip() for flag in hook_clang_flags] if hook_clang_flags else []
 

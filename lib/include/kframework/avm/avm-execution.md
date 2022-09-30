@@ -19,6 +19,7 @@ module AVM-EXECUTION-SYNTAX
   imports ALGO-ITXN
   imports AVM-CONFIGURATION
   imports AVM-INITIALIZATION
+  imports TEAL-SYNTAX
   imports TEAL-DRIVER
 ```
 
@@ -364,7 +365,7 @@ TODO: address contact creation.
 
   syntax AlgorandCommand ::= #loadInputPgm( TealInputPgm )
 
-  rule <k> #loadInputPgm(PGM) => PGM ...</k>
+  rule <k> #loadInputPgm(PGM) => OpaqueTeal(PGM) ...</k>
 ```
 
 ##### Stateless
