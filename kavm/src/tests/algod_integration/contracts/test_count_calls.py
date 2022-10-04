@@ -39,13 +39,15 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
     clear_src = compileTeal(call_counter_clear_program(), mode=Mode.Application, version=6)
     clear = compile_program(client, clear_src)
 
+    print("t1")
+
     # set up TXN --- user creates a call counter app
     txn = ApplicationCallTxn(
         sender = user['address'],
         sp = sp,
         index = None,
         local_schema = StateSchema(num_uints=1, num_byte_slices=0),
-        global_schema = StateSchema(num_uints=1, num_byte_slices=1),
+        global_schema = StateSchema(num_uints=1, num_byte_slices=2),
         on_complete = OnComplete.NoOpOC,
         approval_program=program,
         clear_program=clear,
@@ -55,6 +57,10 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
 
     app_id = get_created_app_id(client, txn_id)
 
+    assert encode_address(get_global_bytes(client, app_id, "Creator")) == user['address']
+
+    print("t2")
+
     # opt in to app
     txn = ApplicationCallTxn(
         sender = user['address'],
@@ -63,8 +69,14 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
         on_complete = OnComplete.OptInOC,
     )
     signed_txn = txn.sign(user['private_key'])
+
     txn_id = client.send_transactions([signed_txn])
+
     txn_status = client.pending_transaction_info(txn_id)
+
+    print("t3")
+
+    assert False
 
     assert encode_address(get_global_bytes(client, app_id, "Creator")) == user['address']
     assert get_local_int(client, app_id, user['address'], "timesPinged") == 0

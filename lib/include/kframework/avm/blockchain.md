@@ -730,9 +730,10 @@ references and also to check that a resource is available.
 ```k
   syntax MaybeTValue ::= accountReference(TValue) [function, functional]
   //--------------------------------------------------------------------
-  rule accountReference(A:TBytes ) => A requires accountAvailable(A)
-  rule accountReference(I:Int    ) => getTxnField(getCurrentTxn(), Accounts, I)
-  rule accountReference(_        ) => NoTValue  [owise]
+  rule accountReference(A:TAddressLiteral ) => A requires accountAvailable(A)
+  rule accountReference(A:Bytes           ) => Bytes2TAddressLiteral(A)// requires accountAvailable(Bytes2TAddressLiteral(A))
+  rule accountReference(I:Int             ) => getTxnField(getCurrentTxn(), Accounts, I)
+  rule accountReference(_                 ) => NoTValue  [owise]
 
   syntax MaybeTValue ::= appReference(TUInt64)  [function, functional]
   //-----------------------------------------------------------------

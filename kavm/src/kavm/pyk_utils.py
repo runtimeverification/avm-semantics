@@ -121,6 +121,8 @@ class KCellMap(MutableMapping):
             if type(inner) is KApply and inner.label.name == self._item_cell_name:
                 key = int(inner.args[0].args[0].token) if key_type is int else str(inner.args[0].args[0].token)
                 self._store[key] = value_initializer(inner)
+#                  print("abc")
+#                  print(self)
             return inner
 
         if term:
@@ -195,6 +197,9 @@ class AccountCellMap(KCellMap):
     ):
         from kavm.adaptors.account import KAVMAccount
 
+        print("in AccountCellMap")
+        print(term)
+
         super().__init__(
             unit_klabel='.AccountCellMap',
             cons_klabel='_AccountCellMap_',
@@ -205,6 +210,9 @@ class AccountCellMap(KCellMap):
             term=term,
         )
 
+        print("self:")
+        print(self)
+
 
 class AppCellMap(KCellMap):
     '''Python-friendly access to <appsCreated> cell'''
@@ -214,6 +222,9 @@ class AppCellMap(KCellMap):
         term: Optional[KAst] = None,
     ):
         from kavm.adaptors.application import KAVMApplication
+
+        print("in AppCellMap")
+        print(term)
 
         super().__init__(
             unit_klabel='.AppCellMap',

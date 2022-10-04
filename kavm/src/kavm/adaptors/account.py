@@ -34,6 +34,8 @@ class KAVMAccount:
         """
         Create a KAVM account cell.
         """
+        print("constructor1")
+        print(apps_created)
         self._address = address
         self._balance = balance
         self._min_balance = min_balance
@@ -46,6 +48,9 @@ class KAVMAccount:
         self._apps_opted_in = apps_opted_in if apps_opted_in else []
         self._assets_created = assets_created if assets_created else []
         self._assets_opted_in = assets_opted_in if assets_opted_in else []
+
+        print("constructor2")
+        print(apps_created)
 
     # TODO: implement better eq
     def __eq__(self, other: Any) -> bool:
@@ -101,7 +106,9 @@ class KAVMAccount:
         Parse a KAVMAccount instance from a Kast term
         """
         (_, subst) = split_direct_subcells_from(term)
-        return KAVMAccount(
+        print("from_account_cell")
+        print(subst['APPSCREATED_CELL'])
+        test = KAVMAccount(
             address=subst['ADDRESS_CELL'].token,
             balance=int(subst['BALANCE_CELL'].token),
             min_balance=int(subst['MINBALANCE_CELL'].token),
@@ -115,6 +122,8 @@ class KAVMAccount:
             assets_created=[],
             assets_opted_in=[],
         )
+        print("before return")
+        return test
 
     def to_kore_term(self, kavm: Any) -> str:
         '''

@@ -138,6 +138,11 @@ class KAVMTransaction:
         if txn.type == ASSETTRANSFER_TXN:
             raise NotImplementedError()
         if txn.type == APPCALL_TXN:
+#            print("APPCALL_TXN")
+#            print(txn.local_schema.num_uints)
+#            print(txn.local_schema.num_byte_slices)
+#            print(txn.global_schema.num_uints)
+#            print(txn.global_schema.num_byte_slices)
             type_specific_subst = Subst(
                 {
                     'APPLICATIONID_CELL': maybe_tvalue(txn.index),
@@ -161,16 +166,16 @@ class KAVMTransaction:
                     if txn.foreign_assets is not None
                     else tvalue_list([]),
                     'GLOBALNUI_CELL': maybe_tvalue(txn.global_schema.num_uints)
-                    if txn.global_schema is not None
+                    if txn.global_schema is not None and txn.global_schema.num_uints is not None
                     else maybe_tvalue(0),
                     'GLOBALNBS_CELL': maybe_tvalue(txn.global_schema.num_byte_slices)
-                    if txn.global_schema is not None
+                    if txn.global_schema is not None and txn.global_schema.num_byte_slices is not None
                     else maybe_tvalue(0),
                     'LOCALNUI_CELL': maybe_tvalue(txn.local_schema.num_uints)
-                    if txn.local_schema is not None
+                    if txn.local_schema is not None and txn.local_schema.num_uints is not None
                     else maybe_tvalue(0),
                     'LOCALNBS_CELL': maybe_tvalue(txn.local_schema.num_byte_slices)
-                    if txn.local_schema is not None
+                    if txn.local_schema is not None and txn.local_schema.num_byte_slices is not None
                     else maybe_tvalue(0),
                     'EXTRAPROGRAMPAGES_CELL': maybe_tvalue(txn.extra_pages)
                     if txn.extra_pages is not None

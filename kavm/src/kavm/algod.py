@@ -123,7 +123,7 @@ class KAVMClient(algod.AlgodClient):
         elif endpoint == 'applications':
             (config, subst) = split_config_from(self.kavm.current_config)
 
-            app_id = params[0]
+            app_id = int(params[0])
             return self.kavm.apps[app_id].dictify()
 
         else:

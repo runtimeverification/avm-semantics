@@ -303,7 +303,7 @@ Add asset to account
   rule <k> #checkSufficientBalance() => . ...</k>
        <touchedAccounts> .Set </touchedAccounts>
   
-  syntax AlgorandCommand ::= #checkSufficientBalance(Bytes)
+  syntax AlgorandCommand ::= #checkSufficientBalance(TAddressLiteral)
   //-------------------------------------------------------
   rule <k> #checkSufficientBalance(ADDR) => . ...</k>
        <account>

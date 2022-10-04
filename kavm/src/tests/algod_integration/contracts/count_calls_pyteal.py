@@ -10,6 +10,7 @@ def call_counter_approval_program():
     handle_creation = Seq(
         [
             App.globalPut(Bytes("Creator"), Txn.sender()),
+            App.globalPut(Bytes("Creator2"), Txn.sender()),
             Return(Int(1)),
         ]
     )

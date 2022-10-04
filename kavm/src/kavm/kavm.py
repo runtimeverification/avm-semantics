@@ -203,6 +203,7 @@ class KAVM(KRun):
 
     @current_config.setter
     def current_config(self, new_config: KAst) -> None:
+#          print("abcdefg")
         self._current_config = new_config
 
     @staticmethod
@@ -246,6 +247,7 @@ class KAVM(KRun):
             self.accounts[addr] = KAVMAccount(addr)
 
         self.current_config = self.simulation_config(txns)
+#          print(f"simulation_config:\n{self.current_config}")
 
         # construct the KAVM configuration and run it via krun
         try:
@@ -257,15 +259,24 @@ class KAVM(KRun):
             raise
         if isinstance(output, KAst) and krun_return_code == 0:
             # Finilize successful evaluation
+#              print(f"setting in {self}")
             self.current_config = output
+#              print(self.current_config)
             (_, subst) = carefully_split_config_from(cast(KInner, self.current_config), ignore_cells={'<transaction>'})
+            print("ACCOUNTSMAP_CELL:")
+            print(subst['ACCOUNTSMAP_CELL'])
+
             # * update self.accounts with the new configuration cells
             modified_accounts = AccountCellMap(subst['ACCOUNTSMAP_CELL'])
+            print("modified_accounts:")
+            print(modified_accounts)
             for address in self.accounts.keys():
                 self.accounts[address] = modified_accounts[address]
                 # * update self.apps with the new configuration cells
                 for appid, app in self.accounts[address]._apps_created.items():
                     self.apps[appid] = app
+            print("accounts:")
+            print(self.accounts)
             # * TODO: update self.assets with the new configuration cells
             # * save committed txns
             post_txns = TransactionCellMap(self, subst['TRANSACTIONS_CELL'])
@@ -414,7 +425,9 @@ class KAVM(KRun):
 
         If successful, put the resulting configuration as the new current config.
         """
+#          print(f"in _run_with_current_config in {self}")
         configuration = self.current_config
+#          print(self.current_config)
         vars = free_vars(cast(KInner, configuration))
         assert len(vars) == 0, f'Cannot run from current configuration due to unbound variables {vars}'
 

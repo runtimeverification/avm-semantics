@@ -1,6 +1,6 @@
 import json
 import tempfile
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from pathlib import Path
 from typing import Any, Dict, Union, cast
 
@@ -25,6 +25,8 @@ class KAVMApplication:
         clear_state_pgm: bytes = b'',
         global_ints: int = 0,
         global_bytes: int = 0,
+        global_int_data: Dict = {},
+        global_bytes_data: Dict = {},
         local_ints: int = 0,
         local_bytes: int = 0,
         extra_pages: int = 0,
@@ -39,6 +41,8 @@ class KAVMApplication:
         self._clear_state_pgm = clear_state_pgm
         self._global_ints = global_ints
         self._global_bytes = global_bytes
+        self._global_int_data = global_int_data
+        self._global_bytes_data = global_bytes_data
         self._local_ints = local_ints
         self._local_bytes = local_bytes
         self._extra_pages = extra_pages
@@ -126,13 +130,26 @@ class KAVMApplication:
     def to_app_cell(app: 'KAVMApplication') -> KInner:
         return app.app_cell
 
+
     @staticmethod
     def from_app_cell(term: KInner) -> 'KAVMApplication':
+        print("in from_app_cell")
+        print(term)
+        def from_map(term: KInner) -> Dict:
+            if term.label.name == '_|->_':
+                if term.args[1].sort.name == 'Bytes':
+                    return {term.args[0].token: b64encode(bytes(term.args[1].token, encoding="raw_unicode_escape"))}
+                if term.args[1].sort.name == 'Int':
+                    return {term.args[0].token: int(term.args[1].token)}
+            if term.label.name == '_Map_':
+                return from_map(term.args[0]) | from_map(term.args[1])
+            if term.label.name == '.Map':
+                return {}
         """
         Parse a KAVMApplication instance from a Kast term
         """
         (_, subst) = split_config_from(term)
-        return KAVMApplication(
+        test = KAVMApplication(
             app_id=int(subst['APPID_CELL'].token),
             approval_pgm_src=subst['APPROVALPGMSRC_CELL'],
             clear_state_pgm_src=subst['CLEARSTATEPGMSRC_CELL'],
@@ -140,10 +157,14 @@ class KAVMApplication:
             clear_state_pgm=b64decode(subst['CLEARSTATEPGM_CELL'].token),
             global_ints=int(subst['GLOBALNUMINTS_CELL'].token),
             global_bytes=int(subst['GLOBALNUMBYTES_CELL'].token),
+            global_int_data=from_map(subst['GLOBALINTS_CELL']),
+            global_bytes_data=from_map(subst['GLOBALBYTES_CELL']),
             local_ints=int(subst['LOCALNUMINTS_CELL'].token),
             local_bytes=int(subst['LOCALNUMBYTES_CELL'].token),
             extra_pages=int(subst['EXTRAPAGES_CELL'].token),
         )
+        print(test)
+        return test
 
     def dictify(self) -> Dict[str, Any]:
         """
@@ -158,6 +179,7 @@ class KAVMApplication:
                 'extra-program-pages': self._extra_pages,
                 'local-state-schema': {},
                 'global-state-schema': {},
-                'global-state': {},
+                'global-state': 
+                    [{'key': b64encode(k.encode('ascii')), 'value':{'bytes':v}} for k,v in self._global_bytes_data.items()]
             },
         }
