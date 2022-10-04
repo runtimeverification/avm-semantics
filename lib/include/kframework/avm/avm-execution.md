@@ -17,6 +17,7 @@ module AVM-EXECUTION-SYNTAX
   imports ALGO-TXN
   imports AVM-CONFIGURATION
   imports AVM-INITIALIZATION
+  imports TEAL-SYNTAX
   imports TEAL-DRIVER
 ```
 

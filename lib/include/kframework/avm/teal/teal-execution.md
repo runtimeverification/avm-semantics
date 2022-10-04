@@ -27,7 +27,7 @@ there may be some remaining artefacts of the previous transaction's TEAL.
            <pc> 0 </pc>
            <program> .Map </program>
            <mode> stateful </mode>
-           <version> 1 </version>
+           <version> 4 </version>
            <stack> .TStack </stack>
            <stacksize> 0 </stacksize>
            <jumped> false </jumped>
