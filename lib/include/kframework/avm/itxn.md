@@ -419,7 +419,7 @@ module ALGO-ITXN
 
   rule <k> #checkForReentrance(
              <transaction>
-               <txID> TX_ID </txID>
+               <txID> _TX_ID </txID>
                <txnTypeSpecificFields>
                  <appCallTxFields>
                    <applicationID> APP_ID </applicationID>
@@ -427,7 +427,7 @@ module ALGO-ITXN
                  </appCallTxFields>
                </txnTypeSpecificFields>
                ...
-             </transaction>) => . 
+             </transaction>) => .
              ...
        </k>
        <activeApps> AA </activeApps>
@@ -435,7 +435,7 @@ module ALGO-ITXN
 
   rule <k> #checkForReentrance(
              <transaction>
-               <txID> TX_ID </txID>
+               <txID> _TX_ID </txID>
                <txnTypeSpecificFields>
                  <appCallTxFields>
                    <applicationID> APP_ID </applicationID>
@@ -511,7 +511,7 @@ module ALGO-ITXN
          </transaction>) => . ... 
        </k>
 
-  rule <k> #checkItxnFieldsCoherent(<transaction> T </transaction>) => panic(TXN_INVALID) ...</k> [owise]
+  rule <k> #checkItxnFieldsCoherent(<transaction> _T </transaction>) => panic(TXN_INVALID) ...</k> [owise]
 
   syntax KItem ::= #checkItxns(List)
 
@@ -529,7 +529,7 @@ module ALGO-ITXN
   //---------------------------
 
   rule <k> #pushItxns() => (#pushTxnFront(<txID> Int2String(TXN_ID) </txID>) ~> #pushItxns()) ...</k>
-       <innerTransactions> OTHER_ITXNS:List (ListItem(
+       <innerTransactions> _OTHER_ITXNS:List (ListItem(
          <transaction>
            <txID> _ </txID>
            <txHeader>
@@ -550,7 +550,7 @@ module ALGO-ITXN
            </txHeader>
            TXN_BODY
          </transaction>)
-         TXNS
+         _TXNS
        </transactions>
        <nextTxnID> TXN_ID => TXN_ID +Int 1 </nextTxnID>
 

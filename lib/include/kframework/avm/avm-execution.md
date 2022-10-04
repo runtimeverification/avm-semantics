@@ -71,7 +71,7 @@ and the current configuration is frozen for examination.
   
   // #evalTxGroup
   //---------------------------------------
-  rule <k> #evalTxGroup() => #initTxGroup() ~> #evalNextTx() ...</k>
+  rule <k> #evalTxGroup() => #initTxGroup() ~> #initTxnIndexMap() ~> #evalNextTx() ...</k>
 
   syntax AlgorandCommand ::= #evalNextTx()
 
@@ -123,7 +123,7 @@ the attached stateless TEAL if the transaction is logicsig-signed.
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID> TXN_ID </txID>
-         <typeEnum> TXN_TYPE </typeEnum>
+         <typeEnum> _TXN_TYPE </typeEnum>
          <resume> true </resume>
          <sender> SENDER_ADDR </sender>
          ...

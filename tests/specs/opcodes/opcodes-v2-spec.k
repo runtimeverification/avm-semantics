@@ -48,29 +48,6 @@ module OPCODES-V2-SPEC
 //         </transactions>
 //     requires S <Int 1000
 
-  claim <k> loadFromGroup(0, Sender) => 0 </k>
-//        <stack> XS => SENDER : XS </stack>
-//        <currentTx> "2" </currentTx>
-        <transactions>
-          <transaction>
-            <txID> "0" </txID>
-            <groupID> "0" </groupID>
-            <groupIdx> 0 </groupIdx>
-            <sender> SENDER:Bytes </sender>
-//            <typeEnum> @ appl </typeEnum>
-            ...
-          </transaction>
-          <transaction>
-            <txID> TXID </txID>
-            <groupID> "0" </groupID>
-            <groupIdx> 1 </groupIdx>
-//            <typeEnum> @ appl </typeEnum>
-            ...
-          </transaction>
-        </transactions>
-      requires TXID ==K "3"
-//      requires ID =/=K "0"
-
 //   claim <k> gtxna 0 ApplicationArgs 1 => . </k>
 //         <stack> XS => SENDER : XS </stack>
 //         <stacksize> S => S +Int 1 </stacksize>
