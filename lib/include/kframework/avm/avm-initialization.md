@@ -354,6 +354,66 @@ The asset initialization rule must be used *after* initializing accounts.
   rule <k> declareTealSource _ => .K ... </k>
 ```
 
+### Transaction Index Initialization
+
+Traverse the `<transactions>` cell and index the relation of group ids with transaction ids
+
+```k
+  syntax AlgorandCommand ::= #initTxnIndexMap()
+  //-------------------------------------------
+  rule <k> #initTxnIndexMap() => #initTxnIndexMap(collectTxnIds(<transactions> TXNS </transactions>)) ... </k>
+       <transactions> TXNS </transactions>
+
+  syntax AlgorandCommand ::= #initTxnIndexMap(List)
+  //-----------------------------------------------
+  rule <k> #initTxnIndexMap(ListItem(TXN_ID) REST) => #initTxnIndexMap(ListItem(TXN_ID) REST) ... </k>
+       <transaction>
+         <txID> TXN_ID </txID>
+         <groupID> GROUP_ID </groupID>
+         ...
+       </transaction>
+       <txnIndexMap>
+          ITEMS =>
+          <txnIndexMapGroup>
+            <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
+            <txnIndexMapGroupValues> .Map </txnIndexMapGroupValues>
+          </txnIndexMapGroup>
+          ITEMS
+       </txnIndexMap>
+    requires notBool (group_id_in_index_map(GROUP_ID))
+
+  rule <k> #initTxnIndexMap(ListItem(TXN_ID) REST) => #initTxnIndexMap(REST) ... </k>
+       <transaction>
+         <txID> TXN_ID </txID>
+         <groupID> GROUP_ID </groupID>
+         <groupIdx> GROUP_IDX </groupIdx>
+         ...
+       </transaction>
+       <txnIndexMap>
+          <txnIndexMapGroup>
+            <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
+            <txnIndexMapGroupValues> VALUES => VALUES[GROUP_IDX <- TXN_ID] </txnIndexMapGroupValues>
+          </txnIndexMapGroup>
+          ...
+       </txnIndexMap>
+
+  rule <k> #initTxnIndexMap(.List) => .K ... </k>
+
+  syntax List ::= collectTxnIds(TransactionsCell) [function, functional]
+  //--------------------------------------------------------------------
+  rule collectTxnIds(<transactions> .Bag </transactions>) => .List
+  rule collectTxnIds(<transactions> <transaction> <txID> TXN_ID </txID> ... </transaction> TXNS </transactions>)
+    => ListItem(TXN_ID) collectTxnIds(<transactions> TXNS </transactions>)
+
+  syntax Bool ::= "group_id_in_index_map" "(" String ")" [function, functional]
+  //---------------------------------------------------------------------------
+  rule [[ group_id_in_index_map(GROUP_ID) => true ]]
+       <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
+  rule group_id_in_index_map(_GROUP_ID) => false [owise]
+
+```
+
+
 ```k
 endmodule
 ```

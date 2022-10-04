@@ -197,6 +197,7 @@ module ALGO-BLOCKCHAIN
   imports ADDITIONAL-FIELDS
   imports TEAL-SYNTAX
   imports TEAL-TYPES-SYNTAX
+  imports MAP
 
   // Note: An address is the base32 encoding of a {pub key + 4-byte checksum}
   // Note: There are three ways in which an account may be created:
@@ -231,6 +232,12 @@ module ALGO-BLOCKCHAIN
       <nextAppID>    1    </nextAppID>
       <nextTxnID>    0    </nextTxnID>
       <nextGroupID>  1    </nextGroupID>
+      <txnIndexMap>
+        <txnIndexMapGroup multiplicity="*" type="Map">
+          <txnIndexMapGroupKey> "":String </txnIndexMapGroupKey>
+          <txnIndexMapGroupValues> .Map </txnIndexMapGroupValues> // GroupIdx (offset) |-> Transaction ID
+        </txnIndexMapGroup>
+      </txnIndexMap>
     </blockchain>
 ```
 
@@ -795,6 +802,31 @@ references and also to check that a resource is available.
     requires contains(getTxnField(getCurrentTxn(), Assets), A)
 
   rule assetAvailable(_) => false [owise]
+
+```
+
+### Transaction Index Accessors
+
+The transaction index connects a transaction groups ID to the transaction IDs comprising the group
+
+```k
+
+  syntax MaybeTValue ::= getGroupFieldByIdx(String, Int, TxnField) [function]
+  syntax MaybeTValue ::= getGroupFieldByIdx(String, Int, TxnaField, Int) [function]
+
+  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD) => getTxnField(TXN_ID, FIELD) ]]
+        <txnIndexMapGroup>
+          <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
+          <txnIndexMapGroupValues> GROUP_INDEX |-> TXN_ID ... </txnIndexMapGroupValues>
+        </txnIndexMapGroup>
+
+  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD, FIELD_INDEX) => getTxnField(TXN_ID, FIELD, FIELD_INDEX) ]]
+        <txnIndexMapGroup>
+          <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
+          <txnIndexMapGroupValues> GROUP_INDEX |-> TXN_ID ... </txnIndexMapGroupValues>
+        </txnIndexMapGroup>
+
+  rule getGroupFieldByIdx(_, _, _) => NoTValue [owise]
 
 endmodule
 ```

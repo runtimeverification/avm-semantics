@@ -419,20 +419,29 @@ module OPCODES-V1-SPEC
 
 // txn f 	1 	heavy_check_mark 	1
   claim <k> txn Sender => . </k>
-        <stack> XS => SENDER : XS </stack>
+        <stack> XS => normalize(SENDER) : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
         <currentTx> TX_ID </currentTx>
         <transactions>
           <transaction>
             <txID> TX_ID </txID>
-            <groupID> "0" </groupID>
-            <groupIdx> 0 </groupIdx>
+            <groupID> GROUP_ID:String </groupID>
+            <groupIdx> GROUP_INDEX:Int </groupIdx>
             <sender> SENDER:Bytes </sender>
-            <typeEnum> @ appl </typeEnum>
+            <typeEnum> TYPE </typeEnum>
             ...
           </transaction>
+          ...
         </transactions>
-    requires S <Int 1000
+        <txnIndexMap>
+          <txnIndexMapGroup>
+            <txnIndexMapGroupKey> GROUP_ID:String </txnIndexMapGroupKey>
+            <txnIndexMapGroupValues> GROUP_INDEX:Int |-> TX_ID:String </txnIndexMapGroupValues>
+          </txnIndexMapGroup>
+          ...
+        </txnIndexMap>
+    requires S <Int MAX_STACK_DEPTH
+      andBool #isValidForTxnType(Sender, TYPE)
 
 // global f 	1 	heavy_check_mark 	1
   claim <k> global MinBalance => . </k>
@@ -441,28 +450,39 @@ module OPCODES-V1-SPEC
     requires S <Int 1000
 
 // gtxn t f 	1 	heavy_check_mark 	1
-  claim <k> gtxn 0 Sender => . </k>
-        <stack> XS => SENDER : XS </stack>
-        <stacksize> S => S +Int 1 </stacksize>
-        <currentTx> "1" </currentTx>
-        <transactions>
-          <transaction>
-            <txID> "0" </txID>
-            <groupID> "0" </groupID>
-            <groupIdx> 0 </groupIdx>
-            <sender> SENDER:Bytes </sender>
-            <typeEnum> @ appl </typeEnum>
-            ...
-          </transaction>
-          <transaction>
-            <txID> "1" </txID>
-            <groupID> "0" </groupID>
-            <groupIdx> 1 </groupIdx>
-            <typeEnum> @ appl </typeEnum>
-            ...
-          </transaction>
-        </transactions>
-    requires S <Int 1000
+   claim <k> gtxn GROUP_INDEX Sender => . </k>
+         <stack> XS => normalize(SENDER) : XS </stack>
+         <stacksize> S => S +Int 1 </stacksize>
+         <currentTx> CURRENT_TX_ID </currentTx>
+         <transactions>
+           <transaction>
+             <txID> CURRENT_TX_ID </txID>
+             <groupID> GROUP_ID:String </groupID>
+             <groupIdx> CURRENT_GROUP_INDEX:Int </groupIdx>
+             ...
+           </transaction>
+           <transaction>
+             <txID> TARGET_TX_ID </txID>
+             <groupID> GROUP_ID:String </groupID>
+             <groupIdx> GROUP_INDEX:Int </groupIdx>
+             <sender> SENDER:Bytes </sender>
+             <typeEnum> TYPE </typeEnum>
+             ...
+           </transaction>
+           ...
+         </transactions>
+         <txnIndexMap>
+           <txnIndexMapGroup>
+             <txnIndexMapGroupKey> GROUP_ID:String </txnIndexMapGroupKey>
+             <txnIndexMapGroupValues> GROUP_INDEX:Int |-> TARGET_TX_ID:String
+                                      CURRENT_GROUP_INDEX |-> CURRENT_TX_ID:String
+                                      ...
+             </txnIndexMapGroupValues>
+           </txnIndexMapGroup>
+           ...
+         </txnIndexMap>
+     requires S <Int MAX_STACK_DEPTH
+      andBool #isValidForTxnType(Sender, TYPE)
 
 // load i 	1 	heavy_check_mark 	1
   claim <k> load 1 => . </k>

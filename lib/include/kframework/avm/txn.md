@@ -207,7 +207,7 @@ module ALGO-TXN
 
 ```k
   syntax String ::= getTxID(TransactionCell) [function, functional]
-  //-------------------------------------------------------------
+  //---------------------------------------------------------------
   rule getTxID(<transaction> <txID> ID </txID> ... </transaction>) => ID
 ```
 
@@ -215,7 +215,7 @@ module ALGO-TXN
 
 ```k
   syntax String ::= getTxnGroupID(String) [function]
-  //---------------------------------------------
+  //------------------------------------------------
   rule [[ getTxnGroupID(TXN_ID) => I ]]
        <transaction> 
          <txID> TXN_ID </txID>
@@ -224,7 +224,7 @@ module ALGO-TXN
        </transaction>
 
   syntax Int ::= getTxnGroupIndex(String) [function]
-  //---------------------------------------------
+  //------------------------------------------------
   rule [[ getTxnGroupIndex(TXN_ID) => I ]]
        <transaction> 
          <txID> TXN_ID </txID>
@@ -232,45 +232,10 @@ module ALGO-TXN
          ...
        </transaction>
 
-//  syntax MaybeTValue ::= getGroupFieldByIdx(String, Int, TxnField) [function]
-  syntax MaybeTValue ::= getGroupFieldByIdx(String, Int) [function]
-//  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD) => getTxnField(TX_ID, FIELD) ]]
-
-  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX) => 0 ]]
-//       <transactions>
-       <transaction>
-//         <txID> TX_ID </txID>
-         <groupID> GROUP_ID </groupID>
-         <groupIdx> GROUP_INDEX </groupIdx>
-         ...
-       </transaction>
-//       ...
-//       </transactions>
-
-  syntax MaybeTValue ::= getGroupFieldByIdx(String, Int, TxnaField, Int) [function]
-//  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD, INDEX) => getTxnField(TX_ID, FIELD, INDEX) ]]
-  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD, INDEX) => 0 ]]
-       <transaction>
-//         <txID> TX_ID </txID>
-         <groupID> GROUP_ID </groupID>
-         <groupIdx> GROUP_INDEX </groupIdx>
-//         <groupIdx> _ </groupIdx>
-         ...
-       </transaction>
-
-//  syntax MaybeTValue ::= getGroupTxnField(String, Int, TxnField)       [function, functional]
-  syntax MaybeTValue ::= getGroupTxnField(String, Int)       [function, functional]
-  syntax MaybeTValue ::= getGroupTxnField(String, Int, TxnaField, Int) [function, functional]
-  syntax MaybeTValue ::= getTxnField(String, TxnField)                 [function, functional]
-  syntax MaybeTValue ::= getTxnField(String, TxnaField, Int)           [function, functional]
-  syntax TValueList  ::= getTxnField(String, TxnaField)                [function, functional]
-  //-----------------------------------------------------------------------------------------
-  rule getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX) =>
-//       getGroupFieldByIdx(getTxnGroupID(CURRENT_TX_ID), GROUP_INDEX, FIELD)
-       getGroupFieldByIdx("0", GROUP_INDEX)
-
-  rule getGroupTxnField(CURRENT_TX_ID, GROUP_INDEX, FIELD, INDEX) => 
-       getGroupFieldByIdx(getTxnGroupID(CURRENT_TX_ID), GROUP_INDEX, FIELD, INDEX)
+  syntax MaybeTValue ::= getTxnField(String, TxnField)                 [function]
+  syntax MaybeTValue ::= getTxnField(String, TxnaField, Int)           [function]
+  syntax TValueList  ::= getTxnField(String, TxnaField)                [function]
+  //-----------------------------------------------------------------------------
 
   rule [[ getTxnField(I, TxID) => normalize(I) ]]
        <transaction>
@@ -927,8 +892,8 @@ module ALGO-TXN
   rule _ in_txns( <transactions> .Bag </transactions> ) => false
 
 
-  syntax Bool ::= #isValidForTxnType(TxnField,     Int) [function]
-  syntax Bool ::= #isValidForTxnType(TxnaField,    Int) [function]
+  syntax Bool ::= #isValidForTxnType(TxnField,     Int) [function, functional]
+  syntax Bool ::= #isValidForTxnType(TxnaField,    Int) [function, functional]
   // -------------------------------------------------------------
   // all transaction types
   rule #isValidForTxnType(_:TxnHeaderField  , I)    => 1 <=Int I andBool I <=Int 6
@@ -947,6 +912,9 @@ module ALGO-TXN
   // the application call transaction type
   rule #isValidForTxnType(_:TxnApplField  , I)    => I ==Int 6
   rule #isValidForTxnType(_:TxnaField     , I)    => I ==Int 6
+  // catch-all failure case
+  rule #isValidForTxnType(_:TxnField  , _)    => false [owise]
+  rule #isValidForTxnType(_:TxnaField , _)    => false [owise]
 
 endmodule
 ```
