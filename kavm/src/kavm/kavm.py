@@ -379,6 +379,7 @@ class KAVM(KRun):
                 'K_CELL': KApply(
                     '#evalTxGroup()_AVM-EXECUTION_AlgorandCommand',
                 ),
+                'TXNINDEXMAP_CELL': KApply('.TxnIndexMapGroupCellMap'),
             }
         )
 
