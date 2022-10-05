@@ -54,7 +54,7 @@ def tvalue_list(value: List[Union[str, int, bytes]]) -> KInner:
         return KApply('.TValueList')
     if len(value) == 1:
         return tvalue_elem(value[0])
-    return KApply('#abcd', [tvalue_elem(value[0]), tvalue_list(value[1:])])
+    return KApply('TValueListCons', [tvalue_elem(value[0]), tvalue_list(value[1:])])
 #      return build_cons(
 #                 unit=KApply('.TValueList'),
 #                 label=KLabel('#abcd'),
