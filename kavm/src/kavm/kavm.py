@@ -259,7 +259,6 @@ class KAVM(KRun):
             # Finilize successful evaluation
             self.current_config = output
             (_, subst) = carefully_split_config_from(cast(KInner, self.current_config), ignore_cells={'<transaction>'})
-
             # * update self.accounts with the new configuration cells
             modified_accounts = AccountCellMap(subst['ACCOUNTSMAP_CELL'])
             for address in self.accounts.keys():
