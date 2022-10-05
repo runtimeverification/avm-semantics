@@ -439,8 +439,6 @@ class KAVM(KRun):
                     proc_result.returncode,
                     proc_result.stderr.decode(sys.getfilesystemencoding()),
                 )
-            print("output_kast_term:")
-            print(output_kast_term)
 
             return (proc_result.returncode, inline_cell_maps(output_kast_term))
 
