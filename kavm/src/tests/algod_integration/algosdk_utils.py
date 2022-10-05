@@ -21,7 +21,6 @@ def get_balance(client: AlgodClient, address: str) -> Optional[int]:
     return client.account_info(address)['amount']
 
 def get_local_int(client: AlgodClient, app_id: int, address: str, key: str) -> Optional[int]:
-    print(client.account_info(address))
     return list_to_dict_state(list_to_dict_apps_created(client.account_info(address)['apps-local-state'])[app_id]['key-value'])[key]['uint']
 
 def get_local_bytes(client: AlgodClient, app_id: int, address: str, key: str) -> Optional[str]:
