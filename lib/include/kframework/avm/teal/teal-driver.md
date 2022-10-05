@@ -1609,11 +1609,11 @@ Stateful TEAL Operations
     requires notBool (APP in_optedInApps(<appsOptedIn> OA </appsOptedIn>))
 
   // if the account doesn't exist, panic
-//  rule <k> #app_local_put ADDR _ => panic(TXN_ACCESS_FAILED) ... </k>
-//       <stack> _ : _ : _ : XS => XS </stack>
-//       <stacksize> S => S -Int 3 </stacksize>
-//       <accountsMap> AMAP  </accountsMap>
-//    requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
+    rule <k> #app_local_put ADDR _ => panic(TXN_ACCESS_FAILED) ... </k>
+         <stack> _ : _ : _ : XS => XS </stack>
+         <stacksize> S => S -Int 3 </stacksize>
+         <accountsMap> AMAP  </accountsMap>
+      requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
 ```
 
 *app_local_del*
