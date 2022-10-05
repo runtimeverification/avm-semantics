@@ -77,10 +77,6 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
 
     print(client.account_info(user['address']))
 
-    print("t3")
-
-    print(get_global_bytes(client, app_id, "Creator"))
-
     assert encode_address(get_global_bytes(client, app_id, "Creator")) == user['address']
     assert get_local_int(client, app_id, user['address'], "timesPinged") == 0
 
