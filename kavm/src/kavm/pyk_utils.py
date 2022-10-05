@@ -141,7 +141,6 @@ class KCellMap(MutableMapping):
                 key = int(inner.args[0].args[0].token) if key_type is int else str(inner.args[0].args[0].token)
                 self._store[key] = value_initializer(inner)
             return inner
-        
         if term:
             top_down(extractor, cast(KInner, term))
 
