@@ -11,6 +11,7 @@ def call_counter_approval_program():
         [
             App.globalPut(Bytes("Creator"), Txn.sender()),
             App.globalPut(Bytes("Creator2"), Txn.sender()),
+            App.globalPut(Bytes("Number"), Int(123)),
             Return(Int(1)),
         ]
     )

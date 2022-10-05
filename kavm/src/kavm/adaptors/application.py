@@ -4,7 +4,7 @@ from base64 import b64decode, b64encode
 from pathlib import Path
 from typing import Any, Dict, Union, cast
 
-from pyk.kast import KApply, KAst, KInner, KSort
+from pyk.kast import KApply, KAst, KInner, KSort, KToken
 from pyk.kastManip import split_config_from
 from pyk.prelude import intToken
 
@@ -57,6 +57,23 @@ class KAVMApplication:
 
     @property
     def app_cell(self) -> KInner:
+
+        def from_list_bytes(d):
+            if len(d) == 0:
+                return KApply('.Map')
+            if len(d) == 1:
+                return KApply('_|->_', args=[KToken(token='b\"' + d[0][0] + '\"', sort=KSort(name='Bytes')),
+                    KToken(token='b\"' + d[0][1][2:-1] + '\"', sort=KSort(name='Bytes'))])
+            return KApply('_Map_', [from_list_bytes(d[0:1]), from_list_bytes(d[1:])])
+
+        def from_list_ints(d):
+            if len(d) == 0:
+                return KApply('.Map')
+            if len(d) == 1:
+                return KApply('_|->_', args=[KToken(token='b\"' + d[0][0] + '\"', sort=KSort(name='Bytes')),
+                    KToken(token=str(d[0][1]), sort=KSort(name='Int'))])
+            return KApply('_Map_', [from_list_ints(d[0:1]), from_list_ints(d[1:])])
+
         return KApply(
             '<app>',
             [
@@ -71,8 +88,8 @@ class KAVMApplication:
                         KApply('<globalNumInts>', [intToken(self._global_ints)]),
                         KApply('<globalNumBytes>', [intToken(self._global_bytes)]),
                         # NOTE: these two cells MUST BE in the same order as they are declared in the K configuration
-                        KApply('<globalBytes>', KApply('.Map')),
-                        KApply('<globalInts>', KApply('.Map')),
+                        KApply('<globalBytes>', from_list_bytes([(k,str(b64decode(v))) for k,v in self._global_bytes_data.items()])),
+                        KApply('<globalInts>', from_list_ints([(k,v) for k,v in self._global_int_data.items()])),
                     ],
                 ),
                 KApply(
@@ -85,6 +102,7 @@ class KAVMApplication:
                 KApply('<extraPages>', [intToken(self._extra_pages)]),
             ],
         )
+        return test
 
     def to_kore_term(self, kavm: Any) -> str:
         '''
@@ -133,8 +151,6 @@ class KAVMApplication:
 
     @staticmethod
     def from_app_cell(term: KInner) -> 'KAVMApplication':
-        print("in from_app_cell")
-        print(term)
         def from_map(term: KInner) -> Dict:
             if term.label.name == '_|->_':
                 if term.args[1].sort.name == 'Bytes':
@@ -149,7 +165,7 @@ class KAVMApplication:
         Parse a KAVMApplication instance from a Kast term
         """
         (_, subst) = split_config_from(term)
-        test = KAVMApplication(
+        return KAVMApplication(
             app_id=int(subst['APPID_CELL'].token),
             approval_pgm_src=subst['APPROVALPGMSRC_CELL'],
             clear_state_pgm_src=subst['CLEARSTATEPGMSRC_CELL'],
@@ -163,8 +179,6 @@ class KAVMApplication:
             local_bytes=int(subst['LOCALNUMBYTES_CELL'].token),
             extra_pages=int(subst['EXTRAPAGES_CELL'].token),
         )
-        print(test)
-        return test
 
     def dictify(self) -> Dict[str, Any]:
         """
@@ -181,5 +195,6 @@ class KAVMApplication:
                 'global-state-schema': {},
                 'global-state': 
                     [{'key': b64encode(k.encode('ascii')), 'value':{'bytes':v}} for k,v in self._global_bytes_data.items()]
+                    +   [{'key': b64encode(k.encode('ascii')), 'value':{'uint':v}} for k,v in self._global_int_data.items()]
             },
         }

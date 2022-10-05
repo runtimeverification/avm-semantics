@@ -2,14 +2,87 @@ import json
 import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union, cast
+from base64 import b64encode
 
 from pyk.kast import KApply, KAst, KInner, KSort, KToken, Subst
 from pyk.kastManip import flatten_label, split_config_from
 from pyk.prelude import intToken
 
 from kavm.constants import MIN_BALANCE
-from kavm.pyk_utils import AppCellMap, split_direct_subcells_from
+from kavm.pyk_utils import AppCellMap, AppOptInCellMap, split_direct_subcells_from
 
+class KAVMOptInApp:
+    def __init__(
+        self,
+        app_id: int = 0,
+        local_ints: Dict = {},
+        local_bytes: Dict = {},
+    ) -> None:
+        self._app_id = app_id
+        self._local_ints = local_ints
+        self._local_bytes = local_bytes
+
+    @staticmethod
+    def from_optin_app_cell(term: KInner) -> 'KAVMOptInApp':
+        def from_map(term: KInner) -> Dict:
+            if term.label.name == '_|->_':
+                if term.args[1].sort.name == 'Bytes':
+                    return {term.args[0].token: b64encode(bytes(term.args[1].token, encoding="raw_unicode_escape"))}
+                if term.args[1].sort.name == 'Int':
+                    return {term.args[0].token: int(term.args[1].token)}
+            if term.label.name == '_Map_':
+                return from_map(term.args[0]) | from_map(term.args[1])
+            if term.label.name == '.Map':
+                return {}
+
+        (_, subst) = split_direct_subcells_from(term)
+
+        print("in from_optin_app_cell")
+        print(subst)
+
+        return KAVMOptInApp(
+            app_id=int(subst['OPTINAPPID_CELL'].token),
+            local_ints=from_map(subst['LOCALINTS_CELL']),
+            local_bytes=from_map(subst['LOCALBYTES_CELL']),
+        )
+
+    @property
+    def optin_app_cell(self) -> KInner:
+
+        def from_list_bytes(d):
+            if len(d) == 0:
+                return KApply('.Map')
+            if len(d) == 1:
+                return KApply('_|->_', args=[KToken(token='b\"' + d[0][0] + '\"', sort=KSort(name='Bytes')),
+                    KToken(token='b\"' + d[0][1][2:-1] + '\"', sort=KSort(name='Bytes'))])
+            return KApply('_Map_', [from_list_bytes(d[0:1]), from_list_bytes(d[1:])])
+
+        def from_list_ints(d):
+            if len(d) == 0:
+                return KApply('.Map')
+            if len(d) == 1:
+                return KApply('_|->_', args=[KToken(token='b\"' + d[0][0] + '\"', sort=KSort(name='Bytes')),
+                    KToken(token=str(d[0][1]), sort=KSort(name='Int'))])
+            return KApply('_Map_', [from_list_ints(d[0:1]), from_list_ints(d[1:])])
+
+        return KApply(
+            '<optInApp>',
+            [
+                KApply('<optInAppID>', [KToken(self._app_id, KSort('Int'))]),
+                KApply('<localInts>', [from_list_ints([(k,v) for k,v in self._local_ints.items()])]),
+                KApply('<localBytes>', [from_list_bytes([(k,v) for k,v in self._local_bytes.items()])]),
+            ],
+        )
+
+    @staticmethod
+    def to_optin_app_cell(optin_app: 'KAVMOptInApp') -> KInner:
+        print("abc")
+        return optin_app.optin_app_cell
+    
+    def dictify(self) -> List:
+        return [{'key': b64encode(k.encode('ascii')), 'value':{'bytes':v}} for k,v in
+                self._local_bytes.items()] + [{'key': b64encode(k.encode('ascii')), 'value':{'uint':v}}
+                        for k,v in self._local_ints.items()]
 
 class KAVMAccount:
     """
@@ -27,15 +100,16 @@ class KAVMAccount:
         status: int = 0,
         key: str = '',
         apps_created: Optional[AppCellMap] = None,
-        apps_opted_in: Optional[List[int]] = None,
+        apps_opted_in: Optional[AppOptInCellMap] = None,
         assets_created: Optional[List[int]] = None,
         assets_opted_in: Optional[List[int]] = None,
     ) -> None:
         """
         Create a KAVM account cell.
         """
-        print("constructor1")
-        print(apps_created)
+        print("in KAVMAccount constructor")
+        print(apps_opted_in.k_cell if apps_opted_in else "none")
+        print(apps_created.k_cell if apps_created else "none")
         self._address = address
         self._balance = balance
         self._min_balance = min_balance
@@ -45,12 +119,9 @@ class KAVMAccount:
         self._status = status
         self._key = address if key == '' else key
         self._apps_created = apps_created if apps_created else AppCellMap()
-        self._apps_opted_in = apps_opted_in if apps_opted_in else []
+        self._apps_opted_in = apps_opted_in if apps_opted_in else AppOptInCellMap()
         self._assets_created = assets_created if assets_created else []
         self._assets_opted_in = assets_opted_in if assets_opted_in else []
-
-        print("constructor2")
-        print(apps_created)
 
     # TODO: implement better eq
     def __eq__(self, other: Any) -> bool:
@@ -90,7 +161,10 @@ class KAVMAccount:
                     '<appsCreated>',
                     self._apps_created.k_cell,
                 ),
-                KApply('<appsOptedIn>', [KApply('.OptInAppCellMap')]),
+                KApply(
+                    '<appsOptedIn>',
+                    self._apps_opted_in.k_cell,
+                ),
                 KApply('<assetsCreated>', [KApply('.AssetCellMap')]),
                 KApply('<assetsOptedIn>', [KApply('.OptInAssetCellMap')]),
             ],
@@ -105,10 +179,10 @@ class KAVMAccount:
         """
         Parse a KAVMAccount instance from a Kast term
         """
+        print("in from_account_cell")
         (_, subst) = split_direct_subcells_from(term)
-        print("from_account_cell")
-        print(subst['APPSCREATED_CELL'])
-        test = KAVMAccount(
+        print(subst['APPSOPTEDIN_CELL'])
+        return KAVMAccount(
             address=subst['ADDRESS_CELL'].token,
             balance=int(subst['BALANCE_CELL'].token),
             min_balance=int(subst['MINBALANCE_CELL'].token),
@@ -118,12 +192,10 @@ class KAVMAccount:
             status=int(subst['STATUS_CELL'].token),
             key=subst['KEY_CELL'].token,
             apps_created=AppCellMap(subst['APPSCREATED_CELL']),
-            apps_opted_in=[],
+            apps_opted_in=AppOptInCellMap(subst['APPSOPTEDIN_CELL']),
             assets_created=[],
             assets_opted_in=[],
         )
-        print("before return")
-        return test
 
     def to_kore_term(self, kavm: Any) -> str:
         '''
@@ -170,6 +242,8 @@ class KAVMAccount:
         Return a dictified representation of the account cell to pass to py-algorand-sdk
         See https://github.com/algorand/go-algorand/blob/87867c9381260dc4efb5a42abaeb9e038b1c10af/daemon/algod/api/algod.oas2.json#L1785 for format
         """
+        print("apps_opted_in:")
+        print(self._apps_opted_in)
         return {
             'round': self._round,
             'address': self._address,
@@ -184,6 +258,7 @@ class KAVMAccount:
             'total-assets-opted-in': len(self._assets_opted_in) if self._assets_opted_in else 0,
             'total-created-apps': len(self._apps_created) if self._apps_created else 0,
             'total-created-assets': len(self._assets_created) if self._assets_created else 0,
+            'apps-local-state': [{'id': k, 'key-value': v.dictify()} for k,v in self._apps_opted_in.items()]
         }
 
     def __repr__(self) -> str:

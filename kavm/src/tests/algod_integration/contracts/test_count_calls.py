@@ -47,7 +47,7 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
         sp = sp,
         index = None,
         local_schema = StateSchema(num_uints=1, num_byte_slices=0),
-        global_schema = StateSchema(num_uints=1, num_byte_slices=2),
+        global_schema = StateSchema(num_uints=2, num_byte_slices=2),
         on_complete = OnComplete.NoOpOC,
         approval_program=program,
         clear_program=clear,
@@ -58,6 +58,7 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
     app_id = get_created_app_id(client, txn_id)
 
     assert encode_address(get_global_bytes(client, app_id, "Creator")) == user['address']
+    assert get_global_int(client, app_id, "Number") == 123
 
     print("t2")
 
@@ -74,9 +75,11 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
 
     txn_status = client.pending_transaction_info(txn_id)
 
+    print(client.account_info(user['address']))
+
     print("t3")
 
-    assert False
+    print(get_global_bytes(client, app_id, "Creator"))
 
     assert encode_address(get_global_bytes(client, app_id, "Creator")) == user['address']
     assert get_local_int(client, app_id, user['address'], "timesPinged") == 0

@@ -5,7 +5,7 @@ from collections.abc import MutableMapping
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, Union, cast
 
 from algosdk.future.transaction import OnComplete
-from pyk.kast import KApply, KAst, KInner, KLabel, KVariable, top_down
+from pyk.kast import KApply, KAst, KInner, KLabel, KToken, KVariable, KSort, top_down
 from pyk.prelude import build_cons, intToken, stringToken
 
 
@@ -40,8 +40,18 @@ def tvalue(value: Union[str, int, bytes]) -> KInner:
 def tvalue_list(value: List[Union[str, int, bytes]]) -> KInner:
     if len(value) == 0:
         return KApply('.TValueList')
-    else:
-        raise NotImplementedError()
+    if len(value) == 1:
+        return KToken(token=str(value), sort=KSort(name='TValue'))
+    return KApply('_TValueList_', [tvalue_list(value[0:1]), tvalue_list(value[1:])])
+#      else:
+#          raise NotImplementedError()
+#  
+#              if len(d) == 0:
+#                  return KApply('.Map')
+#              if len(d) == 1:
+#                  return KApply('_|->_', args=[KToken(token='b\"' + d[0][0] + '\"', sort=KSort(name='Bytes')),
+#                      KToken(token='b\"' + d[0][1][2:-1] + '\"', sort=KSort(name='Bytes'))])
+#              return KApply('_Map_', [from_list_bytes(d[0:1]), from_list_bytes(d[1:])])
 
 
 def split_direct_subcells_from(configuration: KInner) -> Tuple[KInner, Any]:
@@ -109,7 +119,8 @@ class KCellMap(MutableMapping):
         self._store: Dict[Any, Any] = {}
         self._unit_klabel = unit_klabel.name if isinstance(unit_klabel, KLabel) else unit_klabel
         assert self._unit_klabel.endswith('CellMap')
-        self._item_cell_name = '<' + re.sub('CellMap$', '', self._unit_klabel).strip('.').lower() + '>'
+        item_name = re.sub('CellMap$', '', self._unit_klabel).strip('.')
+        self._item_cell_name = '<' + item_name[0].lower() + item_name[1:] + '>'
         self._cons_klabel = cons_klabel.name if isinstance(cons_klabel, KLabel) else cons_klabel
         assert self._cons_klabel.endswith('CellMap_')
         self._key_klabel = key_klabel.name if isinstance(key_klabel, KLabel) else key_klabel
@@ -118,12 +129,16 @@ class KCellMap(MutableMapping):
 
         @typing.no_type_check
         def extractor(inner: KInner) -> KInner:
+            print("in extractor")
+            print(self._item_cell_name)
+            print(inner)
             if type(inner) is KApply and inner.label.name == self._item_cell_name:
                 key = int(inner.args[0].args[0].token) if key_type is int else str(inner.args[0].args[0].token)
                 self._store[key] = value_initializer(inner)
-#                  print("abc")
-#                  print(self)
             return inner
+        
+        print("in KCellMap ctr")
+        print(term)
 
         if term:
             top_down(extractor, cast(KInner, term))
@@ -197,9 +212,6 @@ class AccountCellMap(KCellMap):
     ):
         from kavm.adaptors.account import KAVMAccount
 
-        print("in AccountCellMap")
-        print(term)
-
         super().__init__(
             unit_klabel='.AccountCellMap',
             cons_klabel='_AccountCellMap_',
@@ -210,8 +222,29 @@ class AccountCellMap(KCellMap):
             term=term,
         )
 
-        print("self:")
-        print(self)
+class AppOptInCellMap(KCellMap):
+    '''Python-friendly access to <appsOptedIn> cell'''
+
+    def __init__(
+        self,
+        term: Optional[KAst] = None,
+    ):
+        from kavm.adaptors.account import KAVMOptInApp
+
+        print("in AppOptInCellMap constructor before super")
+        print(term)
+
+        super().__init__(
+            unit_klabel='.OptInAppCellMap',
+            cons_klabel='_OptInAppCellMap_',
+            key_klabel='<optInAppID>',
+            key_type=int,
+            value_initializer=KAVMOptInApp.from_optin_app_cell,
+            value_k_cell=KAVMOptInApp.to_optin_app_cell,
+            term=term,
+        )
+        print("in AppOptInCellMap constructor")
+        print(self.k_cell)
 
 
 class AppCellMap(KCellMap):
@@ -223,7 +256,7 @@ class AppCellMap(KCellMap):
     ):
         from kavm.adaptors.application import KAVMApplication
 
-        print("in AppCellMap")
+        print("in AppCellMap constructor before super")
         print(term)
 
         super().__init__(
@@ -235,6 +268,8 @@ class AppCellMap(KCellMap):
             value_k_cell=KAVMApplication.to_app_cell,
             term=term,
         )
+        print("in AppCellMap constructor")
+        print(self.k_cell)
 
     @staticmethod
     def from_list(apps: List[Any]) -> 'AppCellMap':
