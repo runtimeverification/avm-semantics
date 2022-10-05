@@ -404,9 +404,6 @@ class KAVM(KRun):
             }
         )
 
-        Subst(current_subst).compose(control_subst)
-        Subst(current_subst).compose(control_subst).compose(txns_and_accounts_subst)
-
         return (
             Subst(current_subst).compose(control_subst).compose(txns_and_accounts_subst).apply(current_symbolic_config)
         )
