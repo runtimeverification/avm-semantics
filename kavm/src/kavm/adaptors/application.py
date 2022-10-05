@@ -148,7 +148,6 @@ class KAVMApplication:
     def to_app_cell(app: 'KAVMApplication') -> KInner:
         return app.app_cell
 
-
     @staticmethod
     def from_app_cell(term: KInner) -> 'KAVMApplication':
         def from_map(term: KInner) -> Dict:
