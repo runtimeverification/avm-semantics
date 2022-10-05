@@ -24,7 +24,6 @@ def test_maybe_tvalue(input: Any, expected: Any) -> None:
     [
         ([], KApply('.TValueList')),
         ([1], KApply('TValueNeList', [intToken(1), KApply('.TValueList')])),
-#          ([1, 2], KApply('NoTValue')),
     ],
 )
 def test_tvalue_list(input: Any, expected: Any) -> None:
