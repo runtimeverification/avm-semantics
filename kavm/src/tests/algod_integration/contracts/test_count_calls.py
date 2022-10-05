@@ -39,8 +39,6 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
     clear_src = compileTeal(call_counter_clear_program(), mode=Mode.Application, version=6)
     clear = compile_program(client, clear_src)
 
-    print("t1")
-
     # set up TXN --- user creates a call counter app
     txn = ApplicationCallTxn(
         sender = user['address'],
