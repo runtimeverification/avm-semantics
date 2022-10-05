@@ -58,8 +58,6 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
     assert encode_address(get_global_bytes(client, app_id, "Creator")) == user['address']
     assert get_global_int(client, app_id, "Number") == 123
 
-    print("t2")
-
     # opt in to app
     txn = ApplicationCallTxn(
         sender = user['address'],
