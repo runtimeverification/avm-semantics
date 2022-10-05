@@ -258,8 +258,6 @@ class KAVM(KRun):
         if isinstance(output, KAst) and krun_return_code == 0:
             # Finilize successful evaluation
             self.current_config = output
-            print("finalizing:")
-            print(self.current_config)
             (_, subst) = carefully_split_config_from(cast(KInner, self.current_config), ignore_cells={'<transaction>'})
 
             # * update self.accounts with the new configuration cells
@@ -421,8 +419,6 @@ class KAVM(KRun):
         If successful, put the resulting configuration as the new current config.
         """
         configuration = self.current_config
-        print("current_config:")
-        print(self.current_config)
         vars = free_vars(cast(KInner, configuration))
         assert len(vars) == 0, f'Cannot run from current configuration due to unbound variables {vars}'
 
@@ -447,6 +443,8 @@ class KAVM(KRun):
                     proc_result.returncode,
                     proc_result.stderr.decode(sys.getfilesystemencoding()),
                 )
+            print("output_kast_term:")
+            print(output_kast_term)
 
             return (proc_result.returncode, inline_cell_maps(output_kast_term))
 

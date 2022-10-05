@@ -138,6 +138,8 @@ class KAVMTransaction:
         if txn.type == ASSETTRANSFER_TXN:
             raise NotImplementedError()
         if txn.type == APPCALL_TXN:
+            print("txn_to_k:")
+            print(txn.app_args)
             type_specific_subst = Subst(
                 {
                     'APPLICATIONID_CELL': maybe_tvalue(txn.index),

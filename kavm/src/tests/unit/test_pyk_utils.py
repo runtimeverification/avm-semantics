@@ -4,7 +4,7 @@ import pytest
 from pyk.kast import KApply, KInner, KSort, KToken
 from pyk.prelude import intToken, stringToken
 
-from kavm.pyk_utils import maybe_tvalue, split_direct_subcells_from
+from kavm.pyk_utils import maybe_tvalue, tvalue_list, split_direct_subcells_from
 
 
 @pytest.mark.parametrize(
@@ -19,6 +19,16 @@ from kavm.pyk_utils import maybe_tvalue, split_direct_subcells_from
 def test_maybe_tvalue(input: Any, expected: Any) -> None:
     assert maybe_tvalue(input) == expected
 
+@pytest.mark.parametrize(
+    'input,expected',
+    [
+        ([], KApply('.TValueList')),
+        ([1], KApply('TValueNeList', [intToken(1), KApply('.TValueList')])),
+#          ([1, 2], KApply('NoTValue')),
+    ],
+)
+def test_tvalue_list(input: Any, expected: Any) -> None:
+    assert tvalue_list(input) == expected
 
 @pytest.mark.parametrize(
     'input,expected',

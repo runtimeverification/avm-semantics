@@ -36,22 +36,30 @@ def tvalue(value: Union[str, int, bytes]) -> KInner:
     else:
         raise TypeError()
 
+def tvalue_elem(value: Union[str, int, bytes]) -> KInner:
+    if type(value) is int:
+        return intToken(value)
+    elif type(value) is OnComplete:
+        return intToken(int(value))
+    elif type(value) is str:
+        return stringToken(value)
+    elif type(value) is bytes:
+        return stringToken(value.decode())
+    else:
+        raise TypeError()
+
 
 def tvalue_list(value: List[Union[str, int, bytes]]) -> KInner:
     if len(value) == 0:
         return KApply('.TValueList')
     if len(value) == 1:
-        return KToken(token=str(value), sort=KSort(name='TValue'))
-    return KApply('_TValueList_', [tvalue_list(value[0:1]), tvalue_list(value[1:])])
-#      else:
-#          raise NotImplementedError()
-#  
-#              if len(d) == 0:
-#                  return KApply('.Map')
-#              if len(d) == 1:
-#                  return KApply('_|->_', args=[KToken(token='b\"' + d[0][0] + '\"', sort=KSort(name='Bytes')),
-#                      KToken(token='b\"' + d[0][1][2:-1] + '\"', sort=KSort(name='Bytes'))])
-#              return KApply('_Map_', [from_list_bytes(d[0:1]), from_list_bytes(d[1:])])
+        return tvalue_elem(value[0])
+    return KApply('#abcd', [tvalue_elem(value[0]), tvalue_list(value[1:])])
+#      return build_cons(
+#                 unit=KApply('.TValueList'),
+#                 label=KLabel('#abcd'),
+#                 terms=[tvalue(v) for v in value]
+#             )
 
 
 def split_direct_subcells_from(configuration: KInner) -> Tuple[KInner, Any]:
@@ -129,17 +137,11 @@ class KCellMap(MutableMapping):
 
         @typing.no_type_check
         def extractor(inner: KInner) -> KInner:
-            print("in extractor")
-            print(self._item_cell_name)
-            print(inner)
             if type(inner) is KApply and inner.label.name == self._item_cell_name:
                 key = int(inner.args[0].args[0].token) if key_type is int else str(inner.args[0].args[0].token)
                 self._store[key] = value_initializer(inner)
             return inner
         
-        print("in KCellMap ctr")
-        print(term)
-
         if term:
             top_down(extractor, cast(KInner, term))
 
@@ -231,9 +233,6 @@ class AppOptInCellMap(KCellMap):
     ):
         from kavm.adaptors.account import KAVMOptInApp
 
-        print("in AppOptInCellMap constructor before super")
-        print(term)
-
         super().__init__(
             unit_klabel='.OptInAppCellMap',
             cons_klabel='_OptInAppCellMap_',
@@ -243,9 +242,6 @@ class AppOptInCellMap(KCellMap):
             value_k_cell=KAVMOptInApp.to_optin_app_cell,
             term=term,
         )
-        print("in AppOptInCellMap constructor")
-        print(self.k_cell)
-
 
 class AppCellMap(KCellMap):
     '''Python-friendly access to <appsCreated> cell'''
@@ -256,9 +252,6 @@ class AppCellMap(KCellMap):
     ):
         from kavm.adaptors.application import KAVMApplication
 
-        print("in AppCellMap constructor before super")
-        print(term)
-
         super().__init__(
             unit_klabel='.AppCellMap',
             cons_klabel='_AppCellMap_',
@@ -268,8 +261,6 @@ class AppCellMap(KCellMap):
             value_k_cell=KAVMApplication.to_app_cell,
             term=term,
         )
-        print("in AppCellMap constructor")
-        print(self.k_cell)
 
     @staticmethod
     def from_list(apps: List[Any]) -> 'AppCellMap':

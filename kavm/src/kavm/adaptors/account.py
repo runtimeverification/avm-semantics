@@ -37,9 +37,6 @@ class KAVMOptInApp:
 
         (_, subst) = split_direct_subcells_from(term)
 
-        print("in from_optin_app_cell")
-        print(subst)
-
         return KAVMOptInApp(
             app_id=int(subst['OPTINAPPID_CELL'].token),
             local_ints=from_map(subst['LOCALINTS_CELL']),
@@ -68,7 +65,7 @@ class KAVMOptInApp:
         return KApply(
             '<optInApp>',
             [
-                KApply('<optInAppID>', [KToken(self._app_id, KSort('Int'))]),
+                KApply('<optInAppID>', [KToken(str(self._app_id), KSort('Int'))]),
                 KApply('<localInts>', [from_list_ints([(k,v) for k,v in self._local_ints.items()])]),
                 KApply('<localBytes>', [from_list_bytes([(k,v) for k,v in self._local_bytes.items()])]),
             ],
@@ -76,7 +73,6 @@ class KAVMOptInApp:
 
     @staticmethod
     def to_optin_app_cell(optin_app: 'KAVMOptInApp') -> KInner:
-        print("abc")
         return optin_app.optin_app_cell
     
     def dictify(self) -> List:
@@ -107,9 +103,6 @@ class KAVMAccount:
         """
         Create a KAVM account cell.
         """
-        print("in KAVMAccount constructor")
-        print(apps_opted_in.k_cell if apps_opted_in else "none")
-        print(apps_created.k_cell if apps_created else "none")
         self._address = address
         self._balance = balance
         self._min_balance = min_balance
@@ -179,9 +172,7 @@ class KAVMAccount:
         """
         Parse a KAVMAccount instance from a Kast term
         """
-        print("in from_account_cell")
         (_, subst) = split_direct_subcells_from(term)
-        print(subst['APPSOPTEDIN_CELL'])
         return KAVMAccount(
             address=subst['ADDRESS_CELL'].token,
             balance=int(subst['BALANCE_CELL'].token),
@@ -242,8 +233,6 @@ class KAVMAccount:
         Return a dictified representation of the account cell to pass to py-algorand-sdk
         See https://github.com/algorand/go-algorand/blob/87867c9381260dc4efb5a42abaeb9e038b1c10af/daemon/algod/api/algod.oas2.json#L1785 for format
         """
-        print("apps_opted_in:")
-        print(self._apps_opted_in)
         return {
             'round': self._round,
             'address': self._address,
