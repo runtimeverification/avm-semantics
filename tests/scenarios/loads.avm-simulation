@@ -1,12 +1,12 @@
 declareTealSource "loads.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 300000 </balance>;
+addAccount <address> LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE </address> <balance> 300000 </balance>;
 
 #initTxGroup();
 
 addAppCallTx <txID> 0 </txID>
-             <sender>            b"1"        </sender>
+             <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>

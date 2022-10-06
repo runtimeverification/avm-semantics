@@ -1,13 +1,13 @@
 declareTealSource "asset-holding-get.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 400000 </balance>;
-addAccount <address> b"2" </address> <balance> 200000 </balance>;
+addAccount <address> LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE </address> <balance> 400000 </balance>;
+addAccount <address> MNQJIEWQIGVNYXPWGTVOT7SVEXR7BEGJJJMIHNTO3HSM6QY3QAUYG5PODQ </address> <balance> 200000 </balance>;
 
 #initTxGroup();
 
 addAssetConfigTx <txID>                0           </txID>
-                 <sender>              b"1"        </sender>
+                 <sender>              LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
                  <configAsset>         NoTValue    </configAsset>
                  <configTotal>         12345       </configTotal>
                  <configDecimals>      0           </configDecimals>
@@ -16,14 +16,14 @@ addAssetConfigTx <txID>                0           </txID>
                  <configAssetName>     "testcoin"  </configAssetName>
                  <configAssetURL>      NoTValue    </configAssetURL>
                  <configMetaDataHash>  NoTValue    </configMetaDataHash>
-                 <configManagerAddr>   b"1"        </configManagerAddr>
+                 <configManagerAddr>   LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </configManagerAddr>
                  <configReserveAddr>   NoTValue    </configReserveAddr>
                  <configFreezeAddr>    NoTValue    </configFreezeAddr>
                  <configClawbackAddr>  NoTValue    </configClawbackAddr>;
 
 // Add app 1 and opt in b"1"
 addAppCallTx <txID> 1 </txID>
-             <sender>            b"1"        </sender>
+             <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
@@ -40,7 +40,7 @@ addAppCallTx <txID> 1 </txID>
 
 // opt in b"2"
 addAppCallTx <txID> 2 </txID>
-             <sender>            b"2"        </sender>
+             <sender>            MNQJIEWQIGVNYXPWGTVOT7SVEXR7BEGJJJMIHNTO3HSM6QY3QAUYG5PODQ        </sender>
              <applicationID>     1           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
@@ -57,10 +57,10 @@ addAppCallTx <txID> 2 </txID>
 
 // Call main app code
 addAppCallTx <txID> 3 </txID>
-             <sender>            b"1"        </sender>
+             <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
              <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
-             <accounts>          b"2"        </accounts>
+             <accounts>          MNQJIEWQIGVNYXPWGTVOT7SVEXR7BEGJJJMIHNTO3HSM6QY3QAUYG5PODQ        </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     1           </foreignAssets>

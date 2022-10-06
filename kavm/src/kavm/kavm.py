@@ -414,6 +414,8 @@ class KAVM(KRun):
 
         If successful, put the resulting configuration as the new current config.
         """
+        print(self.current_config)
+
         configuration = self.current_config
         vars = free_vars(cast(KInner, configuration))
         assert len(vars) == 0, f'Cannot run from current configuration due to unbound variables {vars}'

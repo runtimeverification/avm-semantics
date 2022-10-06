@@ -1,14 +1,14 @@
 declareTealSource "clear-basic.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 200000 </balance>;
-addAccount <address> b"2" </address> <balance> 100000000 </balance>;
+addAccount <address> LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE </address> <balance> 200000 </balance>;
+addAccount <address> MNQJIEWQIGVNYXPWGTVOT7SVEXR7BEGJJJMIHNTO3HSM6QY3QAUYG5PODQ </address> <balance> 100000000 </balance>;
 
 #initTxGroup();
 
 // Add app, bringing min balance to 200000.
 addAppCallTx <txID> 0 </txID>
-             <sender>            b"1"        </sender>
+             <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
@@ -25,8 +25,8 @@ addAppCallTx <txID> 0 </txID>
 
 // Pay b"2", sending balance to below b"1"'s minumum.
 addPaymentTx <txID>     1     </txID>
-             <sender>   b"1"  </sender>
-             <receiver> b"2"  </receiver>
+             <sender>   LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE  </sender>
+             <receiver> MNQJIEWQIGVNYXPWGTVOT7SVEXR7BEGJJJMIHNTO3HSM6QY3QAUYG5PODQ  </receiver>
              <amount>   100 </amount>;
 
 #initGlobals(); #evalTxGroup(); .AS

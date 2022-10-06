@@ -797,9 +797,9 @@ module ALGO-TXN
 ```
 
 ```k
-  syntax Bytes ::= getAppAddress(Int) [function, functional]
+  syntax TAddressLiteral ::= getAppAddress(Int) [function, functional]
   //---------------------------------------------------------
-  rule getAppAddress(APP_ID) => b"application" +Bytes String2Bytes(Int2String(APP_ID))
+  rule getAppAddress(APP_ID) => Bytes2TAddressLiteral(b"application" +Bytes String2Bytes(Int2String(APP_ID)))
 ```
 
 ```k

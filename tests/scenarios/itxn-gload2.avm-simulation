@@ -1,13 +1,13 @@
 declareTealSource "itxn-gload2.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 100000000 </balance>;
+addAccount <address> LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE </address> <balance> 100000000 </balance>;
 
 #initTxGroup();
 
 // Create app 1
 addAppCallTx <txID> 0 </txID>
-             <sender>            b"1"        </sender>
+             <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
@@ -24,7 +24,7 @@ addAppCallTx <txID> 0 </txID>
 
 // Create app 2
 addAppCallTx <txID> 1 </txID>
-             <sender>            b"1"        </sender>
+             <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
@@ -41,19 +41,19 @@ addAppCallTx <txID> 1 </txID>
 
 // Fund app 1 account
 addPaymentTx <txID> 2 </txID>
-             <sender>   b"1"            </sender>
+             <sender>   LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE            </sender>
              <receiver> b"application1" </receiver>
              <amount>   500000          </amount>;
 
 // Fund app 1 account
 addPaymentTx <txID> 3 </txID>
-             <sender>   b"1"            </sender>
+             <sender>   LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE            </sender>
              <receiver> b"application2" </receiver>
              <amount>   500000          </amount>;
 
 // Call app 1, which will call app 2 twice.
 addAppCallTx <txID> 4 </txID>
-             <sender>            b"1"        </sender>
+             <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
              <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>

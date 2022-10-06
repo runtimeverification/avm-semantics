@@ -1,15 +1,15 @@
 declareTealSource "clear-basic.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 200000 </balance>;
-addAccount <address> b"2" </address> <balance> 0 </balance>;
+addAccount <address> LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE </address> <balance> 200000 </balance>;
+addAccount <address> MNQJIEWQIGVNYXPWGTVOT7SVEXR7BEGJJJMIHNTO3HSM6QY3QAUYG5PODQ </address> <balance> 0 </balance>;
 
 #initTxGroup();
 
 // Pay b"2". This group should fail because b"2"'s balance is 100, less than their mininum of 100000.
 addPaymentTx <txID>     0     </txID>
-             <sender>   b"1"  </sender>
-             <receiver> b"2"  </receiver>
+             <sender>   LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE  </sender>
+             <receiver> MNQJIEWQIGVNYXPWGTVOT7SVEXR7BEGJJJMIHNTO3HSM6QY3QAUYG5PODQ  </receiver>
              <amount>   100 </amount>;
 
 #initGlobals(); #evalTxGroup(); .AS

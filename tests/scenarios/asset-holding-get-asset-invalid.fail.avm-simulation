@@ -1,12 +1,12 @@
 declareTealSource "asset-holding-get-asset-invalid.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 300000 </balance>;
+addAccount <address> LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE </address> <balance> 300000 </balance>;
 
 #initTxGroup();
 
 addAssetConfigTx <txID>                0          </txID>
-                 <sender>              b"1"       </sender>
+                 <sender>              LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE       </sender>
                  <configAsset>         NoTValue   </configAsset>
                  <configTotal>         12345      </configTotal>
                  <configDecimals>      0          </configDecimals>
@@ -15,14 +15,14 @@ addAssetConfigTx <txID>                0          </txID>
                  <configAssetName>     "testcoin" </configAssetName>
                  <configAssetURL>      NoTValue   </configAssetURL>
                  <configMetaDataHash>  NoTValue   </configMetaDataHash>
-                 <configManagerAddr>   b"1"       </configManagerAddr>
+                 <configManagerAddr>   LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE       </configManagerAddr>
                  <configReserveAddr>   NoTValue   </configReserveAddr>
                  <configFreezeAddr>    NoTValue   </configFreezeAddr>
                  <configClawbackAddr>  NoTValue   </configClawbackAddr>;
 
 // Add app
 addAppCallTx <txID> 1 </txID>
-             <sender>            b"1"        </sender>
+             <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>

@@ -41,7 +41,7 @@ module GLOBALS
       <globalRound>               0 </globalRound>
       <latestTimestamp>           0 </latestTimestamp>
       <currentApplicationID>      0 </currentApplicationID>
-      <currentApplicationAddress> .Bytes </currentApplicationAddress>
+      <currentApplicationAddress> .Bytes:TValue </currentApplicationAddress>
     </globals>
 ```
 
@@ -72,7 +72,7 @@ module GLOBALS
          ...
        </globals>
 
-  rule [[ getGlobalField(CurrentApplicationAddress) => V ]]
+  rule [[ getGlobalField(CurrentApplicationAddress) => normalize(V) ]]
        <globals>
          <currentApplicationAddress> V </currentApplicationAddress>
          ...
@@ -209,7 +209,7 @@ module ALGO-BLOCKCHAIN
     <blockchain>
       <accountsMap>
         <account multiplicity="*" type="Map">
-          <address>    "":TBytes </address>
+          <address>    "":TValue </address>
           <balance>    0                  </balance>
           <minBalance> PARAM_MIN_BALANCE  </minBalance> // the default min balance is 0.1 Algo
           <round>      0                  </round>
@@ -433,7 +433,7 @@ Accessor functions
          </asset> ...
        </assetsCreated>
 
-  rule [[ getAssetParamsField(AssetManager, ASSET) => V ]]
+  rule [[ getAssetParamsField(AssetManager, ASSET) => normalize(V) ]]
        <assetsCreated>
          <asset>
            <assetID> ASSET </assetID>
@@ -441,7 +441,7 @@ Accessor functions
          </asset> ...
        </assetsCreated>
 
-  rule [[ getAssetParamsField(AssetReserve, ASSET) => V ]]
+  rule [[ getAssetParamsField(AssetReserve, ASSET) => normalize(V) ]]
        <assetsCreated>
          <asset>
            <assetID> ASSET </assetID>
@@ -449,7 +449,7 @@ Accessor functions
          </asset> ...
        </assetsCreated>
 
-  rule [[ getAssetParamsField(AssetFreeze, ASSET) => V ]]
+  rule [[ getAssetParamsField(AssetFreeze, ASSET) => normalize(V) ]]
        <assetsCreated>
          <asset>
            <assetID> ASSET </assetID>
@@ -457,7 +457,7 @@ Accessor functions
          </asset> ...
        </assetsCreated>
 
-  rule [[ getAssetParamsField(AssetClawback, ASSET) => V ]]
+  rule [[ getAssetParamsField(AssetClawback, ASSET) => normalize(V) ]]
        <assetsCreated>
          <asset>
            <assetID> ASSET </assetID>
@@ -465,7 +465,7 @@ Accessor functions
          </asset> ...
        </assetsCreated>
 
-  rule [[ getAssetParamsField(AssetCreator, ASSET) => V ]]
+  rule [[ getAssetParamsField(AssetCreator, ASSET) => normalize(V) ]]
        <assetCreator> ASSET |-> V ...</assetCreator>
 
   rule [[ getAssetParamsField(_, ASSET) => -1 ]]
@@ -730,9 +730,9 @@ references and also to check that a resource is available.
 ```k
   syntax MaybeTValue ::= accountReference(TValue) [function, functional]
   //--------------------------------------------------------------------
-  rule accountReference(A:TAddressLiteral ) => A requires accountAvailable(A)
-  rule accountReference(A:Bytes           ) => Bytes2TAddressLiteral(A)// requires accountAvailable(Bytes2TAddressLiteral(A))
-  rule accountReference(I:Int             ) => getTxnField(getCurrentTxn(), Accounts, I)
+//  rule accountReference(A:TAddressLiteral ) => A requires accountAvailable(A)
+  rule accountReference(A:Bytes           ) => Bytes2TAddressLiteral(A) requires accountAvailable(Bytes2TAddressLiteral(A))
+  rule accountReference(I:Int             ) => Bytes2TAddressLiteral({getTxnField(getCurrentTxn(), Accounts, I)}:>Bytes)
   rule accountReference(_                 ) => NoTValue  [owise]
 
   syntax MaybeTValue ::= appReference(TUInt64)  [function, functional]
@@ -752,17 +752,17 @@ references and also to check that a resource is available.
 // TODO the associated account of a contract that was created earlier in the group should be available (v 6)
 // TODO the associated account of a contract present in the txn.ForeignApplications field should be available (v7)
 
-  syntax Bool ::= accountAvailable(TBytes) [function, functional]
+  syntax Bool ::= accountAvailable(TAddressLiteral) [function, functional]
   //---------------------------------------------------------------
 
   rule accountAvailable(A) => true
     requires contains(getTxnField(getCurrentTxn(), Accounts), A)
 
   rule accountAvailable(A) => true
-    requires A ==K getTxnField(getCurrentTxn(), Sender)
+    requires normalize(A) ==K getTxnField(getCurrentTxn(), Sender)
 
   rule accountAvailable(A) => true
-    requires A ==K getGlobalField(CurrentApplicationAddress)
+    requires normalize(A) ==K getGlobalField(CurrentApplicationAddress)
 
   rule accountAvailable(_) => false [owise]
 

@@ -202,15 +202,15 @@ We do not currently model rewards, hence we initilize the network participation-
   syntax AlgorandCommand ::= "addAccount" AddressCell BalanceCell
   //--------------------------------------------------------
 
-  rule <k> addAccount <address> ADDR </address>
+  rule <k> addAccount <address> ADDR:TAddressLiteral </address>
                       <balance> BALANCE </balance>
        => .K ... </k>
        <accountsMap>
          ACCOUNTS =>
          <account>
-           <address> ADDR </address>
+           <address> ADDR:TAddressLiteral </address>
            <balance> BALANCE    </balance>
-           <key> ADDR </key>
+           <key> ADDR:TAddressLiteral </key>
            <appsCreated> .Bag </appsCreated>
            <appsOptedIn> .Bag </appsOptedIn>
            <assetsCreated> .Bag </assetsCreated>
@@ -219,7 +219,7 @@ We do not currently model rewards, hence we initilize the network participation-
          </account>
          ACCOUNTS
        </accountsMap>
-      requires notBool (ADDR in_accounts(<accountsMap> ACCOUNTS </accountsMap>))
+      requires notBool (ADDR:TAddressLiteral in_accounts(<accountsMap> ACCOUNTS </accountsMap>))
 ```
 
 #### Apps Initialization

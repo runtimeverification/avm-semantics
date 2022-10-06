@@ -1427,6 +1427,10 @@ Stateful TEAL Operations
 *app_local_get*
 
 ```k
+  
+//  rule <k> app_local_get => accountReference(A) ~> Bytes2TAddressLiteral({A}:>Bytes) ~> getTxnField(getCurrentTxn(), Sender) ... </k>
+//       <stack> (KEY:Bytes) : (A:TValue) : _ </stack>
+
   rule <k> app_local_get =>
            #app_local_get getAppLocal({accountReference(A)}:>TValue
                                      , getGlobalField(CurrentApplicationID), KEY) ... </k>
@@ -1507,7 +1511,7 @@ Stateful TEAL Operations
          ...
        </app>
 
-  rule <k> app_local_put => #app_local_put {accountReference(A)}:>TAddressLiteral
+  rule <k> app_local_put => #app_local_put {accountReference(A)}:>TValue
                                            getGlobalField(CurrentApplicationID) ... </k>
        <stack> (_:TValue) : (_:Bytes) : (A:TValue) : _ </stack>
     requires isTValue(accountReference(A))
@@ -1609,11 +1613,11 @@ Stateful TEAL Operations
     requires notBool (APP in_optedInApps(<appsOptedIn> OA </appsOptedIn>))
 
   // if the account doesn't exist, panic
-    rule <k> #app_local_put ADDR _ => panic(TXN_ACCESS_FAILED) ... </k>
-         <stack> _ : _ : _ : XS => XS </stack>
-         <stacksize> S => S -Int 3 </stacksize>
-         <accountsMap> AMAP  </accountsMap>
-      requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
+//    rule <k> #app_local_put ADDR _ => panic(TXN_ACCESS_FAILED) ... </k>
+//         <stack> _ : _ : _ : XS => XS </stack>
+//         <stacksize> S => S -Int 3 </stacksize>
+//         <accountsMap> AMAP  </accountsMap>
+//      requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
 ```
 
 *app_local_del*

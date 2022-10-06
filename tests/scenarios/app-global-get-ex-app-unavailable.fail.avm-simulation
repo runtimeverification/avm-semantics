@@ -1,13 +1,13 @@
 declareTealSource "app-global-get-ex-app-unavailable.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 200000 </balance>;
+addAccount <address> 7GZIODOFIQU426NDLOLD4DANFUZO655NSDQEZQE74KREHYNTTL5BB5EETU </address> <balance> 200000 </balance>;
 
 #initTxGroup();
 
 // Add app 1
 addAppCallTx <txID> 0 </txID>
-             <sender>            b"1"        </sender>
+             <sender>            7GZIODOFIQU426NDLOLD4DANFUZO655NSDQEZQE74KREHYNTTL5BB5EETU        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
@@ -24,7 +24,7 @@ addAppCallTx <txID> 0 </txID>
 
 // Add app 2
 addAppCallTx <txID> 1 </txID>
-             <sender>            b"1"        </sender>
+             <sender>            7GZIODOFIQU426NDLOLD4DANFUZO655NSDQEZQE74KREHYNTTL5BB5EETU        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>

@@ -1,17 +1,17 @@
 declareTealSource "app-opted-in-offsets.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 300000 </balance>;
-addAccount <address> b"2" </address> <balance> 100000 </balance>;
+addAccount <address> LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE </address> <balance> 300000 </balance>;
+addAccount <address> MNQJIEWQIGVNYXPWGTVOT7SVEXR7BEGJJJMIHNTO3HSM6QY3QAUYG5PODQ </address> <balance> 100000 </balance>;
 
 #initTxGroup();
 
 // Add app 0 and opt in b"1"
 addAppCallTx <txID> 0 </txID>
-             <sender>            b"1"        </sender>
+             <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
-             <accounts>          b"2"        </accounts>
+             <accounts>          MNQJIEWQIGVNYXPWGTVOT7SVEXR7BEGJJJMIHNTO3HSM6QY3QAUYG5PODQ        </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       1           </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
