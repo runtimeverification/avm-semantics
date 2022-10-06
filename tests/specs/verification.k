@@ -4,6 +4,15 @@ requires "avm/avm-execution.md"
 module VERIFICATION
   imports AVM-EXECUTION
 
+
+  syntax StepSort ::= MaybeTValue
+// ------------------------------------------------
+
+  syntax KItem ::= runLemma ( StepSort )
+                 | doneLemma( StepSort )
+// --------------------------------------
+  rule runLemma( T ) => doneLemma( T )
+
 ////////////////////////////////////////////////////////////////////////////////
 // Lemmas to support `getbit` opcode specification
 ////////////////////////////////////////////////////////////////////////////////

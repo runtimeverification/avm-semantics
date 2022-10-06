@@ -7,8 +7,7 @@ addAccount <address> b"2" </address> <balance> 100000000 </balance>;
 #initTxGroup();
 
 // Add app, bringing min balance to 200000.
-addAppCallTx <txID> 0 </txID>
-             <sender>            b"1"        </sender>
+addAppCallTx <sender>            b"1"        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
@@ -24,8 +23,7 @@ addAppCallTx <txID> 0 </txID>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 // Pay b"2", sending balance to below b"1"'s minumum.
-addPaymentTx <txID>     1     </txID>
-             <sender>   b"1"  </sender>
+addPaymentTx <sender>   b"1"  </sender>
              <receiver> b"2"  </receiver>
              <amount>   100 </amount>;
 

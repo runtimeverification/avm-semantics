@@ -103,6 +103,8 @@ module TEAL-FIELDS
   // group.
   syntax TxnDynamicField ::= "LastLog"
                            | "NumLogs"
+                           | "CreatedApplicationID"
+                           | "CreatedAssetID"
 
   syntax TxnPayField    ::= "Receiver"
                           | "Amount"
@@ -113,6 +115,7 @@ module TEAL-FIELDS
                           | "VoteFirst"
                           | "VoteLast"
                           | "VoteKeyDilution"
+                          | "Nonparticipation"
 
   syntax TxnAcfgField   ::= "ConfigAsset"
                           | "ConfigAssetTotal"

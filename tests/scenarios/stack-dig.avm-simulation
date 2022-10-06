@@ -6,8 +6,7 @@ addAccount <address> b"1" </address> <balance> 200000 </balance>;
 #initTxGroup();
 
 // Add app
-addAppCallTx <txID> 0 </txID>
-             <sender>            b"1"        </sender>
+addAppCallTx <sender>            b"1"        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>

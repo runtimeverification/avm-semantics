@@ -5,8 +5,7 @@ addAccount <address> b"1" </address> <balance> 10000 </balance>;
 
 #initTxGroup();
 
-addAppCallTx <txID> 0 </txID>
-             <sender>            b"1"        </sender>
+addAppCallTx <sender>            b"1"        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>

@@ -1,0 +1,67 @@
+#pragma version 6
+
+txn ApplicationID
+int 0
+==
+bnz end
+
+int 1
+txn ApplicationArgs 0
+btoi
+==
+bnz lbl1
+
+int 2
+txn ApplicationArgs 0
+btoi
+==
+bnz lbl2
+
+lbl1:
+
+itxn_begin
+
+int appl
+itxn_field TypeEnum
+
+global CurrentApplicationAddress
+itxn_field Sender
+
+txn Applications 0
+itxn_field ApplicationID
+
+int 2
+itob
+itxn_field ApplicationArgs
+
+itxn_submit
+
+itxn TypeEnum
+int appl
+==
+assert
+
+itxn Sender
+global CurrentApplicationAddress
+==
+assert
+
+itxn ApplicationID
+txn Applications 0
+==
+assert
+
+itxna ApplicationArgs 0
+int 2
+itob
+==
+assert
+
+b end
+lbl2:
+
+b end
+end:
+
+int 1
+return

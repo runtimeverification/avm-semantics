@@ -69,7 +69,7 @@ class KAVMTransaction:
 
     # TODO: figure out how to easily remove the `kavm` argument, since this definition must be static.
     #       Currently, access to the K definition is required to figure out which cells are empty and put nothing into them
-    def __init__(self, kavm: Any, txn: Transaction, txid: int, apply_data: Optional[KAVMApplyData] = None) -> None:
+    def __init__(self, kavm: Any, txn: Transaction, txid: str, apply_data: Optional[KAVMApplyData] = None) -> None:
         """
         Create a KAVM transaction cell.
         """
@@ -80,7 +80,7 @@ class KAVMTransaction:
         self._apply_data = apply_data if apply_data else KAVMApplyData()
 
     @property
-    def txid(self) -> int:
+    def txid(self) -> str:
         return self._txid
 
     @property
@@ -100,7 +100,7 @@ class KAVMTransaction:
 
     # TODO: txid must be assigned by KAVM itslef and must be str
     @staticmethod
-    def transaction_to_k(kavm: Any, txn: Transaction, txid: int) -> KInner:
+    def transaction_to_k(kavm: Any, txn: Transaction, txid: str) -> KInner:
         """Convert a Transaction objet to a K cell"""
         empty_transaction_cell = kavm.definition.empty_config(KSort('TransactionCell'))
 
@@ -114,7 +114,8 @@ class KAVMTransaction:
                 'SENDER_CELL': KToken(txn.sender.strip("'"), KSort('TAddressLiteral')),
                 'TXTYPE_CELL': maybe_tvalue(txn.type),
                 'TYPEENUM_CELL': maybe_tvalue(txn_type_to_type_enum(txn.type)),
-                'GROUP_CELL': maybe_tvalue(txn.group),
+                'GROUPIDX_CELL': maybe_tvalue(txn.group),
+                'GROUPID_CELL': KToken('"0"', KSort('String')),
                 'LEASE_CELL': maybe_tvalue(txn.lease),
                 'NOTE_CELL': maybe_tvalue(txn.note),
                 'REKEYTO_CELL': maybe_tvalue(txn.rekey_to),
@@ -123,6 +124,7 @@ class KAVMTransaction:
                 'INNERTXNS_CELL': KApply('.List'),
                 'LOGSIZE_CELL': tvalue(0),
                 'LOGDATA_CELL': tvalue_list([]),
+                'RESUME_CELL': KToken('false', KSort('Bool')),
                 'TXSCRATCH_CELL': KApply('.Map'),
             }
         )
@@ -180,13 +182,18 @@ class KAVMTransaction:
         if type_specific_subst is None:
             raise ValueError(f'Transaction object {txn} is invalid')
 
-        fields_subst = Subst({'TXID_CELL': intToken(txid)}).compose(header_subst).compose(type_specific_subst)
+        fields_subst = (
+            Subst({'TXID_CELL': KToken('"' + txid + '"', KSort('String'))})
+            .compose(header_subst)
+            .compose(type_specific_subst)
+        )
         empty_array_fields_subst = Subst(
             {
                 'ACCOUNTS_CELL': tvalue_list([]),
                 'APPLICATIONARGS_CELL': tvalue_list([]),
                 'FOREIGNAPPS_CELL': tvalue_list([]),
                 'FOREIGNASSETS_CELL': tvalue_list([]),
+                'TXNEXECUTIONCONTEXT_CELL': KToken('.K', KSort('K')),
             }
         )
         empty_pgm_fileds_subst = Subst(
@@ -217,7 +224,7 @@ class KAVMTransaction:
         (_, tx_cell_subst) = split_config_from(kast_term)
 
         apply_data = None
-        txid = int(tx_cell_subst['TXID_CELL'].token)
+        txid = tx_cell_subst['TXID_CELL'].token.strip('"')
 
         sp = SuggestedParams(
             int(tx_cell_subst['FEE_CELL'].token),

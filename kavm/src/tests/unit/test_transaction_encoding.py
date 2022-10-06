@@ -12,7 +12,7 @@ def test_payment_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams
     private_key_receiver, receiver = account.generate_account()
     amount = 10000
     txn = PaymentTxn(sender, suggested_params, receiver, amount)
-    kavm_transaction = KAVMTransaction(kavm, txn, 0)
+    kavm_transaction = KAVMTransaction(kavm, txn, '0')
     parsed_txn = KAVMTransaction.transaction_from_k(kavm, kavm_transaction.transaction_cell).sdk_txn
     assert parsed_txn.dictify() == txn.dictify()
 
@@ -100,7 +100,7 @@ def test_application_create_txn_encode_decode(kavm: KAVM, suggested_params: Sugg
         global_schema,
         local_schema,
     )
-    kavm_transaction = KAVMTransaction(kavm, txn, 0)
+    kavm_transaction = KAVMTransaction(kavm, txn, '0')
     parsed_txn = KAVMTransaction.transaction_from_k(kavm, kavm_transaction.transaction_cell)
     apply_data = parsed_txn._apply_data
     assert parsed_txn.sdk_txn.dictify() == txn.dictify()

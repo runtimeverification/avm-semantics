@@ -45,6 +45,8 @@ module SUMMARY-SPEC
               int 1, 0)
             ~> #startExecution()
            => . </k>
+          <currentApplicationID> APP_ID => ?_ </currentApplicationID>
+          <activeApps> SetItem(APP_ID) _ => ?_ </activeApps>
           <mode> stateless </mode>
           <pc> 0 => ?_ </pc>
           <program> .Map => ?_ </program>

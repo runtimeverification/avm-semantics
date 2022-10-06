@@ -1,0 +1,36 @@
+#pragma version 6
+
+txn ApplicationID
+int 0
+==
+bnz end
+
+itxn_begin
+
+int acfg
+itxn_field TypeEnum
+
+int 1000000
+itxn_field ConfigAssetTotal
+
+int 0
+itxn_field ConfigAssetDecimals
+
+int 0
+itxn_field ConfigAssetDefaultFrozen
+
+byte "test"
+itxn_field ConfigAssetName
+
+itxn_submit
+
+itxn CreatedAssetID
+int 1
+==
+assert
+
+b end
+end:
+
+int 1
+return
