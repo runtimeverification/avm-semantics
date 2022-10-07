@@ -28,6 +28,7 @@ def exec_kompile(
     hook_namespaces: List[str],
     hook_cpp_files: List[Path],
     hook_clang_flags: List[str],
+    coverage: bool,
     **kwargs: Any,
 ) -> None:
     kompile(
@@ -41,6 +42,7 @@ def exec_kompile(
         hook_namespaces=hook_namespaces,
         hook_cpp_files=hook_cpp_files,
         hook_clang_flags=hook_clang_flags,
+        coverage=coverage,
     )
 
 def exec_prove(
@@ -172,6 +174,7 @@ def create_argument_parser() -> ArgumentParser:
     kompile_subparser.add_argument('--main-module', type=str)
     kompile_subparser.add_argument('--syntax-module', type=str)
     kompile_subparser.add_argument('--backend', type=str)
+    kompile_subparser.add_argument('--coverage', default=False, action='store_true')
     kompile_subparser.add_argument(
         '-I',
         type=dir_path,
