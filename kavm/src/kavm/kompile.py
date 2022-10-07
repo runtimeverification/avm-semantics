@@ -18,6 +18,7 @@ def kompile(
     hook_namespaces: Optional[List[str]] = None,
     hook_cpp_files: Optional[List[Path]] = None,
     hook_clang_flags: Optional[List[str]] = None,
+    coverage: bool = False,
 ) -> KAVM:
     if backend == 'llvm':
         generate_interpreter(
@@ -30,6 +31,7 @@ def kompile(
             hook_namespaces,
             hook_cpp_files,
             hook_clang_flags,
+            coverage=coverage,
         )
     elif backend == 'haskell':
         kompile_haskell(
@@ -86,6 +88,7 @@ def generate_interpreter(
     hook_namespaces: Optional[List[str]] = None,
     hook_cpp_files: Optional[List[Path]] = None,
     hook_clang_flags: Optional[List[str]] = None,
+    coverage: bool =  False,
 ) -> None:
     '''Kompile KAVM to produce an LLVM-based interpreter'''
 
@@ -105,6 +108,7 @@ def generate_interpreter(
         command += ['--md-selector', md_selector] if md_selector else []
         command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
         command += ['-ccopt', '-c', '-ccopt', '-o', '-ccopt', 'partial.o']
+        command += ['--coverage'] if coverage else []
         try:
             subprocess.run(command, check=True, text=True)
         except CalledProcessError:

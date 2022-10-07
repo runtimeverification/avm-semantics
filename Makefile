@@ -311,7 +311,8 @@ $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM
                             --syntax-module $(avm_syntax_module)                        \
                             --hook-namespaces KRYPTO KAVM                               \
                             --hook-cpp-files $(HOOK_KAVM_FILES) $(PLUGIN_CPP_FILES)     \
-                            --hook-clang-flags $(HOOK_CC_OPTS)
+                            --hook-clang-flags $(HOOK_CC_OPTS)                          \
+														--coverage
 
 
 
