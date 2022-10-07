@@ -6,8 +6,7 @@ addAccount <address> 7GZIODOFIQU426NDLOLD4DANFUZO655NSDQEZQE74KREHYNTTL5BB5EETU 
 #initTxGroup();
 
 // Add app 1
-addAppCallTx <txID> 0 </txID>
-             <sender>            7GZIODOFIQU426NDLOLD4DANFUZO655NSDQEZQE74KREHYNTTL5BB5EETU        </sender>
+addAppCallTx <sender>            7GZIODOFIQU426NDLOLD4DANFUZO655NSDQEZQE74KREHYNTTL5BB5EETU        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
@@ -23,8 +22,7 @@ addAppCallTx <txID> 0 </txID>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 // Add app 2
-addAppCallTx <txID> 1 </txID>
-             <sender>            7GZIODOFIQU426NDLOLD4DANFUZO655NSDQEZQE74KREHYNTTL5BB5EETU        </sender>
+addAppCallTx <sender>            7GZIODOFIQU426NDLOLD4DANFUZO655NSDQEZQE74KREHYNTTL5BB5EETU        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>

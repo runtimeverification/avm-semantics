@@ -7,8 +7,7 @@ addAccount <address> MNQJIEWQIGVNYXPWGTVOT7SVEXR7BEGJJJMIHNTO3HSM6QY3QAUYG5PODQ 
 #initTxGroup();
 
 // Pay b"2". This group should fail because b"2"'s balance is 100, less than their mininum of 100000.
-addPaymentTx <txID>     0     </txID>
-             <sender>   LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE  </sender>
+addPaymentTx <sender>   LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE  </sender>
              <receiver> MNQJIEWQIGVNYXPWGTVOT7SVEXR7BEGJJJMIHNTO3HSM6QY3QAUYG5PODQ  </receiver>
              <amount>   100 </amount>;
 

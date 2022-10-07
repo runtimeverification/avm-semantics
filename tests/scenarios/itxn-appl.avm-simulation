@@ -6,8 +6,7 @@ addAccount <address> LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE 
 #initTxGroup();
 
 // Create app 1
-addAppCallTx <txID> 0 </txID>
-             <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
+addAppCallTx <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
@@ -23,8 +22,7 @@ addAppCallTx <txID> 0 </txID>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 // Create app 2
-addAppCallTx <txID> 1 </txID>
-             <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
+addAppCallTx <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
@@ -40,20 +38,17 @@ addAppCallTx <txID> 1 </txID>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 // Fund app 1 account
-addPaymentTx <txID> 2 </txID>
-             <sender>   LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE            </sender>
+addPaymentTx <sender>   LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE            </sender>
              <receiver> b"application1" </receiver>
              <amount>   500000          </amount>;
 
 // Fund app 2 account
-addPaymentTx <txID> 3 </txID>
-             <sender>   LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE            </sender>
+addPaymentTx <sender>   LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE            </sender>
              <receiver> b"application2" </receiver>
              <amount>   500000          </amount>;
 
 // Call app 1, which will call app 2
-addAppCallTx <txID> 4 </txID>
-             <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
+addAppCallTx <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
              <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>

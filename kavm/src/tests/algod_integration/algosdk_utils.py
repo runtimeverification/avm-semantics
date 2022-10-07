@@ -30,4 +30,8 @@ def get_global_int(client: AlgodClient, app_id: int, key: str) -> Optional[int]:
     return list_to_dict_state(client.application_info(app_id)['params']['global-state'])[key]['uint']
 
 def get_global_bytes(client: AlgodClient, app_id: int, key: str) -> Optional[str]:
+    print("get_global_bytes")
+    print(client.application_info(app_id))
+    print("\n")
+    print(list_to_dict_state(client.application_info(app_id)['params']['global-state']))
     return b64decode(list_to_dict_state(client.application_info(app_id)['params']['global-state'])[key]['bytes'])

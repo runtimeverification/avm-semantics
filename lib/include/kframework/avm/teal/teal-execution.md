@@ -19,34 +19,13 @@ Before starting the execution of a TEAL progam, the `<teal>` cell needs to be (r
 there may be some remaining artefacts of the previous transaction's TEAL.
 
 ```k
-  rule <k> #initApp(APP_ID) => . ...</k>
-       <currentApplicationID> _ => APP_ID </currentApplicationID>
-       <currentApplicationAddress> _ => getAppAddress(APP_ID)       </currentApplicationAddress>
-       <teal>
+  rule <k> #initContext() => . ...</k>
+       <currentTxnExecution>
+         <teal>
          _ => (
            <pc> 0 </pc>
            <program> .Map </program>
-           <mode> stateful </mode>
-           <version> 4 </version>
-           <stack> .TStack </stack>
-           <stacksize> 0 </stacksize>
-           <jumped> false </jumped>
-           <labels> .Map </labels>
-           <callStack> .List </callStack>
-           <scratch> .Map </scratch>
-           <intcblock> .Map </intcblock>
-           <bytecblock> .Map </bytecblock>
-         )
-       </teal>
-```
-
-```k
-  rule <k> #initSmartSig() => .K ... </k>
-       <teal>
-         _ => (
-           <pc> 0 </pc>
-           <program> .Map </program>
-           <mode> stateless </mode>
+           <mode> undefined </mode>
            <version> 1 </version>
            <stack> .TStack </stack>
            <stacksize> 0 </stacksize>
@@ -57,7 +36,33 @@ there may be some remaining artefacts of the previous transaction's TEAL.
            <intcblock> .Map </intcblock>
            <bytecblock> .Map </bytecblock>
          )
-       </teal>
+         </teal>
+         ...
+       </currentTxnExecution>
+
+  rule <k> #restoreContext() => . ...</k>
+       <currentTx> TX_ID </currentTx>
+       <transaction>
+         <txID> TX_ID </txID>
+         <txnExecutionContext> <currentTxnExecution> C </currentTxnExecution> </txnExecutionContext>
+         ...
+       </transaction>
+       <currentTxnExecution> _ => C </currentTxnExecution>
+```
+
+```k
+  rule <k> #initApp(APP_ID) => . ...</k>
+       <currentApplicationID> _ => APP_ID </currentApplicationID>
+       <currentApplicationAddress> _ => getAppAddress(APP_ID)       </currentApplicationAddress>
+       <activeApps> (.Set => SetItem(APP_ID)) REST </activeApps>
+       <lastTxnGroupID> _ => "" </lastTxnGroupID>
+       <mode> _ => stateful </mode>
+    requires notBool(APP_ID in REST)
+```
+
+```k
+  rule <k> #initSmartSig() => .K ... </k>
+       <mode> _ => stateless </mode>
 ```
 
 ### Program initialization
@@ -157,7 +162,7 @@ The `#fetchOpcode()` operation will lookup the next opcode from program memory a
 put it into the `<k>` cell for execution.
 
 ```k
-  rule <k> #fetchOpcode() => PGM[PC] ~> #incrementPC() ... </k>
+  rule <k> #fetchOpcode() => PGM[PC] ~> #incrementPC() ~> #fetchOpcode() ... </k>
        <pc> PC </pc>
        <program> PGM </program>
    requires isValidProgamAddress(PC)
@@ -185,7 +190,7 @@ Program counter is incremented after every opcode execution, unless its a branch
 The semantics of branches updates the PC on its own.
 
 ```k
-  rule <k> #incrementPC() => #fetchOpcode() ... </k>
+  rule <k> #incrementPC() => . ... </k>
        <pc> PC => PC +Int #if JUMPED #then 0 #else 1 #fi </pc>
        <jumped> JUMPED => false </jumped>
 ```
@@ -209,33 +214,42 @@ Note: For stateless teal, failure means rejecting the transaction. For stateful
 teal, failure means undoing changes made to the state (for more details, see
 [this article](https://developer.algorand.org/docs/features/asc1/).)
 ```k
-  rule <k> #finalizeExecution() => .K ... </k>
+  syntax KItem ::= #calcReturn()
+  syntax KItem ::= #deactivateApp()
+
+  rule <k> #finalizeExecution() => #deactivateApp() ~> #calcReturn() ... </k>
+
+  rule <k> #deactivateApp() => . ... </k>
+       <currentApplicationID> APP_ID </currentApplicationID>
+       <activeApps> (SetItem(APP_ID) => .Set) ...</activeApps>
+
+  rule <k> #calcReturn() => .K ... </k>
        <stack> I : .TStack </stack>
        <stacksize> SIZE </stacksize>
        <returncode> 4 => 0 </returncode>
        <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
     requires I >Int 0 andBool SIZE ==Int 1
 
-  rule <k> #finalizeExecution() ~> .K ... </k>
+  rule <k> #calcReturn() => .K </k>
        <stack> I : .TStack </stack>
        <stacksize> _ </stacksize>
        <returncode> 4 => 1 </returncode>
        <returnstatus> _ => "Failure - zero-valued singleton stack" </returnstatus>
     requires 0 >=Int I
 
-  rule <k> #finalizeExecution() ~> .K ... </k>
+  rule <k> #calcReturn() => .K </k>
        <stack> _ </stack>
        <stacksize> SIZE </stacksize>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - stack size greater than 1" </returnstatus>
     requires SIZE >Int 1
 
-  rule <k> #finalizeExecution() ~> .K ... </k>
+  rule <k> #calcReturn() => .K </k>
        <stack> .TStack </stack>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - empty stack" </returnstatus>
 
-  rule <k> #finalizeExecution() ~> .K ... </k>
+  rule <k> #calcReturn() => .K </k>
        <stack> (_:Bytes) : .TStack </stack>
        <stacksize> _ </stacksize>
        <returncode> 4 => 2 </returncode>
@@ -342,6 +356,7 @@ return code to 3 (see return codes below).
   syntax String ::= "DIV_BY_ZERO"                [macro]
   syntax String ::= "BYTES_OVERFLOW"             [macro]
   syntax String ::= "TXN_ACCESS_FAILED"          [macro]
+  syntax String ::= "TXN_INVALID"                [macro]
   syntax String ::= "INVALID_SCRATCH_LOC"        [macro]
   syntax String ::= "TXN_OUT_OF_BOUNDS"          [macro]
   syntax String ::= "FUTURE_TXN"                 [macro]
@@ -362,6 +377,7 @@ return code to 3 (see return codes below).
   syntax String ::= "CALLSTACK_UNDERFLOW"        [macro]
   syntax String ::= "CALLSTACK_OVERFLOW"         [macro]
   syntax String ::= "INVALID_ARGUMENT"           [macro]
+  syntax String ::= "ITXN_REENTRY"               [macro]
   syntax String ::= "MATH_BYTES_ARG_TOO_LONG"    [macro]
   syntax String ::= "INSUFFICIENT_FUNDS"         [macro]
   syntax String ::= "KEY_TOO_LARGE"              [macro]
@@ -375,6 +391,7 @@ return code to 3 (see return codes below).
   rule DIV_BY_ZERO         => "division by zero"
   rule BYTES_OVERFLOW      => "resulting byte array too large"
   rule TXN_ACCESS_FAILED   => "transaction field access failed"
+  rule TXN_INVALID         => "a transaction is malformed"
   rule INVALID_SCRATCH_LOC => "invalid scratch space location"
   rule TXN_OUT_OF_BOUNDS   => "transaction index out of bounds"
   rule FUTURE_TXN          => "tried to access transaction that hasn't executed yet"
@@ -395,6 +412,7 @@ return code to 3 (see return codes below).
   rule IMPOSSIBLE_NEGATIVE_NUMBER => "impossible happened: negative number on stack"
   rule CALLSTACK_UNDERFLOW => "call stack underflow: illegal retsub"
   rule CALLSTACK_OVERFLOW  => "call stack overflow: recursion is too deep"
+  rule ITXN_REENTRY        => "application called from itself"
   rule MATH_BYTES_ARG_TOO_LONG => "math attempted on large byte-array"
   rule INSUFFICIENT_FUNDS  => "negative balance reached"
   rule KEY_TOO_LARGE       => "key is too long"

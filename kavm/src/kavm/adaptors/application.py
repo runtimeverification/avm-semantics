@@ -153,9 +153,9 @@ class KAVMApplication:
         def from_map(term: KInner) -> Dict:
             if term.label.name == '_|->_':
                 if term.args[1].sort.name == 'Bytes':
-                    return {term.args[0].token: b64encode(bytes(term.args[1].token, encoding="raw_unicode_escape"))}
+                    return {term.args[0].token[2:-1]: b64encode(bytes(term.args[1].token[2:-1], encoding="raw_unicode_escape"))}
                 if term.args[1].sort.name == 'Int':
-                    return {term.args[0].token: int(term.args[1].token)}
+                    return {term.args[0].token[2:-1]: int(term.args[1].token)}
             if term.label.name == '_Map_':
                 return from_map(term.args[0]) | from_map(term.args[1])
             if term.label.name == '.Map':
@@ -164,6 +164,8 @@ class KAVMApplication:
         Parse a KAVMApplication instance from a Kast term
         """
         (_, subst) = split_config_from(term)
+        print("from_app_cell")
+        print(subst['GLOBALBYTES_CELL'])
         return KAVMApplication(
             app_id=int(subst['APPID_CELL'].token),
             approval_pgm_src=subst['APPROVALPGMSRC_CELL'],
@@ -183,6 +185,8 @@ class KAVMApplication:
         """
         Return a dictified representation of the application cell to pass to py-algorand-sdk
         """
+        print("dictify")
+        print(self._global_bytes_data)
         return {
             'index': str(self._app_id),
             'params': {

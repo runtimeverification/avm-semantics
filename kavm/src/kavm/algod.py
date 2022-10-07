@@ -110,7 +110,7 @@ class KAVMClient(algod.AlgodClient):
                     'min-fee': 1000,
                 }
             elif params[0] == 'pending':
-                txid = int(params[1])
+                txid = params[1]
                 return self.kavm._committed_txns[txid]
             else:
                 raise NotImplementedError(f'Endpoint not implemented: {requrl}')
@@ -166,8 +166,8 @@ class KAVMClient(algod.AlgodClient):
                 known_addresses.add(signed_txn.transaction.sender)
                 if hasattr(signed_txn.transaction, 'receiver'):
                     known_addresses.add(signed_txn.transaction.receiver)
-                txid = self.kavm.next_valid_txid + txid_offset
-                kavm_txn = KAVMTransaction(self.kavm, signed_txn.transaction, txid)
+                txid = str(int(self.kavm.next_valid_txid) + txid_offset)
+                kavm_txn = KAVMTransaction(self.kavm, signed_txn.transaction, txid, offset=txid_offset)
                 self.algodLogger.debug(f'Submitting txn with id: {kavm_txn.txid}')
                 kavm_txns.append(kavm_txn)
 

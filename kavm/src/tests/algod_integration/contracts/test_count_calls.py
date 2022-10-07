@@ -55,6 +55,12 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
 
     app_id = get_created_app_id(client, txn_id)
 
+    x = get_global_bytes(client, app_id, "Creator")
+
+    print("abc")
+    print(x)
+    print(len(x))
+    assert False
     assert encode_address(get_global_bytes(client, app_id, "Creator")) == user['address']
     assert get_global_int(client, app_id, "Number") == 123
 
@@ -105,3 +111,5 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
 
     assert get_local_int(client, app_id, user['address'], "timesPinged") == 2
     assert get_global_int(client, app_id, "timesPonged") == 2
+
+    assert False

@@ -1,0 +1,8 @@
+tests/specs/template-spec.k
+tests/specs/teal-execution-spec.k
+tests/specs/opcodes/opcodes-v2-spec.k
+tests/specs/simple/max-int-spec.k
+tests/specs/simple/max-list-spec.k
+tests/specs/simple/sum-list-spec.k
+tests/specs/simple/sum-to-n-spec.k
+tests/specs/simple/newton-sqrt-spec.k

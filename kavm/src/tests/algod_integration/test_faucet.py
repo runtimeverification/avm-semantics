@@ -53,6 +53,8 @@ def test_faucet(
     assert alice_balance == amount1
     assert bob_balance == amount2
 
+    assert False
+
 
 def test_faucet_separate_groups(
     client: AlgodClient,

@@ -9,8 +9,7 @@ addAccount <address> 7GZIODOFIQU426NDLOLD4DANFUZO655NSDQEZQE74KREHYNTTL5BB5EETU 
 #initTxGroup();
 
 // Add app and opt in b"1"
-addAppCallTx <txID> 0 </txID>
-             <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
+addAppCallTx <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>        

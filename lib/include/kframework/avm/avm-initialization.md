@@ -35,21 +35,11 @@ The transaction is initialized first.
 ### Transaction Group Initialization
 ```k
   rule <k> #initTxGroup() => .K ... </k>
-       <txGroup>
-         <txGroupID> _ => 0 </txGroupID>
-         <currentTx> _ => 0 </currentTx>
-         <transactions>
-           _ => .Bag
-          </transactions>
-          // Accounts that have been modified during this (top-level) transaction group: those for which it will be checked
-          // that their balance has not gone below their minimum balance. 
-          <touchedAccounts> _ => .Set </touchedAccounts>
-       </txGroup>
 ```
 
 ### Transactions
 
-By convention, we initialise the `<group>` cell, which tracks the transaction's position
+By convention, we initialise the `<groupIdx>` cell, which tracks the transaction's position
 withing the group, with it's `<txID>`. Transaction IDs will be assigned sequentially.
 
 **TODO**: transaction IDs and group indices need be assigned differently for real blockchain transactions.
@@ -57,24 +47,24 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
 #### Payment Transaction
 
 ```k
-  syntax AlgorandCommand ::= "addPaymentTx" TxIDCell SenderCell ReceiverCell AmountCell
+  syntax AlgorandCommand ::= "addPaymentTx" SenderCell ReceiverCell AmountCell
   //-----------------------------------------------------------------------------------
-  rule <k> addPaymentTx <txID>     ID       </txID>
-                        <sender>   SENDER   </sender>
+  rule <k> addPaymentTx <sender>   SENDER   </sender>
                         <receiver> RECEIVER </receiver>
                         <amount>   AMOUNT   </amount>
-       => #pushTxnBack(<txID> ID </txID>)
+       => #pushTxnBack(<txID> Int2String(ID) </txID>)
            ...
        </k>
        <transactions>
          TXNS =>
          <transaction>
-           <txID> ID </txID>
+           <txID> Int2String(ID) </txID>
            <txHeader>
-             <sender>      SENDER </sender>
-             <txType>      "pay"  </txType>
-             <typeEnum>    @ pay  </typeEnum>
-             <group>       ID     </group>    // for testing, we make these the same as sequential TxIDs
+             <sender>      SENDER   </sender>
+             <txType>      "pay"    </txType>
+             <typeEnum>    @ pay    </typeEnum>
+             <groupID>     Int2String(GROUP_ID) </groupID>
+             <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx>    // for testing, we make these the same as sequential TxIDs
              ...                              // other fields will receive default values
            </txHeader>
            <payTxFields>
@@ -86,13 +76,15 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
          </transaction>
          TXNS
        </transactions>
-       requires notBool (ID in_txns(<transactions> TXNS </transactions>))
+       <nextGroupID> GROUP_ID </nextGroupID>
+       <nextTxnID> ID => ID +Int ID </nextTxnID>
+       requires notBool (Int2String(ID) in_txns(<transactions> TXNS </transactions>))
 ```
 
 #### Application Call Transaction
 
 ```k
-  syntax AlgorandCommand ::= "addAppCallTx" TxIDCell SenderCell ApplicationIDCell
+  syntax AlgorandCommand ::= "addAppCallTx" SenderCell ApplicationIDCell
                                             OnCompletionCell AccountsCell
                                             ApplicationArgsCell ForeignAppsCell 
                                             ForeignAssetsCell
@@ -102,8 +94,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
                                             "<approvalPgmIdx>" Int "</approvalPgmIdx>"
                                             "<clearStatePgmIdx>" Int "</clearStatePgmIdx>"
   //-----------------------------------------------------------
-  rule <k> addAppCallTx <txID>              ID              </txID>
-                        <sender>            SENDER          </sender>
+  rule <k> addAppCallTx <sender>            SENDER          </sender>
                         <applicationID>     APP_ID          </applicationID>
                         <onCompletion>      ON_COMPLETION   </onCompletion>
                         <accounts>          ACCOUNTS        </accounts>
@@ -117,18 +108,19 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
                         <extraProgramPages> EXTRA_PAGES     </extraProgramPages>
                         <approvalPgmIdx>    APPROVAL_IDX    </approvalPgmIdx>
                         <clearStatePgmIdx>  CLEAR_STATE_IDX </clearStatePgmIdx>
-       => #pushTxnBack(<txID> ID </txID>)
+       => #pushTxnBack(<txID> Int2String(ID) </txID>)
            ...
        </k>
        <transactions>
          TXNS =>
          <transaction>
-           <txID> ID </txID>
+           <txID> Int2String(ID) </txID>
            <txHeader>
-             <sender>   SENDER </sender>
-             <txType>   "appl" </txType>
-             <typeEnum> @ appl </typeEnum>
-             <group>    ID     </group> // for testing, we make these the same as sequential TxIDs
+             <sender>   SENDER   </sender>
+             <txType>   "appl"   </txType>
+             <typeEnum> @ appl   </typeEnum>
+             <groupID>  Int2String(GROUP_ID) </groupID>
+             <groupIdx> groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx> // for testing, we make these the same as sequential TxIDs
              ...                           // other fields will receive default values
            </txHeader>
            <appCallTxFields>
@@ -151,8 +143,10 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
          </transaction>
          TXNS
        </transactions>
+       <nextGroupID> GROUP_ID </nextGroupID>
+       <nextTxnID> ID => ID +Int 1 </nextTxnID>
        <tealPrograms> TEAL_PGMS_LIST </tealPrograms>
-       requires notBool (ID in_txns(<transactions> TXNS </transactions>))
+       requires notBool (Int2String(ID) in_txns(<transactions> TXNS </transactions>))
 ```
 
 ### Globals Initialization
@@ -166,6 +160,17 @@ To now the group size, we need to count the transactions in the group:
   rule countTxns(<transactions> <transaction> _ </transaction> REST </transactions>)
        => 1 +Int countTxns(<transactions> REST </transactions>)
   rule countTxns(<transactions> .Bag </transactions>)
+       => 0
+
+  syntax Int ::= countTxnsInGroup(TransactionsCell, String) [function, functional]
+  // --------------------------------------------------------------------------
+
+  rule countTxnsInGroup(<transactions> <transaction> <groupID> GROUP </groupID> ... </transaction> REST </transactions>, GROUP)
+       => 1 +Int countTxnsInGroup(<transactions> REST </transactions>, GROUP)
+  rule countTxnsInGroup(<transactions> <transaction> <groupID> GROUP' </groupID> ... </transaction> REST </transactions>, GROUP)
+       => countTxnsInGroup(<transactions> REST </transactions>, GROUP)
+    requires GROUP' =/=K GROUP
+  rule countTxnsInGroup(<transactions> .Bag </transactions>, _)
        => 0
 ```
 
@@ -181,10 +186,7 @@ and ` <latestTimestamp>` are initialized with somewhat arbitrary values.
          <currentApplicationID> _ => 0 </currentApplicationID>
          <currentApplicationAddress> _ => .Bytes </currentApplicationAddress>
        </globals>
-       <txGroup>
-         <transactions> TXNS </transactions>
-          ...
-       </txGroup>
+       <transactions> TXNS </transactions>
 ```
 
 ### Blockchain Initialization
@@ -239,14 +241,13 @@ WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM
 The asset initialization rule must be used *after* initializing accounts.
 
 ```k
-  syntax AlgorandCommand ::= "addAssetConfigTx" TxIDCell SenderCell ConfigAssetCell ConfigTotalCell
+  syntax AlgorandCommand ::= "addAssetConfigTx" SenderCell ConfigAssetCell ConfigTotalCell
                                                 ConfigDecimalsCell ConfigDefaultFrozenCell ConfigUnitNameCell
                                                 ConfigAssetNameCell ConfigAssetURLCell ConfigMetaDataHashCell
                                                 ConfigManagerAddrCell ConfigReserveAddrCell
                                                 ConfigFreezeAddrCell ConfigClawbackAddrCell
   //-----------------------------------------------------------
-  rule <k> addAssetConfigTx <txID>                TXN_ID        </txID>
-                            <sender>              SENDER        </sender>
+  rule <k> addAssetConfigTx <sender>              SENDER        </sender>
                             <configAsset>         ASSET_ID      </configAsset>
                             <configTotal>         TOTAL         </configTotal>
                             <configDecimals>      DECIMALS      </configDecimals>
@@ -259,18 +260,19 @@ The asset initialization rule must be used *after* initializing accounts.
                             <configReserveAddr>   RES_ADDR      </configReserveAddr>
                             <configFreezeAddr>    FRZ_ADDR      </configFreezeAddr>
                             <configClawbackAddr>  CLB_ADDR      </configClawbackAddr>
-       => #pushTxnBack(<txID> TXN_ID </txID>)
+       => #pushTxnBack(<txID> Int2String(TXN_ID) </txID>)
            ...
        </k>
        <transactions>
          TXNS =>
          <transaction>
-           <txID> TXN_ID </txID>
+           <txID> Int2String(TXN_ID) </txID>
            <txHeader>
-             <sender>      SENDER </sender>
-             <txType>      "acfg" </txType>
-             <typeEnum>    @ acfg </typeEnum>
-             <group>       TXN_ID </group> // for testing, we make these the same as sequential TxIDs
+             <sender>      SENDER   </sender>
+             <txType>      "acfg"   </txType>
+             <typeEnum>    @ acfg   </typeEnum>
+             <groupID>     Int2String(GROUP_ID) </groupID>
+             <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx> // for testing, we make these the same as sequential TxIDs
              ...                           // other fields will receive default values
            </txHeader>
            <assetConfigTxFields>
@@ -293,35 +295,37 @@ The asset initialization rule must be used *after* initializing accounts.
          </transaction>
          TXNS
        </transactions>
-       requires notBool (TXN_ID in_txns(<transactions> TXNS </transactions>))
+       <nextGroupID> GROUP_ID </nextGroupID>
+       <nextTxnID> TXN_ID => TXN_ID +Int 1 </nextTxnID>
+       requires notBool (Int2String(TXN_ID) in_txns(<transactions> TXNS </transactions>))
 ```
 
 ### Asset transfer
 
 ```k
-  syntax AlgorandCommand ::= "addAssetTransferTx" TxIDCell SenderCell XferAssetCell AssetAmountCell
+  syntax AlgorandCommand ::= "addAssetTransferTx" SenderCell XferAssetCell AssetAmountCell
                                                   AssetASenderCell AssetReceiverCell AssetCloseToCell
   //-----------------------------------------------------------------------------------------------
 
-  rule <k> addAssetTransferTx <txID>          TXN_ID        </txID>
-                              <sender>        SENDER        </sender>
+  rule <k> addAssetTransferTx <sender>        SENDER        </sender>
                               <xferAsset>     ASSET_ID      </xferAsset>
                               <assetAmount>   AMOUNT        </assetAmount>
                               <assetASender>  CLAWBACK_FROM </assetASender>
                               <assetReceiver> RECEIVER      </assetReceiver>
                               <assetCloseTo>  CLOSE_TO      </assetCloseTo>
-           => #pushTxnBack(<txID> TXN_ID </txID>)
+           => #pushTxnBack(<txID> Int2String(TXN_ID) </txID>)
            ...
        </k>
        <transactions>
          TXNS =>
          <transaction>
-           <txID> TXN_ID </txID>
+           <txID> Int2String(TXN_ID) </txID>
            <txHeader>
-             <sender>   SENDER  </sender>
-             <txType>   "axfer" </txType>
-             <typeEnum> @ axfer </typeEnum>
-             <group>    TXN_ID  </group> // for testing, we make these the same as sequential TxIDs
+             <sender>   SENDER   </sender>
+             <txType>   "axfer"  </txType>
+             <typeEnum> @ axfer  </typeEnum>
+             <groupID>  Int2String(GROUP_ID) </groupID>
+             <groupIdx> groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx> // for testing, we make these the same as sequential TxIDs
              ...                         // other fields will receive default values
            </txHeader>
            <assetTransferTxFields>
@@ -336,7 +340,9 @@ The asset initialization rule must be used *after* initializing accounts.
          </transaction>
          TXNS
        </transactions>
-       requires notBool (TXN_ID in_txns(<transactions> TXNS </transactions>))
+       <nextGroupID> GROUP_ID </nextGroupID>
+       <nextTxnID> TXN_ID => TXN_ID +Int 1 </nextTxnID>
+       requires notBool (Int2String(TXN_ID) in_txns(<transactions> TXNS </transactions>))
 
 ```
 
@@ -347,6 +353,66 @@ The asset initialization rule must be used *after* initializing accounts.
   //------------------------------------------------
   rule <k> declareTealSource _ => .K ... </k>
 ```
+
+### Transaction Index Initialization
+
+Traverse the `<transactions>` cell and index the relation of group ids with transaction ids
+
+```k
+  syntax AlgorandCommand ::= #initTxnIndexMap()
+  //-------------------------------------------
+  rule <k> #initTxnIndexMap() => #initTxnIndexMap(collectTxnIds(<transactions> TXNS </transactions>)) ... </k>
+       <transactions> TXNS </transactions>
+
+  syntax AlgorandCommand ::= #initTxnIndexMap(List)
+  //-----------------------------------------------
+  rule <k> #initTxnIndexMap(ListItem(TXN_ID) REST) => #initTxnIndexMap(ListItem(TXN_ID) REST) ... </k>
+       <transaction>
+         <txID> TXN_ID </txID>
+         <groupID> GROUP_ID </groupID>
+         ...
+       </transaction>
+       <txnIndexMap>
+          ITEMS =>
+          <txnIndexMapGroup>
+            <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
+            <txnIndexMapGroupValues> .Map </txnIndexMapGroupValues>
+          </txnIndexMapGroup>
+          ITEMS
+       </txnIndexMap>
+    requires notBool (group_id_in_index_map(GROUP_ID))
+
+  rule <k> #initTxnIndexMap(ListItem(TXN_ID) REST) => #initTxnIndexMap(REST) ... </k>
+       <transaction>
+         <txID> TXN_ID </txID>
+         <groupID> GROUP_ID </groupID>
+         <groupIdx> GROUP_IDX </groupIdx>
+         ...
+       </transaction>
+       <txnIndexMap>
+          <txnIndexMapGroup>
+            <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
+            <txnIndexMapGroupValues> VALUES => VALUES[GROUP_IDX <- TXN_ID] </txnIndexMapGroupValues>
+          </txnIndexMapGroup>
+          ...
+       </txnIndexMap>
+
+  rule <k> #initTxnIndexMap(.List) => .K ... </k>
+
+  syntax List ::= collectTxnIds(TransactionsCell) [function, functional]
+  //--------------------------------------------------------------------
+  rule collectTxnIds(<transactions> .Bag </transactions>) => .List
+  rule collectTxnIds(<transactions> <transaction> <txID> TXN_ID </txID> ... </transaction> TXNS </transactions>)
+    => ListItem(TXN_ID) collectTxnIds(<transactions> TXNS </transactions>)
+
+  syntax Bool ::= "group_id_in_index_map" "(" String ")" [function, functional]
+  //---------------------------------------------------------------------------
+  rule [[ group_id_in_index_map(GROUP_ID) => true ]]
+       <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
+  rule group_id_in_index_map(_GROUP_ID) => false [owise]
+
+```
+
 
 ```k
 endmodule
