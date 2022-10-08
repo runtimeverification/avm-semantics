@@ -104,6 +104,7 @@ class KAVM(KRun):
         output: str = 'json',
         profile: bool = False,
         teal_sources_dir: Optional[Path] = None,
+        check: bool = True,
     ) -> CompletedProcess:
         """Run an AVM simulaion scenario with krun"""
 
@@ -129,7 +130,10 @@ class KAVM(KRun):
         command_env = os.environ.copy()
         command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
 
-        return run_process(krun_command, env=command_env, logger=self._logger, profile=profile)
+        for line in krun_command:
+            print(line, end=' ')
+
+        return run_process(krun_command, env=command_env, logger=self._logger, profile=profile, check=check)
 
     def kast(
         self,

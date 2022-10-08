@@ -10,3 +10,5 @@ tests/scenarios/itxn-gload.avm-simulation
 tests/scenarios/itxn-gload2.avm-simulation
 tests/scenarios/itxn-multiple-field-types-set.fail.avm-simulation
 tests/scenarios/itxn-reentrant.fail.avm-simulation
+tests/scenarios/stack-too-deep.fail.avm-simulation
+tests/scenarios/insufficient-funds.fail.avm-simulation
