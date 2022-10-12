@@ -23,6 +23,7 @@ module AVM-CONFIGURATION
       <returnstatus>                       // the exit status message
         "Failure - AVM is stuck"
       </returnstatus>
+      <paniccode> 0 </paniccode>
 
       // The transaction group as submitted
       <transactions/>
@@ -135,15 +136,13 @@ These panic behaviors indicate that internal assumptions of the semantics were v
 These are AVM-specific panic behaviors, caused by issues like depleted balances, missing apps, etc.
 
 ```k
-  syntax AvmPanic ::= String
-  syntax AvmPanic ::= "MIN_BALANCE_VIOLATION"   [macro]
-  syntax AvmPanic ::= "UNSUPPORTED_TXN_TYPE"    [macro]
-  syntax AvmPanic ::= "ASSET_FROZEN_FOR_SENDER" [macro]
-  syntax AvmPanic ::= "ASSET_NOT_OPT_IN"        [macro]
-  syntax AvmPanic ::= "UNKNOWN_ADDRESS"         [macro]
+  syntax String ::= "MIN_BALANCE_VIOLATION"   [macro]
+  syntax String ::= "UNSUPPORTED_TXN_TYPE"    [macro]
+  syntax String ::= "ASSET_FROZEN_FOR_SENDER" [macro]
+  syntax String ::= "ASSET_NOT_OPT_IN"        [macro]
+  syntax String ::= "UNKNOWN_ADDRESS"         [macro]
+  syntax String ::= "ASSET_NO_PERMISSION"     [macro]
 
-  //---------------------------------------------------
-  syntax AvmPanic ::= "ASSET_NO_PERMISSION"     [macro]
   //------------------------------------------------
   rule MIN_BALANCE_VIOLATION   => "account's balance falls below its allowed minimum balance"
   rule UNSUPPORTED_TXN_TYPE    => "attempt to execute an unsupported transaction type"
@@ -152,13 +151,23 @@ These are AVM-specific panic behaviors, caused by issues like depleted balances,
   rule UNKNOWN_ADDRESS         => "address is not in the <accountsMap>"
   rule ASSET_NO_PERMISSION     => "sender does not have permission to modify asset"
 
-  syntax AlgorandCommand ::= #avmPanic(String, AvmPanic)
+  syntax Int ::= panicCode(String)  [function]
+  //------------------------------------------
+  rule panicCode(MIN_BALANCE_VIOLATION) => 36
+  rule panicCode(UNSUPPORTED_TXN_TYPE) => 37
+  rule panicCode(ASSET_FROZEN_FOR_SENDER) => 38
+  rule panicCode(ASSET_NOT_OPT_IN) => 39
+  rule panicCode(UNKNOWN_ADDRESS) => 40
+  rule panicCode(ASSET_NO_PERMISSION) => 41
+
+  syntax AlgorandCommand ::= #avmPanic(String, String)
   //-------------------------------------------
   rule <k> #avmPanic(TXN_ID, S) ~> _ => .K </k>
        <returncode> _ => 3 </returncode>
        <returnstatus> _ => "Failure - when executing transaction " +String TXN_ID
                            +String ": " +String S
        </returnstatus>
+       <paniccode> _ => panicCode(S) </paniccode>
 
 endmodule
 ```

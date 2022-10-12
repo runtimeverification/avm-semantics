@@ -1,8 +1,10 @@
-from typing import Any
+from typing import Any, cast
 
+import json
 import pytest
 import glob
-from pyk.kast import KApply, KInner, KSort, KToken
+from pyk.kast import KApply, KInner, KSort, KToken, KAst
+from pyk.kastManip import split_config_from
 from pyk.prelude import intToken, stringToken
 import os
 from os.path import abspath
@@ -21,8 +23,7 @@ def file_loop_index() -> list:
     files = glob.glob(os.path.join(project_path, "tests/scenarios/*.avm-simulation"))
     files_passing = [os.path.basename(f) for f in files]
     for file in files_passing:
-        return_code = 0
-        if file.__contains__('.fail.'): return_code = 3
+        return_code = int(file.split('.')[-2])
         filenames.append(tuple((file, return_code)))
     return filenames
 
@@ -45,7 +46,7 @@ def test_run_simulation(filename: str, expected: int) -> None:
     avm_simulation_parser = project_path / kavm_lib_dir / 'scripts/parse-avm-simulation.sh'
     proc_result = kavm.run_avm_simulation(
         input_file=Path(os.path.join(project_path, 'tests/scenarios', filename)),
-        output='pretty',
+        output='json',
         profile=True,
         teal_sources_dir=Path(os.path.join(project_path, 'tests/teal-sources/')),
         teal_programs_parser=teal_programs_parser,
@@ -53,6 +54,14 @@ def test_run_simulation(filename: str, expected: int) -> None:
         depth=0,
         check=False,
     )
-    print(proc_result.stdout)
 
-    assert proc_result.returncode == expected
+    expected_exit_code = 0 if expected == 0 else 3
+
+    output_kast_term = KAst.from_dict(json.loads(proc_result.stdout)['term'])
+
+    (_, subst) = split_config_from(cast(KInner, output_kast_term))
+
+    panic_code = int(subst['PANICCODE_CELL'].token)
+
+    assert panic_code == expected
+    assert proc_result.returncode == expected_exit_code

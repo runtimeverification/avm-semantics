@@ -346,7 +346,7 @@ uninstall:
 
 KAVM_OPTIONS :=
 
-test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics test-avm-semantics-prove
+test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics-prove
 
 ##########################################
 ## Standalone AVM LLVM Backend hooks tests

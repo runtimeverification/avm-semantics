@@ -130,9 +130,6 @@ class KAVM(KRun):
         command_env = os.environ.copy()
         command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
 
-        for line in krun_command:
-            print(line, end=' ')
-
         return run_process(krun_command, env=command_env, logger=self._logger, profile=profile, check=check)
 
     def kast(
@@ -336,6 +333,7 @@ class KAVM(KRun):
                     'BLOCKHEIGHT_CELL': intToken(0),
                     'TEALPROGRAMS_CELL': KApply('.TealPrograms'),
                     'RETURNCODE_CELL': intToken(4),
+                    'PANICCODE_CELL': intToken(0),
                     'RETURNSTATUS_CELL': stringToken('Failure - program is stuck'),
                     'K_CELL': KApply(
                         '.AS_AVM-EXECUTION-SYNTAX_AVMSimulation',

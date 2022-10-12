@@ -421,11 +421,49 @@ return code to 3 (see return codes below).
   rule ASSERTION_VIOLATION => "assertion violation"
   //--------------------------------------------------------------------------------
 
+  rule panicCode(INVALID_OP_FOR_MODE) => 1
+  rule panicCode(ERR_OPCODE)          => 2
+  rule panicCode(INT_OVERFLOW)        => 3
+  rule panicCode(INT_UNDERFLOW)       => 4
+  rule panicCode(DIV_BY_ZERO)         => 5
+  rule panicCode(BYTES_OVERFLOW)      => 6
+  rule panicCode(TXN_ACCESS_FAILED)   => 7
+  rule panicCode(TXN_INVALID)         => 8
+  rule panicCode(INVALID_SCRATCH_LOC) => 9
+  rule panicCode(TXN_OUT_OF_BOUNDS)   => 10
+  rule panicCode(FUTURE_TXN)          => 11
+  rule panicCode(INDEX_OUT_OF_BOUNDS) => 12
+  rule panicCode(ILLEGAL_JUMP)        => 13
+  rule panicCode(ILL_TYPED_STACK)     => 14
+  rule panicCode(LOG_CALLS_EXCEEDED)  => 15
+  rule panicCode(LOG_SIZE_EXCEEDED)   => 16
+  rule panicCode(GLOBAL_BYTES_EXCEEDED) => 17
+  rule panicCode(GLOBAL_INTS_EXCEEDED) => 18
+  rule panicCode(LOCAL_BYTES_EXCEEDED) => 19
+  rule panicCode(LOCAL_INTS_EXCEEDED) => 20
+  rule panicCode(INVALID_ARGUMENT)    => 21
+  rule panicCode(STACK_OVERFLOW)      => 22
+  rule panicCode(STACK_UNDERFLOW)     => 23
+  rule panicCode(ASSERTION_VIOLATION) => 24
+  rule panicCode(DUPLICATE_LABEL)     => 25
+  rule panicCode(IMPOSSIBLE_NEGATIVE_NUMBER) => 26
+  rule panicCode(CALLSTACK_UNDERFLOW) => 27
+  rule panicCode(CALLSTACK_OVERFLOW)  => 28
+  rule panicCode(ITXN_REENTRY)        => 29
+  rule panicCode(MATH_BYTES_ARG_TOO_LONG) => 30
+  rule panicCode(INSUFFICIENT_FUNDS)  => 31
+  rule panicCode(KEY_TOO_LARGE)       => 32
+  rule panicCode(BYTE_VALUE_TOO_LARGE) => 33
+  rule panicCode(KEY_VALUE_TOO_LARGE) => 34
+  rule panicCode(ASSERTION_VIOLATION) => 35
+
+
   syntax KItem ::= panic(String)
   // ---------------------------
   rule <k> panic(S) ~> _ => .K </k>
        <returncode> _ => 3 </returncode>
        <returnstatus> _ => "Failure - panic: " +String S </returnstatus>
+       <paniccode> _ => panicCode(S) </paniccode>
 ```
 
 ```k
