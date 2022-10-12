@@ -419,6 +419,9 @@ test-kavm-algod:
 	$(MAKE) test-unit -C $(PY_KAVM_DIR)
 	$(MAKE) test-integration-kalgod -C $(PY_KAVM_DIR)
 
+test-kavm-algod-semantics:
+	$(MAKE) test-scenarios -C $(PY_KAVM_DIR)
+
 # Utils
 # -----
 
