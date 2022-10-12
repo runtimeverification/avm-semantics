@@ -35,6 +35,7 @@ pipeline {
           parallel {
             stage('Test kavm.algod') { steps { sh 'make -j4 test-kavm-algod' } }
             stage('Test KAVM hooks') { steps { sh 'make build-kavm-hooks-tests' } }
+            stage('AVM tests') { steps { sh 'make THREADS=4 test-kavm-algod-semantics' } }
             stage('AVM proofs') { steps { sh 'make -j4 test-avm-semantics-prove' } }
             stage('Module Imports Graph') { steps { sh 'make module-imports-graph' } }
           }

@@ -1,6 +1,7 @@
 .PHONY: default all clean build install          \
         poetry-install                           \
         test test-unit test-integration          \
+        test-scenarios                           \
         format isort autoflake black             \
         check check-isort check-autoflake check-black check-flake8 check-mypy
 
