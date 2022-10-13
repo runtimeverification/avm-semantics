@@ -301,12 +301,122 @@ module OPCODES-V2-SPEC
         </accountsMap>
 
 // app_local_del 	2 	heavy_check_mark 	1
+  claim <k> app_local_del => . </k>
+        <stack> (b"key" : ADDR:Bytes : XS) => XS </stack>
+        <stacksize> S => S -Int 2 </stacksize>
+        <currentTx> TX_ID </currentTx>
+        <transaction>
+          <txID> TX_ID </txID>
+          <typeEnum> @ appl </typeEnum>
+          <sender> ADDR </sender>
+          ...
+        </transaction>
+        <currentApplicationID> APP_ID </currentApplicationID>
+        <accountsMap>
+          <account>
+            <address> ADDR </address>
+            <appsOptedIn>
+              <optInApp>
+                <optInAppID> APP_ID </optInAppID>
+                <localInts> (b"key" |-> 123) => .Map </localInts>
+                <localBytes> .Map </localBytes>
+                ...
+              </optInApp>
+              ...
+            </appsOptedIn>
+            ...
+          </account>
+        </accountsMap>
+
 // app_global_del 	2 	heavy_check_mark 	1
+  claim <k> app_global_del => . </k>
+        <stack> (b"key" : XS) => XS </stack>
+        <stacksize> S => S -Int 1 </stacksize>
+        <currentApplicationID> APP_ID </currentApplicationID>
+        <accountsMap>
+          <account>
+            <address> _ </address>
+            <appsCreated>
+              <app>
+                <appID> APP_ID </appID>
+                <globalInts> (b"key" |-> 123) => .Map </globalInts>
+                <globalBytes> .Map </globalBytes>
+                ...
+              </app>
+              ...
+            </appsCreated>
+            ...
+          </account>
+        </accountsMap>
+
 // asset_holding_get i 	2 	heavy_check_mark 	1
+  claim <k> asset_holding_get AssetBalance => . </k>
+        <stack> ASSET:Int : normalize(ADDR:Bytes) : XS => 1 : 12345 : XS </stack>
+        <currentTx> TX_ID </currentTx>
+        <transaction>
+          <txID> TX_ID </txID>
+          <typeEnum> @ appl </typeEnum>
+          <foreignAssets> ASSET _ </foreignAssets>
+          <sender> ADDR </sender>
+          ...
+        </transaction>
+        <account>
+          <address> ADDR </address>
+          <optInAsset>
+            <optInAssetID> ASSET </optInAssetID>
+            <optInAssetBalance> 12345 </optInAssetBalance>
+            ...
+          </optInAsset>
+          ...
+        </account>
+
 // asset_params_get i 	2 	heavy_check_mark 	1
+  claim <k> asset_params_get AssetTotal => . </k>
+        <stack> ASSET:Int : XS => 1 : 12345 : XS </stack>
+        <stacksize> S => S +Int 1 </stacksize>
+        <currentTx> TX_ID </currentTx>
+        <transaction>
+          <txID> TX_ID </txID>
+          <typeEnum> @ appl </typeEnum>
+          <foreignAssets> ASSET _ </foreignAssets>
+          ...
+        </transaction>
+        <asset>
+          <assetID> ASSET </assetID>
+          <assetTotal> 12345 </assetTotal>
+          ...
+        </asset>
+    requires S <Int 1000
+
 // return 	2 	heavy_check_mark 	1
+  claim <k> return ~> #incrementPC() ~> #fetchOpcode() => . </k>
+        <stack> (1 : 2 : .TStack) => (1 : .TStack) </stack>
+        <stacksize> 2 => 1 </stacksize>
+        <currentApplicationID> APP_ID:Int </currentApplicationID>
+        <activeApps> (SetItem(APP_ID) .Set) => .Set </activeApps>
+        <returncode> 4 => 0 </returncode>
+        <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
+
 // bnz target 	2 (4) 	heavy_check_mark 	1
+  claim <k> bnz LABEL => . </k>
+        <stack> 1 : XS => XS </stack>
+        <stacksize> S => S -Int 1 </stacksize>
+        <jumped> _ => true </jumped>
+        <pc> _ => 23 </pc>
+        <labels> .Map [LABEL <- 23] </labels>
+
 // bz target 	2 (4) 	heavy_check_mark 	1
+  claim <k> bz LABEL => . </k>
+        <stack> 0 : XS => XS </stack>
+        <stacksize> S => S -Int 1 </stacksize>
+        <jumped> _ => true </jumped>
+        <pc> _ => 23 </pc>
+        <labels> .Map [LABEL <- 23] </labels>
+
 // b target 	2 (4) 	heavy_check_mark 	1
+  claim <k> b LABEL => . </k>
+        <jumped> _ => true </jumped>
+        <pc> _ => 23 </pc>
+        <labels> .Map [LABEL <- 23] </labels>
 
 endmodule
