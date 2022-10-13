@@ -1014,7 +1014,7 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
   rule <k> assert => .K ... </k>
        <stack> (X:Int) : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
-    requires X >=Int 0
+    requires X >Int 0
 
   rule <k> assert => panic(ASSERTION_VIOLATION) ... </k>
        <stack> (X:Int) : _ </stack>
@@ -2267,7 +2267,7 @@ TODO: incorporate Bytes math opcodes
       orBool isStoreOpCode(Op)
       orBool isCondBranchOpCode(Op)
       orBool isReturnOpCode(Op)
-      orBool isStackOpCode(Op)
+      orBool (isStackOpCode(Op) andBool notBool (isNullaryStackOpCode(Op)))
       orBool isStateOpCode(Op)
       orBool isSigVerOpCode(Op)
 
