@@ -31,9 +31,9 @@ kompile $CURDIR/kavm-hooks-tests.k --backend llvm \
         -ccopt -c -ccopt -o -ccopt partial.o
 
 # Compile the C++ code of the blockchain-k-plugin's hooks and the custom hooks and link them into the interpreter
-llvm-kompilex $CURDIR/kavm-hooks-tests-kompiled/partial.o main -- \
-              $PLUGIN_CPP_FILES $KAVM_HOOKS_CPP_FILES             \
-              -I"$KLLVM_INCLUDES"                                 \
-              -I"$LIBFF_INCLUDE" -L"$LIBFF_LIB"                   \
-              $CLANG_FLAGS                                        \
-              -o $CURDIR/kavm-hooks-tests-kompiled/interpreter
+llvm-kompile $CURDIR/kavm-hooks-tests-kompiled/partial.o main -- \
+             $PLUGIN_CPP_FILES $KAVM_HOOKS_CPP_FILES             \
+             -I"$KLLVM_INCLUDES"                                 \
+             -I"$LIBFF_INCLUDE" -L"$LIBFF_LIB"                   \
+             $CLANG_FLAGS                                        \
+             -o $CURDIR/kavm-hooks-tests-kompiled/interpreter
