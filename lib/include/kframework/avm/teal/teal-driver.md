@@ -1946,30 +1946,40 @@ Stateful TEAL Operations
 *gaid*
 
 ```k
-  rule <k> gaid T => .K ... </k>
-       <stack> XS => ({getTxnField(Int2String(T), ApplicationID)}:>TValue) : XS </stack>
+  rule <k> gaid T:Int => .K ... </k>
+       <stack> XS => {getGroupFieldByIdx( getTxnGroupID(getCurrentTxn()), T, ApplicationID)}:>TValue : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
-     andBool T <Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
-     andBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) ==Int (@ appl)
+     andBool T <Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+     andBool ({getGroupFieldByIdx(getTxnGroupID(getCurrentTxn()), T, TypeEnum)}:>Int) ==Int (@ appl)
 
   rule <k> gaid T => panic(FUTURE_TXN) ... </k>
-    requires T >=Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
-     orBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) =/=Int (@ appl)
+     requires T >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+     orBool ({getGroupFieldByIdx(getTxnGroupID(getCurrentTxn()), T, TypeEnum)}:>Int) =/=Int (@ appl)
 ```
 
 *gaids*
 
 ```k
+//  rule <k> gaids => .K ... </k>
+//       <stack> T : XS => ({getTxnField(Int2String(T), ApplicationID)}:>TValue) : XS </stack>
+//    requires T <Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
+//     andBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) ==Int (@ appl)
+//
+//  rule <k> gaids => panic(FUTURE_TXN) ... </k>
+//       <stack> T : _ </stack>
+//    requires T >=Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
+//     orBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) =/=Int (@ appl)
+
   rule <k> gaids => .K ... </k>
-       <stack> T : XS => ({getTxnField(Int2String(T), ApplicationID)}:>TValue) : XS </stack>
-    requires T <Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
-     andBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) ==Int (@ appl)
+       <stack> T:Int : XS => {getGroupFieldByIdx( getTxnGroupID(getCurrentTxn()), T, ApplicationID)}:>TValue : XS </stack>
+    requires T <Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+     andBool ({getGroupFieldByIdx(getTxnGroupID(getCurrentTxn()), T, TypeEnum)}:>Int) ==Int (@ appl)
 
   rule <k> gaids => panic(FUTURE_TXN) ... </k>
-       <stack> T : _ </stack>
-    requires T >=Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
-     orBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) =/=Int (@ appl)
+       <stack> T:Int : _ </stack>
+     requires T >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+     orBool ({getGroupFieldByIdx(getTxnGroupID(getCurrentTxn()), T, TypeEnum)}:>Int) =/=Int (@ appl)
 ```
 
 *gload, gloads, & gloadss*
