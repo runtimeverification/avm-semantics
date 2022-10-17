@@ -1,5 +1,5 @@
 pipeline {
-  agent { label 'docker' }
+  agent { label 'docker && big' }
   environment {
     VERSION   = '0.1.0'
     LONG_REV  = """${sh(returnStdout: true, script: 'git rev-parse HEAD').trim()}"""
