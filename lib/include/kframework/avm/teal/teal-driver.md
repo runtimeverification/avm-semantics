@@ -349,6 +349,9 @@ Note that we need to perform the left shift modulo `MAX_UINT64 + 1`, otherwise t
 
   rule <k> ~ => .K ... </k>
        <stack> I : XS => (~Int I) : XS </stack>
+
+  rule <k> ~ => panic(ILL_TYPED_STACK) ... </k>
+       <stack> _:Bytes : _ </stack>
 ```
 
 `bitlen` computes the highest set bit in X, indexed from one. Can be used for both integers and byte-arrays.
@@ -363,9 +366,9 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
        <stack> (I:Int) : XS => log2Int(I) +Int 1 : XS </stack>
     requires 0 <Int I andBool I <=Int MAX_UINT64
 
-  rule <k> bitlen => panic(INVALID_ARGUMENT) ... </k>
-       <stack> (I:Int) : _ </stack>
-    requires notBool (0 <=Int I andBool I <=Int MAX_UINT64)
+//  rule <k> bitlen => panic(INVALID_ARGUMENT) ... </k>
+//       <stack> (I:Int) : _ </stack>
+//    requires notBool (0 <=Int I andBool I <=Int MAX_UINT64)
 
   rule <k> bitlen => .K ... </k>
        <stack> (B:Bytes) : XS => 0 : XS </stack>
@@ -377,9 +380,9 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
     requires lengthBytes(B) <=Int MAX_BYTEARRAY_LEN
      andBool Bytes2Int(B, BE, Unsigned) >Int 0
 
-  rule <k> bitlen => panic(INVALID_ARGUMENT) ... </k>
-       <stack> (B:Bytes) : _ </stack>
-    requires lengthBytes(B) >Int MAX_BYTEARRAY_LEN
+//  rule <k> bitlen => panic(INVALID_ARGUMENT) ... </k>
+//       <stack> (B:Bytes) : _ </stack>
+//    requires lengthBytes(B) >Int MAX_BYTEARRAY_LEN
 ```
 
 ### Byte Array Operations
@@ -566,11 +569,12 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
 The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no restriction on the length of the result.
 
 ```k
-  rule <k> _OP:MathByteOpCode => panic(MATH_BYTES_ARG_TOO_LONG) ... </k>
+  rule <k> OP:MathByteOpCode => panic(MATH_BYTES_ARG_TOO_LONG) ... </k>
        <stack> B:Bytes : A:Bytes : _ </stack>
        <stacksize> S => S -Int 1 </stacksize>
-    requires lengthBytes(A) >Int MAX_BYTE_MATH_SIZE
-      orBool lengthBytes(B) >Int MAX_BYTE_MATH_SIZE
+    requires (lengthBytes(A) >Int MAX_BYTE_MATH_SIZE
+      orBool lengthBytes(B) >Int MAX_BYTE_MATH_SIZE)
+     andBool notBool(isUnaryLogicalMathByteOpCode(OP))
 
   rule <k> _OP:UnaryLogicalMathByteOpCode => panic(MATH_BYTES_ARG_TOO_LONG) ... </k>
        <stack> A:Bytes : _ </stack>
@@ -2182,7 +2186,7 @@ Panic Behaviors due to Ill-typed Stack Arguments
 
   rule <k> Op:OpCode => panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Bytes) : _ </stack>
-    requires isUnaryLogicalOpCode(Op) orBool isUnaryBitOpCode(Op)
+    requires isUnaryLogicalOpCode(Op)
 
   rule <k> _:EqualityOpCode => panic(ILL_TYPED_STACK) ... </k>
        <stack> (V2:TValue) : (V1:TValue) : _ </stack>
@@ -2192,6 +2196,17 @@ Panic Behaviors due to Ill-typed Stack Arguments
 
 ### Byte Opcodes
 ```k
+  rule <k> OP:OpCode => panic(ILL_TYPED_STACK) ... </k>
+       <stack> A : B : _ </stack>
+    requires (isInt(A) orBool isInt(B))
+     andBool ( isArithmMathByteOpCode(OP)
+     orBool   isRelationalMathByteOpCode(OP)
+     orBool   isBinaryLogicalMathByteOpCode(OP))
+
+  rule <k> OP:OpCode => panic(ILL_TYPED_STACK) ... </k>
+       <stack> _:Int : _ </stack>
+    requires isUnaryLogicalMathByteOpCode(OP)
+  
   rule <k> len => panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Int) : _ </stack>
 
