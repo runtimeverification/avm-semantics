@@ -210,14 +210,14 @@ module ALGO-BLOCKCHAIN
     <blockchain>
       <accountsMap>
         <account multiplicity="*" type="Map">
-          <address>    "":TValue </address>
+          <address>    NoTValue           </address>
           <balance>    0                  </balance>
           <minBalance> PARAM_MIN_BALANCE  </minBalance> // the default min balance is 0.1 Algo
           <round>      0                  </round>
           <preRewards> 0                  </preRewards>
           <rewards>    0                  </rewards>
           <status>     0                  </status>
-          <key>        "":TBytes </key>
+          <key>        NoTValue           </key>
           <appsCreated/>
           <appsOptedIn/>
           <assetsCreated/>
