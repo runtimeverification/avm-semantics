@@ -61,8 +61,35 @@ claim <k> extract_uint64 => . </k>
       <stacksize> S => S -Int 1 </stacksize>
 
 // app_params_get 	5 	x 	1
+
 // log 	5 	heavy_check_mark 	1
+claim <k> log => . </k>
+      <stack> b"abc" : XS => XS </stack>
+      <stacksize> S => S -Int 1 </stacksize>
+      <currentTx> TX_ID </currentTx>
+      <transaction>
+        <txID> TX_ID </txID>
+        <logData> LOG => append(b"abc", LOG) </logData>
+        <logSize> LS => LS +Int 3 </logSize>
+        ...
+      </transaction>
+  requires LS <=Int 1024 -Int 3
+   andBool size(LOG) <Int 32
+
 // itxn_begin 	5 	heavy_check_mark 	1
+claim <k> itxn_begin => . </k>
+      <currentTx> TX_ID </currentTx>
+      <transaction>
+        <txID> TX_ID </txID>
+        <firstValid> FV </firstValid>
+        <lastValid> LV </lastValid>
+        ...
+      </transaction>
+      <innerTransactions>
+        .List =>
+        ListItem
+      </innerTransactions>
+
 // itxn_field 	5 	heavy_check_mark 	1
 // itxn_submit 	5 	heavy_check_mark 	1
 // itxn 	5 	heavy_check_mark 	1
