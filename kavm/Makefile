@@ -30,7 +30,7 @@ test-unit: poetry-install
 	$(POETRY_RUN) python -m pytest $(PYTEST_ARGS) src/tests/unit
 
 test-scenarios: poetry-install
-	$(POETRY_RUN) python -m pytest $(PYTEST_ARGS) src/tests/scenarios
+	$(POETRY_RUN) python -m pytest --verbose $(PYTEST_ARGS) src/tests/scenarios
 
 test-integration: test-integration-algod test-integration-kalgod
 

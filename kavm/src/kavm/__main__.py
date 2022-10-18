@@ -43,6 +43,7 @@ def exec_kompile(
         hook_clang_flags=hook_clang_flags,
     )
 
+
 def exec_prove(
     definition: Path,
     main_file: Path,
@@ -57,6 +58,7 @@ def exec_prove(
         debug_script,
     )
     exit(proc_result.returncode)
+
 
 def exec_kast(
     definition_dir: Path,
@@ -120,10 +122,12 @@ def exec_run(
             avm_simulation_parser=avm_simulation_parser,
             depth=depth,
         )
-        print(proc_result.stdout)
+        if not output == 'none':
+            print(proc_result.stdout)
         exit(proc_result.returncode)
     except CalledProcessError as err:
-        print(err.stdout)
+        if not output == 'none':
+            print(err.stdout)
         exit(err.returncode)
 
 
