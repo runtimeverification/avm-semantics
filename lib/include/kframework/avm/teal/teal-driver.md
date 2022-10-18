@@ -1139,6 +1139,16 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <stacksize> S </stacksize>
     requires notBool (0 <=Int N andBool N <Int S)
 
+  rule <k> uncover N => .K ... </k>
+       <stack> STACK => STACK [ N ] : (#take(N, STACK) #drop(N +Int 1, STACK)) </stack>
+       <stacksize> S </stacksize>
+    requires 0 <=Int N andBool N <Int S
+
+  rule <k> uncover N => panic(STACK_UNDERFLOW) ... </k>
+       <stack> _ </stack>
+       <stacksize> S </stacksize>
+    requires notBool (0 <=Int N andBool N <Int S)
+
   rule <k> swap => .K ... </k>
        <stack> X : Y : XS => Y : X : XS </stack>
 
@@ -1305,6 +1315,10 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
   rule <k> load I => panic(INVALID_SCRATCH_LOC) ... </k>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
+  rule <k> load _ => panic(STACK_OVERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S >=Int MAX_STACK_DEPTH
+
   rule <k> store I => panic(INVALID_SCRATCH_LOC) ... </k>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
@@ -1328,9 +1342,6 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <stack> _ : I : _ </stack>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
-  rule <k> _:LoadOpCode => panic(STACK_OVERFLOW) ... </k>
-       <stacksize> S </stacksize>
-    requires S >=Int MAX_STACK_DEPTH
 ```
 
 Stateless TEAL Operations
@@ -2199,7 +2210,7 @@ Panic Behaviors due to Ill-typed Stack Arguments
   rule <k> OP:OpCode => panic(ILL_TYPED_STACK) ... </k>
        <stack> A : B : _ </stack>
     requires (isInt(A) orBool isInt(B))
-     andBool ( isArithmMathByteOpCode(OP)
+     andBool (isArithmMathByteOpCode(OP)
      orBool   isRelationalMathByteOpCode(OP)
      orBool   isBinaryLogicalMathByteOpCode(OP))
 
