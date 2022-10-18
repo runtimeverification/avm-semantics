@@ -1,5 +1,5 @@
-ARG K_COMMIT
-FROM runtimeverificationinc/kframework-k:ubuntu-focal-${K_COMMIT}
+ARG K_VERSION
+FROM runtimeverificationinc/kframework-k:ubuntu-focal-${K_VERSION}
 
 RUN    apt-get update            \
     && apt-get upgrade --yes     \

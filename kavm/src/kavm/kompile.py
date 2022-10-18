@@ -131,7 +131,7 @@ def generate_interpreter(
         hook_cpp_files: Optional[List[Path]] = None,
         hook_clang_flags: Optional[List[str]] = None,
     ) -> None:
-        command = ['llvm-kompilex', str(interpreter_object_file), 'main', '--']
+        command = ['llvm-kompile', str(interpreter_object_file), 'main', '--']
 
         command += [str(path) for path in hook_cpp_files] if hook_cpp_files else []
         command += ['-o', str(interpreter_executable_file)]
