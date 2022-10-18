@@ -11,6 +11,7 @@ module AVM-INITIALIZATION
   imports AVM-CONFIGURATION
   imports AVM-TXN-DEQUE
   imports TEAL-CONSTANTS
+  imports TEAL-TYPES
   imports ALGO-TXN
 ```
 

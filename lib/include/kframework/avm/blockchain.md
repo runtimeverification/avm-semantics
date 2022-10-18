@@ -615,7 +615,7 @@ Accessor functions
 ### Auxiliary Functions
 
 ```k
-  syntax Bool ::= TValue "in_accounts" "(" AccountsMapCell ")" [function]
+  syntax Bool ::= TAddressLiteral "in_accounts" "(" AccountsMapCell ")" [function]
   // -------------------------------------------------------------------
   rule ADDR in_accounts( <accountsMap>
                            <account>
@@ -746,6 +746,7 @@ references and also to check that a resource is available.
 //  rule accountReference(A:TAddressLiteral ) => A requires accountAvailable(A)
   rule accountReference(A:Bytes           ) => Bytes2TAddressLiteral(A) requires accountAvailable(Bytes2TAddressLiteral(A))
   rule accountReference(I:Int             ) => Bytes2TAddressLiteral({getTxnField(getCurrentTxn(), Accounts, I)}:>Bytes)
+    requires isTValue(getTxnField(getCurrentTxn(), Accounts, I))
   rule accountReference(_                 ) => NoTValue  [owise]
 
   syntax MaybeTValue ::= appReference(TUInt64)  [function, functional]
