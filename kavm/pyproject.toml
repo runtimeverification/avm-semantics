@@ -27,6 +27,7 @@ isort = "*"
 mypy = "*"
 pep8-naming = "*"
 pytest = "*"
+pytest-xdist = "*"
 
 [tool.poetry.scripts]
 kavm = "kavm.__main__:main"

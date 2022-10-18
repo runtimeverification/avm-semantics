@@ -13,7 +13,6 @@ from algosdk.future.transaction import (
 )
 from pyk.kast import KApply, KAst, KInner, KSort, KToken, Subst
 from pyk.kastManip import free_vars, split_config_from
-from pyk.prelude import intToken
 
 from kavm.pyk_utils import maybe_tvalue, tvalue, tvalue_list
 
@@ -58,7 +57,7 @@ class KAVMApplyData:
             log_data=subst['LOGDATA_CELL'],
         )
 
-    def to_k(self):
+    def to_k(self) -> None:
         raise NotImplementedError("KAVMApplyData.to_k must not be implemented")
 
 

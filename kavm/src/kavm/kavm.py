@@ -12,14 +12,14 @@ from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Set, Tu
 from algosdk.future.transaction import Transaction
 from pyk.cli_utils import run_process
 from pyk.kast import KApply, KAst, KInner, KLabel, KSort, KToken, Subst
-from pyk.kastManip import free_vars, inline_cell_maps, split_config_from
+from pyk.kastManip import free_vars, inline_cell_maps
 from pyk.ktool.kprint import paren
 from pyk.ktool.krun import KRun
 from pyk.prelude import Sorts, build_assoc, build_cons, intToken, stringToken
 
 from kavm import constants
 from kavm.adaptors.account import KAVMAccount
-from kavm.adaptors.transaction import KAVMApplyData, KAVMTransaction
+from kavm.adaptors.transaction import KAVMTransaction
 from kavm.pyk_utils import AccountCellMap, AppCellMap, TransactionCellMap, carefully_split_config_from
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -104,6 +104,7 @@ class KAVM(KRun):
         output: str = 'json',
         profile: bool = False,
         teal_sources_dir: Optional[Path] = None,
+        check: bool = True,
     ) -> CompletedProcess:
         """Run an AVM simulaion scenario with krun"""
 
@@ -129,7 +130,7 @@ class KAVM(KRun):
         command_env = os.environ.copy()
         command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
 
-        return run_process(krun_command, env=command_env, logger=self._logger, profile=profile)
+        return run_process(krun_command, env=command_env, logger=self._logger, profile=profile, check=check)
 
     def kast(
         self,
@@ -316,8 +317,6 @@ class KAVM(KRun):
                     # TODO: CURRENTTX_CELL should be of sort String in the semantics
                     'CURRENTTX_CELL': KToken('"0"', KSort('String')),
                     'TOUCHEDACCOUNTS_CELL': KApply('.Set'),
-                    'RETURNCODE_CELL': intToken(4),
-                    'RETURNSTATUS_CELL': stringToken('Failure - program is stuck'),
                     'GLOBALROUND_CELL': intToken(6),
                     'LATESTTIMESTAMP_CELL': intToken(50),
                     'CURRENTAPPLICATIONID_CELL': intToken(-1),
@@ -332,6 +331,7 @@ class KAVM(KRun):
                     'BLOCKHEIGHT_CELL': intToken(0),
                     'TEALPROGRAMS_CELL': KApply('.TealPrograms'),
                     'RETURNCODE_CELL': intToken(4),
+                    'PANICCODE_CELL': intToken(0),
                     'RETURNSTATUS_CELL': stringToken('Failure - program is stuck'),
                     'K_CELL': KApply(
                         '.AS_AVM-EXECUTION-SYNTAX_AVMSimulation',
