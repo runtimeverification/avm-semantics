@@ -1,0 +1,55 @@
+name: 'Test'
+on:
+  pull_request:
+  workflow_dispatch:
+# Stop in progress workflows on the same branch and same workflow to use latest committed code
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-pr:
+    name: 'Test PR'
+    runs-on: [self-hosted, linux, normal]
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: 'Set up Docker'
+        run: |
+          set -euxo pipefail
+
+          cd deps/k
+          git fetch --no-recurse-submodules origin 'refs/tags/*:refs/tags/*'
+          K_VERSION="$(git tag --points-at HEAD | cut --characters=2- | head -n 1)"
+          cd ../..
+
+          KAVM_COMMIT="$(git rev-parse --short=7 HEAD)"
+
+          docker build . --file Dockerfile --build-arg K_VERSION=${K_VERSION} --tag runtimeverification/avm-semantics-ci:${KAVM_COMMIT} --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)
+
+          docker run --name avm-semantics-ci --rm -it --detach --workdir /opt/workspace --user $(id -u):$(id -g) -v ${HOME}:${HOME} -v "$(pwd):/opt/workspace" -v "/etc/passwd:/etc/passwd:ro" -v "/etc/group:/etc/group:ro" runtimeverification/avm-semantics-ci:${KAVM_COMMIT}
+      - name: 'Build AVM semantics'
+        run: docker exec -t avm-semantics-ci /bin/bash -c 'make build -j4'
+      - name: 'Test kavm kast'
+        run: |
+          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-kast-teal'
+          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-kast-avm-scenario'
+      - name: 'Test standalone AVM C++ hooks'
+        run: |
+          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 build-kavm-hooks-tests'
+      - name: 'Test AVM semantics --- scenarious'
+        run: |
+          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics'
+      - name: 'Test AVM semantics --- proofs'
+        run: |
+          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-prove'
+      - name: 'Test AVM semantics --- algod integration'
+        run: |
+          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-algod'
+
+      - name: 'Tear down Docker'
+        if: always()
+        run: |
+          docker stop --time 0 avm-semantics-ci
