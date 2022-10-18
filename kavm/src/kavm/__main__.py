@@ -10,8 +10,9 @@ from typing import Any, Final, List, Optional
 
 from pyk.cli_utils import dir_path, file_path
 
-from .kavm import KAVM
 from kavm.kompile import kompile
+
+from .kavm import KAVM
 
 _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
@@ -45,6 +46,7 @@ def exec_kompile(
         coverage=coverage,
     )
 
+
 def exec_prove(
     definition: Path,
     main_file: Path,
@@ -59,6 +61,7 @@ def exec_prove(
         debug_script,
     )
     exit(proc_result.returncode)
+
 
 def exec_kast(
     definition_dir: Path,
@@ -122,10 +125,12 @@ def exec_run(
             avm_simulation_parser=avm_simulation_parser,
             depth=depth,
         )
-        print(proc_result.stdout)
+        if not output == 'none':
+            print(proc_result.stdout)
         exit(proc_result.returncode)
     except CalledProcessError as err:
-        print(err.stdout)
+        if not output == 'none':
+            print(err.stdout)
         exit(err.returncode)
 
 

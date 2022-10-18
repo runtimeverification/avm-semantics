@@ -102,7 +102,7 @@ def test_application_create_txn_encode_decode(kavm: KAVM, suggested_params: Sugg
     )
     kavm_transaction = KAVMTransaction(kavm, txn, '0')
     parsed_txn = KAVMTransaction.transaction_from_k(kavm, kavm_transaction.transaction_cell)
-    apply_data = parsed_txn._apply_data
+    parsed_txn._apply_data
     assert parsed_txn.sdk_txn.dictify() == txn.dictify()
 
 

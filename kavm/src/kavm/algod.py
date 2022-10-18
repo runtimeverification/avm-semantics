@@ -11,7 +11,6 @@ from algosdk.future.transaction import Transaction
 from algosdk.v2client import algod
 from pyk.kastManip import split_config_from
 
-from kavm.adaptors.account import KAVMAccount, get_account
 from kavm.adaptors.transaction import KAVMTransaction
 from kavm.kavm import KAVM
 
