@@ -41,7 +41,7 @@ jobs:
           docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 build-kavm-hooks-tests'
       - name: 'Test AVM semantics --- scenarious'
         run: |
-          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-algod-semantics'
+          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-avm-simulation'
       - name: 'Test AVM semantics --- proofs'
         run: |
           docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-prove'
