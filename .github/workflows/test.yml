@@ -47,7 +47,7 @@ jobs:
           docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-prove'
       - name: 'Test AVM semantics --- algod integration'
         run: |
-          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-algod'
+          docker exec -t avm-semantics-ci /bin/bash -c 'THREADS=4 make test-kavm-algod'
 
       - name: 'Tear down Docker'
         if: always()
