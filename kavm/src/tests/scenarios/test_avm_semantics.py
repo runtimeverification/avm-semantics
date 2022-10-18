@@ -1,20 +1,18 @@
-from typing import Any, cast
-
-import json
-import pytest
 import glob
-from pyk.kast import KApply, KInner, KSort, KToken, KAst
-from pyk.kastManip import split_config_from
-from pyk.prelude import intToken, stringToken
+import json
 import os
 from os.path import abspath
 from pathlib import Path
-from subprocess import CalledProcessError, CompletedProcess
+from typing import cast
 
-from kavm.pyk_utils import maybe_tvalue, split_direct_subcells_from
+import pytest
+from pyk.kast import KAst, KInner
+from pyk.kastManip import split_config_from
+
 from kavm.kavm import KAVM
 
 project_path = abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
+
 
 def file_loop_index() -> list:
 
@@ -24,8 +22,9 @@ def file_loop_index() -> list:
     files_passing = [os.path.basename(f) for f in files]
     for file in files_passing:
         return_code = int(file.split('.')[-2])
-        filenames.append(tuple((file, return_code)))
+        filenames.append((file, return_code))
     return filenames
+
 
 @pytest.mark.parametrize("filename, expected", file_loop_index())
 def test_run_simulation(filename: str, expected: int) -> None:
@@ -38,7 +37,7 @@ def test_run_simulation(filename: str, expected: int) -> None:
     if not os.environ.get('KAVM_LIB'):
         raise RuntimeError('Cannot access KAVM_LIB environment variable. Is it set?')
 
-    kavm = KAVM(definition_dir=os.path.join(project_path, '.build/usr/lib/kavm/avm-llvm/avm-execution-kompiled/'))
+    kavm = KAVM(definition_dir=Path(os.path.join(project_path, '.build/usr/lib/kavm/avm-llvm/avm-execution-kompiled/')))
 
     kavm_lib_dir = Path(str(os.environ.get('KAVM_LIB')))
 

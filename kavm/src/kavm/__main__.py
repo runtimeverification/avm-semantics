@@ -10,8 +10,9 @@ from typing import Any, Final, List, Optional
 
 from pyk.cli_utils import dir_path, file_path
 
-from .kavm import KAVM
 from kavm.kompile import kompile
+
+from .kavm import KAVM
 
 _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'

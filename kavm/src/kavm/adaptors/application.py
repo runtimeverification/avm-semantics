@@ -2,7 +2,7 @@ import json
 import tempfile
 from base64 import b64decode
 from pathlib import Path
-from typing import Any, Dict, Union, cast
+from typing import Any, Dict, cast
 
 from pyk.kast import KApply, KAst, KInner, KSort
 from pyk.kastManip import split_config_from
