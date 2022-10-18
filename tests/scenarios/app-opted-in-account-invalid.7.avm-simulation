@@ -6,7 +6,7 @@ addAccount <address> MNQJIEWQIGVNYXPWGTVOT7SVEXR7BEGJJJMIHNTO3HSM6QY3QAUYG5PODQ 
 
 #initTxGroup();
 
-// Add app and opt in b"1"
+// Add app and opt in LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE
 addAppCallTx <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
