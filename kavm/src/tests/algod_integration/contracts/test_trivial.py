@@ -1,7 +1,6 @@
 from base64 import b64decode
 from typing import Dict
 
-import pytest
 from algosdk import account
 from algosdk.future import transaction
 from algosdk.future.transaction import ApplicationCallTxn, ApplicationCreateTxn, OnComplete, PaymentTxn
