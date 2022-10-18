@@ -1,4 +1,3 @@
-tests/scenarios/app-params-get.0.avm-simulation
 tests/scenarios/insufficient-funds.31.avm-simulation
 tests/scenarios/loads-uninitialized.0.avm-simulation
 tests/scenarios/multi-app.0.avm-simulation

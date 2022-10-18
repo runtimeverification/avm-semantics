@@ -1941,6 +1941,33 @@ Stateful TEAL Operations
      andBool (isInt(RET) andThenBool {RET}:>Int <Int 0)
 ```
 
+*app_params_get*
+
+```k
+  rule <k> app_params_get FIELD => . ...</k>
+       <stack> APP:Int : XS => 1 : {getAppParamsField(FIELD, APP)}:>TValue : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires isTValue(getAppParamsField(FIELD, APP))
+     andBool S <Int MAX_STACK_DEPTH
+
+  rule <k> app_params_get FIELD => . ...</k>
+       <stack> APP:Int : XS => 0 : 0 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires notBool(isTValue(getAppParamsField(FIELD, APP)))
+
+  rule <k> app_params_get _ => panic(STACK_OVERFLOW) ...</k>
+       <stacksize> S </stacksize>
+    requires S >=Int MAX_STACK_DEPTH
+
+  rule <k> app_params_get _ => panic(STACK_UNDERFLOW) ...</k>
+       <stacksize> S </stacksize>
+    requires S <Int 1
+
+  rule <k> app_params_get _ => panic(ILL_TYPED_STACK) ...</k>
+       <stack> _:Bytes : _ </stack>
+
+```
+
 ### Access to past transactions in the group
 
 *gaid*
