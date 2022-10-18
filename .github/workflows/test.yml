@@ -52,4 +52,4 @@ jobs:
       - name: 'Tear down Docker'
         if: always()
         run: |
-          docker stop avm-semantics-ci
+          docker stop --time 0 avm-semantics-ci
