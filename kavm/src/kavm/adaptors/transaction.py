@@ -68,7 +68,9 @@ class KAVMTransaction:
 
     # TODO: figure out how to easily remove the `kavm` argument, since this definition must be static.
     #       Currently, access to the K definition is required to figure out which cells are empty and put nothing into them
-    def __init__(self, kavm: Any, txn: Transaction, txid: str, apply_data: Optional[KAVMApplyData] = None, offset: int = 0) -> None:
+    def __init__(
+        self, kavm: Any, txn: Transaction, txid: str, apply_data: Optional[KAVMApplyData] = None, offset: int = 0
+    ) -> None:
         """
         Create a KAVM transaction cell.
         """
@@ -99,12 +101,9 @@ class KAVMTransaction:
 
     # TODO: txid must be assigned by KAVM itslef and must be str
     @staticmethod
-    def transaction_to_k(kavm: Any, txn: Transaction, txid: str, offset:int) -> KInner:
+    def transaction_to_k(kavm: Any, txn: Transaction, txid: str, offset: int) -> KInner:
         """Convert a Transaction objet to a K cell"""
         empty_transaction_cell = kavm.definition.empty_config(KSort('TransactionCell'))
-
-        print("txn group")
-        print(offset)
 
         header_subst = Subst(
             {
@@ -142,8 +141,6 @@ class KAVMTransaction:
         if txn.type == ASSETTRANSFER_TXN:
             raise NotImplementedError()
         if txn.type == APPCALL_TXN:
-            print("txn_to_k:")
-            print(txn.app_args)
             type_specific_subst = Subst(
                 {
                     'APPLICATIONID_CELL': maybe_tvalue(txn.index),

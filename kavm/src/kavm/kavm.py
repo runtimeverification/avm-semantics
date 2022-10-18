@@ -418,7 +418,6 @@ class KAVM(KRun):
 
         If successful, put the resulting configuration as the new current config.
         """
-        print(self.current_config)
 
         configuration = self.current_config
         vars = free_vars(cast(KInner, configuration))

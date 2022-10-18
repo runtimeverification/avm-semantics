@@ -11,6 +11,7 @@ from pyk.prelude import intToken
 from kavm.constants import MIN_BALANCE
 from kavm.pyk_utils import AppCellMap, AppOptInCellMap, split_direct_subcells_from
 
+
 class KAVMOptInApp:
     def __init__(
         self,
@@ -45,40 +46,50 @@ class KAVMOptInApp:
 
     @property
     def optin_app_cell(self) -> KInner:
-
         def from_list_bytes(d):
             if len(d) == 0:
                 return KApply('.Map')
             if len(d) == 1:
-                return KApply('_|->_', args=[KToken(token='b\"' + d[0][0] + '\"', sort=KSort(name='Bytes')),
-                    KToken(token='b\"' + d[0][1][2:-1] + '\"', sort=KSort(name='Bytes'))])
+                return KApply(
+                    '_|->_',
+                    args=[
+                        KToken(token='b\"' + d[0][0] + '\"', sort=KSort(name='Bytes')),
+                        KToken(token='b\"' + d[0][1][2:-1] + '\"', sort=KSort(name='Bytes')),
+                    ],
+                )
             return KApply('_Map_', [from_list_bytes(d[0:1]), from_list_bytes(d[1:])])
 
         def from_list_ints(d):
             if len(d) == 0:
                 return KApply('.Map')
             if len(d) == 1:
-                return KApply('_|->_', args=[KToken(token='b\"' + d[0][0] + '\"', sort=KSort(name='Bytes')),
-                    KToken(token=str(d[0][1]), sort=KSort(name='Int'))])
+                return KApply(
+                    '_|->_',
+                    args=[
+                        KToken(token='b\"' + d[0][0] + '\"', sort=KSort(name='Bytes')),
+                        KToken(token=str(d[0][1]), sort=KSort(name='Int')),
+                    ],
+                )
             return KApply('_Map_', [from_list_ints(d[0:1]), from_list_ints(d[1:])])
 
         return KApply(
             '<optInApp>',
             [
                 KApply('<optInAppID>', [KToken(str(self._app_id), KSort('Int'))]),
-                KApply('<localInts>', [from_list_ints([(k,v) for k,v in self._local_ints.items()])]),
-                KApply('<localBytes>', [from_list_bytes([(k,v) for k,v in self._local_bytes.items()])]),
+                KApply('<localInts>', [from_list_ints([(k, v) for k, v in self._local_ints.items()])]),
+                KApply('<localBytes>', [from_list_bytes([(k, v) for k, v in self._local_bytes.items()])]),
             ],
         )
 
     @staticmethod
     def to_optin_app_cell(optin_app: 'KAVMOptInApp') -> KInner:
         return optin_app.optin_app_cell
-    
+
     def dictify(self) -> List:
-        return [{'key': b64encode(k.encode('ascii')), 'value':{'bytes':v}} for k,v in
-                self._local_bytes.items()] + [{'key': b64encode(k.encode('ascii')), 'value':{'uint':v}}
-                        for k,v in self._local_ints.items()]
+        return [{'key': b64encode(k.encode('ascii')), 'value': {'bytes': v}} for k, v in self._local_bytes.items()] + [
+            {'key': b64encode(k.encode('ascii')), 'value': {'uint': v}} for k, v in self._local_ints.items()
+        ]
+
 
 class KAVMAccount:
     """
@@ -181,7 +192,7 @@ class KAVMAccount:
             pre_rewards=int(subst['PREREWARDS_CELL'].token),
             rewards=int(subst['REWARDS_CELL'].token),
             status=int(subst['STATUS_CELL'].token),
-            key=subst['KEY_CELL'].token,
+            key=subst['KEY_CELL'].token if type(subst['KEY_CELL']) is KToken else subst['ADDRESS_CELL'].token,
             apps_created=AppCellMap(subst['APPSCREATED_CELL']),
             apps_opted_in=AppOptInCellMap(subst['APPSOPTEDIN_CELL']),
             assets_created=[],
@@ -247,7 +258,7 @@ class KAVMAccount:
             'total-assets-opted-in': len(self._assets_opted_in) if self._assets_opted_in else 0,
             'total-created-apps': len(self._apps_created) if self._apps_created else 0,
             'total-created-assets': len(self._assets_created) if self._assets_created else 0,
-            'apps-local-state': [{'id': k, 'key-value': v.dictify()} for k,v in self._apps_opted_in.items()]
+            'apps-local-state': [{'id': k, 'key-value': v.dictify()} for k, v in self._apps_opted_in.items()],
         }
 
     def __repr__(self) -> str:

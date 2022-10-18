@@ -1,7 +1,7 @@
 from typing import Dict
 
 import base64
-from base64 import b64decode
+from base64 import b32decode, b64decode
 
 import pytest
 from algosdk import account
@@ -17,9 +17,10 @@ from src.tests.algod_integration.algosdk_utils import (
     get_global_int,
     get_global_bytes,
     get_created_app_id,
+    list_to_dict_state,
 )
 
-from algosdk.encoding import encode_address
+from algosdk.encoding import decode_address, encode_address
 
 
 def generate_and_fund_account(client: AlgodClient, faucet: Dict[str, str]) -> Dict[str, str]:
@@ -43,6 +44,7 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
     sp = client.suggested_params()
 
     program_src = compileTeal(call_counter_approval_program(), mode=Mode.Application, version=6)
+
     program = compile_program(client, program_src)
 
     clear_src = compileTeal(call_counter_clear_program(), mode=Mode.Application, version=6)
@@ -64,10 +66,8 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
 
     app_id = get_created_app_id(client, txn_id)
 
-    x = get_global_bytes(client, app_id, "Creator")
-
-    assert encode_address(get_global_bytes(client, app_id, "Creator")) == user['address']
-    assert get_global_int(client, app_id, "Number") == 123
+    assert get_global_bytes(client, app_id, 'Creator').decode('utf-8') == user['address']
+    assert get_global_int(client, app_id, 'Number') == 123
 
     # opt in to app
     txn = ApplicationCallTxn(
@@ -84,35 +84,35 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
 
     print(client.account_info(user['address']))
 
-    assert encode_address(get_global_bytes(client, app_id, "Creator")) == user['address']
-    assert get_local_int(client, app_id, user['address'], "timesPinged") == 0
+    assert get_global_bytes(client, app_id, 'Creator').decode('utf-8') == user['address']
+    assert get_local_int(client, app_id, user['address'], 'timesPinged') == 0
 
-    # call ping" function on app, increasing local and global counter by 1
+    # call ping' function on app, increasing local and global counter by 1
     txn = ApplicationCallTxn(
         sender=user['address'],
         sp=sp,
         index=app_id,
         on_complete=OnComplete.NoOpOC,
-        app_args=[bytearray("ping", "ascii"), 0x0],
+        app_args=[bytearray('ping', 'ascii'), 0x0],
     )
     signed_txn = txn.sign(user['private_key'])
     txn_id = client.send_transactions([signed_txn])
     txn_status = client.pending_transaction_info(txn_id)
 
-    assert get_local_int(client, app_id, user['address'], "timesPinged") == 1
-    assert get_global_int(client, app_id, "timesPonged") == 1
+    assert get_local_int(client, app_id, user['address'], 'timesPinged') == 1
+    assert get_global_int(client, app_id, 'timesPonged') == 1
 
-    # call ping" function on app, increasing local and global counter by 1
+    # call ping' function on app, increasing local and global counter by 1
     txn = ApplicationCallTxn(
         sender=user['address'],
         sp=sp,
         index=app_id,
         on_complete=OnComplete.NoOpOC,
-        app_args=[bytearray("ping", "ascii"), 0x1],
+        app_args=[bytearray('ping', 'ascii'), 0x1],
     )
     signed_txn = txn.sign(user['private_key'])
     txn_id = client.send_transactions([signed_txn])
     txn_status = client.pending_transaction_info(txn_id)
 
-    assert get_local_int(client, app_id, user['address'], "timesPinged") == 2
-    assert get_global_int(client, app_id, "timesPonged") == 2
+    assert get_local_int(client, app_id, user['address'], 'timesPinged') == 2
+    assert get_global_int(client, app_id, 'timesPonged') == 2
