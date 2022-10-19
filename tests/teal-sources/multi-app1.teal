@@ -1,17 +1,24 @@
 #pragma version 6
 
+txn ApplicationID
+int 0
+==
+bnz end
+
 itxn_begin
 
 int appl  // this is an application call transaction
 itxn_field TypeEnum
 
-int 2     // attempt to call other application
+int 1     // attempt to call other application
 itxn_field ApplicationID
 
 int NoOp
 itxn_field OnCompletion
 
 itxn_submit
+
+end:
 
 int 1
 return

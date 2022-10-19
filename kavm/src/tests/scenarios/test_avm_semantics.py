@@ -1,5 +1,6 @@
 import glob
 import json
+import sys
 import os
 from os.path import abspath
 from pathlib import Path
@@ -60,6 +61,9 @@ def test_run_simulation(filename: str, expected_panic_code: int, expected_exit_c
         depth=0,
         check=False,
     )
+
+    # This is needed because long programs create deeply nested json objects
+    sys.setrecursionlimit(12500)
 
     output_kast_term = KAst.from_dict(json.loads(proc_result.stdout)['term'])
 
