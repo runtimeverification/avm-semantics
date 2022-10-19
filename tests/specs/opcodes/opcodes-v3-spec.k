@@ -56,6 +56,12 @@ module OPCODES-V3-SPEC
         <stack> 0 : _ </stack>
         <returncode> _ => 3 </returncode>
         <returnstatus> _ => "Failure - panic: assertion violation" </returnstatus>
+
+  claim <k> assert => . </k>
+        <stack> N : _ </stack>
+        <returncode> _ </returncode>
+        <returnstatus> _ </returnstatus>
+    requires N >=Int 1
   
 // dig n 	3 	heavy_check_mark 	1
   claim <k> dig 3 => . </k>
