@@ -21,13 +21,20 @@ def file_loop_index() -> list:
     files = glob.glob(os.path.join(project_path, "tests/scenarios/*.avm-simulation"))
     files_passing = [os.path.basename(f) for f in files]
     for file in files_passing:
-        return_code = int(file.split('.')[-2])
-        filenames.append((file, return_code))
+        desc = file.split('.')[-2]
+        if 'exit' in desc:
+            panic_code = 0
+            exit_code = int(desc[4:])
+        else:
+            panic_code = int(file.split('.')[-2])
+            exit_code = 0 if panic_code == 0 else 3
+
+        filenames.append((file, panic_code, exit_code))
     return filenames
 
 
-@pytest.mark.parametrize("filename, expected", file_loop_index())
-def test_run_simulation(filename: str, expected: int) -> None:
+@pytest.mark.parametrize(("filename", "expected_panic_code", "expected_exit_code"), file_loop_index())
+def test_run_simulation(filename: str, expected_panic_code: int, expected_exit_code: int) -> None:
 
     failing_file = open(os.path.join(project_path, 'tests/failing-avm-simulation.list'))
     failing_tests = [os.path.basename(f) for f in failing_file.read().split('\n')]
@@ -54,13 +61,11 @@ def test_run_simulation(filename: str, expected: int) -> None:
         check=False,
     )
 
-    expected_exit_code = 0 if expected == 0 else 3
-
     output_kast_term = KAst.from_dict(json.loads(proc_result.stdout)['term'])
 
     (_, subst) = split_config_from(cast(KInner, output_kast_term))
 
     panic_code = int(subst['PANICCODE_CELL'].token)
 
-    assert panic_code == expected
+    assert panic_code == expected_panic_code
     assert proc_result.returncode == expected_exit_code
