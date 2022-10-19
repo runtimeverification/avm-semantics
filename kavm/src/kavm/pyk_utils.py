@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, Union,
 
 from algosdk.future.transaction import OnComplete
 from pyk.kast import KApply, KAst, KInner, KLabel, KToken, KVariable, KSort, top_down
-from pyk.prelude import build_cons, intToken, stringToken
+from pyk.prelude import build_cons, intToken, stringToken, build_assoc
 
 
 def maybe_tvalue(value: Optional[Union[str, int, bytes]]) -> KInner:
@@ -36,6 +36,7 @@ def tvalue(value: Union[str, int, bytes]) -> KInner:
     else:
         raise TypeError()
 
+
 def tvalue_elem(value: Union[str, int, bytes]) -> KInner:
     if type(value) is int:
         return intToken(value)
@@ -55,11 +56,38 @@ def tvalue_list(value: List[Union[str, int, bytes]]) -> KInner:
     if len(value) == 1:
         return tvalue_elem(value[0])
     return KApply('TValueListCons', [tvalue_elem(value[0]), tvalue_list(value[1:])])
-#      return build_cons(
-#                 unit=KApply('.TValueList'),
-#                 label=KLabel('#abcd'),
-#                 terms=[tvalue(v) for v in value]
-#             )
+
+
+def map_bytes_bytes(d):
+    """Convert a Dict[str, str] into a K Bytes to Bytes Map"""
+    return build_assoc(
+        KApply('.Map'),
+        KLabel('_Map_'),
+        [
+            KApply(
+                '_|->_', [KToken(token=f'b"{k}"', sort=KSort('Bytes')), KToken(token=f'b"{v}"', sort=KSort('Bytes'))]
+            )
+            for k, v in d.items()
+        ],
+    )
+
+
+def map_bytes_ints(d):
+    """Convert a Dict[str, int] into a K Bytes to Int Map"""
+    return build_assoc(
+        KApply('.Map'),
+        KLabel('_Map_'),
+        [
+            KApply('_|->_', [KToken(token=f'b"{k}"', sort=KSort('Bytes')), KToken(str(v), sort=KSort('Int'))])
+            for k, v in d.items()
+        ],
+    )
+
+
+def unescape_global_storage_bytes(value: str):
+    """Prepare a Bytes token for algosdk consumption"""
+    unescaped_token_bytes = value.encode('utf-8').decode('unicode_escape').encode('latin-1')
+    return b64encode(unescaped_token_bytes).decode('ascii')
 
 
 def split_direct_subcells_from(configuration: KInner) -> Tuple[KInner, Any]:
@@ -141,6 +169,7 @@ class KCellMap(MutableMapping):
                 key = int(inner.args[0].args[0].token) if key_type is int else str(inner.args[0].args[0].token)
                 self._store[key] = value_initializer(inner)
             return inner
+
         if term:
             top_down(extractor, cast(KInner, term))
 
@@ -223,6 +252,7 @@ class AccountCellMap(KCellMap):
             term=term,
         )
 
+
 class AppOptInCellMap(KCellMap):
     '''Python-friendly access to <appsOptedIn> cell'''
 
@@ -241,6 +271,7 @@ class AppOptInCellMap(KCellMap):
             value_k_cell=KAVMOptInApp.to_optin_app_cell,
             term=term,
         )
+
 
 class AppCellMap(KCellMap):
     '''Python-friendly access to <appsCreated> cell'''

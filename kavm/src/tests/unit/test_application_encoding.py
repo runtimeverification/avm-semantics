@@ -12,7 +12,19 @@ def application_blank(kavm: KAVM) -> KAVMApplication:
     )
 
 
-@pytest.fixture(params=[application_blank])
+def application_with_global_state(kavm: KAVM) -> KAVMApplication:
+    return KAVMApplication(
+        app_id=42,
+        approval_pgm_src=kavm.parse_teal('int 0'),
+        clear_state_pgm_src=kavm.parse_teal('int 1'),
+        global_bytes=1,
+        global_ints=1,
+        global_bytes_data={'key1': 'value1', 'key2': 'value2'},
+        global_int_data={'key1': 1, 'key2': 2},
+    )
+
+
+@pytest.fixture(params=[application_blank, application_with_global_state])
 def application(kavm: KAVM, request: Any) -> KAVMApplication:
     return request.param(kavm)
 

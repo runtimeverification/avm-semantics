@@ -2,13 +2,13 @@ import json
 import tempfile
 from base64 import b64decode, b64encode
 from pathlib import Path
-from typing import Any, Dict, cast
+from typing import Any, Dict, cast, Union
 
 from pyk.kast import KApply, KAst, KInner, KSort, KToken
 from pyk.kastManip import split_config_from
 from pyk.prelude import intToken
 
-from kavm.pyk_utils import tvalue
+from kavm.pyk_utils import tvalue, map_bytes_bytes, map_bytes_ints, unescape_global_storage_bytes
 
 
 class KAVMApplication:
@@ -25,8 +25,8 @@ class KAVMApplication:
         clear_state_pgm: bytes = b'',
         global_ints: int = 0,
         global_bytes: int = 0,
-        global_int_data: Dict = {},
-        global_bytes_data: Dict = {},
+        global_int_data: Dict[str, str] = {},
+        global_bytes_data: Dict[str, str] = {},
         local_ints: int = 0,
         local_bytes: int = 0,
         extra_pages: int = 0,
@@ -57,31 +57,6 @@ class KAVMApplication:
 
     @property
     def app_cell(self) -> KInner:
-        def from_list_bytes(d):
-            if len(d) == 0:
-                return KApply('.Map')
-            if len(d) == 1:
-                return KApply(
-                    '_|->_',
-                    args=[
-                        KToken(token='b\"' + d[0][0] + '\"', sort=KSort(name='Bytes')),
-                        KToken(token='b\"' + d[0][1][2:-1] + '\"', sort=KSort(name='Bytes')),
-                    ],
-                )
-            return KApply('_Map_', [from_list_bytes(d[0:1]), from_list_bytes(d[1:])])
-
-        def from_list_ints(d):
-            if len(d) == 0:
-                return KApply('.Map')
-            if len(d) == 1:
-                return KApply(
-                    '_|->_',
-                    args=[
-                        KToken(token='b\"' + d[0][0] + '\"', sort=KSort(name='Bytes')),
-                        KToken(token=str(d[0][1]), sort=KSort(name='Int')),
-                    ],
-                )
-            return KApply('_Map_', [from_list_ints(d[0:1]), from_list_ints(d[1:])])
 
         return KApply(
             '<app>',
@@ -99,9 +74,9 @@ class KAVMApplication:
                         # NOTE: these two cells MUST BE in the same order as they are declared in the K configuration
                         KApply(
                             '<globalBytes>',
-                            from_list_bytes([(k, str(b64decode(v))) for k, v in self._global_bytes_data.items()]),
+                            map_bytes_bytes(self._global_bytes_data),
                         ),
-                        KApply('<globalInts>', from_list_ints([(k, v) for k, v in self._global_int_data.items()])),
+                        KApply('<globalInts>', map_bytes_ints(self._global_int_data)),
                     ],
                 ),
                 KApply(
@@ -162,14 +137,10 @@ class KAVMApplication:
 
     @staticmethod
     def from_app_cell(term: KInner) -> 'KAVMApplication':
-        def from_map(term: KInner) -> Dict:
+        def from_map(term: KInner) -> Dict[str, Union[str, int]]:
             if term.label.name == '_|->_':
                 if term.args[1].sort.name == 'Bytes':
-                    return {
-                        term.args[0].token[2:-1]: b64encode(
-                            bytes(term.args[1].token[2:-1], encoding="raw_unicode_escape")
-                        )
-                    }
+                    return {term.args[0].token[2:-1]: term.args[1].token[2:-1]}
                 if term.args[1].sort.name == 'Int':
                     return {term.args[0].token[2:-1]: int(term.args[1].token)}
             if term.label.name == '_Map_':
@@ -200,6 +171,7 @@ class KAVMApplication:
         """
         Return a dictified representation of the application cell to pass to py-algorand-sdk
         """
+
         return {
             'index': str(self._app_id),
             'params': {
@@ -210,11 +182,14 @@ class KAVMApplication:
                 'local-state-schema': {},
                 'global-state-schema': {},
                 'global-state': [
-                    {'key': b64encode(k.encode('ascii')), 'value': {'bytes': v}}
+                    {
+                        'key': b64encode(k.encode('ascii')).decode('ascii'),
+                        'value': {'bytes': unescape_global_storage_bytes(v)},
+                    }
                     for k, v in self._global_bytes_data.items()
                 ]
                 + [
-                    {'key': b64encode(k.encode('ascii')), 'value': {'uint': v}}
+                    {'key': b64encode(k.encode('ascii')).decode('ascii'), 'value': {'uint': v}}
                     for k, v in self._global_int_data.items()
                 ],
             },

@@ -9,7 +9,14 @@ from pyk.kastManip import flatten_label, split_config_from
 from pyk.prelude import intToken
 
 from kavm.constants import MIN_BALANCE
-from kavm.pyk_utils import AppCellMap, AppOptInCellMap, split_direct_subcells_from
+from kavm.pyk_utils import (
+    AppCellMap,
+    AppOptInCellMap,
+    split_direct_subcells_from,
+    map_bytes_bytes,
+    map_bytes_ints,
+    unescape_global_storage_bytes,
+)
 
 
 class KAVMOptInApp:
@@ -28,9 +35,9 @@ class KAVMOptInApp:
         def from_map(term: KInner) -> Dict:
             if term.label.name == '_|->_':
                 if term.args[1].sort.name == 'Bytes':
-                    return {term.args[0].token: b64encode(bytes(term.args[1].token, encoding="raw_unicode_escape"))}
+                    return {term.args[0].token[2:-1]: term.args[1].token[2:-1]}
                 if term.args[1].sort.name == 'Int':
-                    return {term.args[0].token: int(term.args[1].token)}
+                    return {term.args[0].token[2:-1]: int(term.args[1].token)}
             if term.label.name == '_Map_':
                 return from_map(term.args[0]) | from_map(term.args[1])
             if term.label.name == '.Map':
@@ -46,38 +53,12 @@ class KAVMOptInApp:
 
     @property
     def optin_app_cell(self) -> KInner:
-        def from_list_bytes(d):
-            if len(d) == 0:
-                return KApply('.Map')
-            if len(d) == 1:
-                return KApply(
-                    '_|->_',
-                    args=[
-                        KToken(token='b\"' + d[0][0] + '\"', sort=KSort(name='Bytes')),
-                        KToken(token='b\"' + d[0][1][2:-1] + '\"', sort=KSort(name='Bytes')),
-                    ],
-                )
-            return KApply('_Map_', [from_list_bytes(d[0:1]), from_list_bytes(d[1:])])
-
-        def from_list_ints(d):
-            if len(d) == 0:
-                return KApply('.Map')
-            if len(d) == 1:
-                return KApply(
-                    '_|->_',
-                    args=[
-                        KToken(token='b\"' + d[0][0] + '\"', sort=KSort(name='Bytes')),
-                        KToken(token=str(d[0][1]), sort=KSort(name='Int')),
-                    ],
-                )
-            return KApply('_Map_', [from_list_ints(d[0:1]), from_list_ints(d[1:])])
-
         return KApply(
             '<optInApp>',
             [
                 KApply('<optInAppID>', [KToken(str(self._app_id), KSort('Int'))]),
-                KApply('<localInts>', [from_list_ints([(k, v) for k, v in self._local_ints.items()])]),
-                KApply('<localBytes>', [from_list_bytes([(k, v) for k, v in self._local_bytes.items()])]),
+                KApply('<localInts>', [map_bytes_ints(self._local_ints)]),
+                KApply('<localBytes>', [map_bytes_bytes(self._local_bytes)]),
             ],
         )
 
@@ -86,8 +67,12 @@ class KAVMOptInApp:
         return optin_app.optin_app_cell
 
     def dictify(self) -> List:
-        return [{'key': b64encode(k.encode('ascii')), 'value': {'bytes': v}} for k, v in self._local_bytes.items()] + [
-            {'key': b64encode(k.encode('ascii')), 'value': {'uint': v}} for k, v in self._local_ints.items()
+        return [
+            {'key': b64encode(k.encode('ascii')).decode('ascii'), 'value': {'bytes': unescape_global_storage_bytes(v)}}
+            for k, v in self._local_bytes.items()
+        ] + [
+            {'key': b64encode(k.encode('ascii')).decode('ascii'), 'value': {'uint': v}}
+            for k, v in self._local_ints.items()
         ]
 
 

@@ -1,7 +1,7 @@
 from typing import Dict
 
 import base64
-from base64 import b32decode, b64decode
+from base64 import b32decode, b64decode, b64encode
 
 import pytest
 from algosdk import account
@@ -66,7 +66,8 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
 
     app_id = get_created_app_id(client, txn_id)
 
-    assert get_global_bytes(client, app_id, 'Creator').decode('utf-8') == user['address']
+    creator_addr_bytes = b64decode(get_global_bytes(client, app_id, 'Creator').encode('ascii'))
+    assert encode_address(creator_addr_bytes) == user['address']
     assert get_global_int(client, app_id, 'Number') == 123
 
     # opt in to app
@@ -82,9 +83,8 @@ def test_count_calls(client: AlgodClient, faucet: Dict[str, str]):
 
     txn_status = client.pending_transaction_info(txn_id)
 
-    print(client.account_info(user['address']))
-
-    assert get_global_bytes(client, app_id, 'Creator').decode('utf-8') == user['address']
+    creator_addr_bytes = b64decode(get_global_bytes(client, app_id, 'Creator').encode('ascii'))
+    assert encode_address(creator_addr_bytes) == user['address']
     assert get_local_int(client, app_id, user['address'], 'timesPinged') == 0
 
     # call ping' function on app, increasing local and global counter by 1

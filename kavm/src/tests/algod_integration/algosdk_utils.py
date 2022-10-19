@@ -1,12 +1,13 @@
 from algosdk.v2client.algod import AlgodClient
+from algosdk.encoding import encode_address
 from typing import Optional
-from base64 import b64decode, b64encode
+from base64 import b32decode, b32encode, b64decode, b64encode
 
 
 def list_to_dict_state(l):
     d = {}
     for item in l:
-        d[b64decode(item['key']).decode('utf-8')] = item['value']
+        d[item['key']] = item['value']
     return d
 
 
@@ -26,12 +27,12 @@ def get_balance(client: AlgodClient, address: str) -> Optional[int]:
 
 
 def get_local_int(client: AlgodClient, app_id: int, address: str, key: str) -> Optional[int]:
-    values = list_to_dict_apps_created(client.account_info(address)['apps-local-state'])[app_id]['key-value']
-    print(list_to_dict_state(values))
-    # for v in values:
-    #     print(b64decode(v['key']).decode('utf-8'))
-    #     if b64decode(v['key']).decode('utf-8') == key:
-    #         return v['values']
+    local_state = list_to_dict_state(
+        list_to_dict_apps_created(client.account_info(address)['apps-local-state'])[app_id]['key-value']
+    )
+    print(local_state)
+    encoded_key = b64encode(key.encode('ascii')).decode('ascii')
+    return local_state[encoded_key]['uint']
 
 
 def get_local_bytes(client: AlgodClient, app_id: int, address: str, key: str) -> Optional[str]:
@@ -39,12 +40,16 @@ def get_local_bytes(client: AlgodClient, app_id: int, address: str, key: str) ->
         list_to_dict_state(
             list_to_dict_apps_created(client.account_info(address)['apps-local-state'])[app_id]['key-value']
         )[key]['bytes']
-    )
+    ).decode('ascii')
 
 
 def get_global_int(client: AlgodClient, app_id: int, key: str) -> Optional[int]:
-    return list_to_dict_state(client.application_info(app_id)['params']['global-state'])[key]['uint']
+    global_state = list_to_dict_state(client.application_info(app_id)['params']['global-state'])
+    encoded_key = b64encode(key.encode('ascii')).decode('ascii')
+    return global_state[encoded_key]['uint']
 
 
 def get_global_bytes(client: AlgodClient, app_id: int, key: str) -> Optional[str]:
-    return b64decode(list_to_dict_state(client.application_info(app_id)['params']['global-state'])[key]['bytes'])
+    global_state = list_to_dict_state(client.application_info(app_id)['params']['global-state'])
+    encoded_key = b64encode(key.encode('ascii')).decode('ascii')
+    return global_state[encoded_key]['bytes']
