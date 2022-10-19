@@ -1310,6 +1310,12 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
     requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
      andBool I in_keys(M)
 
+  rule <k> loads => .K ... </k>
+       <stack> I : XS => 0 : XS </stack>
+       <scratch> M </scratch>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+     andBool notBool(I in_keys(M))
+
   rule <k> loads => panic(INVALID_SCRATCH_LOC) ... </k>
        <stack> I : _ </stack>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
