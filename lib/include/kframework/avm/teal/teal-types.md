@@ -132,8 +132,7 @@ All `TBytes` literals are interpreted into the K `Bytes` type.
   rule normalizeB(B:Bytes)  => B
   rule normalizeB(S:String) => String2Bytes(S)
   rule normalizeB(H:HexToken) => prepBytesString(Hex2String(H))
-//  rule normalizeB(TA:TAddressLiteral) => DecodeAddressString(TealAddress2String(TA))
-  rule normalizeB(TA:TAddressLiteral) => String2Bytes(TealAddress2String(TA))
+  rule normalizeB(TA:TAddressLiteral) => DecodeAddressString(TealAddress2String(TA))
 
   syntax Bytes ::= prepBytesString(String) [function]
   // ------------------------------------------------
@@ -154,8 +153,7 @@ It is sometimes useful to go from the byte representation back to the token.
 ```k
   syntax TAddressLiteral ::= Bytes2TAddressLiteral(Bytes) [function]
   // ---------------------------------------------------------------
-//  rule Bytes2TAddressLiteral(B) => String2TealAddress(EncodeAddressBytes(padLeftBytes(B, 32, 0)))
-  rule Bytes2TAddressLiteral(B) => String2TealAddress(Bytes2String(B))
+  rule Bytes2TAddressLiteral(B) => String2TealAddress(EncodeAddressBytes(padLeftBytes(B, 32, 0)))
 
   syntax HexToken ::= Bytes2HexToken(Bytes) [function]
   // -------------------------------------------------
@@ -177,7 +175,7 @@ We also need hooks which convert between the string and byte representations of 
   syntax Bytes  ::= DecodeAddressString(String) [function]
   syntax String ::= EncodeAddressBytes(Bytes)   [function]
   // -----------------------------------------------------
-  rule DecodeAddressString(S) => DecodeAddressStringInternal(S)// requires IsAddressValid(S)
+  rule DecodeAddressString(S) => DecodeAddressStringInternal(S) requires IsAddressValid(S)
   rule EncodeAddressBytes(B)  => EncodeAddressBytesInternal(B)  requires lengthBytes(B)  ==Int 32
 
   syntax Bytes  ::= DecodeAddressStringInternal(String) [function, hook(KAVM.address_decode)]
