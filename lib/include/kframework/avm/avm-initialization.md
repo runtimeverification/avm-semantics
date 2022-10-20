@@ -77,7 +77,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
          TXNS
        </transactions>
        <nextGroupID> GROUP_ID </nextGroupID>
-       <nextTxnID> ID => ID +Int ID </nextTxnID>
+       <nextTxnID> ID => ID +Int 1 </nextTxnID>
        requires notBool (Int2String(ID) in_txns(<transactions> TXNS </transactions>))
 ```
 

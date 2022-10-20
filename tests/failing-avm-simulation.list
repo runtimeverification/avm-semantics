@@ -1,8 +1,2 @@
 tests/scenarios/app-params-get.0.avm-simulation
-tests/scenarios/insufficient-funds.31.avm-simulation
-tests/scenarios/loads-uninitialized.0.avm-simulation
-tests/scenarios/multi-app.0.avm-simulation
 tests/scenarios/opcode-budget-test.0.avm-simulation
-tests/scenarios/stack-too-deep.22.avm-simulation
-tests/scenarios/txnas-stacksize.0.avm-simulation
-tests/scenarios/uncover.0.avm-simulation
