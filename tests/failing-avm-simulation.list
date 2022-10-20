@@ -1,12 +1,1 @@
-tests/scenarios/app-params-get.avm-simulation
-tests/scenarios/loads-uninitialized.avm-simulation
-tests/scenarios/multi-app.avm-simulation
-tests/scenarios/opcode-budget-test.avm-simulation
-tests/scenarios/uncover.avm-simulation
-tests/scenarios/itxn-appl.avm-simulation
-tests/scenarios/itxn-basic.avm-simulation
-tests/scenarios/itxn-gtxn.avm-simulation
-tests/scenarios/itxn-gload.avm-simulation
-tests/scenarios/itxn-gload2.avm-simulation
-tests/scenarios/itxn-multiple-field-types-set.fail.avm-simulation
-tests/scenarios/itxn-reentrant.fail.avm-simulation
+tests/scenarios/opcode-budget-test.0.avm-simulation

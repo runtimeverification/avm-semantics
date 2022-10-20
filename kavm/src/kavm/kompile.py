@@ -1,21 +1,7 @@
-import json
-import logging
-import os
-import re
 import subprocess
-import sys
-import tempfile
 from pathlib import Path
 from subprocess import CalledProcessError, CompletedProcess
-from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Set, Tuple, Union, cast
-
-from pyk.cli_utils import run_process
-from pyk.kast import KApply, KAst, KInner, KLabel, KSort, KToken, Subst
-from pyk.kastManip import free_vars, inline_cell_maps, split_config_from
-from pyk.ktool import KRun
-from pyk.ktool.kprint import paren
-from pyk.prelude import Sorts, build_assoc, build_cons, intToken, stringToken
-
+from typing import List, Optional
 
 from kavm.kavm import KAVM
 
@@ -63,7 +49,7 @@ def kompile(
 def kompile_haskell(
     definition_dir: Path,
     main_file: Path,
-    includes: Optional[List[str]] = None,
+    includes: Optional[List[Path]] = None,
     main_module_name: Optional[str] = None,
     syntax_module_name: Optional[str] = None,
     md_selector: Optional[str] = None,
@@ -85,7 +71,7 @@ def kompile_haskell(
     command += ['--syntax-module', syntax_module_name] if syntax_module_name else []
     command += ['--md-selector', md_selector] if md_selector else []
     command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
-    command += [arg for include in includes for arg in ['-I', include]] if includes else []
+    command += [str(arg) for include in includes for arg in ['-I', include]] if includes else []
 
     return subprocess.run(command, check=True, text=True)
 
@@ -115,7 +101,7 @@ def generate_interpreter(
         command += ['--emit-json']
         command += ['--main-module', main_module_name] if main_module_name else []
         command += ['--syntax-module', syntax_module_name] if syntax_module_name else []
-        command += [arg for include in includes for arg in ['-I', include]] if includes else []
+        command += [str(arg) for include in includes for arg in ['-I', include]] if includes else []
         command += ['--md-selector', md_selector] if md_selector else []
         command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
         command += ['-ccopt', '-c', '-ccopt', '-o', '-ccopt', 'partial.o']
@@ -131,7 +117,7 @@ def generate_interpreter(
         hook_cpp_files: Optional[List[Path]] = None,
         hook_clang_flags: Optional[List[str]] = None,
     ) -> None:
-        command = ['llvm-kompilex', str(interpreter_object_file), 'main', '--']
+        command = ['llvm-kompile', str(interpreter_object_file), 'main', '--']
 
         command += [str(path) for path in hook_cpp_files] if hook_cpp_files else []
         command += ['-o', str(interpreter_executable_file)]

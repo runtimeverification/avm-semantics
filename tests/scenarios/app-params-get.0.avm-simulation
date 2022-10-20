@@ -1,24 +1,23 @@
-addAccount <address> b"1" </address> <balance> 1500000 </balance>;
-
-declareTealSource "multi-app1.teal";
-declareTealSource "multi-app2.teal";
+declareTealSource "app-params-get.teal";
 declareTealSource "clear-basic.teal";
+
+addAccount <address> b"1" </address> <balance> 1000000 </balance>;
 
 #initTxGroup();
 
 addAppCallTx <sender>            b"1"        </sender>
              <applicationID>     0           </applicationID>
-             <onCompletion>      @ NoOp      </onCompletion>
+             <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
-             <foreignApps>       .TValueList </foreignApps>
+             <foreignApps>       3           </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
-             <globalNui>         0           </globalNui>
+             <globalNui>         3           </globalNui>
              <globalNbs>         0           </globalNbs>
-             <localNui>          1           </localNui>
-             <localNbs>          2           </localNbs>
+             <localNui>          0           </localNui>
+             <localNbs>          4           </localNbs>
              <extraProgramPages> 0           </extraProgramPages>
              <approvalPgmIdx>    0           </approvalPgmIdx>
-             <clearStatePgmIdx>  2           </clearStatePgmIdx>;
+             <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 #initGlobals(); #evalTxGroup(); .AS

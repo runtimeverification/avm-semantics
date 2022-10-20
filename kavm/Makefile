@@ -1,6 +1,7 @@
 .PHONY: default all clean build install          \
         poetry-install                           \
         test test-unit test-integration          \
+        test-scenarios                           \
         format isort autoflake black             \
         check check-isort check-autoflake check-black check-flake8 check-mypy
 
@@ -17,21 +18,27 @@ poetry-install:
 	poetry install
 
 POETRY_RUN := poetry run
+THREADS := $(if $(THREADS),$(THREADS),1)
+
+PYTEST_ARGS := -n $(THREADS)
 
 # Tests
 
 test: test-unit test-integration
 
 test-unit: poetry-install
-	$(POETRY_RUN) python -m pytest src/tests/unit
+	$(POETRY_RUN) python -m pytest $(PYTEST_ARGS) src/tests/unit
+
+test-scenarios: poetry-install
+	$(POETRY_RUN) python -m pytest --verbose $(PYTEST_ARGS) src/tests/scenarios
 
 test-integration: test-integration-algod test-integration-kalgod
 
 test-integration-algod: poetry-install
-	$(POETRY_RUN) python -m pytest --backend=algod src/tests/algod_integration
+	$(POETRY_RUN) python -m pytest $(PYTEST_ARGS) --backend=algod src/tests/algod_integration
 
 test-integration-kalgod:
-	$(POETRY_RUN) python -m pytest --backend=kalgod src/tests/algod_integration
+	$(POETRY_RUN) python -m pytest $(PYTEST_ARGS) --backend=kalgod src/tests/algod_integration
 
 # Checks and formatting
 

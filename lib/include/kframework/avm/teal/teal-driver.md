@@ -1328,6 +1328,12 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
     requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
      andBool I in_keys(M)
 
+  rule <k> loads => .K ... </k>
+       <stack> I : XS => 0 : XS </stack>
+       <scratch> M </scratch>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+     andBool notBool(I in_keys(M))
+
   rule <k> loads => panic(INVALID_SCRATCH_LOC) ... </k>
        <stack> I : _ </stack>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
@@ -1954,6 +1960,33 @@ Stateful TEAL Operations
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
      andBool (isInt(RET) andThenBool {RET}:>Int <Int 0)
+```
+
+*app_params_get*
+
+```k
+  rule <k> app_params_get FIELD => . ...</k>
+       <stack> APP:Int : XS => 1 : {getAppParamsField(FIELD, APP)}:>TValue : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires isTValue(getAppParamsField(FIELD, APP))
+     andBool S <Int MAX_STACK_DEPTH
+
+  rule <k> app_params_get FIELD => . ...</k>
+       <stack> APP:Int : XS => 0 : 0 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires notBool(isTValue(getAppParamsField(FIELD, APP)))
+
+  rule <k> app_params_get _ => panic(STACK_OVERFLOW) ...</k>
+       <stacksize> S </stacksize>
+    requires S >=Int MAX_STACK_DEPTH
+
+  rule <k> app_params_get _ => panic(STACK_UNDERFLOW) ...</k>
+       <stacksize> S </stacksize>
+    requires S <Int 1
+
+  rule <k> app_params_get _ => panic(ILL_TYPED_STACK) ...</k>
+       <stack> _:Bytes : _ </stack>
+
 ```
 
 ### Access to past transactions in the group
