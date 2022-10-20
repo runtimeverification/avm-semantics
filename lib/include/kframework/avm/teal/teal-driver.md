@@ -1135,6 +1135,16 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <stacksize> S </stacksize>
     requires notBool (0 <=Int N andBool N <Int S)
 
+  rule <k> uncover N => .K ... </k>
+       <stack> STACK => STACK [ N ] : (#take(N, STACK) #drop(N +Int 1, STACK)) </stack>
+       <stacksize> S </stacksize>
+    requires 0 <=Int N andBool N <Int S
+
+  rule <k> uncover N => panic(STACK_UNDERFLOW) ... </k>
+       <stack> _ </stack>
+       <stacksize> S </stacksize>
+    requires notBool (0 <=Int N andBool N <Int S)
+
   rule <k> swap => .K ... </k>
        <stack> X : Y : XS => Y : X : XS </stack>
 
@@ -1309,6 +1319,12 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <scratch> M </scratch>
     requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
      andBool I in_keys(M)
+
+  rule <k> loads => .K ... </k>
+       <stack> I : XS => 0 : XS </stack>
+       <scratch> M </scratch>
+    requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
+     andBool notBool(I in_keys(M))
 
   rule <k> loads => panic(INVALID_SCRATCH_LOC) ... </k>
        <stack> I : _ </stack>
