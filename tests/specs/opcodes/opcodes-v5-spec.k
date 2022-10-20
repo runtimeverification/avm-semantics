@@ -77,59 +77,177 @@ claim <k> log => . </k>
    andBool size(LOG) <Int 32
 
 // itxn_begin 	5 	heavy_check_mark 	1
-claim <k> itxn_begin => . </k>
-      <currentTx> "1" </currentTx>
-      <transactions>
-        <transaction>
-          <txID> "1" </txID>
-          <firstValid> 0 </firstValid>
-          <lastValid> 100 </lastValid>
-          <typeEnum> @ appl </typeEnum>
-          ...
-        </transaction>
-      </transactions>
-      <currentApplicationAddress> b"application1" </currentApplicationAddress>
-      <innerTransactions>
-        .List =>
-        ListItem(
+  claim <k> itxn_begin => . </k>
+        <currentTx> "1" </currentTx>
+        <transactions>
           <transaction>
-            <txID> "" </txID>
-            <txHeader>
-               <fee> 0 </fee>
-               <sender> b"application1" </sender>
-               <firstValid> 0 </firstValid>
-               <lastValid> 100 </lastValid>
-               <genesisHash> .Bytes </genesisHash>
-               <txType> "unknown" </txType>
-               <typeEnum> 0 </typeEnum>
-               <groupID> "33" </groupID>
-               <groupIdx> 0 </groupIdx>
-               <genesisID> .Bytes </genesisID>
-               <lease> .Bytes </lease>
-               <note> .Bytes </note>
-               <rekeyTo> ?_ </rekeyTo>
-            </txHeader>
-            <txnTypeSpecificFields>
-              .Bag
-            </txnTypeSpecificFields>
-            <applyData>
-              <txScratch>       .Map  </txScratch>
-              <txConfigAsset>   0     </txConfigAsset>
-              <txApplicationID> 0     </txApplicationID>
-              <log>
-                <logData> .TValueList </logData>
-                <logSize> 0:TValue    </logSize>
-              </log>
-            </applyData>
-            <txnExecutionContext> .K </txnExecutionContext>
-            <resume> false </resume>
+            <txID> "1" </txID>
+            <firstValid> 0 </firstValid>
+            <lastValid> 100 </lastValid>
+            <typeEnum> @ appl </typeEnum>
+            ...
           </transaction>
-        )
-      </innerTransactions>
-      <nextGroupID> 32 => 33 </nextGroupID>
+        </transactions>
+        <currentApplicationAddress> b"application1" </currentApplicationAddress>
+        <innerTransactions>
+          .List =>
+          ListItem(
+            <transaction>
+              <txID> "" </txID>
+              <txHeader>
+                 <fee> 0 </fee>
+                 <sender> b"application1" </sender>
+                 <firstValid> 0 </firstValid>
+                 <lastValid> 100 </lastValid>
+                 <genesisHash> .Bytes </genesisHash>
+                 <txType> "unknown" </txType>
+                 <typeEnum> 0 </typeEnum>
+                 <groupID> "33" </groupID>
+                 <groupIdx> 0 </groupIdx>
+                 <genesisID> .Bytes </genesisID>
+                 <lease> .Bytes </lease>
+                 <note> .Bytes </note>
+                 <rekeyTo> ?_ </rekeyTo>
+              </txHeader>
+              <txnTypeSpecificFields>
+                .Bag
+              </txnTypeSpecificFields>
+              <applyData>
+                <txScratch>       .Map  </txScratch>
+                <txConfigAsset>   0     </txConfigAsset>
+                <txApplicationID> 0     </txApplicationID>
+                <log>
+                  <logData> .TValueList </logData>
+                  <logSize> 0:TValue    </logSize>
+                </log>
+              </applyData>
+              <txnExecutionContext> .K </txnExecutionContext>
+              <resume> false </resume>
+            </transaction>
+          )
+        </innerTransactions>
+        <nextGroupID> 32 => 33 </nextGroupID>
 
 // itxn_field 	5 	heavy_check_mark 	1
+  claim <k> itxn_field TypeEnum => . </k>
+        <stack> 3 : XS => XS </stack>
+        <stacksize> S => S -Int 1 </stacksize>
+        <innerTransactions>
+          ...
+          ListItem(
+            <transaction>
+               <txType> _ => b"acfg" </txType>
+               <typeEnum> _ => 3 </typeEnum>
+               ...
+            </transaction>
+          )
+        </innerTransactions>
+
+  claim <k> itxn_field ConfigAssetUnitName => . </k>
+        <stack> b"abcdefg" : XS => XS </stack>
+        <stacksize> S => S -Int 1 </stacksize>
+        <innerTransactions>
+          ...
+          ListItem(
+            <transaction>
+              <configUnitName> _ => b"abcdefg" </configUnitName>
+               ...
+            </transaction>
+          )
+        </innerTransactions>
+
+  claim <k> itxn_field ConfigAssetUnitName => . </k>
+        <stack> b"abcdefg" : XS => XS </stack>
+        <stacksize> S => S -Int 1 </stacksize>
+        <innerTransactions>
+          ...
+          ListItem(
+            <transaction>
+              <txnTypeSpecificFields>
+                .Bag => 
+                <assetConfigTxFields>
+                  <configAsset> ?_ </configAsset>
+                  <assetParams>
+                    <configUnitName> b"abcdefg" </configUnitName>
+                    ?_
+                  </assetParams>
+                </assetConfigTxFields>
+              </txnTypeSpecificFields>
+              ...
+            </transaction>
+          )
+        </innerTransactions>
+        
+
 // itxn_submit 	5 	heavy_check_mark 	1
+  claim <k> itxn_submit => . </k>
+        <currentTxnExecution> 
+          <pc> 0 </pc>
+          <program> .Map </program>
+          <jumped> true => false </jumped>
+          <currentApplicationID> 1 </currentApplicationID>
+          <stack> 1 : .TStack </stack>
+          <stacksize> 1 </stacksize>
+          <lastTxnGroupID> "1" </lastTxnGroupID>
+          ...
+        </currentTxnExecution>
+        <returncode> 4 => 0 </returncode>
+        <returnstatus> _ => "Success - transaction group accepted" </returnstatus>
+        <activeApps> SetItem(1) => .Set </activeApps>
+        <touchedAccounts> .Set </touchedAccounts>
+        <currentTx> "1" </currentTx>
+        <transactions>
+          <transaction>
+            <txID> "1" </txID>
+            <groupID> "1" </groupID>
+            <sender> b"3" </sender>
+            <resume> true </resume>
+            ...
+          </transaction>
+          => ?_
+        </transactions>
+        <innerTransactions>
+          ListItem(
+            <transaction>
+              <txID> _ </txID>
+              <txHeader> 
+                <txType> b"pay" </txType>
+                <typeEnum> 1 </typeEnum>
+                <groupID> "2" </groupID>
+                <sender> b"application1" </sender>
+                ... 
+              </txHeader>
+              <txnTypeSpecificFields>
+                <payTxFields>
+                  <receiver> b"3" </receiver>
+                  <amount> 1000 </amount>
+                  ...
+                </payTxFields>
+              </txnTypeSpecificFields>
+              <resume> false </resume>
+              ...
+            </transaction>)
+            => .List
+        </innerTransactions>
+        <nextTxnID> 5 => 6 </nextTxnID>
+        <nextGroupID> 1 </nextGroupID>
+        <deque> ListItem("1") => .List </deque>
+        <dequeIndexSet> SetItem("1") => (SetItem("1") SetItem("5")) </dequeIndexSet>
+        <txnIndexMap> .Bag => ?_ </txnIndexMap>
+        <accountsMap>
+          <account>
+            <address> b"application1" </address>
+            <minBalance> 10000 </minBalance>
+            <balance> 100000000 => 100000000 -Int 1000 </balance>
+            ...
+          </account>
+          <account>
+            <address> b"3" </address>
+            <minBalance> 10000 </minBalance>
+            <balance> 100000000 => 100000000 +Int 1000 </balance>
+            ...
+          </account>
+        </accountsMap>
 // itxn 	5 	heavy_check_mark 	1
 // itxna 	5 	heavy_check_mark 	1
 // txnas 	5 	heavy_check_mark 	1
