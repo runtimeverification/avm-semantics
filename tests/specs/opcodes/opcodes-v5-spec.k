@@ -284,8 +284,80 @@ module OPCODES-V5-SPEC
     requires S <Int 1000
 
 // txnas 	5 	heavy_check_mark 	1
+  claim <k> txnas Applications => . </k>
+        <stack> 1 : XS => APPL : XS </stack>
+        <stacksize> S </stacksize>
+        <currentTx> TX_ID </currentTx>
+        <transaction>
+          <txID> TX_ID </txID>
+          <groupID> "0" </groupID>
+          <groupIdx> 0 </groupIdx>
+          <typeEnum> @ appl </typeEnum>
+          <foreignApps> 3 APPL:Int 7 </foreignApps>
+          ...
+        </transaction>
+        <txnIndexMapGroup>
+          <txnIndexMapGroupKey> "0" </txnIndexMapGroupKey>
+          <txnIndexMapGroupValues> (0 |-> TX_ID) ... </txnIndexMapGroupValues>
+        </txnIndexMapGroup>
+    requires S <Int 1000
+
 // gtxnas 	5 	heavy_check_mark 	1
+  claim <k> gtxnas 0 ApplicationArgs => . </k>
+        <stack> 1 : XS => b"123" : XS </stack>
+        <stacksize> S </stacksize>
+        <currentTx> "2a" </currentTx>
+        <transactions>
+          <transaction>
+            <txID> "0" </txID>
+            <groupID> "0" </groupID>
+            <groupIdx> 0 </groupIdx>
+            <applicationArgs> b"456" b"123" </applicationArgs>
+            <typeEnum> @ appl </typeEnum>
+            ...
+          </transaction>
+          <transaction>
+            <txID> "2a" </txID>
+            <groupID> "0" </groupID>
+            <groupIdx> 2 </groupIdx>
+            <typeEnum> @ appl </typeEnum>
+            ...
+          </transaction>
+        </transactions>
+        <txnIndexMapGroup>
+          <txnIndexMapGroupKey> "0" </txnIndexMapGroupKey>
+          <txnIndexMapGroupValues> (2 |-> "2a") (0 |-> "0") </txnIndexMapGroupValues>
+        </txnIndexMapGroup>
+    requires S <Int 1000
+
 // gtxnsas 	5 	heavy_check_mark 	1
+  claim <k> gtxnsas ApplicationArgs => . </k>
+        <stack> 1 : 0 : XS => b"123" : XS </stack>
+        <stacksize> S => S -Int 1 </stacksize>
+        <currentTx> "2a" </currentTx>
+        <transactions>
+          <transaction>
+            <txID> "0" </txID>
+            <groupID> "0" </groupID>
+            <groupIdx> 0 </groupIdx>
+            <applicationArgs> b"456" b"123" </applicationArgs>
+            <typeEnum> @ appl </typeEnum>
+            ...
+          </transaction>
+          <transaction>
+            <txID> "2a" </txID>
+            <groupID> "0" </groupID>
+            <groupIdx> 2 </groupIdx>
+            <typeEnum> @ appl </typeEnum>
+            ...
+          </transaction>
+        </transactions>
+        <txnIndexMapGroup>
+          <txnIndexMapGroupKey> "0" </txnIndexMapGroupKey>
+          <txnIndexMapGroupValues> (2 |-> "2a") (0 |-> "0") </txnIndexMapGroupValues>
+        </txnIndexMapGroup>
+    requires S <Int 1000
+
 // args 	5 	heavy_check_mark 	1    
 
 endmodule

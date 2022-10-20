@@ -26,7 +26,6 @@ module OPCODES-V2-SPEC
     requires S <Int 1000
 
 // gtxna t f i 	2 	heavy_check_mark 	1
-
   claim <k> gtxna 0 ApplicationArgs 0 => . </k>
         <stack> XS => b"123" : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
