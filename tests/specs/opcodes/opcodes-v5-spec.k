@@ -78,17 +78,55 @@ claim <k> log => . </k>
 
 // itxn_begin 	5 	heavy_check_mark 	1
 claim <k> itxn_begin => . </k>
-      <currentTx> TX_ID </currentTx>
-      <transaction>
-        <txID> TX_ID </txID>
-        <firstValid> FV </firstValid>
-        <lastValid> LV </lastValid>
-        ...
-      </transaction>
+      <currentTx> "1" </currentTx>
+      <transactions>
+        <transaction>
+          <txID> "1" </txID>
+          <firstValid> 0 </firstValid>
+          <lastValid> 100 </lastValid>
+          <typeEnum> @ appl </typeEnum>
+          ...
+        </transaction>
+      </transactions>
+      <currentApplicationAddress> b"application1" </currentApplicationAddress>
       <innerTransactions>
         .List =>
-        ListItem
+        ListItem(
+          <transaction>
+            <txID> "" </txID>
+            <txHeader>
+               <fee> 0 </fee>
+               <sender> b"application1" </sender>
+               <firstValid> 0 </firstValid>
+               <lastValid> 100 </lastValid>
+               <genesisHash> .Bytes </genesisHash>
+               <txType> "unknown" </txType>
+               <typeEnum> 0 </typeEnum>
+               <groupID> "33" </groupID>
+               <groupIdx> 0 </groupIdx>
+               <genesisID> .Bytes </genesisID>
+               <lease> .Bytes </lease>
+               <note> .Bytes </note>
+               <rekeyTo> ?_ </rekeyTo>
+            </txHeader>
+            <txnTypeSpecificFields>
+              .Bag
+            </txnTypeSpecificFields>
+            <applyData>
+              <txScratch>       .Map  </txScratch>
+              <txConfigAsset>   0     </txConfigAsset>
+              <txApplicationID> 0     </txApplicationID>
+              <log>
+                <logData> .TValueList </logData>
+                <logSize> 0:TValue    </logSize>
+              </log>
+            </applyData>
+            <txnExecutionContext> .K </txnExecutionContext>
+            <resume> false </resume>
+          </transaction>
+        )
       </innerTransactions>
+      <nextGroupID> 32 => 33 </nextGroupID>
 
 // itxn_field 	5 	heavy_check_mark 	1
 // itxn_submit 	5 	heavy_check_mark 	1

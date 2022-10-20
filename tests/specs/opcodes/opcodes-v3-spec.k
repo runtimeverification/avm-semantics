@@ -58,7 +58,8 @@ module OPCODES-V3-SPEC
         <returnstatus> _ => "Failure - panic: assertion violation" </returnstatus>
 
   claim <k> assert => . </k>
-        <stack> N : _ </stack>
+        <stack> N : XS => XS </stack>
+        <stacksize> S => S -Int 1 </stacksize>
         <returncode> _ </returncode>
         <returnstatus> _ </returnstatus>
     requires N >=Int 1
