@@ -380,9 +380,6 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
     requires lengthBytes(B) <=Int MAX_BYTEARRAY_LEN
      andBool Bytes2Int(B, BE, Unsigned) >Int 0
 
-//  rule <k> bitlen => panic(INVALID_ARGUMENT) ... </k>
-//       <stack> (B:Bytes) : _ </stack>
-//    requires lengthBytes(B) >Int MAX_BYTEARRAY_LEN
 ```
 
 ### Byte Array Operations
