@@ -56,6 +56,7 @@ module OPCODES-V3-SPEC
         <stack> 0 : _ </stack>
         <returncode> _ => 3 </returncode>
         <returnstatus> _ => "Failure - panic: assertion violation" </returnstatus>
+        <paniccode> _ => 24 </paniccode>
 
   claim <k> assert => . </k>
         <stack> N : XS => XS </stack>
