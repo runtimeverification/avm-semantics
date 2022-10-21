@@ -162,6 +162,32 @@ Opcode Semantics
        <stack> I4 : I3 : _ : _ : _ </stack>
     requires I4 ==Int 0 andBool I3 ==Int 0
 
+  rule <k> divw => .K ... </k>
+       <stack> I3 : I2 : I1 : XS =>
+               #fun(NUMERATOR
+            => #fun(DENOMINATOR
+            => #fun(QUOTIENT
+            => QUOTIENT : XS
+               )(NUMERATOR /Int DENOMINATOR)
+               )(I3)
+               )(asUInt128(I1, I2))
+       </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+    requires I3 =/=Int 0
+     andBool (asUInt128(I1, I2) /Int I3) <=Int MAX_UINT64
+
+  rule <k> divw => panic(INT_OVERFLOW) ... </k>
+       <stack> I3 : I2 : I1 : _ </stack>
+    requires I3 =/=Int 0
+     andBool (asUInt128(I1, I2) /Int I3) >Int MAX_UINT64
+
+  rule <k> divw => panic(DIV_BY_ZERO) ... </k>
+       <stack> 0 : _ : _ : _ </stack>
+
+  rule <k> divw => panic(ILL_TYPED_STACK) ... </k>
+       <stack> I3 : I2 : I1 : _ </stack>
+    requires isBytes(I1) orBool isBytes(I2) orBool isBytes(I3)
+
   // Auxilary funtion that interprets two `UInt64` as one Int, big-endian
   syntax Int ::= asUInt128(TUInt64, TUInt64) [function, functional]
   // --------------------------------------------------------------

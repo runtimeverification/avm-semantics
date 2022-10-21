@@ -67,6 +67,7 @@ module TEAL-OPCODES
                              | "exp"
                              | "addw"
                              | "divmodw"
+                             | "divw"
                              | "mulw"
                              | "expw"
 ```
@@ -471,6 +472,7 @@ module TEAL-UNPARSER
   rule unparseTEAL(exp)                           => "exp"
   rule unparseTEAL(addw)                          => "addw"
   rule unparseTEAL(divmodw)                       => "divmodw"
+  rule unparseTEAL(divw)                          => "divw"
   rule unparseTEAL(mulw)                          => "mulw"
   rule unparseTEAL(expw)                          => "expw"
   rule unparseTEAL(|)                             => "|"
