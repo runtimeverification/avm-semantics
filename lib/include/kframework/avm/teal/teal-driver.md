@@ -1984,6 +1984,40 @@ Stateful TEAL Operations
 
 ```
 
+*acct_params_get*
+
+```k
+  rule <k> acct_params_get FIELD => . ...</k>
+       <stack> ACCT : XS => 1 : {getAccountParamsField(FIELD, {accountReference(ACCT)}:>TValue)}:>TValue : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires (isTValue(accountReference(ACCT))
+ andThenBool isTValue(getAccountParamsField(FIELD, {accountReference(ACCT)}:>TValue))
+ andThenBool isInt(getAccountParamsField(AcctBalance, ACCT))
+ andThenBool {getAccountParamsField(AcctBalance, ACCT)}:>Int >Int 0)
+     andBool S <Int MAX_STACK_DEPTH
+
+  rule <k> acct_params_get FIELD => . ...</k>
+       <stack> ACCT : XS => 0 : {getAccountParamsField(FIELD, {accountReference(ACCT)}:>TValue)}:>TValue : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires (isTValue(accountReference(ACCT))
+ andThenBool isTValue(getAccountParamsField(FIELD, {accountReference(ACCT)}:>TValue))
+ andThenBool isInt(getAccountParamsField(AcctBalance, ACCT))
+ andThenBool {getAccountParamsField(AcctBalance, ACCT)}:>Int <=Int 0)
+     andBool S <Int MAX_STACK_DEPTH
+
+  rule <k> acct_params_get _ => panic(TXN_ACCESS_FAILED) ...</k>
+       <stack> ACCT : _ </stack>
+    requires notBool(isTValue(accountReference(ACCT)))
+
+  rule <k> acct_params_get _ => panic(STACK_OVERFLOW) ...</k>
+       <stacksize> S </stacksize>
+    requires S >=Int MAX_STACK_DEPTH
+
+  rule <k> acct_params_get _ => panic(STACK_UNDERFLOW) ...</k>
+       <stacksize> S </stacksize>
+    requires S <Int 1
+```
+
 ### Access to past transactions in the group
 
 *gaid*
