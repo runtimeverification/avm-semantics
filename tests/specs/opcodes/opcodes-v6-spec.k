@@ -80,7 +80,6 @@ module OPCODES-V6-SPEC
   claim <k> divw => panic(INT_OVERFLOW) </k>
         <stack> 2 : 0 : 5 : _ </stack>
 
-  // (5 << 64) / 2 > MAX_UINT
   claim <k> divw => panic(ILL_TYPED_STACK) </k>
         <stack> C : B : A : _ </stack>
     requires (isBytes(A) orBool isBytes(B) orBool isBytes(C))
