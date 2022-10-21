@@ -2181,7 +2181,7 @@ Stateful TEAL Operations
              <fee>         0                                         </fee>
              <sender>      getGlobalField(CurrentApplicationAddress) </sender>
              <firstValid>  getTxnField(getCurrentTxn(), FirstValid)  </firstValid>
-             <lastValid>   getTxnField(getCurrentTxn(), FirstValid)  </lastValid>
+             <lastValid>   getTxnField(getCurrentTxn(), LastValid)   </lastValid>
              <genesisHash> .Bytes                                    </genesisHash>
              <txType>       "unknown"                                </txType>
              <typeEnum>     0                                        </typeEnum>
