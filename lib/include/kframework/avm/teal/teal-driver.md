@@ -2009,15 +2009,6 @@ Stateful TEAL Operations
 *gaids*
 
 ```k
-//  rule <k> gaids => .K ... </k>
-//       <stack> T : XS => ({getTxnField(Int2String(T), ApplicationID)}:>TValue) : XS </stack>
-//    requires T <Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
-//     andBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) ==Int (@ appl)
-//
-//  rule <k> gaids => panic(FUTURE_TXN) ... </k>
-//       <stack> T : _ </stack>
-//    requires T >=Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
-//     orBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) =/=Int (@ appl)
 
   rule <k> gaids => .K ... </k>
        <stack> T:Int : XS => {getGroupFieldByIdx( getTxnGroupID(getCurrentTxn()), T, ApplicationID)}:>TValue : XS </stack>
