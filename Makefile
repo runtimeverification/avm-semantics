@@ -404,8 +404,7 @@ tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_L
 tests/specs/verification-kompiled/timestamp: tests/specs/verification.k $(VENV_DIR)/pyvenv.cfg $(avm_includes)
 	mkdir -p tests/specs/verification-kompiled
 	$(VENV_ACTIVATE) && $(KAVM) kompile $< --backend haskell --definition-dir tests/specs/verification-kompiled \
-                      -I "${KAVM_INCLUDE}/kframework"                                                         \
-											-I "${plugin_include}/kframework"
+                                    -I "${KAVM_INCLUDE}/kframework" -I "${plugin_include}/kframework"
 
 clean-verification:
 	rm -rf tests/specs/verification-kompiled
