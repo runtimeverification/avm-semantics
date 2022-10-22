@@ -375,6 +375,9 @@ Note that we need to perform the left shift modulo `MAX_UINT64 + 1`, otherwise t
 
   rule <k> ~ => .K ... </k>
        <stack> I : XS => (~Int I) : XS </stack>
+
+  rule <k> ~ => panic(ILL_TYPED_STACK) ... </k>
+       <stack> _:Bytes : _ </stack>
 ```
 
 `bitlen` computes the highest set bit in X, indexed from one. Can be used for both integers and byte-arrays.
@@ -389,9 +392,9 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
        <stack> (I:Int) : XS => log2Int(I) +Int 1 : XS </stack>
     requires 0 <Int I andBool I <=Int MAX_UINT64
 
-  rule <k> bitlen => panic(INVALID_ARGUMENT) ... </k>
-       <stack> (I:Int) : _ </stack>
-    requires notBool (0 <=Int I andBool I <=Int MAX_UINT64)
+//  rule <k> bitlen => panic(INVALID_ARGUMENT) ... </k>
+//       <stack> (I:Int) : _ </stack>
+//    requires notBool (0 <=Int I andBool I <=Int MAX_UINT64)
 
   rule <k> bitlen => .K ... </k>
        <stack> (B:Bytes) : XS => 0 : XS </stack>
@@ -403,9 +406,6 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
     requires lengthBytes(B) <=Int MAX_BYTEARRAY_LEN
      andBool Bytes2Int(B, BE, Unsigned) >Int 0
 
-  rule <k> bitlen => panic(INVALID_ARGUMENT) ... </k>
-       <stack> (B:Bytes) : _ </stack>
-    requires lengthBytes(B) >Int MAX_BYTEARRAY_LEN
 ```
 
 ### Byte Array Operations
@@ -592,11 +592,12 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
 The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no restriction on the length of the result.
 
 ```k
-  rule <k> _OP:MathByteOpCode => panic(MATH_BYTES_ARG_TOO_LONG) ... </k>
+  rule <k> OP:MathByteOpCode => panic(MATH_BYTES_ARG_TOO_LONG) ... </k>
        <stack> B:Bytes : A:Bytes : _ </stack>
        <stacksize> S => S -Int 1 </stacksize>
-    requires lengthBytes(A) >Int MAX_BYTE_MATH_SIZE
-      orBool lengthBytes(B) >Int MAX_BYTE_MATH_SIZE
+    requires (lengthBytes(A) >Int MAX_BYTE_MATH_SIZE
+      orBool lengthBytes(B) >Int MAX_BYTE_MATH_SIZE)
+     andBool notBool(isUnaryLogicalMathByteOpCode(OP))
 
   rule <k> _OP:UnaryLogicalMathByteOpCode => panic(MATH_BYTES_ARG_TOO_LONG) ... </k>
        <stack> A:Bytes : _ </stack>
@@ -1040,7 +1041,7 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
   rule <k> assert => .K ... </k>
        <stack> (X:Int) : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
-    requires X >=Int 0
+    requires X >Int 0
 
   rule <k> assert => panic(ASSERTION_VIOLATION) ... </k>
        <stack> (X:Int) : _ </stack>
@@ -1337,6 +1338,10 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
   rule <k> load I => panic(INVALID_SCRATCH_LOC) ... </k>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
+  rule <k> load _ => panic(STACK_OVERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S >=Int MAX_STACK_DEPTH
+
   rule <k> store I => panic(INVALID_SCRATCH_LOC) ... </k>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
@@ -1366,9 +1371,6 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <stack> _ : I : _ </stack>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
-  rule <k> _:LoadOpCode => panic(STACK_OVERFLOW) ... </k>
-       <stacksize> S </stacksize>
-    requires S >=Int MAX_STACK_DEPTH
 ```
 
 Stateless TEAL Operations
@@ -2049,30 +2051,31 @@ Stateful TEAL Operations
 *gaid*
 
 ```k
-  rule <k> gaid T => .K ... </k>
-       <stack> XS => ({getTxnField(Int2String(T), ApplicationID)}:>TValue) : XS </stack>
+  rule <k> gaid T:Int => .K ... </k>
+       <stack> XS => {getGroupFieldByIdx( getTxnGroupID(getCurrentTxn()), T, ApplicationID)}:>TValue : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
-     andBool T <Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
-     andBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) ==Int (@ appl)
+     andBool T <Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+     andBool ({getGroupFieldByIdx(getTxnGroupID(getCurrentTxn()), T, TypeEnum)}:>Int) ==Int (@ appl)
 
   rule <k> gaid T => panic(FUTURE_TXN) ... </k>
-    requires T >=Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
-     orBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) =/=Int (@ appl)
+     requires T >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+     orBool ({getGroupFieldByIdx(getTxnGroupID(getCurrentTxn()), T, TypeEnum)}:>Int) =/=Int (@ appl)
 ```
 
 *gaids*
 
 ```k
+
   rule <k> gaids => .K ... </k>
-       <stack> T : XS => ({getTxnField(Int2String(T), ApplicationID)}:>TValue) : XS </stack>
-    requires T <Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
-     andBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) ==Int (@ appl)
+       <stack> T:Int : XS => {getGroupFieldByIdx( getTxnGroupID(getCurrentTxn()), T, ApplicationID)}:>TValue : XS </stack>
+    requires T <Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+     andBool ({getGroupFieldByIdx(getTxnGroupID(getCurrentTxn()), T, TypeEnum)}:>Int) ==Int (@ appl)
 
   rule <k> gaids => panic(FUTURE_TXN) ... </k>
-       <stack> T : _ </stack>
-    requires T >=Int String2Int(Bytes2String({getTxnField(getCurrentTxn(), GroupIndex)}:>Bytes))
-     orBool ({getTxnField(Int2String(T), TypeEnum)}:>Int) =/=Int (@ appl)
+       <stack> T:Int : _ </stack>
+     requires T >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+     orBool ({getGroupFieldByIdx(getTxnGroupID(getCurrentTxn()), T, TypeEnum)}:>Int) =/=Int (@ appl)
 ```
 
 *gload, gloads, & gloadss*
@@ -2187,7 +2190,7 @@ Stateful TEAL Operations
              <fee>         0                                         </fee>
              <sender>      getGlobalField(CurrentApplicationAddress) </sender>
              <firstValid>  getTxnField(getCurrentTxn(), FirstValid)  </firstValid>
-             <lastValid>   getTxnField(getCurrentTxn(), FirstValid)  </lastValid>
+             <lastValid>   getTxnField(getCurrentTxn(), LastValid)  </lastValid>
              <genesisHash> .Bytes                                    </genesisHash>
              <txType>       "unknown"                                </txType>
              <typeEnum>     0                                        </typeEnum>
@@ -2226,7 +2229,7 @@ Stateful TEAL Operations
              <fee>         0                                         </fee>
              <sender>      getGlobalField(CurrentApplicationAddress) </sender>
              <firstValid>  getTxnField(getCurrentTxn(), FirstValid)  </firstValid>
-             <lastValid>   getTxnField(getCurrentTxn(), FirstValid)  </lastValid>
+             <lastValid>   getTxnField(getCurrentTxn(), LastValid)   </lastValid>
              <genesisHash> .Bytes                                    </genesisHash>
              <txType>       "unknown"                                </txType>
              <typeEnum>     0                                        </typeEnum>
@@ -2275,7 +2278,7 @@ Panic Behaviors due to Ill-typed Stack Arguments
 
   rule <k> Op:OpCode => panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Bytes) : _ </stack>
-    requires isUnaryLogicalOpCode(Op) orBool isUnaryBitOpCode(Op)
+    requires isUnaryLogicalOpCode(Op)
 
   rule <k> _:EqualityOpCode => panic(ILL_TYPED_STACK) ... </k>
        <stack> (V2:TValue) : (V1:TValue) : _ </stack>
@@ -2285,6 +2288,17 @@ Panic Behaviors due to Ill-typed Stack Arguments
 
 ### Byte Opcodes
 ```k
+  rule <k> OP:OpCode => panic(ILL_TYPED_STACK) ... </k>
+       <stack> A : B : _ </stack>
+    requires (isInt(A) orBool isInt(B))
+     andBool (isArithmMathByteOpCode(OP)
+     orBool   isRelationalMathByteOpCode(OP)
+     orBool   isBinaryLogicalMathByteOpCode(OP))
+
+  rule <k> OP:OpCode => panic(ILL_TYPED_STACK) ... </k>
+       <stack> _:Int : _ </stack>
+    requires isUnaryLogicalMathByteOpCode(OP)
+  
   rule <k> len => panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Int) : _ </stack>
 
@@ -2370,7 +2384,7 @@ TODO: incorporate Bytes math opcodes
       orBool isStoreOpCode(Op)
       orBool isCondBranchOpCode(Op)
       orBool isReturnOpCode(Op)
-      orBool isStackOpCode(Op)
+      orBool (isStackOpCode(Op) andBool notBool (isNullaryStackOpCode(Op)))
       orBool isStateOpCode(Op)
       orBool isSigVerOpCode(Op)
 

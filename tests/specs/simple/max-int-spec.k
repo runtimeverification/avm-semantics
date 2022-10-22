@@ -34,6 +34,8 @@ module MAX-INT-SPEC
         <stacksize> #sizeTStack(INITIAL_STACK) => 1 +Int #sizeTStack(INITIAL_STACK) </stacksize>
         <scratch> M => M </scratch>
         <labels> LL => ?_ </labels>
+        <currentApplicationID> APP_ID </currentApplicationID>
+        <activeApps> (SetItem(APP_ID) => .Set) ... </activeApps>
         <returncode> 4 => ?RETURN_CODE </returncode>
         <returnstatus>
           "Failure - program is stuck" => ?RETURN_STATUS
