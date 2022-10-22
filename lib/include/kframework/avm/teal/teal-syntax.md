@@ -67,6 +67,7 @@ module TEAL-OPCODES
                              | "exp"
                              | "addw"
                              | "divmodw"
+                             | "divw"
                              | "mulw"
                              | "expw"
 ```
@@ -300,6 +301,7 @@ module TEAL-OPCODES
                               | "app_global_del"
                               | "app_global_get"
                               | "asset_params_get" AssetParamsField
+                              | "acct_params_get" AccountParamsField
                               | "app_params_get" AppParamsField
                               | "min_balance"
                               | "log"
@@ -470,6 +472,7 @@ module TEAL-UNPARSER
   rule unparseTEAL(exp)                           => "exp"
   rule unparseTEAL(addw)                          => "addw"
   rule unparseTEAL(divmodw)                       => "divmodw"
+  rule unparseTEAL(divw)                          => "divw"
   rule unparseTEAL(mulw)                          => "mulw"
   rule unparseTEAL(expw)                          => "expw"
   rule unparseTEAL(|)                             => "|"
@@ -573,6 +576,7 @@ module TEAL-UNPARSER
   rule unparseTEAL(app_global_del)                => "app_global_del"
   rule unparseTEAL(app_global_get)                => "app_global_get"
   rule unparseTEAL(asset_params_get FieldName)    => "asset_params_get" +&+ TealField2String(FieldName:AssetParamsField)
+  rule unparseTEAL(acct_params_get FieldName)     => "acct_params_get" +&+ TealField2String(FieldName:AccountParamsField)
   rule unparseTEAL(app_params_get FieldName)      => "app_params_get" +&+ TealField2String(FieldName:AppParamsField)
   rule unparseTEAL(min_balance)                   => "min_balance"
   rule unparseTEAL(log)                           => "log"
