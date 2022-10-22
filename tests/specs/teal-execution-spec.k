@@ -15,7 +15,7 @@ module TEAL-EXECUTION-SPEC
            // otherwise load Y on top of the stack
            MAX_Y:
            load 1
-           // END:
+           END:
          , 0)
           // => .
          ~> #startExecution() => .
@@ -34,16 +34,16 @@ module TEAL-EXECUTION-SPEC
           8 |-> END:
         </program>
         <jumped> false </jumped>
-        <stack> INITIAL_STACK => INITIAL_STACK </stack>
-        <stacksize> #sizeTStack(INITIAL_STACK) => #sizeTStack(INITIAL_STACK) </stacksize>
+        <stack> INITIAL_STACK => ?MAX : INITIAL_STACK </stack>
+        <stacksize> #sizeTStack(INITIAL_STACK) => 1 +Int #sizeTStack(INITIAL_STACK) </stacksize>
         <scratch> SCRATCH => SCRATCH </scratch>
         <labels> LL => ?_ </labels>
+        <currentApplicationID> APP_ID:Int </currentApplicationID>
+        <activeApps> (SetItem(APP_ID) => .Set) ... </activeApps>
         <returncode> 4 => ?RETURN_CODE </returncode>
         <returnstatus>
           "Failure - program is stuck" => ?RETURN_STATUS
         </returnstatus>
-        <globals> _ </globals>
-        <txGroup> _ </txGroup>
         <blockchain> _ </blockchain>
     requires  notBool (MAX_Y in_labels LL)
       andBool (notBool (END in_labels LL))
