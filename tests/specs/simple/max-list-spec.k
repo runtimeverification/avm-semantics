@@ -67,29 +67,28 @@ module MAX-LIST-SPEC
         <returnstatus>
           "Failure - program is stuck" => ?RETURN_STATUS
         </returnstatus>
-        <globals> _ </globals>
         <currentTx> TX_ID </currentTx>
         <transactions>
           <transaction>
             <txID> TX_ID </txID>
-            <appCallTxFields>
-              <applicationArgs>
-                Int2Bytes(ARG1, BE, Unsigned)
-                Int2Bytes(ARG2, BE, Unsigned)
-                Int2Bytes(ARG3, BE, Unsigned)
-              </applicationArgs>
-              ...
-            </appCallTxFields>
-            <txHeader>
-              <typeEnum> @ appl </typeEnum>
-              <group> TX_ID </group>
-              ...
-            </txHeader>
+            <groupID> GROUP_ID </groupID>
+            <groupIdx> GROUP_IDX:Int </groupIdx>
+            <applicationArgs>
+              Int2Bytes(ARG1, BE, Unsigned)
+              Int2Bytes(ARG2, BE, Unsigned)
+              Int2Bytes(ARG3, BE, Unsigned)
+            </applicationArgs>
+            <typeEnum> @ appl </typeEnum>
             ...
           </transaction>
           ...
         </transactions>
-        <blockchain> _ </blockchain>
+        <currentApplicationID> APP_ID </currentApplicationID>
+        <activeApps> (SetItem(APP_ID) => .Set) ... </activeApps>
+        <txnIndexMapGroup>
+          <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
+          <txnIndexMapGroupValues> GROUP_IDX |-> TX_ID ... </txnIndexMapGroupValues>
+        </txnIndexMapGroup>
     requires  notBool (LOOP_BEGIN in_labels LL)
       andBool (notBool (LOOP_END in_labels LL))
       andBool (LOOP_BEGIN =/=K LOOP_END)
