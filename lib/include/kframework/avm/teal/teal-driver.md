@@ -2256,6 +2256,14 @@ Stateful TEAL Operations
   rule <k> gitxn GROUP_IDX FIELD => #loadFromGroupInner(GROUP_IDX, FIELD) ...</k>
 
   rule <k> gitxna GROUP_IDX FIELD IDX => #loadFromGroupInner(GROUP_IDX, FIELD, IDX) ...</k>
+
+  rule <k> itxnas FIELD => gitxna getLastItxnGroupIdx() FIELD IDX ...</k>
+       <stack> IDX : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
+  rule <k> gitxnas GROUP_IDX FIELD => gitxna GROUP_IDX FIELD IDX ...</k>
+       <stack> IDX : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
 ```
 
 

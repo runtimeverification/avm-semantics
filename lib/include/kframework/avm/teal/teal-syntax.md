@@ -341,6 +341,8 @@ module TEAL-OPCODES
                          | "itxn_next"
                          | "itxn" TxnField
                          | "itxna" TxnaField Int
+                         | "itxnas" TxnaField
+                         | "gitxnas" Int TxnaField
                          | "gitxn" Int TxnField
                          | "gitxna" Int TxnaField Int
 ```
@@ -601,6 +603,8 @@ module TEAL-UNPARSER
   rule unparseTEAL(itxna FieldName N)             => "itxna" +&+ TealField2String(FieldName:TxnField) +&+ Int2String(N)
   rule unparseTEAL(gitxn T FieldName)             => "itxn" +&+ Int2String(T) +&+ TealField2String(FieldName:TxnField)
   rule unparseTEAL(gitxna T FieldName N)          => "itxna" +&+ Int2String(T) +&+ TealField2String(FieldName:TxnField) +&+ Int2String(N)
+  rule unparseTEAL(itxnas FieldName)              => "itxnas" +&+ TealField2String(FieldName:TxnaField)
+  rule unparseTEAL(gitxnas T FieldName)           => "gitxnas" +&+ Int2String(T) +&+ TealField2String(FieldName:TxnaField)
 
   syntax String ::= left:
                     String "+&+" String       [function]
