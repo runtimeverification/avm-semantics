@@ -57,22 +57,22 @@ module SUM-TO-N-SPEC
         <transactions>
           <transaction>
             <txID> TX_ID </txID>
-            <appCallTxFields>
-              <applicationArgs>
-                Int2Bytes(N, BE, Unsigned)
-              </applicationArgs>
-              ...
-            </appCallTxFields>
-            <txHeader>
-              <typeEnum> @ appl </typeEnum>
-              <group> TX_ID </group>
-              ...
-            </txHeader>
+            <applicationArgs>
+              Int2Bytes(N, BE, Unsigned)
+            </applicationArgs>
+            <typeEnum> @ appl </typeEnum>
+            <groupID> GROUP_ID </groupID>
+            <groupIdx> GROUP_IDX:Int </groupIdx>
             ...
           </transaction>
           ...
         </transactions>
-        <blockchain> _ </blockchain>
+        <currentApplicationID> APP_ID </currentApplicationID>
+        <activeApps> SetItem(APP_ID) => .Set ... </activeApps>
+        <txnIndexMapGroup>
+          <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
+          <txnIndexMapGroupValues> GROUP_IDX |-> TX_ID ... </txnIndexMapGroupValues>
+        </txnIndexMapGroup>
     requires  notBool (LOOP_BEGIN in_labels LL)
       andBool (notBool (LOOP_END in_labels LL))
       andBool (LOOP_BEGIN =/=K LOOP_END)
@@ -91,25 +91,22 @@ module SUM-TO-N-SPEC
     <k> (bnz LOOP_END:Label ~> #incrementPC ( )) => . </k>
     <returncode> 4 => ?RETURN_CODE </returncode>
     <returnstatus> "Failure - program is stuck" => ?RETURN_STATUS </returnstatus>
-    <txGroup>
-      <currentTx> TX_ID:Int </currentTx>
-      <transactions>
-        <transaction>
-          <txID> TX_ID:Int </txID>
-          <txHeader>
-            <typeEnum> 6 </typeEnum>
-            ...
-          </txHeader>
-          <appCallTxFields>
-            <applicationArgs> Int2Bytes ( _:Int , BE , Unsigned ) </applicationArgs>
-            ...
-          </appCallTxFields>
+    <currentTx> TX_ID </currentTx>
+    <transactions>
+      <transaction>
+        <txID> TX_ID </txID>
+        <txHeader>
+          <typeEnum> 6 </typeEnum>
           ...
-        </transaction>
+        </txHeader>
+        <appCallTxFields>
+          <applicationArgs> Int2Bytes ( _:Int , BE , Unsigned ) </applicationArgs>
+          ...
+        </appCallTxFields>
         ...
-      </transactions>
+      </transaction>
       ...
-    </txGroup>
+    </transactions>
     <currentTxnExecution>
       <teal>
         <pc> 9 => 21 </pc>

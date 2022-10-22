@@ -233,6 +233,8 @@ module OPCODES-V1-SPEC
 //  claim <k> ~ => . </k>
 //        <stack> 123 : XS => 18446744073709551492 : XS </stack>
 //        <stacksize> _ </stacksize>
+  claim <k> ~ => panic(ILL_TYPED_STACK) </k>
+        <stack> b"123" : _ </stack>
 
 // mulw 	1 	heavy_check_mark 	1
   claim <k> mulw => . </k>
