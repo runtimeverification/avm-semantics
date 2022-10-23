@@ -6,14 +6,14 @@ module OPCODES-V1-SPEC
 <table>
 
 <thead>
-<tr><th> Opcode </th><th>TEAL V</th><th> Status </th><th> Cost </th><th> K Claims </th></tr>
+<tr><th> Opcode </th><th> AVM version </th><th> Status </th><th> Cost </th><th> K Claims </th></tr>
 </thead>
 
 <tbody>
 
 <!----------------------------------------------------------------------------->
 
-<tr><td> err </td><td> 1 </td><td> tested (unit) </td><td> 1 </td>
+<tr><td> err </td><td> 1 </td><td> tested </td><td> 1 </td>
 <td><details>
 <summary>K claims</summary>
 

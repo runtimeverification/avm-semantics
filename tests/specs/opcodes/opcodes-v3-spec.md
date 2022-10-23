@@ -6,7 +6,7 @@ module OPCODES-V3-SPEC
 <table>
 
 <thead>
-<tr><th> Opcode </th><th>TEAL V</th><th> Status </th><th> Cost </th><th> K Claims </th></tr>
+<tr><th> Opcode </th><th> AVM version </th><th> Status </th><th> Cost </th><th> K Claims </th></tr>
 </thead>
 
 <tbody>

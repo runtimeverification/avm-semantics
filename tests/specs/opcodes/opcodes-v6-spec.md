@@ -6,14 +6,14 @@ module OPCODES-V6-SPEC
 <table>
 
 <thead>
-<tr><th> Opcode </th><th>TEAL V</th><th> Status </th><th> Cost </th><th> K Claims </th></tr>
+<tr><th> Opcode </th><th> AVM version </th><th> Status </th><th> Cost </th><th> K Claims </th></tr>
 </thead>
 
 <tbody>
 
 <!----------------------------------------------------------------------------->
 
-<tr><td> bsqrt        </td><td> 6 </td><td> not implemented </td><td> 40   </td>
+<tr><td> bsqrt </td><td> 6 </td><td> not implemented </td><td> 40   </td>
 <td></td>
 
 <!----------------------------------------------------------------------------->
