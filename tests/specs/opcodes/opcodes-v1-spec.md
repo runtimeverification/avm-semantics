@@ -1,12 +1,6 @@
 ```k
-module OPCODES-V1-SPEC-SYNTAX
-  imports VERIFICATION
-endmodule
-```
-
-```k
 module OPCODES-V1-SPEC
-  imports OPCODES-V1-SPEC-SYNTAX
+  imports VERIFICATION
 ```
 
 <table>
@@ -16,6 +10,8 @@ module OPCODES-V1-SPEC
 </thead>
 
 <tbody>
+
+<!----------------------------------------------------------------------------->
 
 <tr><td> err </td><td> 1 </td><td> tested (unit) </td><td> 1 </td>
 <td><details>
@@ -28,10 +24,27 @@ module OPCODES-V1-SPEC
 </details>
 </td></tr>
 
-<tr><td> sha256 </td><td> 1 </td><td> not implemented </td><td> 1 </td><td></td>
-<tr><td> keccak256 </td><td> 1 </td><td> not implemented </td><td> 130 </td><td></td>
-<tr><td> sha512_256 </td><td> 1 </td><td> not implemented </td><td> 45 </td><td></td>
-<tr><td> ed25519verify </td><td> 1 </td><td> not implemented </td><td> 1900 </td><td></td>
+<!----------------------------------------------------------------------------->
+
+<tr><td> sha256        </td><td> 1 </td><td> not implemented </td><td> 1   </td>
+<td></td>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> keccak256     </td><td> 1 </td><td> not implemented </td><td> 130  </td>
+<td></td>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> sha512_256    </td><td> 1 </td><td> not implemented </td><td> 45   </td>
+<td></td>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> ed25519verify </td><td> 1 </td><td> not implemented </td><td> 1900 </td>
+<td></td>
+
+<!----------------------------------------------------------------------------->
 
 <tr><td> + </td><td> 1 </td><td> tested </td><td> 1 </td>
 <td><details>
@@ -48,36 +61,64 @@ module OPCODES-V1-SPEC
 </details>
 </td></tr>
 
-</tbody>
-</table>
+<!----------------------------------------------------------------------------->
+
+<tr><td> - </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
 
 ```k
-
-// - 	1 	heavy_check_mark 	1
   claim <k> - => . ...</k>
         <stack> 6 : 10 : XS => 4 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
   claim <k> - => panic(INT_UNDERFLOW) ...</k>
         <stack> 10 : 6 : _ </stack>
+```
+</details>
+</td></tr>
 
-// / 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> / </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> / => . ...</k>
         <stack> 5 : 30 : XS => 6 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
   claim <k> / => panic(DIV_BY_ZERO) ...</k>
         <stack> 0 : 30 : _</stack>
+```
+</details>
+</td></tr>
 
-// * 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> * </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> * => . ...</k>
         <stack> 6 : 7 : XS => 42 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
   claim <k> * => panic(INT_OVERFLOW) ...</k>
         <stack> MAX_UINT64 : 2 : _ </stack>
+```
+</details>
+</td></tr>
 
-// < 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> < </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> < => . ...</k>
         <stack> 5 : 3 : XS => 1 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -89,8 +130,17 @@ module OPCODES-V1-SPEC
   claim <k> < => . ...</k>
         <stack> 5 : 5 : XS => 0 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// > 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> > </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> > => . ...</k>
         <stack> 5 : 3 : XS => 0 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -102,8 +152,17 @@ module OPCODES-V1-SPEC
   claim <k> > => . ...</k>
         <stack> 5 : 5 : XS => 0 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// <= 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> <= </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> <= => . ...</k>
         <stack> 5 : 3 : XS => 1 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -115,8 +174,17 @@ module OPCODES-V1-SPEC
   claim <k> <= => . ...</k>
         <stack> 5 : 5 : XS => 1 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// >= 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> >= </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> >= => . ...</k>
         <stack> 5 : 3 : XS => 0 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -128,8 +196,17 @@ module OPCODES-V1-SPEC
   claim <k> >= => . ...</k>
         <stack> 5 : 5 : XS => 1 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// && 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> && </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> && => . ...</k>
         <stack> 3 : 1 : XS => 1 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -145,8 +222,18 @@ module OPCODES-V1-SPEC
   claim <k> && => . ...</k>
         <stack> 0 : 0 : XS => 0 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// || 	1 	heavy_check_mark 	1
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> || </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> || => . ...</k>
         <stack> 3 : 1 : XS => 1 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -162,8 +249,17 @@ module OPCODES-V1-SPEC
   claim <k> || => . ...</k>
         <stack> 0 : 0 : XS => 0 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// == 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> == </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> == => . ...</k>
         <stack> 2 : 2 : XS => 1 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -179,8 +275,17 @@ module OPCODES-V1-SPEC
   claim <k> == => . ...</k>
         <stack> b"123" : b"321" : XS => 0 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// != 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> != </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> != => . ...</k>
         <stack> 2 : 2 : XS => 0 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -196,8 +301,17 @@ module OPCODES-V1-SPEC
   claim <k> != => . ...</k>
         <stack> b"123" : b"321" : XS => 1 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// ! 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> ! </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> ! => . ...</k>
         <stack> 1 : XS => 0 : XS </stack>
         <stacksize> _ </stacksize>
@@ -209,8 +323,17 @@ module OPCODES-V1-SPEC
   claim <k> ! => . ...</k>
         <stack> 0 : XS => 1 : XS </stack>
         <stacksize> _ </stacksize>
+```
+</details>
+</td></tr>
 
-// len 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> len </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> len => . ...</k>
         <stack> b"123456" : XS => 6 : XS </stack>
         <stacksize> _ </stacksize>
@@ -218,64 +341,152 @@ module OPCODES-V1-SPEC
   claim <k> len => . ...</k>
         <stack> b"" : XS => 0 : XS </stack>
         <stacksize> _ </stacksize>
+```
+</details>
+</td></tr>
 
-// itob 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> itob </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> itob => . ...</k>
         <stack> 6382179 : XS => b"abc" : XS </stack>
         <stacksize> _ </stacksize>
+```
+</details>
+</td></tr>
 
-// btoi 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> btoi </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> btoi => . ...</k>
         <stack> b"abc" : XS => 6382179 : XS </stack>
         <stacksize> _ </stacksize>
+```
+</details>
+</td></tr>
 
-//  claim <k> btoi => panic(?_) </k>
-//        <stack> b"123456789" : _</stack>
-//        <stacksize> _ </stacksize>
+<!----------------------------------------------------------------------------->
 
-// % 	1 	heavy_check_mark 	1
+<tr><td> % </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> % => . ...</k>
         <stack> 3 : 5 : XS => 2 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
   claim <k> % => panic(DIV_BY_ZERO) ...</k>
         <stack> 0 : 5 : _ </stack>
+```
+</details>
+</td></tr>
 
-// | 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> | </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> | => . ...</k>
         <stack> 123 : 321 : XS => 379 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// & 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> & </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> & => . ...</k>
         <stack> 123 : 321 : XS => 65 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// ^ 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> ^ </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> ^ => . ...</k>
         <stack> 123 : 321 : XS => 314 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
+<!----------------------------------------------------------------------------->
+
+<tr><td> ~ </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
 // ~ 	1 	heavy_check_mark 	1
 //  claim <k> ~ => . </k>
 //        <stack> 123 : XS => 18446744073709551492 : XS </stack>
 //        <stacksize> _ </stacksize>
   claim <k> ~ => panic(ILL_TYPED_STACK) </k>
         <stack> b"123" : _ </stack>
+```
+</details>
+</td></tr>
 
-// mulw 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> mulw </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> mulw => . </k>
         <stack> 123456789012345 : 123456789012345 : XS => 15098910126093764401 : 826247639 : XS </stack>
         <stacksize> _ </stacksize>
+```
+</details>
+</td></tr>
 
-// intcblock 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> intcblock </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> intcblock 3 4 5 6 => . </k>
-        <intcblock> _ => 
+        <intcblock> _ =>
                    (0 |-> 4
                     1 |-> 5
                     2 |-> 6)
         </intcblock>
-// intc i 	1 	heavy_check_mark 	1
+```
+</details>
+</td></tr>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> intc </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> intc 1 => . </k>
         <stack> XS => 5 : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -284,8 +495,17 @@ module OPCODES-V1-SPEC
                     2 |-> 6
         </intcblock>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// intc_0 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> intc_0 </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> intc_0 => . </k>
         <stack> XS => 4 : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -295,8 +515,17 @@ module OPCODES-V1-SPEC
                     3 |-> 7
         </intcblock>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// intc_1 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> intc_1 </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> intc_1 => . </k>
         <stack> XS => 5 : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -306,8 +535,17 @@ module OPCODES-V1-SPEC
                     3 |-> 7
         </intcblock>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// intc_2 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> intc_2 </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> intc_2 => . </k>
         <stack> XS => 6 : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -317,8 +555,17 @@ module OPCODES-V1-SPEC
                     3 |-> 7
         </intcblock>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// intc_3 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> intc_3 </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> intc_3 => . </k>
         <stack> XS => 7 : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -328,16 +575,34 @@ module OPCODES-V1-SPEC
                     3 |-> 7
         </intcblock>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// bytecblock 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> bytecblock </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> bytecblock 3 (1, "1") (1, "2") (1,"3") => . </k>
-        <bytecblock> _ => 
+        <bytecblock> _ =>
                    (0 |-> "1"
                     1 |-> "2"
                     2 |-> "3")
         </bytecblock>
+```
+</details>
+</td></tr>
 
-// bytec i 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> bytec </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> bytec 1 => . </k>
         <stack> XS => "2" : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -346,8 +611,17 @@ module OPCODES-V1-SPEC
                     2 |-> "3"
         </bytecblock>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// bytec_0 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> bytec_0 </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> bytec_0 => . </k>
         <stack> XS => "1" : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -357,8 +631,17 @@ module OPCODES-V1-SPEC
                     3 |-> "4"
         </bytecblock>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// bytec_1 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> bytec_1 </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> bytec_1 => . </k>
         <stack> XS => "2" : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -368,8 +651,17 @@ module OPCODES-V1-SPEC
                     3 |-> "4"
         </bytecblock>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// bytec_2 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> bytec_2 </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> bytec_2 => . </k>
         <stack> XS => "3" : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -379,8 +671,17 @@ module OPCODES-V1-SPEC
                     3 |-> "4"
         </bytecblock>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// bytec_3 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> bytec_3 </td><td> 1 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> bytec_3 => . </k>
         <stack> XS => "4" : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -390,63 +691,42 @@ module OPCODES-V1-SPEC
                     3 |-> "4"
         </bytecblock>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// // arg n 	1 	heavy_check_mark 	1
-//   claim <k> arg 2 => . </k>
-//         <stack> XS => 6 : XS </stack>
-//         <stacksize> S => S +Int 1 </stacksize>
-//         <args> 0 |-> 4
-//                1 |-> 5
-//                2 |-> 6
-//                3 |-> 7
-//         </args>
-//     requires S <Int 1000
-// 
-// // arg_0 	1 	heavy_check_mark 	1
-//   claim <k> arg_0 => . </k>
-//         <stack> XS => 4 : XS </stack>
-//         <stacksize> S => S +Int 1 </stacksize>
-//         <args> 0 |-> 4
-//                1 |-> 5
-//                2 |-> 6
-//                3 |-> 7
-//         </args>
-//     requires S <Int 1000
-// 
-// // arg_1 	1 	heavy_check_mark 	1
-//   claim <k> arg_1 => . </k>
-//         <stack> XS => 5 : XS </stack>
-//         <stacksize> S => S +Int 1 </stacksize>
-//         <args> 0 |-> 4
-//                1 |-> 5
-//                2 |-> 6
-//                3 |-> 7
-//         </args>
-//     requires S <Int 1000
-// 
-// // arg_2 	1 	heavy_check_mark 	1
-//   claim <k> arg_2 => . </k>
-//         <stack> XS => 6 : XS </stack>
-//         <stacksize> S => S +Int 1 </stacksize>
-//         <args> 0 |-> 4
-//                1 |-> 5
-//                2 |-> 6
-//                3 |-> 7
-//         </args>
-//     requires S <Int 1000
-// 
-// // arg_3 	1 	heavy_check_mark 	1
-//   claim <k> arg_3 => . </k>
-//         <stack> XS => 7 : XS </stack>
-//         <stacksize> S => S +Int 1 </stacksize>
-//         <args> 0 |-> 4
-//                1 |-> 5
-//                2 |-> 6
-//                3 |-> 7
-//         </args>
-//     requires S <Int 1000
+<!----------------------------------------------------------------------------->
 
-// txn f 	1 	heavy_check_mark 	1
+<tr><td> arg n </td><td> 1 </td><td> not implemented </td><td> 1 </td>
+<td></td></tr>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> arg_0 </td><td> 1 </td><td> not implemented </td><td> 1 </td>
+<td></td></tr>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> arg_1 </td><td> 1 </td><td> not implemented </td><td> 1 </td>
+<td></td></tr>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> arg_2 </td><td> 1 </td><td> not implemented </td><td> 1 </td>
+<td></td></tr>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> arg_3 </td><td> 1 </td><td> not implemented </td><td> 1 </td>
+<td></td></tr>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> txn f </td><td> 1 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> txn Sender => . </k>
         <stack> XS => normalize(SENDER) : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -471,14 +751,32 @@ module OPCODES-V1-SPEC
         </txnIndexMap>
     requires S <Int MAX_STACK_DEPTH
       andBool #isValidForTxnType(Sender, TYPE)
+```
+</details>
+</td></tr>
 
-// global f 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> global f </td><td> 1 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> global MinBalance => . </k>
         <stack> XS => 100000 : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// gtxn t f 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> gtxn t f </td><td> 1 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
    claim <k> gtxn GROUP_INDEX Sender => . </k>
          <stack> XS => normalize(SENDER) : XS </stack>
          <stacksize> S => S +Int 1 </stacksize>
@@ -512,8 +810,17 @@ module OPCODES-V1-SPEC
          </txnIndexMap>
      requires S <Int MAX_STACK_DEPTH
       andBool #isValidForTxnType(Sender, TYPE)
+```
+</details>
+</td></tr>
 
-// load i 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> load i </td><td> 1 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> load 1 => . </k>
         <stack> XS => VALUE : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -525,23 +832,58 @@ module OPCODES-V1-SPEC
         <stacksize> S => S +Int 1 </stacksize>
         <scratch> (2 |-> _) (1 |-> _) (4 |-> _) (.Map => (3 |-> 0)) </scratch>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// store i 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> store i </td><td> 1 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> store 1 => . </k>
         <stack> VALUE : XS => XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
         <scratch> (2 |-> _) (1 |-> (_ => VALUE)) (4 |-> _) </scratch>
+```
+</details>
+</td></tr>
 
-// pop 	1 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> pop </td><td> 1 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> pop => . </k>
         <stack> _ : XS => XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// dup 	1 	heavy_check_mark 	1 
+<!----------------------------------------------------------------------------->
+
+<tr><td> dup </td><td> 1 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> dup => . </k>
         <stack> VAL : XS => VAL : VAL : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
+</tbody>
+</table>
+
+
+```k
 endmodule
 ```
