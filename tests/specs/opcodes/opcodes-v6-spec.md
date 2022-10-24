@@ -18,7 +18,7 @@ module OPCODES-V6-SPEC
 
 <!----------------------------------------------------------------------------->
 
-<tr><td> acct_params_get f </td><td> 6 </td><td> tested (not every field)</td><td> 1 </td>
+<tr><td> acct_params_get f </td><td> 6 </td><td> tested </td><td> 1 </td>
 <td><details>
 <summary>K claims</summary>
 
