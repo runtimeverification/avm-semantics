@@ -12,7 +12,7 @@ clean:
 	find -type d -name __pycache__ -prune -exec rm -rf {} \;
 
 build:
-	poetry build
+	poetry env use $(PYTHON_VERSION) && poetry build
 
 poetry-install:
 	poetry install
