@@ -3,9 +3,9 @@ from typing import Dict
 from algosdk.encoding import encode_address
 from algosdk.future import transaction
 from algosdk.v2client import algod
-from pyteal import And, App, Bytes, Cond, Int, Mode, OnComplete, Return, Seq, Txn, compileTeal
+from pyteal import And, App, Bytes, Cond, Expr, Int, Mode, OnComplete, Return, Seq, Txn, compileTeal
 
-from src.tests.algod_integration.algosdk_utils import (
+from ..algosdk_utils import (
     compile_program,
     generate_and_fund_account,
     get_created_app_id,
@@ -21,7 +21,7 @@ from src.tests.algod_integration.algosdk_utils import (
 #   by incrementing a counter in the caller's local state
 # * tracks haw many times the app was called overall
 #   by incrementing a counter in the app's global state
-def call_counter_approval_program():
+def call_counter_approval_program() -> Expr:
 
     handle_creation = Seq(
         [
@@ -69,11 +69,11 @@ def call_counter_approval_program():
     return program
 
 
-def call_counter_clear_program():
+def call_counter_clear_program() -> Expr:
     return Int(1)
 
 
-def test_count_calls(client: algod.AlgodClient, faucet: Dict[str, str]):
+def test_count_calls(client: algod.AlgodClient, faucet: Dict[str, str]) -> None:
     # Setup a user account
     user = generate_and_fund_account(client, faucet)
     sp = client.suggested_params()

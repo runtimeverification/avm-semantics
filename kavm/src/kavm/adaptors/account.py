@@ -214,7 +214,7 @@ class KAVMAccount:
             kast_term = KAst.from_dict(json.loads(kast_term_json)['term'])
             return KAVMAccount.from_account_cell(cast(KInner, kast_term))
 
-    def dictify(self) -> Dict[str, Union[str, int]]:
+    def dictify(self) -> Dict[str, Union[str, int, List[Dict[str, Any]]]]:
         """
         Return a dictified representation of the account cell to pass to py-algorand-sdk
         See https://github.com/algorand/go-algorand/blob/87867c9381260dc4efb5a42abaeb9e038b1c10af/daemon/algod/api/algod.oas2.json#L1785 for format

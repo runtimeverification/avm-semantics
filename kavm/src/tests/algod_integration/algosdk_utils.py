@@ -1,3 +1,4 @@
+import typing
 from base64 import b64decode, b64encode
 from typing import Dict, Optional
 
@@ -6,6 +7,7 @@ from algosdk.future import transaction
 from algosdk.v2client import algod
 
 
+@typing.no_type_check
 def list_to_dict_state(l):
     d = {}
     for item in l:
@@ -13,6 +15,7 @@ def list_to_dict_state(l):
     return d
 
 
+@typing.no_type_check
 def list_to_dict_apps_created(l):
     d = {}
     for item in l:

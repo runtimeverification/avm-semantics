@@ -2,13 +2,13 @@ import json
 import tempfile
 from base64 import b64decode, b64encode
 from pathlib import Path
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Dict, Optional, cast
 
-from pyk.kast import KApply, KAst, KInner, KSort
+from pyk.kast import KApply, KAst, KInner, KSort, KToken
 from pyk.kastManip import split_config_from
 from pyk.prelude.kint import intToken
 
-from kavm.pyk_utils import map_bytes_bytes, map_bytes_ints, tvalue, unescape_global_storage_bytes
+from kavm.pyk_utils import from_map, map_bytes_bytes, map_bytes_ints, tvalue, unescape_global_storage_bytes
 
 
 class KAVMApplication:
@@ -25,7 +25,7 @@ class KAVMApplication:
         clear_state_pgm: bytes = b'',
         global_ints: int = 0,
         global_bytes: int = 0,
-        global_int_data: Optional[Dict[str, str]] = None,
+        global_int_data: Optional[Dict[str, int]] = None,
         global_bytes_data: Optional[Dict[str, str]] = None,
         local_ints: int = 0,
         local_bytes: int = 0,
@@ -136,34 +136,24 @@ class KAVMApplication:
 
     @staticmethod
     def from_app_cell(term: KInner) -> 'KAVMApplication':
-        def from_map(term: KInner) -> Dict[str, Union[str, int]]:
-            if term.label.name == '_|->_':
-                if term.args[1].sort.name == 'Bytes':
-                    return {term.args[0].token[2:-1]: term.args[1].token[2:-1]}
-                if term.args[1].sort.name == 'Int':
-                    return {term.args[0].token[2:-1]: int(term.args[1].token)}
-            if term.label.name == '_Map_':
-                return from_map(term.args[0]) | from_map(term.args[1])
-            if term.label.name == '.Map':
-                return {}
 
         """
         Parse a KAVMApplication instance from a Kast term
         """
         (_, subst) = split_config_from(term)
         return KAVMApplication(
-            app_id=int(subst['APPID_CELL'].token),
+            app_id=int(cast(KToken, subst['APPID_CELL']).token),
             approval_pgm_src=subst['APPROVALPGMSRC_CELL'],
             clear_state_pgm_src=subst['CLEARSTATEPGMSRC_CELL'],
-            approval_pgm=b64decode(subst['APPROVALPGM_CELL'].token),
-            clear_state_pgm=b64decode(subst['CLEARSTATEPGM_CELL'].token),
-            global_ints=int(subst['GLOBALNUMINTS_CELL'].token),
-            global_bytes=int(subst['GLOBALNUMBYTES_CELL'].token),
+            approval_pgm=b64decode(cast(KToken, subst['APPROVALPGM_CELL']).token),
+            clear_state_pgm=b64decode(cast(KToken, subst['CLEARSTATEPGM_CELL']).token),
+            global_ints=int(cast(KToken, subst['GLOBALNUMINTS_CELL']).token),
+            global_bytes=int(cast(KToken, subst['GLOBALNUMBYTES_CELL']).token),
             global_int_data=from_map(subst['GLOBALINTS_CELL']),
             global_bytes_data=from_map(subst['GLOBALBYTES_CELL']),
-            local_ints=int(subst['LOCALNUMINTS_CELL'].token),
-            local_bytes=int(subst['LOCALNUMBYTES_CELL'].token),
-            extra_pages=int(subst['EXTRAPAGES_CELL'].token),
+            local_ints=int(cast(KToken, subst['LOCALNUMINTS_CELL']).token),
+            local_bytes=int(cast(KToken, subst['LOCALNUMBYTES_CELL']).token),
+            extra_pages=int(cast(KToken, subst['EXTRAPAGES_CELL']).token),
         )
 
     def dictify(self) -> Dict[str, Any]:

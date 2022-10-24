@@ -5,20 +5,9 @@ from collections.abc import MutableMapping
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, Union, cast
 
 from algosdk.future.transaction import OnComplete
+from pyk.kast import KApply, KAst, KInner, KLabel, KSort, KToken, KVariable, build_assoc, build_cons, top_down
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
-from pyk.kast import (
-    KApply,
-    KAst,
-    KInner,
-    KLabel,
-    KSort,
-    KToken,
-    KVariable,
-    build_assoc,
-    build_cons,
-    top_down,
-)
 
 
 def maybe_tvalue(value: Optional[Union[str, int, bytes]]) -> KInner:
@@ -70,7 +59,7 @@ def tvalue_list(value: List[Union[str, int, bytes]]) -> KInner:
     return KApply('TValueListCons', [tvalue_elem(value[0]), tvalue_list(value[1:])])
 
 
-def map_bytes_bytes(d):
+def map_bytes_bytes(d: Dict[str, str]) -> KInner:
     """Convert a Dict[str, str] into a K Bytes to Bytes Map"""
     return build_assoc(
         KApply('.Map'),
@@ -84,19 +73,7 @@ def map_bytes_bytes(d):
     )
 
 
-def from_map(term: KInner) -> Dict:
-    if term.label.name == '_|->_':
-        if term.args[1].sort.name == 'Bytes':
-            return {term.args[0].token[2:-1]: term.args[1].token[2:-1]}
-        if term.args[1].sort.name == 'Int':
-            return {term.args[0].token[2:-1]: int(term.args[1].token)}
-    if term.label.name == '_Map_':
-        return from_map(term.args[0]) | from_map(term.args[1])
-    if term.label.name == '.Map':
-        return {}
-
-
-def map_bytes_ints(d):
+def map_bytes_ints(d: Dict[str, int]) -> KInner:
     """Convert a Dict[str, int] into a K Bytes to Int Map"""
     return build_assoc(
         KApply('.Map'),
@@ -108,7 +85,23 @@ def map_bytes_ints(d):
     )
 
 
-def unescape_global_storage_bytes(value: str):
+@typing.no_type_check
+def from_map(term: KInner) -> Dict[str, Union[str, int]]:
+    if term.label.name == '_|->_':
+        if term.args[1].sort.name == 'Bytes':
+            return {cast(KToken, term.args[0]).token[2:-1]: cast(KToken, term.args[1]).token[2:-1]}
+        if term.args[1].sort.name == 'Int':
+            return {cast(KToken, term.args[0]).token[2:-1]: int(cast(KToken, term.args[1]).token)}
+        else:
+            return {}
+    if term.label.name == '_Map_':
+        return {**from_map(term.args[0]), **from_map(term.args[1])}
+    if term.label.name == '.Map':
+        return {}
+    return {}
+
+
+def unescape_global_storage_bytes(value: str) -> str:
     """Prepare a Bytes token for algosdk consumption"""
     unescaped_token_bytes = value.encode('utf-8').decode('unicode_escape').encode('latin-1')
     return b64encode(unescaped_token_bytes).decode('ascii')
