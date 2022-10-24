@@ -47,6 +47,19 @@ WORKDIR /home/user
 RUN curl -L https://github.com/github/hub/releases/download/v2.14.0/hub-linux-amd64-2.14.0.tgz -o /home/user/hub.tgz
 RUN cd /home/user && tar xzf hub.tgz
 
+# Set-up pyenv
+ENV PYTHON_VERSION 3.10.6
+ENV PYENV_ROOT /home/user/.pyenv
+ENV PATH=$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
+
+# Install pyenv
+RUN set -ex \
+    && curl https://pyenv.run | bash \
+    && pyenv update \
+    && pyenv install $PYTHON_VERSION \
+    && pyenv global $PYTHON_VERSION \
+    && pyenv rehash
+
 ENV PATH=/home/user/hub-linux-amd64-2.14.0/bin:$PATH
 
 RUN    git config --global user.email 'admin@runtimeverification.com' \
