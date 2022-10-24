@@ -1,12 +1,33 @@
 #pragma version 5
 
-app_params_get AppCreator
-
-int 1
+global CurrentApplicationID
+app_params_get AppGlobalNumUint
+assert
+int 3
 ==
 assert
 
-byte 0x1
+global CurrentApplicationID
+app_params_get AppLocalNumByteSlice
+assert
+int 4
+==
+assert
+
+global CurrentApplicationID
+app_params_get AppAddress
+assert
+global CurrentApplicationAddress
+==
+assert
+
+// Test app not existing
+int 3
+app_params_get AppAddress
+int 0
+==
+assert
+int 0
 ==
 assert
 

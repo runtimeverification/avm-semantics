@@ -10,12 +10,12 @@ addAppCallTx <sender>            LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAX
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
-             <foreignApps>       .TValueList </foreignApps>
+             <foreignApps>       3           </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
-             <globalNui>         0           </globalNui>
+             <globalNui>         3           </globalNui>
              <globalNbs>         0           </globalNbs>
              <localNui>          0           </localNui>
-             <localNbs>          0           </localNbs>
+             <localNbs>          4           </localNbs>
              <extraProgramPages> 0           </extraProgramPages>
              <approvalPgmIdx>    0           </approvalPgmIdx>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;

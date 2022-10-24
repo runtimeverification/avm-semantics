@@ -67,6 +67,7 @@ module TEAL-OPCODES
                              | "exp"
                              | "addw"
                              | "divmodw"
+                             | "divw"
                              | "mulw"
                              | "expw"
 ```
@@ -300,6 +301,7 @@ module TEAL-OPCODES
                               | "app_global_del"
                               | "app_global_get"
                               | "asset_params_get" AssetParamsField
+                              | "acct_params_get" AccountParamsField
                               | "app_params_get" AppParamsField
                               | "min_balance"
                               | "log"
@@ -339,6 +341,8 @@ module TEAL-OPCODES
                          | "itxn_next"
                          | "itxn" TxnField
                          | "itxna" TxnaField Int
+                         | "itxnas" TxnaField
+                         | "gitxnas" Int TxnaField
                          | "gitxn" Int TxnField
                          | "gitxna" Int TxnaField Int
 ```
@@ -469,6 +473,7 @@ module TEAL-UNPARSER
   rule unparseTEAL(exp)                           => "exp"
   rule unparseTEAL(addw)                          => "addw"
   rule unparseTEAL(divmodw)                       => "divmodw"
+  rule unparseTEAL(divw)                          => "divw"
   rule unparseTEAL(mulw)                          => "mulw"
   rule unparseTEAL(expw)                          => "expw"
   rule unparseTEAL(|)                             => "|"
@@ -572,6 +577,7 @@ module TEAL-UNPARSER
   rule unparseTEAL(app_global_del)                => "app_global_del"
   rule unparseTEAL(app_global_get)                => "app_global_get"
   rule unparseTEAL(asset_params_get FieldName)    => "asset_params_get" +&+ TealField2String(FieldName:AssetParamsField)
+  rule unparseTEAL(acct_params_get FieldName)     => "acct_params_get" +&+ TealField2String(FieldName:AccountParamsField)
   rule unparseTEAL(app_params_get FieldName)      => "app_params_get" +&+ TealField2String(FieldName:AppParamsField)
   rule unparseTEAL(min_balance)                   => "min_balance"
   rule unparseTEAL(log)                           => "log"
@@ -596,6 +602,8 @@ module TEAL-UNPARSER
   rule unparseTEAL(itxna FieldName N)             => "itxna" +&+ TealField2String(FieldName:TxnField) +&+ Int2String(N)
   rule unparseTEAL(gitxn T FieldName)             => "itxn" +&+ Int2String(T) +&+ TealField2String(FieldName:TxnField)
   rule unparseTEAL(gitxna T FieldName N)          => "itxna" +&+ Int2String(T) +&+ TealField2String(FieldName:TxnField) +&+ Int2String(N)
+  rule unparseTEAL(itxnas FieldName)              => "itxnas" +&+ TealField2String(FieldName:TxnaField)
+  rule unparseTEAL(gitxnas T FieldName)           => "gitxnas" +&+ Int2String(T) +&+ TealField2String(FieldName:TxnaField)
 
   syntax String ::= left:
                     String "+&+" String       [function]

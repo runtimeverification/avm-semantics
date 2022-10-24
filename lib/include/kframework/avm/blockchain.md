@@ -276,6 +276,77 @@ Accessor functions
 
   rule getAccountParamsField(_, _) => NoTValue  [owise]
 
+  syntax MaybeTValue ::= getAppParamsField(AppParamsField, Int) [function, functional]
+  //----------------------------------------------------------------------------------
+  rule [[ getAppParamsField(AppApprovalProgram, APP) => X ]]
+       <app>
+         <appID> APP </appID>
+         <approvalPgm> X </approvalPgm>
+         ...
+       </app>
+
+  rule [[ getAppParamsField(AppClearStateProgram, APP) => X ]]
+       <app>
+         <appID> APP </appID>
+         <clearStatePgm> X </clearStatePgm>
+         ...
+       </app>
+
+  rule [[ getAppParamsField(AppGlobalNumUint, APP) => X ]]
+       <app>
+         <appID> APP </appID>
+         <globalNumInts> X </globalNumInts>
+         ...
+       </app>
+
+  rule [[ getAppParamsField(AppGlobalNumByteSlice, APP) => X ]]
+       <app>
+         <appID> APP </appID>
+         <globalNumBytes> X </globalNumBytes>
+         ...
+       </app>
+
+  rule [[ getAppParamsField(AppLocalNumUint, APP) => X ]]
+       <app>
+         <appID> APP </appID>
+         <localNumInts> X </localNumInts>
+         ...
+       </app>
+
+  rule [[ getAppParamsField(AppLocalNumByteSlice, APP) => X ]]
+       <app>
+         <appID> APP </appID>
+         <localNumBytes> X </localNumBytes>
+         ...
+       </app>
+
+  rule [[ getAppParamsField(AppExtraProgramPages, APP) => X ]]
+       <app>
+         <appID> APP </appID>
+         <extraPages> X </extraPages>
+         ...
+       </app>
+
+  rule [[ getAppParamsField(AppCreator, APP) => X ]]
+       <account>
+         <address> X </address>
+         <appsCreated>
+           <app>
+             <appID> APP </appID>
+             <extraPages> X </extraPages>
+             ...
+           </app>
+           ...
+         </appsCreated>
+         ...
+       </account>
+
+  rule [[ getAppParamsField(AppAddress, APP) => getAppAddress(APP) ]]
+       <accountsMap> AM </accountsMap>
+    requires APP in_apps(<accountsMap> AM </accountsMap>)
+
+  rule getAppParamsField(_, _) => NoTValue [owise]
+
   //TODO: In all accessors below, handle the case when NoTValue is returned
 
   syntax MaybeTValue ::= getAccountField(AccountField, TValue) [function]
