@@ -61,6 +61,8 @@ RUN set -ex \
     && pyenv rehash
 
 ENV PATH=/home/user/hub-linux-amd64-2.14.0/bin:$PATH
+RUN pyenv version
+RUN python --version
 
 RUN    git config --global user.email 'admin@runtimeverification.com' \
     && git config --global user.name  'RV Jenkins'                    \
