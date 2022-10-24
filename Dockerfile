@@ -50,7 +50,7 @@ RUN cd /home/user && tar xzf hub.tgz
 # Set-up pyenv
 ENV PYTHON_VERSION 3.10.6
 ENV PYENV_ROOT /home/user/.pyenv
-ENV PATH=$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
+ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
 
 # Install pyenv
 RUN set -ex \
