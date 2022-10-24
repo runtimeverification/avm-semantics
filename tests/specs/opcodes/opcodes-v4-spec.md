@@ -13,7 +13,7 @@ module OPCODES-V4-SPEC
 
 <!----------------------------------------------------------------------------->
 
-<tr><td> divmodw </td><td> 4 </td><td> not implemented </td><td> 1 </td>
+<tr><td> divmodw </td><td> 4 </td><td> implemented, not tested </td><td> 1 </td>
 <td><details>
 <summary>K claims</summary>
 
