@@ -12,10 +12,10 @@ authors = [
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-py-algorand-sdk = "1.15.0"
-pyk = { git = "https://github.com/runtimeverification/pyk.git", tag="v0.1.0" }
-pyteal = "*"
+python = "^3.10"
+py-algorand-sdk = "1.19.0"
+pyk = { git = "https://github.com/runtimeverification/pyk.git", tag="v0.1.27" }
+pyteal = "0.18.1"
 
 [tool.poetry.dev-dependencies]
 autoflake = "*"

@@ -11,11 +11,13 @@ from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Set, Tu
 
 from algosdk.future.transaction import Transaction
 from pyk.cli_utils import run_process
-from pyk.kast import KApply, KAst, KInner, KLabel, KSort, KToken, Subst
+from pyk.kast import KApply, KAst, KInner, KLabel, KSort, KToken, Subst, build_assoc, build_cons
 from pyk.kastManip import free_vars, inline_cell_maps
 from pyk.ktool.kprint import paren
 from pyk.ktool.krun import KRun
-from pyk.prelude import Sorts, build_assoc, build_cons, intToken, stringToken
+from pyk.prelude.kint import intToken
+from pyk.prelude.string import stringToken
+from pyk.prelude.k import K
 
 from kavm import constants
 from kavm.adaptors.account import KAVMAccount
@@ -138,7 +140,7 @@ class KAVM(KRun):
         input: str = 'json',
         output: str = 'kore',
         module: str = 'AVM-EXECUTION',
-        sort: Union[KSort, str] = Sorts.K,
+        sort: Union[KSort, str] = K,
         args: Iterable[str] = (),
     ) -> CompletedProcess:
         kast_command = ['kast', '--definition', str(self.definition_dir)]
@@ -156,7 +158,7 @@ class KAVM(KRun):
         input: str = 'json',
         output: str = 'kore',
         module: str = 'AVM-EXECUTION',
-        sort: Union[KSort, str] = Sorts.K,
+        sort: Union[KSort, str] = K,
         args: Iterable[str] = (),
     ) -> CompletedProcess:
         kast_command = ['kast', '--definition', str(self.definition_dir)]

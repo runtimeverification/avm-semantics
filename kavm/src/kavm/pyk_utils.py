@@ -5,8 +5,20 @@ from collections.abc import MutableMapping
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, Union, cast
 
 from algosdk.future.transaction import OnComplete
-from pyk.kast import KApply, KAst, KInner, KLabel, KToken, KVariable, KSort, top_down
-from pyk.prelude import build_cons, intToken, stringToken, build_assoc
+from pyk.prelude.kint import intToken
+from pyk.prelude.string import stringToken
+from pyk.kast import (
+    KApply,
+    KAst,
+    KInner,
+    KLabel,
+    KSort,
+    KToken,
+    KVariable,
+    build_assoc,
+    build_cons,
+    top_down,
+)
 
 
 def maybe_tvalue(value: Optional[Union[str, int, bytes]]) -> KInner:
@@ -70,6 +82,18 @@ def map_bytes_bytes(d):
             for k, v in d.items()
         ],
     )
+
+
+def from_map(term: KInner) -> Dict:
+    if term.label.name == '_|->_':
+        if term.args[1].sort.name == 'Bytes':
+            return {term.args[0].token[2:-1]: term.args[1].token[2:-1]}
+        if term.args[1].sort.name == 'Int':
+            return {term.args[0].token[2:-1]: int(term.args[1].token)}
+    if term.label.name == '_Map_':
+        return from_map(term.args[0]) | from_map(term.args[1])
+    if term.label.name == '.Map':
+        return {}
 
 
 def map_bytes_ints(d):

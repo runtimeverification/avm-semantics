@@ -2,13 +2,13 @@ import json
 import tempfile
 from base64 import b64decode, b64encode
 from pathlib import Path
-from typing import Any, Dict, cast, Union
+from typing import Any, Dict, Optional, Union, cast
 
-from pyk.kast import KApply, KAst, KInner, KSort, KToken
+from pyk.kast import KApply, KAst, KInner, KSort
 from pyk.kastManip import split_config_from
-from pyk.prelude import intToken
+from pyk.prelude.kint import intToken
 
-from kavm.pyk_utils import tvalue, map_bytes_bytes, map_bytes_ints, unescape_global_storage_bytes
+from kavm.pyk_utils import map_bytes_bytes, map_bytes_ints, tvalue, unescape_global_storage_bytes
 
 
 class KAVMApplication:
@@ -25,8 +25,8 @@ class KAVMApplication:
         clear_state_pgm: bytes = b'',
         global_ints: int = 0,
         global_bytes: int = 0,
-        global_int_data: Dict[str, str] = {},
-        global_bytes_data: Dict[str, str] = {},
+        global_int_data: Optional[Dict[str, str]] = None,
+        global_bytes_data: Optional[Dict[str, str]] = None,
         local_ints: int = 0,
         local_bytes: int = 0,
         extra_pages: int = 0,
@@ -41,8 +41,8 @@ class KAVMApplication:
         self._clear_state_pgm = clear_state_pgm
         self._global_ints = global_ints
         self._global_bytes = global_bytes
-        self._global_int_data = global_int_data
-        self._global_bytes_data = global_bytes_data
+        self._global_int_data = global_int_data if global_int_data else {}
+        self._global_bytes_data = global_bytes_data if global_bytes_data else {}
         self._local_ints = local_ints
         self._local_bytes = local_bytes
         self._extra_pages = extra_pages
@@ -89,7 +89,6 @@ class KAVMApplication:
                 KApply('<extraPages>', [intToken(self._extra_pages)]),
             ],
         )
-        return test
 
     def to_kore_term(self, kavm: Any) -> str:
         '''

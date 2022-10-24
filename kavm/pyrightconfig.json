@@ -1,0 +1,25 @@
+{
+  "include": [
+    "src"
+  ],
+
+  "venvPath": "../.build",
+  "venv": "venv",
+
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "useLibraryCodeForTypes": true,
+
+  "pythonVersion": "3.10",
+  "pythonPlatform": "Linux",
+
+  "executionEnvironments": [
+    {
+      "root": "."
+      "extraPaths": [
+         "../.build/venv/lib/python3.10/site-packages"
+      ]
+    }
+  ]
+
+}

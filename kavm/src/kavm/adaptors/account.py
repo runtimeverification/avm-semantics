@@ -1,20 +1,21 @@
 import json
 import tempfile
+from base64 import b64encode
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union, cast
-from base64 import b64encode
 
 from pyk.kast import KApply, KAst, KInner, KSort, KToken, Subst
 from pyk.kastManip import flatten_label, split_config_from
-from pyk.prelude import intToken
+from pyk.prelude.kint import intToken
 
 from kavm.constants import MIN_BALANCE
 from kavm.pyk_utils import (
     AppCellMap,
     AppOptInCellMap,
-    split_direct_subcells_from,
+    from_map,
     map_bytes_bytes,
     map_bytes_ints,
+    split_direct_subcells_from,
     unescape_global_storage_bytes,
 )
 
@@ -23,26 +24,15 @@ class KAVMOptInApp:
     def __init__(
         self,
         app_id: int = 0,
-        local_ints: Dict = {},
-        local_bytes: Dict = {},
+        local_ints: Optional[Dict] = None,
+        local_bytes: Optional[Dict] = None,
     ) -> None:
         self._app_id = app_id
-        self._local_ints = local_ints
-        self._local_bytes = local_bytes
+        self._local_ints = local_ints if local_ints else {}
+        self._local_bytes = local_bytes if local_bytes else {}
 
     @staticmethod
     def from_optin_app_cell(term: KInner) -> 'KAVMOptInApp':
-        def from_map(term: KInner) -> Dict:
-            if term.label.name == '_|->_':
-                if term.args[1].sort.name == 'Bytes':
-                    return {term.args[0].token[2:-1]: term.args[1].token[2:-1]}
-                if term.args[1].sort.name == 'Int':
-                    return {term.args[0].token[2:-1]: int(term.args[1].token)}
-            if term.label.name == '_Map_':
-                return from_map(term.args[0]) | from_map(term.args[1])
-            if term.label.name == '.Map':
-                return {}
-
         (_, subst) = split_direct_subcells_from(term)
 
         return KAVMOptInApp(
