@@ -4,7 +4,12 @@ from typing import Dict, Optional
 
 from algosdk import account
 from algosdk.future import transaction
+from algosdk.encoding import encode_address, checksum
 from algosdk.v2client import algod
+
+
+def app_account_address(app_id: int) -> str:
+    return encode_address(checksum(b'appID' + (1).to_bytes(8, 'big')))
 
 
 @typing.no_type_check

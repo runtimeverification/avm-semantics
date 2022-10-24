@@ -86,6 +86,7 @@ module TEAL-TYPES
   import BYTES
   import INT
   import STRING
+  import KRYPTO
 ```
 
 ### Type Representation
@@ -186,6 +187,19 @@ We also have a hook just for checking whether an address is valid.
 
 ```k
   syntax Bool ::= IsAddressValid(String) [function, hook(KAVM.check_address)]
+```
+
+Finally, application addresses are constructed by hashing the application ID in a specail way.
+See also [this section](https://developer.algorand.org/docs/get-details/dapps/smart-contracts/apps/#issuing-transactions-from-an-application) of the Algorand documentation.
+
+```k
+  syntax Bytes ::= getAppAddressBytes(Int) [function, functional]
+  //-------------------------------------------------------------
+  rule getAppAddressBytes(APP_ID) => String2Bytes(Sha512_256raw(Bytes2String(b"appID" +Bytes Int2Bytes(8, APP_ID, BE))))
+
+  syntax TAddressLiteral ::= getAppAddress(Int) [function, functional]
+  //------------------------------------------------------------------
+  rule getAppAddress(APP_ID) => String2TealAddress(EncodeAddressBytes(getAppAddressBytes(APP_ID)))
 ```
 
 ### TEAL Value Processing

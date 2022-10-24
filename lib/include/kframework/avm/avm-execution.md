@@ -1106,8 +1106,13 @@ TODO: determine if we need to support them an all.
        <currentTx> TXN_ID </currentTx>
 ```
 
-* **Future transaction types**
+* **Testing**
 
+```k
+    syntax AlgorandCommand ::= #buildTValue(MaybeTValue)
+    //--------------------------------------------
+    rule <k> #buildTValue(V) => V </k>
+```
 
 ```k
 endmodule
