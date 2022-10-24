@@ -18,7 +18,7 @@ RUN    apt-get update            \
             libyaml-dev          \
             maven                \
             pkg-config           \
-            python3              \
+            python3.10           \
             python3-pip          \
             zlib1g-dev
 
@@ -46,16 +46,8 @@ WORKDIR /home/user
 
 RUN curl -L https://github.com/github/hub/releases/download/v2.14.0/hub-linux-amd64-2.14.0.tgz -o /home/user/hub.tgz
 RUN cd /home/user && tar xzf hub.tgz
-ENV PATH=/home/user/hub-linux-amd64-2.14.0/bin:$PATH
 
-# set up pyenv and install Python 3.10.6
-RUN curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
-ENV PYENV_ROOT=/home/user/.pyenv
-RUN command -v pyenv >/dev/null
-ENV PATH=/home/user/.pyenv/bin:$PATH
-RUN eval "$(pyenv init -)"
-RUN pyenv install 3.10.6
-RUN pyenv global 3.10.6
+ENV PATH=/home/user/hub-linux-amd64-2.14.0/bin:$PATH
 
 RUN    git config --global user.email 'admin@runtimeverification.com' \
     && git config --global user.name  'RV Jenkins'                    \
