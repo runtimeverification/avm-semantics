@@ -1,7 +1,7 @@
 declareTealSource "app-params-get.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE </address> <balance> 10000 </balance>;
+addAccount <address> LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE </address> <balance> 1500000 </balance>;
 
 #initTxGroup();
 
