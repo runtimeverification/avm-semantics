@@ -20,6 +20,13 @@ RUN    apt-get update            \
             pkg-config           \
             zlib1g-dev
 
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+RUN groupadd -g $GROUP_ID user && useradd -m -u $USER_ID -s /bin/sh -g user user
+
+USER user:user
+WORKDIR /home/user
+
 # Set-up pyenv
 ENV PYTHON_VERSION 3.10.6
 ENV PYENV_ROOT /home/user/.pyenv
@@ -45,13 +52,6 @@ RUN    git clone 'https://github.com/z3prover/z3' --branch=z3-4.8.11 \
 RUN curl -sSL https://get.haskellstack.org/ | sh
 
 RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/usr python3 - && poetry --version
-
-ARG USER_ID=1000
-ARG GROUP_ID=1000
-RUN groupadd -g $GROUP_ID user && useradd -m -u $USER_ID -s /bin/sh -g user user
-
-USER user:user
-WORKDIR /home/user
 
 RUN curl -L https://github.com/github/hub/releases/download/v2.14.0/hub-linux-amd64-2.14.0.tgz -o /home/user/hub.tgz
 RUN cd /home/user && tar xzf hub.tgz
