@@ -31,7 +31,7 @@ jobs:
 
           docker run --name avm-semantics-ci --rm -it --detach --workdir /opt/workspace --user $(id -u):$(id -g) -v ${HOME}:${HOME} -v "$(pwd):/opt/workspace" -v "/etc/passwd:/etc/passwd:ro" -v "/etc/group:/etc/group:ro" runtimeverification/avm-semantics-ci:${KAVM_COMMIT}
       - name: 'Build AVM semantics'
-        run: docker exec -t avm-semantics-ci /bin/bash -c 'env && make build -j4'
+        run: docker exec -t avm-semantics-ci /bin/bash -c 'env && make build'
       - name: 'Test kavm kast'
         run: |
           docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-kast-teal'
