@@ -341,7 +341,7 @@ Accessor functions
          ...
        </account>
 
-  rule [[ getAppParamsField(AppAddress, APP) => getAppAddress(APP) ]]
+  rule [[ getAppParamsField(AppAddress, APP) => getAppAddressBytes(APP) ]]
        <accountsMap> AM </accountsMap>
     requires APP in_apps(<accountsMap> AM </accountsMap>)
 
