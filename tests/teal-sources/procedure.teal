@@ -1,0 +1,22 @@
+#pragma version 7
+
+  int 3
+  int 4
+  callsub hyp
+  int 5
+  ==
+  return
+
+hyp:
+  proto 2 1
+  dupn 1					// room for the return value
+  frame_dig -1
+  frame_dig -1
+  *
+  frame_dig -2
+  frame_dig -2
+  *
+  +
+  sqrt
+  frame_bury 0				// place return value
+  retsub

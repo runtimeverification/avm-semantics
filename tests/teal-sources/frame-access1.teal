@@ -1,0 +1,13 @@
+#pragma version 7
+  b main
+add: proto 2 1
+  frame_dig -1
+  frame_dig -2
+  +
+  retsub
+main: 
+  int 8
+  int 2
+  callsub add
+  int 10
+  ==
