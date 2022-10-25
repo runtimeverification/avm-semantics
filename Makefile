@@ -210,9 +210,9 @@ VENV_DIR       := $(BUILD_DIR)/venv
 VENV_ACTIVATE  := . $(VENV_DIR)/bin/activate
 
 $(VENV_DIR)/pyvenv.cfg:
-	   virtualenv $(VENV_DIR) \
-	&& $(VENV_ACTIVATE)       \
-	&& pip install --editable $(PY_KAVM_DIR)
+	   python -m venv $(VENV_DIR) \
+           && $(VENV_ACTIVATE)        \
+           && pip install --editable $(PY_KAVM_DIR)
 
 venv: $(VENV_DIR)/pyvenv.cfg
 	@echo $(VENV_ACTIVATE)
@@ -361,6 +361,9 @@ build-kavm-hooks-tests: $(hook_includes) plugin-deps
 #######
 ## kavm
 #######
+check-codestyle-kavm:
+	$(MAKE) check -C $(PY_KAVM_DIR)
+
 ## * kavm CLI tests
 test-kavm: test-kavm-kast module-imports-graph
 
