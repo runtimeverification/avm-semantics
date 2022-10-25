@@ -1,12 +1,37 @@
+```k
 module OPCODES-V2-SPEC
   imports VERIFICATION
+```
 
-// addw 	2 	heavy_check_mark 	1
+<table>
+
+<thead>
+<tr><th> Opcode </th><th> AVM version </th><th> Status </th><th> Cost </th><th> K Claims </th></tr>
+</thead>
+
+<tbody>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> addw </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> addw => . </k>
         <stack> 18446744073709551615 : 5 : XS => 4 : 1 : XS </stack>
         <stacksize> _ </stacksize>
+```
+</details>
+</td></tr>
 
-// txna f i 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> txna f i </td><td> 2 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> txna Applications 1 => . </k>
         <stack> XS => APPL : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -24,8 +49,17 @@ module OPCODES-V2-SPEC
           <txnIndexMapGroupValues> (0 |-> TX_ID) ... </txnIndexMapGroupValues>
         </txnIndexMapGroup>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// gtxna t f i 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> gtxna t f i </td><td> 2 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> gtxna 0 ApplicationArgs 0 => . </k>
         <stack> XS => b"123" : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -52,8 +86,17 @@ module OPCODES-V2-SPEC
           <txnIndexMapGroupValues> (2 |-> "2a") (0 |-> "0") </txnIndexMapGroupValues>
         </txnIndexMapGroup>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// concat 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> concat </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> concat => . </k>
         <stack> b"def" : b"abc" : XS => b"abcdef" : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -61,23 +104,59 @@ module OPCODES-V2-SPEC
   claim <k> concat => panic(BYTES_OVERFLOW) </k>
         <stack> B2 : B1 : _ </stack>
     requires lengthBytes(B1) +Int lengthBytes(B2) >Int 4096
+```
+</details>
+</td></tr>
 
-// substring s e 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> substring s e </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> substring 3 8 => . </k>
         <stack> (b"0123456789" => b"34567") : _ </stack>
-  
-// substring3 	2 	heavy_check_mark 	1
+```
+</details>
+</td></tr>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> substring3 </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> substring3 => . </k>
         <stack> (b"0123456789" : 3 : 8 : XS) => (b"34567" : XS) </stack>
         <stacksize> S => S -Int 2 </stacksize>
-  
-// dup2 	2 	heavy_check_mark 	1
+```
+</details>
+</td></tr>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> dup2 </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> dup2 => . </k>
         <stack> (3 : 4 : XS) => (3 : 4 : 3 : 4 : XS) </stack>
         <stacksize> S => S +Int 2 </stacksize>
     requires S <Int 1000 -Int 2
+```
+</details>
+</td></tr>
 
-// balance 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> balance </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> balance => . </k>
         <stack> (normalize(ADDR) : XS) => (12345 : XS) </stack>
         <currentTx> TX_ID </currentTx>
@@ -92,8 +171,17 @@ module OPCODES-V2-SPEC
           <balance> 12345 </balance>
           ...
         </account>
+```
+</details>
+</td></tr>
 
-// app_opted_in 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> app_opted_in </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> app_opted_in => . </k>
         <stack> (B:Int : normalize(A:Bytes) : XS) => 1 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -139,8 +227,17 @@ module OPCODES-V2-SPEC
           ...
         </account>
       requires B =/=K B'
+```
+</details>
+</td></tr>
 
-// app_local_get 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> app_local_get </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> app_local_get => . </k>
         <stack> (B:Bytes : normalize(A:Bytes) : XS) => 123 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -164,8 +261,17 @@ module OPCODES-V2-SPEC
           </appsOptedIn>
           ...
         </account>
+```
+</details>
+</td></tr>
 
-// app_local_get_ex 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> app_local_get_ex </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> app_local_get_ex => . </k>
         <stack> (C:Bytes : B:Int : normalize(A:Bytes) : XS) => 1 : 123 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -189,8 +295,17 @@ module OPCODES-V2-SPEC
           </appsOptedIn>
           ...
         </account>
+```
+</details>
+</td></tr>
 
-// app_global_get 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> app_global_get </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> app_global_get => . </k>
         <stack> (A:Bytes : XS) => (123 : XS) </stack>
         <currentTx> TX_ID </currentTx>
@@ -212,8 +327,17 @@ module OPCODES-V2-SPEC
           </appsCreated>
           ...
         </account>
+```
+</details>
+</td></tr>
 
-// app_global_get_ex 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> app_global_get_ex </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> app_global_get_ex => . </k>
         <stack> (B:Bytes : A:Int : XS) => (1 : 123 : XS) </stack>
         <currentTx> TX_ID </currentTx>
@@ -235,8 +359,17 @@ module OPCODES-V2-SPEC
           </appsCreated>
           ...
         </account>
+```
+</details>
+</td></tr>
 
-// app_local_put 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> app_local_put </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> app_local_put => . </k>
         <stack> (123 : b"key" : normalize(A:Bytes) : XS) => XS </stack>
         <stacksize> S => S -Int 3 </stacksize>
@@ -269,8 +402,17 @@ module OPCODES-V2-SPEC
           </appsOptedIn>
           ...
         </account>
+```
+</details>
+</td></tr>
 
-// app_global_put 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> app_global_put </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> app_global_put => . </k>
         <stack> (123 : b"key" : XS) => XS </stack>
         <stacksize> S => S -Int 2 </stacksize>
@@ -298,8 +440,17 @@ module OPCODES-V2-SPEC
             ...
           </account>
         </accountsMap>
+```
+</details>
+</td></tr>
 
-// app_local_del 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> app_local_del </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> app_local_del => . </k>
         <stack> (b"key" : ADDR:Bytes : XS) => XS </stack>
         <stacksize> S => S -Int 2 </stacksize>
@@ -326,8 +477,17 @@ module OPCODES-V2-SPEC
             ...
           </account>
         </accountsMap>
+```
+</details>
+</td></tr>
 
-// app_global_del 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> app_global_del </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> app_global_del => . </k>
         <stack> (b"key" : XS) => XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -347,8 +507,17 @@ module OPCODES-V2-SPEC
             ...
           </account>
         </accountsMap>
+```
+</details>
+</td></tr>
 
-// asset_holding_get i 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> asset_holding_get i </td><td> 2 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> asset_holding_get AssetBalance => . </k>
         <stack> ASSET:Int : normalize(ADDR:Bytes) : XS => 1 : 12345 : XS </stack>
         <currentTx> TX_ID </currentTx>
@@ -368,8 +537,17 @@ module OPCODES-V2-SPEC
           </optInAsset>
           ...
         </account>
+```
+</details>
+</td></tr>
 
-// asset_params_get i 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> asset_params_get i </td><td> 2 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> asset_params_get AssetTotal => . </k>
         <stack> ASSET:Int : XS => 1 : 12345 : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -386,8 +564,17 @@ module OPCODES-V2-SPEC
           ...
         </asset>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// return 	2 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> return </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> return ~> #incrementPC() ~> #fetchOpcode() => . </k>
         <stack> (1 : 2 : .TStack) => (1 : .TStack) </stack>
         <stacksize> 2 => 1 </stacksize>
@@ -396,26 +583,64 @@ module OPCODES-V2-SPEC
         <returncode> 4 => 0 </returncode>
         <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
 
-// bnz target 	2 (4) 	heavy_check_mark 	1
+```
+</details>
+</td></tr>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> bnz target </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> bnz LABEL => . </k>
         <stack> 1 : XS => XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
         <jumped> _ => true </jumped>
         <pc> _ => 23 </pc>
         <labels> .Map [LABEL <- 23] </labels>
+```
+</details>
+</td></tr>
 
-// bz target 	2 (4) 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> bz target </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> bz LABEL => . </k>
         <stack> 0 : XS => XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
         <jumped> _ => true </jumped>
         <pc> _ => 23 </pc>
         <labels> .Map [LABEL <- 23] </labels>
+```
+</details>
+</td></tr>
 
-// b target 	2 (4) 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> b target </td><td> 2 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> b LABEL => . </k>
         <jumped> _ => true </jumped>
         <pc> _ => 23 </pc>
         <labels> .Map [LABEL <- 23] </labels>
+```
+</details>
+</td></tr>
 
+<!----------------------------------------------------------------------------->
+
+</tbody>
+</table>
+
+```k
 endmodule
+```
