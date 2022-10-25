@@ -391,19 +391,27 @@ test-kavm-avm-simulation:
 ###########################
 ## AVM Symbolic Proof Tests
 ###########################
-avm_prove_specs := $(wildcard tests/specs/*-spec.k) $(wildcard tests/specs/*/*-spec.k)
+avm_prove_simple_specs := $(wildcard tests/specs/simple/*-spec.k)
+avm_prove_internal_specs :=  $(wildcard tests/specs/internal/*-spec.md)
+avm_prove_opcode_specs :=  $(wildcard tests/specs/opcodes/*-spec.md)
 avm_prove_specs_failing := $(shell cat tests/failing-symbolic.list)
-avm_prove_specs_passing := $(filter-out $(avm_prove_specs_failing), $(avm_prove_specs))
+avm_prove_specs_passing := $(filter-out $(avm_prove_specs_failing), $(avm_prove_opcodes_specs) $(avm_prove_internal_specs) $(avm_prove_simple_specs) )
 
 test-avm-semantics-prove: $(avm_prove_specs_passing:=.prove)
 
 tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
-	$(VENV_ACTIVATE) && $(KAVM) prove tests/specs/$*-spec.k --definition tests/specs/verification-kompiled
+	$(VENV_ACTIVATE) && \
+	$(KAVM) prove tests/specs/$*-spec.k --definition tests/specs/verification-kompiled
+
+tests/specs/%-spec.md.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
+	$(VENV_ACTIVATE) && \
+	$(KAVM) prove tests/specs/$*-spec.md --definition tests/specs/verification-kompiled
 
 tests/specs/verification-kompiled/timestamp: tests/specs/verification.k $(VENV_DIR)/pyvenv.cfg $(avm_includes)
 	mkdir -p tests/specs/verification-kompiled
-	$(VENV_ACTIVATE) && $(KAVM) kompile $< --backend haskell --definition-dir tests/specs/verification-kompiled \
-                                    -I "${KAVM_INCLUDE}/kframework" -I "${plugin_include}/kframework"
+	$(VENV_ACTIVATE) &&                                                                     \
+	$(KAVM) kompile $< --backend haskell --definition-dir tests/specs/verification-kompiled \
+                           -I "${KAVM_INCLUDE}/kframework" -I "${plugin_include}/kframework"
 
 clean-verification:
 	rm -rf tests/specs/verification-kompiled
