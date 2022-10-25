@@ -13,6 +13,8 @@ clean:
 
 THREADS := $(if $(THREADS),$(THREADS),1)
 PYTHON_VERSION := $(if $(PYTHON_VERSION),$(PYTHON_VERSION),3.10.6)
+POETRY_RUN := poetry run
+PYTEST_ARGS := -n $(THREADS)
 
 build:
 	pyenv local $(PYTHON_VERSION) && poetry build
@@ -20,10 +22,6 @@ build:
 poetry-install:
 	pyenv local $(PYTHON_VERSION) && poetry install
 
-POETRY_RUN := poetry run
-THREADS := $(if $(THREADS),$(THREADS),1)
-
-PYTEST_ARGS := -n $(THREADS)
 
 # Tests
 
