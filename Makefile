@@ -361,6 +361,9 @@ build-kavm-hooks-tests: $(hook_includes) plugin-deps
 #######
 ## kavm
 #######
+check-codestyle-kavm:
+	$(MAKE) check -C $(PY_KAVM_DIR)
+
 ## * kavm CLI tests
 test-kavm: test-kavm-kast module-imports-graph
 
