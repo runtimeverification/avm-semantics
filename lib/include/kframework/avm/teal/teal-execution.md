@@ -390,6 +390,7 @@ return code to 3 (see return codes below).
   syntax String ::= "KEY_VALUE_TOO_LARGE"        [macro]
   syntax String ::= "BOX_TOO_LARGE"              [macro]
   syntax String ::= "CHANGED_BOX_SIZE"           [macro]
+  syntax String ::= "BOX_NOT_FOUND"              [macro]
   //----------------------------------------------------
   rule INVALID_OP_FOR_MODE => "invalid opcode for current execution mode"
   rule ERR_OPCODE          => "err opcode encountered"
@@ -428,6 +429,7 @@ return code to 3 (see return codes below).
   rule ASSERTION_VIOLATION => "assertion violation"
   rule BOX_TOO_LARGE       => "tried to create a box which is too large"
   rule CHANGED_BOX_SIZE    => "called box_create on existing box with a different size"
+  rule BOX_NOT_FOUND       => "tried to access a box name that doesn't exist"
   //--------------------------------------------------------------------------------
 
   rule panicCode(INVALID_OP_FOR_MODE)        => 1
@@ -467,6 +469,7 @@ return code to 3 (see return codes below).
   rule panicCode(ASSERTION_VIOLATION)        => 35
   rule panicCode(BOX_TOO_LARGE)              => 36
   rule panicCode(CHANGED_BOX_SIZE)           => 37
+  rule panicCode(BOX_NOT_FOUND)              => 38
 
 
   syntax KItem ::= panic(String)

@@ -2108,6 +2108,65 @@ Stateful TEAL Operations
   rule <k> box_create => panic(BOX_TOO_LARGE) ... </k>
        <stack> SIZE:Int : _ : _ </stack>
     requires SIZE >Int PARAM_MAX_BOX_SIZE
+
+  rule <k> box_create => panic(ILL_TYPED_STACK) ... </k>
+       <stack> SIZE : NAME : _ </stack>
+    requires isBytes(SIZE) orBool isInt(NAME)
+
+  rule <k> box_create => panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 2
+```
+
+*box_replace*
+
+```k
+  rule <k> box_replace => . ... </k>
+       <stack> VAL:Bytes : OFFSET:Int : NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 3 </stacksize>
+       <currentApplicationAddress> ADDR </currentApplicationAddress>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES => replaceAtBytes(BYTES, OFFSET, VAL) </boxData>
+         </box>
+         ...
+       </account>
+    requires (lengthBytes(VAL) +Int OFFSET) <Int lengthBytes(BYTES)
+
+  rule <k> box_replace => panic(BYTES_OVERFLOW) ... </k>
+       <stack> VAL:Bytes : OFFSET:Int : NAME:Bytes : _ </stack>
+       <currentApplicationAddress> ADDR </currentApplicationAddress>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires (lengthBytes(VAL) +Int OFFSET) >=Int lengthBytes(BYTES)
+
+  rule <k> box_replace => panic(BOX_NOT_FOUND) ... </k>
+       <stack> _:Bytes : _:Int : NAME:Bytes : _ </stack>
+       <currentApplicationAddress> ADDR </currentApplicationAddress>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_replace => panic(ILL_TYPED_STACK) ... </k>
+       <stack> VAL : OFFSET : NAME : _ </stack>
+    requires isInt(VAL) orBool isBytes(OFFSET) orBool isInt(NAME)
+
+  rule <k> box_replace => panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 3
 ```
 
 ### Access to past transactions in the group
