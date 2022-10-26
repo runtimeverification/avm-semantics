@@ -1,0 +1,22 @@
+#pragma version 8
+
+byte "box1"
+int 32
+box_create
+
+byte "box1"
+int 10
+byte "abc"
+box_replace
+
+byte "box1"
+int 10
+int 5
+box_extract
+
+byte "abc\x00\x00"
+==
+assert
+
+int 1
+return

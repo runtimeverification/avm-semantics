@@ -222,6 +222,12 @@ module ALGO-BLOCKCHAIN
           <appsOptedIn/>
           <assetsCreated/>
           <assetsOptedIn/>
+          <boxes>
+            <box multiplicity="*" type="Map">
+              <boxName> .Bytes </boxName>
+              <boxData> .Bytes </boxData>
+            </box>
+          </boxes>
         </account>
       </accountsMap>
       <appCreator>   .Map </appCreator>   // AppID |-> Creator's address
@@ -704,6 +710,31 @@ Accessor functions
     requires ADDR =/=K ADDR'
 
   rule _ in_accounts( <accountsMap> .Bag </accountsMap> ) => false
+
+  syntax Bool ::= Bytes "in_boxes" "(" BoxesCell ")" [function]
+  //-----------------------------------------------------------
+  rule NAME in_boxes(
+              <boxes>
+                <box>
+                  <boxName> NAME </boxName>
+                  ...
+                </box>
+                ...
+              </boxes>
+            ) => true
+
+  rule NAME in_boxes(
+              <boxes>
+                <box>
+                  <boxName> NAME' </boxName>
+                  ...
+                </box>
+                REST
+              </boxes>
+            ) => NAME in_boxes(<boxes> REST </boxes>)
+    requires NAME =/=K NAME'
+
+  rule _ in_boxes(<boxes> .Bag </boxes>) => false
 
 
   syntax Bool ::= TValue "in_optedInApps" "(" AppsOptedInCell ")" [function]

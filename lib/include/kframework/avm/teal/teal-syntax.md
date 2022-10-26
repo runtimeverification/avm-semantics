@@ -29,6 +29,7 @@ module TEAL-OPCODES
                         | ScratchOpCode
                         | BranchingOpCode
                         | StackOpCode
+                        | BoxStorageOpCode
   syntax SigOpCode    ::= SigVerOpCode | ArgOpCode           // Opcodes used only by stateless TEAL
   syntax AppOpCode    ::= StateOpCode
                         | TxnGroupStateOpCode

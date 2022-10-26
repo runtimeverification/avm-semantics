@@ -388,6 +388,8 @@ return code to 3 (see return codes below).
   syntax String ::= "KEY_TOO_LARGE"              [macro]
   syntax String ::= "BYTE_VALUE_TOO_LARGE"       [macro]
   syntax String ::= "KEY_VALUE_TOO_LARGE"        [macro]
+  syntax String ::= "BOX_TOO_LARGE"              [macro]
+  syntax String ::= "CHANGED_BOX_SIZE"           [macro]
   //----------------------------------------------------
   rule INVALID_OP_FOR_MODE => "invalid opcode for current execution mode"
   rule ERR_OPCODE          => "err opcode encountered"
@@ -424,6 +426,8 @@ return code to 3 (see return codes below).
   rule BYTE_VALUE_TOO_LARGE => "tried to store too large of a byte value"
   rule KEY_VALUE_TOO_LARGE => "sum of key length and value length is too high"
   rule ASSERTION_VIOLATION => "assertion violation"
+  rule BOX_TOO_LARGE       => "tried to create a box which is too large"
+  rule CHANGED_BOX_SIZE    => "called box_create on existing box with a different size"
   //--------------------------------------------------------------------------------
 
   rule panicCode(INVALID_OP_FOR_MODE)        => 1
@@ -461,6 +465,8 @@ return code to 3 (see return codes below).
   rule panicCode(BYTE_VALUE_TOO_LARGE)       => 33
   rule panicCode(KEY_VALUE_TOO_LARGE)        => 34
   rule panicCode(ASSERTION_VIOLATION)        => 35
+  rule panicCode(BOX_TOO_LARGE)              => 36
+  rule panicCode(CHANGED_BOX_SIZE)           => 37
 
 
   syntax KItem ::= panic(String)

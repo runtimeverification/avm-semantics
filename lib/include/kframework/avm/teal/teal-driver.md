@@ -2046,6 +2046,70 @@ Stateful TEAL Operations
     requires S <Int 1
 ```
 
+### Box storage
+
+*box_create*
+
+```k
+  rule <k> box_create => . ... </k>
+       <stack> SIZE:Int : NAME:Bytes : XS => 1 : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+       <currentApplicationAddress> ADDR </currentApplicationAddress>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           (.Bag =>
+           <box>
+             <boxName> NAME </boxName>
+             <boxData> padLeftBytes(.Bytes, SIZE, 0) </boxData>
+           </box>)
+           REST
+         </boxes>
+         ...
+       </account>
+    requires SIZE <=Int PARAM_MAX_BOX_SIZE
+     andBool notBool(NAME in_boxes(<boxes> REST </boxes>))
+
+  rule <k> box_create => . ... </k>
+       <stack> SIZE:Int : NAME:Bytes : XS => 0 : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+       <currentApplicationAddress> ADDR </currentApplicationAddress>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           <box>
+             <boxName> NAME </boxName>
+             <boxData> BYTES </boxData>
+           </box>
+           ...
+         </boxes>
+         ...
+       </account>
+    requires SIZE <=Int PARAM_MAX_BOX_SIZE
+     andBool lengthBytes(BYTES) ==Int SIZE
+
+  rule <k> box_create => panic(CHANGED_BOX_SIZE) ... </k>
+       <stack> SIZE:Int : NAME:Bytes : _ </stack>
+       <currentApplicationAddress> ADDR </currentApplicationAddress>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           <box>
+             <boxName> NAME </boxName>
+             <boxData> BYTES </boxData>
+           </box>
+           ...
+         </boxes>
+         ...
+       </account>
+    requires SIZE <=Int PARAM_MAX_BOX_SIZE
+     andBool lengthBytes(BYTES) =/=Int SIZE
+
+  rule <k> box_create => panic(BOX_TOO_LARGE) ... </k>
+       <stack> SIZE:Int : _ : _ </stack>
+    requires SIZE >Int PARAM_MAX_BOX_SIZE
+```
+
 ### Access to past transactions in the group
 
 *gaid*
