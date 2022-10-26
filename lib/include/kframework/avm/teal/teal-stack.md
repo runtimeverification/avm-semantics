@@ -70,7 +70,7 @@ The elements of the stack are values of sort `TValue`, i.e. either `TUInt64` or 
 - `S { N <- M }` set element $N$ (counting from the bottom of the stack) of $S$ to $M$.
 ```k
   syntax TStack ::= TStack "{" Int "<-" TValue "}" [function]
-  // -----------------------------------------------------------
+  // --------------------------------------------------------
   rule XS:TStack { N <- M } => #take((#sizeTStack(XS) -Int N) -Int 1, XS) M : #drop(#sizeTStack(XS) -Int N, XS) 
 ```
 
