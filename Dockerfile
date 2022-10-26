@@ -39,19 +39,9 @@ ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
 # Install pyenv
 RUN set -ex \
     && curl https://pyenv.run | bash \
-    && pyenv update \
     && pyenv install $PYTHON_VERSION \
     && pyenv global $PYTHON_VERSION \
     && pyenv rehash
-
-RUN    git clone 'https://github.com/z3prover/z3' --branch=z3-4.8.11 \
-    && cd z3                                                         \
-    && python3 scripts/mk_make.py                                    \
-    && cd build                                                      \
-    && make -j8                                                      \
-    && make install                                                  \
-    && cd ../..                                                      \
-    && rm -rf z3
 
 RUN curl -L https://github.com/github/hub/releases/download/v2.14.0/hub-linux-amd64-2.14.0.tgz -o /home/user/hub.tgz
 RUN cd /home/user && tar xzf hub.tgz

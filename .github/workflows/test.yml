@@ -30,6 +30,8 @@ jobs:
           docker build . --file Dockerfile --build-arg K_VERSION=${K_VERSION} --tag runtimeverification/avm-semantics-ci:${KAVM_COMMIT} --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)
 
           docker run --name avm-semantics-ci --rm -it --detach --workdir /opt/workspace --user $(id -u):$(id -g) -v ${HOME}:${HOME} -v "$(pwd):/opt/workspace" -v "/etc/passwd:/etc/passwd:ro" -v "/etc/group:/etc/group:ro" runtimeverification/avm-semantics-ci:${KAVM_COMMIT}
+      - name: 'Check code style'
+        run: docker exec -t avm-semantics-ci /bin/bash -c 'make check-kavm-codestyle'
       - name: 'Build AVM semantics'
         run: docker exec -t avm-semantics-ci /bin/bash -c 'make build'
       - name: 'Test kavm kast'
@@ -45,9 +47,15 @@ jobs:
       - name: 'Test AVM semantics --- algod integration'
         run: |
           docker exec -t avm-semantics-ci /bin/bash -c 'THREADS=4 make test-kavm-algod'
-      - name: 'Test AVM semantics --- proofs'
+      - name: 'Test AVM semantics --- proofs --- internal'
         run: |
-          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-prove'
+          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-internal-prove'
+      - name: 'Test AVM semantics --- proofs --- opcodes'
+        run: |
+          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-opcode-prove'
+      - name: 'Test AVM semantics --- proofs --- simple'
+        run: |
+          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-simple-prove'
       - name: 'Tear down Docker'
         if: always()
         run: |

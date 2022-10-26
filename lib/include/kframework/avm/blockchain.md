@@ -28,7 +28,7 @@ module GLOBALS
   rule getGlobalField(MinTxnFee)       => PARAM_MIN_TXN_FEE
   rule getGlobalField(MinBalance)      => PARAM_MIN_BALANCE
   rule getGlobalField(MaxTxnLife)      => PARAM_MAX_TXN_LIFE
-  rule getGlobalField(ZeroAddress)     => DecodeAddressString("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ")
+  rule getGlobalField(ZeroAddress)     => b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
   rule getGlobalField(LogicSigVersion) => 2
 ```
 
