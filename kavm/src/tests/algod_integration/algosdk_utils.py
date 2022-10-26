@@ -3,8 +3,8 @@ from base64 import b64decode, b64encode
 from typing import Dict, Optional
 
 from algosdk import account
+from algosdk.encoding import checksum, encode_address
 from algosdk.future import transaction
-from algosdk.encoding import encode_address, checksum
 from algosdk.v2client import algod
 
 
