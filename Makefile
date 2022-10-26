@@ -349,7 +349,7 @@ uninstall:
 
 KAVM_OPTIONS :=
 
-test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics-prove
+test: test-kavm-hooks test-kavm test-kavm-algod test-kavm-avm-simulation
 
 ##########################################
 ## Standalone AVM LLVM Backend hooks tests
@@ -405,6 +405,8 @@ avm_prove_opcode_specs :=  $(filter-out $(avm_prove_specs_failing), $(wildcard t
 test-avm-semantics-internal-prove: $(avm_prove_internal_specs:=.prove)
 test-avm-semantics-opcode-prove: $(avm_prove_opcode_specs:=.prove)
 test-avm-semantics-simple-prove: $(avm_prove_simple_specs:=.prove)
+
+test-prove: test-avm-semantics-internal-prove test-avm-semantics-opcode-prove test-avm-semantics-simple-prove
 
 tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
 	$(VENV_ACTIVATE) && \
