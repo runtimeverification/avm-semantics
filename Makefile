@@ -223,6 +223,9 @@ venv-clean:
 py-kavm:
 	$(MAKE) build -C $(PY_KAVM_DIR)
 
+check-kavm-codestyle:
+	$(MAKE) check -C $(PY_KAVM_DIR)
+
 includes := $(avm_includes) $(plugin_includes) $(plugin_c_includes) $(hook_includes)
 
 kavm_scripts := $(patsubst %, $(KAVM_SCRIPTS)/%, parse-avm-simulation.sh  parse-teal-programs.sh)
