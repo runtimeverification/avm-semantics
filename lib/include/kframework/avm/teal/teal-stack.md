@@ -58,7 +58,7 @@ The elements of the stack are values of sort `TValue`, i.e. either `TUInt64` or 
 - `S { N }` accesses element $N$ (counting from the bottom of the stack) of $S$.
 ```k
   syntax TValue ::= TStack "{" Int "}" [function]
-  // -----------------------------------------------------------
+  // --------------------------------------------
   rule (X : XS):TStack { N } => X
     requires N ==Int #sizeTStack(XS)
   rule XS              { N } => #drop((#sizeTStack(XS) -Int N) -Int 1, XS) [ 0 ]
