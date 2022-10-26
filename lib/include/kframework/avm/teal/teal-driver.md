@@ -1076,6 +1076,18 @@ records the next program counter value on the call stack.
 Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL program. Either could be used to pass arguments or return results.
 
 ```k
+  //                          Next PC | Stack pointer | Num args | Num return vals
+  syntax StackFrame ::= frame(Int,      Int,            Int,       Int           )
+                      | frame(Int,      Int                                      )
+
+  syntax Int ::= getStackPtr() [function]
+
+  rule [[ getStackPtr() => PTR ]]
+       <callStack> ListItem(frame(_, PTR, _, _)) ... </callStack>
+
+  rule [[ getStackPtr() => PTR ]]
+       <callStack> ListItem(frame(_, PTR)) ... </callStack>
+
   rule <k> callsub TARGET => callSubroutine(TARGET) ... </k>
 
   rule <k> retsub => returnSubroutine() ... </k>
@@ -1089,7 +1101,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <jumped> _ => true </jumped>
        <labels> LL </labels>
        <stack> S </stack>
-       <callStack> XS => ListItem(frame(PC +Int 1, #sizeTStack(S), -1, -1)) XS </callStack>
+       <callStack> XS => ListItem(frame(PC +Int 1, #sizeTStack(S))) XS </callStack>
     requires  (TARGET in_labels LL)
       andBool (size(XS) <Int MAX_CALLSTACK_DEPTH)
 
@@ -1112,15 +1124,22 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <stacksize> SIZE => SIZE -Int (#sizeTStack(S) -Int STACK_PTR) -Int RETS </stacksize>
        <callStack> ListItem(frame(RETURN_PC, STACK_PTR, ARGS, RETS)) XS => XS </callStack>
 
+  rule <k> returnSubroutine() => .K ... </k>
+       <pc> _ => RETURN_PC </pc>
+       <jumped> _ => true </jumped>
+       <callStack> ListItem(frame(RETURN_PC, _)) XS => XS </callStack>
+
   rule <k> returnSubroutine() => panic(CALLSTACK_UNDERFLOW) ... </k>
        <pc> _ </pc>
        <callStack> .List </callStack>
 
-  //                          Next PC | Stack pointer | Num args | Num return vals
-  syntax StackFrame ::= frame(Int,      Int,            Int,       Int           )
-
   rule <k> proto ARGS RETS => . ... </k>
        <callStack> ListItem(frame(_, _, _ => ARGS, _ => RETS)) ... </callStack>
+    requires (ARGS >=Int 0) andBool (RETS >=Int 0)
+
+  rule <k> proto ARGS RETS => . ... </k>
+       <callStack> ListItem(frame(RETURN_PC, STACK_PTR) => frame(RETURN_PC, STACK_PTR, ARGS, RETS)) ... </callStack>
+    requires (ARGS >=Int 0) andBool (RETS >=Int 0)
 
   rule <k> dupn N => dupn (N -Int 1) ... </k>
        <stack> X : XS => X : X : XS </stack>
@@ -1131,15 +1150,13 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
   rule <k> dupn 0 => . ... </k>
 
   rule <k> frame_dig N => . ... </k>
-       <stack> XS => XS{STACK_PTR +Int N} : XS </stack>
+       <stack> XS => XS{getStackPtr() +Int N} : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
-       <callStack> ListItem(frame(_, STACK_PTR, _, _)) ... </callStack>
     requires S <Int MAX_STACK_DEPTH
 
   rule <k> frame_bury N => . ... </k>
-       <stack> X : XS => XS{STACK_PTR +Int N <- X} </stack>
+       <stack> X : XS => XS{getStackPtr() +Int N <- X} </stack>
        <stacksize> S => S -Int 1 </stacksize>
-       <callStack> ListItem(frame(_, STACK_PTR, _, _)) ... </callStack>
 
 ```
 

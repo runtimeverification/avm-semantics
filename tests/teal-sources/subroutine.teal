@@ -1,0 +1,21 @@
+#pragma version 7
+
+  b main
+fact:
+  dup
+  int 2
+  <
+  bz recur
+  retsub
+recur:
+  dup
+  int 1
+  -
+  callsub fact
+  *
+  retsub
+main:
+  int 5
+  callsub fact
+  int 120
+  ==

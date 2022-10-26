@@ -1,3 +1,5 @@
+#pragma version 7
+
   b main
 ijsum:
   proto 2 1
