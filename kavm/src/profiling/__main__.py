@@ -1,24 +1,19 @@
 import os
-from operator import attrgetter
-from pathlib import Path
-import pstats
-from pstats import Stats
 from argparse import ArgumentParser
-import pprint
-
-from tabulate import tabulate
+from pstats import Stats
+from typing import Any, Dict
 
 from pyk.cli_utils import file_path
+from tabulate import tabulate
 
 
 def main() -> None:
-    pp = pprint.PrettyPrinter(indent=4)
     parser = create_argument_parser()
     args = parser.parse_args()
     stats = Stats(str(args.profile_file))
     profiles = stats.get_stats_profile()
 
-    kavm_profiles = list()
+    kavm_profiles = []
     for name, func_data in profiles.func_profiles.items():
         func_data.file_name = strip_source_file_path_prefix(func_data.file_name, os.curdir)
         if 'kavm' in func_data.file_name:
@@ -38,7 +33,7 @@ def main() -> None:
     sorted_by_ncalls = sorted(kavm_profiles, key=lambda v: ncalls_to_int(v['ncalls']), reverse=True)
     sorted_by_cumtime = sorted(sorted_by_ncalls, key=lambda v: v['percall_cumtime'], reverse=True)
 
-    table = {'function': list(), 'cumtime': list(), 'percall_cumtime': list(), 'ncalls': list()}
+    table: Dict[str, Any] = {'function': [], 'cumtime': [], 'percall_cumtime': [], 'ncalls': []}
     for item in sorted_by_cumtime:
         table['function'].append(item['function'])
         table['percall_cumtime'].append(item['percall_cumtime'])
