@@ -223,6 +223,9 @@ venv-clean:
 py-kavm:
 	$(MAKE) build -C $(PY_KAVM_DIR)
 
+check-kavm-codestyle:
+	$(MAKE) check -C $(PY_KAVM_DIR)
+
 includes := $(avm_includes) $(plugin_includes) $(plugin_c_includes) $(hook_includes)
 
 kavm_scripts := $(patsubst %, $(KAVM_SCRIPTS)/%, parse-avm-simulation.sh  parse-teal-programs.sh)
@@ -394,13 +397,14 @@ test-kavm-avm-simulation:
 ###########################
 ## AVM Symbolic Proof Tests
 ###########################
-avm_prove_simple_specs := $(wildcard tests/specs/simple/*-spec.k)
-avm_prove_internal_specs :=  $(wildcard tests/specs/internal/*-spec.md)
-avm_prove_opcode_specs :=  $(wildcard tests/specs/opcodes/*-spec.md)
 avm_prove_specs_failing := $(shell cat tests/failing-symbolic.list)
-avm_prove_specs_passing := $(filter-out $(avm_prove_specs_failing), $(avm_prove_opcodes_specs) $(avm_prove_internal_specs) $(avm_prove_simple_specs) )
+avm_prove_internal_specs := $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/internal/*-spec.k))
+avm_prove_simple_specs := $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/simple/*-spec.k))
+avm_prove_opcode_specs :=  $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/opcodes/*-spec.md))
 
-test-avm-semantics-prove: $(avm_prove_specs_passing:=.prove)
+test-avm-semantics-internal-prove: $(avm_prove_internal_specs:=.prove)
+test-avm-semantics-opcode-prove: $(avm_prove_opcode_specs:=.prove)
+test-avm-semantics-simple-prove: $(avm_prove_simple_specs:=.prove)
 
 tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
 	$(VENV_ACTIVATE) && \

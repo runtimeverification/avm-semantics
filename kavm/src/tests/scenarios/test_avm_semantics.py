@@ -1,7 +1,7 @@
 import glob
 import json
-import sys
 import os
+import sys
 from os.path import abspath
 from pathlib import Path
 from typing import cast
