@@ -139,7 +139,7 @@ Feel free to ignore `direnv` if you prefer your global installation of K.
 
 We use [`pytest-profiling`](https://pypi.org/project/pytest-profiling/) to generate profiling data for `py-algorand-sdk`-based integration tests.
 The approach is as follows:
-1. Run an test file to collect profiling information into a `.prof` binary file
+1. Run a test file to collect profiling information into a `.prof` binary file
 2. Run a script that will analyse the `.prof` file and present the relevant results as a Markdown table
 
 For example, here are the steps required to profile `kavm/src/tests/algod_integration/test_faucet.py`:
