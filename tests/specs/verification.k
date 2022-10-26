@@ -3,6 +3,7 @@ requires "avm/avm-execution.md"
 // Verification interface and lemmas
 module VERIFICATION
   imports AVM-EXECUTION
+  imports TEAL-TYPES
 
 
   syntax StepSort ::= MaybeTValue
@@ -148,5 +149,12 @@ module VERIFICATION
 ////////////////////////////////////////////////////////////////////////////////
 
   rule lengthBytes(B1) +Int lengthBytes(B2) => lengthBytes(B1 +Bytes B2)  [simplification]
+
+////////////////////////////////////////////////////////////////////////////////
+// Address hooks
+////////////////////////////////////////////////////////////////////////////////
+
+  // for symbolic reasoning, we relax address validity to just the checking the length
+  rule IsAddressValid(A) => lengthString(A) ==Int 58 [simplification]
 
 endmodule
