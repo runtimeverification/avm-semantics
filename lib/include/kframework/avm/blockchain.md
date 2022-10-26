@@ -686,7 +686,7 @@ Accessor functions
 ### Auxiliary Functions
 
 ```k
-  syntax Bool ::= TAddressLiteral "in_accounts" "(" AccountsMapCell ")" [function]
+  syntax Bool ::= TValue "in_accounts" "(" AccountsMapCell ")" [function]
   // -------------------------------------------------------------------
   rule ADDR in_accounts( <accountsMap>
                            <account>
@@ -814,10 +814,8 @@ references and also to check that a resource is available.
 ```k
   syntax MaybeTValue ::= accountReference(TValue) [function, functional]
   //--------------------------------------------------------------------
-//  rule accountReference(A:TAddressLiteral ) => A requires accountAvailable(A)
-  rule accountReference(A:Bytes           ) => Bytes2TAddressLiteral(A) requires accountAvailable(Bytes2TAddressLiteral(A))
-  rule accountReference(I:Int             ) => Bytes2TAddressLiteral({getTxnField(getCurrentTxn(), Accounts, I)}:>Bytes)
-    requires isTValue(getTxnField(getCurrentTxn(), Accounts, I))
+  rule accountReference(A:TBytes          ) => A requires accountAvailable(A)
+  rule accountReference(I:Int             ) => getTxnField(getCurrentTxn(), Accounts, I)
   rule accountReference(_                 ) => NoTValue  [owise]
 
   syntax MaybeTValue ::= appReference(TUInt64)  [function, functional]
@@ -837,17 +835,17 @@ references and also to check that a resource is available.
 // TODO the associated account of a contract that was created earlier in the group should be available (v 6)
 // TODO the associated account of a contract present in the txn.ForeignApplications field should be available (v7)
 
-  syntax Bool ::= accountAvailable(TAddressLiteral) [function, functional]
+  syntax Bool ::= accountAvailable(TBytes) [function, functional]
   //---------------------------------------------------------------
 
   rule accountAvailable(A) => true
     requires contains(getTxnField(getCurrentTxn(), Accounts), A)
 
   rule accountAvailable(A) => true
-    requires normalize(A) ==K getTxnField(getCurrentTxn(), Sender)
+    requires A ==K getTxnField(getCurrentTxn(), Sender)
 
   rule accountAvailable(A) => true
-    requires normalize(A) ==K getGlobalField(CurrentApplicationAddress)
+    requires A ==K getGlobalField(CurrentApplicationAddress)
 
   rule accountAvailable(_) => false [owise]
 

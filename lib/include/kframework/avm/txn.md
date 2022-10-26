@@ -162,7 +162,6 @@ module ALGO-TXN
   imports TEAL-TYPES
   imports SET
   imports LIST
-  imports BYTES-HOOKED
 ```
 
 *Transaction Group Configuration*
