@@ -210,9 +210,9 @@ VENV_DIR       := $(BUILD_DIR)/venv
 VENV_ACTIVATE  := . $(VENV_DIR)/bin/activate
 
 $(VENV_DIR)/pyvenv.cfg:
-	   virtualenv $(VENV_DIR) \
-	&& $(VENV_ACTIVATE)       \
-	&& pip install --editable $(PY_KAVM_DIR)
+	   python -m venv $(VENV_DIR) \
+           && $(VENV_ACTIVATE)        \
+           && pip install --editable $(PY_KAVM_DIR)
 
 venv: $(VENV_DIR)/pyvenv.cfg
 	@echo $(VENV_ACTIVATE)
@@ -346,7 +346,7 @@ uninstall:
 
 KAVM_OPTIONS :=
 
-test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics test-avm-semantics-prove
+test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics-prove
 
 ##########################################
 ## Standalone AVM LLVM Backend hooks tests
@@ -358,47 +358,12 @@ test-kavm-hooks: build-kavm-hooks-tests
 build-kavm-hooks-tests: $(hook_includes) plugin-deps
 	cd $(CURDIR)/tests/hooks; ./generate-interpreter.sh
 
-#################
-## AVM Unit Tests
-#################
-avm_simulation_sources := $(wildcard tests/scenarios/*.avm-simulation)
-avm_tests_failing := $(shell cat tests/failing-avm-simulation.list)
-avm_tests_passing := $(filter-out $(avm_tests_failing), $(avm_simulation_sources))
-teal_sources := $(wildcard tests/teal-sources/*.teal)
-all_sources := $(join $(avm_simulation_sources), $(teal_sources))
-
-test-avm-semantics: $(avm_tests_passing:=.unit)
-
-tests/scenarios/%.fail.avm-simulation.unit: tests/scenarios/%.fail.avm-simulation
-	$(VENV_ACTIVATE) && ! $(KAVM) run --teal-sources-dir=./tests/teal-sources/ --output none $<
-
-tests/scenarios/%.avm-simulation.unit: tests/scenarios/%.avm-simulation
-	$(VENV_ACTIVATE) && $(KAVM) run --teal-sources-dir=./tests/teal-sources/ --output none $<
-
-###########################
-## AVM Symbolic Proof Tests
-###########################
-avm_prove_specs := $(wildcard tests/specs/*-spec.k) $(wildcard tests/specs/*/*-spec.k)
-avm_prove_specs_failing := $(shell cat tests/failing-symbolic.list)
-avm_prove_specs_passing := $(filter-out $(avm_prove_specs_failing), $(avm_prove_specs))
-
-test-avm-semantics-prove: $(avm_prove_specs_passing:=.prove)
-
-tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
-	$(VENV_ACTIVATE) && $(KAVM) prove tests/specs/$*-spec.k --definition tests/specs/verification-kompiled
-
-tests/specs/verification-kompiled/timestamp: tests/specs/verification.k $(VENV_DIR)/pyvenv.cfg $(avm_includes)
-	mkdir -p tests/specs/verification-kompiled
-	$(VENV_ACTIVATE) && $(KAVM) kompile $< --backend haskell --definition-dir tests/specs/verification-kompiled \
-                      -I "${KAVM_INCLUDE}/kframework"                                                         \
-											-I "${plugin_include}/kframework"
-
-clean-verification:
-	rm -rf tests/specs/verification-kompiled
-
 #######
 ## kavm
 #######
+check-codestyle-kavm:
+	$(MAKE) check -C $(PY_KAVM_DIR)
+
 ## * kavm CLI tests
 test-kavm: test-kavm-kast module-imports-graph
 
@@ -418,6 +383,42 @@ tests/teal-sources/%.teal.kavm-kast.unit: tests/teal-sources/%.teal
 test-kavm-algod:
 	$(MAKE) test-unit -C $(PY_KAVM_DIR)
 	$(MAKE) test-integration-kalgod -C $(PY_KAVM_DIR)
+
+###########################
+## AVM Simulation Scenarios
+###########################
+test-kavm-avm-simulation:
+	$(MAKE) test-scenarios -C $(PY_KAVM_DIR)
+
+
+###########################
+## AVM Symbolic Proof Tests
+###########################
+avm_prove_simple_specs := $(wildcard tests/specs/simple/*-spec.k)
+avm_prove_internal_specs :=  $(wildcard tests/specs/internal/*-spec.md)
+avm_prove_opcode_specs :=  $(wildcard tests/specs/opcodes/*-spec.md)
+avm_prove_specs_failing := $(shell cat tests/failing-symbolic.list)
+avm_prove_specs_passing := $(filter-out $(avm_prove_specs_failing), $(avm_prove_opcodes_specs) $(avm_prove_internal_specs) $(avm_prove_simple_specs) )
+
+test-avm-semantics-prove: $(avm_prove_specs_passing:=.prove)
+
+tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
+	$(VENV_ACTIVATE) && \
+	$(KAVM) prove tests/specs/$*-spec.k --definition tests/specs/verification-kompiled
+
+tests/specs/%-spec.md.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
+	$(VENV_ACTIVATE) && \
+	$(KAVM) prove tests/specs/$*-spec.md --definition tests/specs/verification-kompiled
+
+tests/specs/verification-kompiled/timestamp: tests/specs/verification.k $(VENV_DIR)/pyvenv.cfg $(avm_includes)
+	mkdir -p tests/specs/verification-kompiled
+	$(VENV_ACTIVATE) &&                                                                     \
+	$(KAVM) kompile $< --backend haskell --definition-dir tests/specs/verification-kompiled \
+                           -I "${KAVM_INCLUDE}/kframework" -I "${plugin_include}/kframework"
+
+clean-verification:
+	rm -rf tests/specs/verification-kompiled
+
 
 # Utils
 # -----

@@ -216,8 +216,9 @@ teal, failure means undoing changes made to the state (for more details, see
 ```k
   syntax KItem ::= #calcReturn()
   syntax KItem ::= #deactivateApp()
+  syntax KItem ::= #stopIfError()
 
-  rule <k> #finalizeExecution() => #deactivateApp() ~> #calcReturn() ... </k>
+  rule <k> #finalizeExecution() => #deactivateApp() ~> #calcReturn() ~> #stopIfError() ... </k>
 
   rule <k> #deactivateApp() => . ... </k>
        <currentApplicationID> APP_ID </currentApplicationID>
@@ -230,39 +231,43 @@ teal, failure means undoing changes made to the state (for more details, see
        <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
     requires I >Int 0 andBool SIZE ==Int 1
 
-  rule <k> #calcReturn() => .K </k>
+  rule <k> #calcReturn() => .K ... </k>
        <stack> I : .TStack </stack>
        <stacksize> _ </stacksize>
        <returncode> 4 => 1 </returncode>
        <returnstatus> _ => "Failure - zero-valued singleton stack" </returnstatus>
     requires 0 >=Int I
 
-  rule <k> #calcReturn() => .K </k>
+  rule <k> #calcReturn() => .K ... </k>
        <stack> _ </stack>
        <stacksize> SIZE </stacksize>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - stack size greater than 1" </returnstatus>
     requires SIZE >Int 1
 
-  rule <k> #calcReturn() => .K </k>
+  rule <k> #calcReturn() => .K ... </k>
        <stack> .TStack </stack>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - empty stack" </returnstatus>
 
-  rule <k> #calcReturn() => .K </k>
+  rule <k> #calcReturn() => .K ... </k>
        <stack> (_:Bytes) : .TStack </stack>
        <stacksize> _ </stacksize>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - singleton stack with byte array type" </returnstatus>
 
   // Consume the rest of the K cell if the execution terminated with an error
-  rule <k> #finalizeExecution() ~> (_:KItem => .K) ... </k>
+  rule <k> #stopIfError() ~> (_:KItem => .K) ... </k>
        <returncode> RETURN_CODE </returncode>
-    requires RETURN_CODE =/=Int 0 andBool RETURN_CODE =/=Int 4
+    requires RETURN_CODE =/=Int 0
 
-  rule <k> #finalizeExecution() => .K </k>
+  rule <k> #stopIfError() => .K </k>
        <returncode> RETURN_CODE </returncode>
-    requires RETURN_CODE =/=Int 0 andBool RETURN_CODE =/=Int 4
+    requires RETURN_CODE =/=Int 0
+
+  rule <k> #stopIfError() => . ... </k>
+       <returncode> RETURN_CODE </returncode>
+    requires RETURN_CODE ==Int 0
 ```
 
 ```k
@@ -421,11 +426,49 @@ return code to 3 (see return codes below).
   rule ASSERTION_VIOLATION => "assertion violation"
   //--------------------------------------------------------------------------------
 
+  rule panicCode(INVALID_OP_FOR_MODE)        => 1
+  rule panicCode(ERR_OPCODE)                 => 2
+  rule panicCode(INT_OVERFLOW)               => 3
+  rule panicCode(INT_UNDERFLOW)              => 4
+  rule panicCode(DIV_BY_ZERO)                => 5
+  rule panicCode(BYTES_OVERFLOW)             => 6
+  rule panicCode(TXN_ACCESS_FAILED)          => 7
+  rule panicCode(TXN_INVALID)                => 8
+  rule panicCode(INVALID_SCRATCH_LOC)        => 9
+  rule panicCode(TXN_OUT_OF_BOUNDS)          => 10
+  rule panicCode(FUTURE_TXN)                 => 11
+  rule panicCode(INDEX_OUT_OF_BOUNDS)        => 12
+  rule panicCode(ILLEGAL_JUMP)               => 13
+  rule panicCode(ILL_TYPED_STACK)            => 14
+  rule panicCode(LOG_CALLS_EXCEEDED)         => 15
+  rule panicCode(LOG_SIZE_EXCEEDED)          => 16
+  rule panicCode(GLOBAL_BYTES_EXCEEDED)      => 17
+  rule panicCode(GLOBAL_INTS_EXCEEDED)       => 18
+  rule panicCode(LOCAL_BYTES_EXCEEDED)       => 19
+  rule panicCode(LOCAL_INTS_EXCEEDED)        => 20
+  rule panicCode(INVALID_ARGUMENT)           => 21
+  rule panicCode(STACK_OVERFLOW)             => 22
+  rule panicCode(STACK_UNDERFLOW)            => 23
+  rule panicCode(ASSERTION_VIOLATION)        => 24
+  rule panicCode(DUPLICATE_LABEL)            => 25
+  rule panicCode(IMPOSSIBLE_NEGATIVE_NUMBER) => 26
+  rule panicCode(CALLSTACK_UNDERFLOW)        => 27
+  rule panicCode(CALLSTACK_OVERFLOW)         => 28
+  rule panicCode(ITXN_REENTRY)               => 29
+  rule panicCode(MATH_BYTES_ARG_TOO_LONG)    => 30
+  rule panicCode(INSUFFICIENT_FUNDS)         => 31
+  rule panicCode(KEY_TOO_LARGE)              => 32
+  rule panicCode(BYTE_VALUE_TOO_LARGE)       => 33
+  rule panicCode(KEY_VALUE_TOO_LARGE)        => 34
+  rule panicCode(ASSERTION_VIOLATION)        => 35
+
+
   syntax KItem ::= panic(String)
   // ---------------------------
   rule <k> panic(S) ~> _ => .K </k>
        <returncode> _ => 3 </returncode>
        <returnstatus> _ => "Failure - panic: " +String S </returnstatus>
+       <paniccode> _ => panicCode(S) </paniccode>
 ```
 
 ```k
