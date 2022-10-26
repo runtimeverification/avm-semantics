@@ -63,8 +63,6 @@ The elements of the stack are values of sort `TValue`, i.e. either `TUInt64` or 
     requires N ==Int #sizeTStack(XS)
   rule XS              { N } => #drop((#sizeTStack(XS) -Int N) -Int 1, XS) [ 0 ]
     requires N  <Int #sizeTStack(XS)
-
-//  rule XS:TStack {N} => #sizeTStack(#drop(#sizeTStack(XS) -Int N, XS))
 ```
 
 - `S { N <- M }` set element $N$ (counting from the bottom of the stack) of $S$ to $M$.
