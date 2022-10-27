@@ -4,9 +4,9 @@ from base64 import b64decode
 from pathlib import Path
 from typing import Any, Dict, cast
 
-from pyk.kast import KApply, KAst, KInner, KSort
+from pyk.kast import KApply, KAst, KInner, KSort, KToken
 from pyk.kastManip import split_config_from
-from pyk.prelude import intToken
+from pyk.prelude.kint import intToken
 
 from kavm.pyk_utils import tvalue
 
@@ -133,16 +133,16 @@ class KAVMApplication:
         """
         (_, subst) = split_config_from(term)
         return KAVMApplication(
-            app_id=int(subst['APPID_CELL'].token),
+            app_id=int(cast(KToken, subst['APPID_CELL']).token),
             approval_pgm_src=subst['APPROVALPGMSRC_CELL'],
             clear_state_pgm_src=subst['CLEARSTATEPGMSRC_CELL'],
-            approval_pgm=b64decode(subst['APPROVALPGM_CELL'].token),
-            clear_state_pgm=b64decode(subst['CLEARSTATEPGM_CELL'].token),
-            global_ints=int(subst['GLOBALNUMINTS_CELL'].token),
-            global_bytes=int(subst['GLOBALNUMBYTES_CELL'].token),
-            local_ints=int(subst['LOCALNUMINTS_CELL'].token),
-            local_bytes=int(subst['LOCALNUMBYTES_CELL'].token),
-            extra_pages=int(subst['EXTRAPAGES_CELL'].token),
+            approval_pgm=b64decode(cast(KToken, subst['APPROVALPGM_CELL']).token),
+            clear_state_pgm=b64decode(cast(KToken, subst['CLEARSTATEPGM_CELL']).token),
+            global_ints=int(cast(KToken, subst['GLOBALNUMINTS_CELL']).token),
+            global_bytes=int(cast(KToken, subst['GLOBALNUMBYTES_CELL']).token),
+            local_ints=int(cast(KToken, subst['LOCALNUMINTS_CELL']).token),
+            local_bytes=int(cast(KToken, subst['LOCALNUMBYTES_CELL']).token),
+            extra_pages=int(cast(KToken, subst['EXTRAPAGES_CELL']).token),
         )
 
     def dictify(self) -> Dict[str, Any]:

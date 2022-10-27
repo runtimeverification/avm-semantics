@@ -5,8 +5,9 @@ from collections.abc import MutableMapping
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, Union, cast
 
 from algosdk.future.transaction import OnComplete
-from pyk.kast import KApply, KAst, KInner, KLabel, KVariable, top_down
-from pyk.prelude import build_cons, intToken, stringToken
+from pyk.kast import KApply, KAst, KInner, KLabel, KVariable, build_cons, top_down
+from pyk.prelude.kint import intToken
+from pyk.prelude.string import stringToken
 
 
 def maybe_tvalue(value: Optional[Union[str, int, bytes]]) -> KInner:
