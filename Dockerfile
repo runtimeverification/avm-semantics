@@ -34,13 +34,11 @@ ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
 RUN set -ex \
     && curl https://pyenv.run | bash \
     && pyenv install $PYTHON_VERSION \
-    && pyenv global $PYTHON_VERSION \
+    && pyenv global $PYTHON_VERSION  \
     && pyenv rehash
-RUN eval "$(pyenv init -)"
 
 # Install poetry
 RUN pip install poetry
-RUN poetry config virtualenvs.prefer-active-python true
 
 RUN curl -L https://github.com/github/hub/releases/download/v2.14.0/hub-linux-amd64-2.14.0.tgz -o /home/user/hub.tgz
 RUN cd /home/user && tar xzf hub.tgz

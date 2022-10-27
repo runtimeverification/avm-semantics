@@ -16,14 +16,16 @@ PYTHON_VERSION := $(if $(PYTHON_VERSION),$(PYTHON_VERSION),3.10.6)
 POETRY_RUN := poetry run
 PYTEST_ARGS := -n $(THREADS)
 
-check-python-version:
-	which python
-	python --version
+ci-config:
+	poetry config virtualenvs.in-project true
+	poetry config virtualenvs.prefer-active-python true
+	poetry config --list
+	pyenv local $(PYTHON_VERSION)
+	poetry env use $(PYTHON_VERSION)
 
-build: check-python-version
+build:
 	poetry build
-
-poetry-install: check-python-version
+poetry-install:
 	poetry install
 
 
