@@ -907,10 +907,10 @@ references and also to check that a resource is available.
 
   syntax Map ::= TValuePairList2Map(TValuePairList, TValueList, Bytes) [function, functional]
   //----------------------------------------------------------------------
-//  rule TValuePairList2Map((A, B):TValuePair REST, APPS, DEFAULT) => ((A |-> APPS[B -Int 1]) TValuePairList2Map(REST, APPS, DEFAULT))
-//    requires B >=Int 1
-//  rule TValuePairList2Map((A, B):TValuePair, APPS, DEFAULT) => (A |-> APPS[B -Int 1])
-//    requires B >=Int 1
+  rule TValuePairList2Map((A, B):TValuePair REST, APPS, DEFAULT) => ((A |-> APPS[B -Int 1]) TValuePairList2Map(REST, APPS, DEFAULT))
+    requires B >=Int 1
+  rule TValuePairList2Map((A, B):TValuePair, APPS, DEFAULT) => (A |-> APPS[B -Int 1])
+    requires B >=Int 1
   rule TValuePairList2Map((A, 0):TValuePair REST, APPS, DEFAULT) => ((A |-> DEFAULT) TValuePairList2Map(REST, APPS, DEFAULT))
   rule TValuePairList2Map((A, 0):TValuePair, APPS, DEFAULT) => (A |-> DEFAULT)
   rule TValuePairList2Map(.TValuePairList, _, _) => .Map
@@ -947,9 +947,13 @@ references and also to check that a resource is available.
          ...
        </transaction>
 
-  syntax Bytes ::= boxAcct(Bytes) [function, functional]
+  syntax MaybeTValue ::= boxAcct(Bytes) [function, functional]
   //--------------------------------------------------------------------
   rule boxAcct(NAME) => {getGroupBoxRefs(getTxnGroupID(getCurrentTxn()))[NAME]}:>Bytes
+    requires NAME in_keys(getGroupBoxRefs(getTxnGroupID(getCurrentTxn())))
+
+  rule boxAcct(_) => NoTValue [owise]
+
 
 ```
 

@@ -4,6 +4,8 @@ byte "box1"
 int 32
 box_create
 
+assert
+
 byte "box1"
 int 10
 byte "abc"

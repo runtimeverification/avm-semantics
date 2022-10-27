@@ -2051,9 +2051,10 @@ Stateful TEAL Operations
 *box_create*
 
 ```k
-  rule <k> box_create => #createBox(NAME, boxAcct(NAME), SIZE) ... </k>
+  rule <k> box_create => #createBox(NAME, {boxAcct(NAME)}:>Bytes, SIZE) ... </k>
        <stack> SIZE:Int : NAME:Bytes : XS => XS </stack>
        <stacksize> S => S -Int 2 </stacksize>
+    requires isBytes(boxAcct(NAME))
 
   syntax KItem ::= "#createBox" "(" Bytes "," Bytes "," Int ")"
 
@@ -2107,6 +2108,10 @@ Stateful TEAL Operations
     requires SIZE <=Int PARAM_MAX_BOX_SIZE
      andBool lengthBytes(BYTES) =/=Int SIZE
 
+  rule <k> box_create => panic(BOX_UNAVAILABLE) ... </k>
+       <stack> SIZE:Int : NAME:Bytes : _</stack>
+    requires boxAcct(NAME) ==K NoTValue
+
   rule <k> box_create => panic(BOX_TOO_LARGE) ... </k>
        <stack> SIZE:Int : _ : _ </stack>
     requires SIZE >Int PARAM_MAX_BOX_SIZE
@@ -2123,10 +2128,14 @@ Stateful TEAL Operations
 *box_replace*
 
 ```k
-  rule <k> box_replace => . ... </k>
+  syntax KItem ::= "#boxReplace" "(" Bytes "," Bytes "," Int "," Bytes ")"
+
+  rule <k> box_replace => #boxReplace(NAME, {boxAcct(NAME)}:>Bytes, OFFSET, VAL) ... </k>
        <stack> VAL:Bytes : OFFSET:Int : NAME:Bytes : XS => XS </stack>
        <stacksize> S => S -Int 3 </stacksize>
-       <currentApplicationAddress> ADDR </currentApplicationAddress>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxReplace(NAME, ADDR, OFFSET, VAL) => . ...</k>
        <account>
          <address> ADDR </address>
          <box>
@@ -2137,9 +2146,7 @@ Stateful TEAL Operations
        </account>
     requires (lengthBytes(VAL) +Int OFFSET) <Int lengthBytes(BYTES)
 
-  rule <k> box_replace => panic(BYTES_OVERFLOW) ... </k>
-       <stack> VAL:Bytes : OFFSET:Int : NAME:Bytes : _ </stack>
-       <currentApplicationAddress> ADDR </currentApplicationAddress>
+  rule <k> #boxReplace(NAME, ADDR, OFFSET, VAL) => panic(BYTES_OVERFLOW) ...</k>
        <account>
          <address> ADDR </address>
          <box>
@@ -2150,9 +2157,7 @@ Stateful TEAL Operations
        </account>
     requires (lengthBytes(VAL) +Int OFFSET) >=Int lengthBytes(BYTES)
 
-  rule <k> box_replace => panic(BOX_NOT_FOUND) ... </k>
-       <stack> _:Bytes : _:Int : NAME:Bytes : _ </stack>
-       <currentApplicationAddress> ADDR </currentApplicationAddress>
+  rule <k> #boxReplace(NAME, ADDR, OFFSET, VAL) => panic(BOX_NOT_FOUND) ...</k>
        <account>
          <address> ADDR </address>
          <boxes>
@@ -2161,6 +2166,10 @@ Stateful TEAL Operations
          ...
        </account>
     requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_replace => panic(BOX_UNAVAILABLE) ... </k>
+       <stack> VAL:Bytes : OFFSET:Int : NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
 
   rule <k> box_replace => panic(ILL_TYPED_STACK) ... </k>
        <stack> VAL : OFFSET : NAME : _ </stack>
@@ -2174,9 +2183,16 @@ Stateful TEAL Operations
 *box_extract*
 
 ```k
-  rule <k> box_extract => . ... </k>
-       <stack> LENGTH:Int : OFFSET:Int : NAME:Bytes : XS => substrBytes(BYTES, OFFSET, OFFSET +Int LENGTH) : XS </stack>
-       <stacksize> S => S -Int 2 </stacksize>
+  syntax KItem ::= "#boxExtract" "(" Bytes "," Bytes "," Int "," Int ")"
+
+  rule <k> box_extract => #boxExtract(NAME, {boxAcct(NAME)}:>Bytes, OFFSET, LENGTH) ... </k>
+       <stack> LENGTH:Int : OFFSET:Int : NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 3 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxExtract(NAME, ADDR, OFFSET, LENGTH) => . ... </k>
+       <stack> XS => substrBytes(BYTES, OFFSET, OFFSET +Int LENGTH) : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
        <currentApplicationAddress> ADDR </currentApplicationAddress>
        <account>
          <address> ADDR </address>
@@ -2188,10 +2204,7 @@ Stateful TEAL Operations
        </account>
     requires (LENGTH +Int OFFSET) <Int lengthBytes(BYTES)
 
-  rule <k> box_extract => panic(BYTES_OVERFLOW) ... </k>
-       <stack> LENGTH:Int : OFFSET:Int : NAME:Bytes : _ </stack>
-       <stacksize> S => S -Int 2 </stacksize>
-       <currentApplicationAddress> ADDR </currentApplicationAddress>
+  rule <k> #boxExtract(NAME, ADDR, OFFSET, LENGTH) => panic(BYTES_OVERFLOW) ... </k>
        <account>
          <address> ADDR </address>
          <box>
@@ -2202,9 +2215,7 @@ Stateful TEAL Operations
        </account>
     requires (LENGTH +Int OFFSET) >=Int lengthBytes(BYTES)
 
-  rule <k> box_extract => panic(BOX_NOT_FOUND) ... </k>
-       <stack> _:Int : _:Int : NAME:Bytes : _ </stack>
-       <currentApplicationAddress> ADDR </currentApplicationAddress>
+  rule <k> #boxExtract(NAME, ADDR, OFFSET, LENGTH) => panic(BOX_NOT_FOUND) ... </k>
        <account>
          <address> ADDR </address>
          <boxes>
@@ -2213,6 +2224,10 @@ Stateful TEAL Operations
          ...
        </account>
     requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_extract => panic(BOX_UNAVAILABLE) ... </k>
+       <stack> LENGTH:Int : OFFSET:Int : NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
 
   rule <k> box_extract => panic(ILL_TYPED_STACK) ... </k>
        <stack> LENGTH : OFFSET : NAME : _ </stack>
