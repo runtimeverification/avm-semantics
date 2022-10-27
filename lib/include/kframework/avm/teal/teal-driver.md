@@ -2169,6 +2169,58 @@ Stateful TEAL Operations
     requires S <Int 3
 ```
 
+*box_extract*
+
+```k
+  rule <k> box_extract => . ... </k>
+       <stack> LENGTH:Int : OFFSET:Int : NAME:Bytes : XS => substrBytes(BYTES, OFFSET, OFFSET +Int LENGTH) : XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+       <currentApplicationAddress> ADDR </currentApplicationAddress>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires (LENGTH +Int OFFSET) <Int lengthBytes(BYTES)
+
+  rule <k> box_extract => panic(BYTES_OVERFLOW) ... </k>
+       <stack> LENGTH:Int : OFFSET:Int : NAME:Bytes : _ </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+       <currentApplicationAddress> ADDR </currentApplicationAddress>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires (LENGTH +Int OFFSET) >=Int lengthBytes(BYTES)
+
+  rule <k> box_extract => panic(BOX_NOT_FOUND) ... </k>
+       <stack> _:Int : _:Int : NAME:Bytes : _ </stack>
+       <currentApplicationAddress> ADDR </currentApplicationAddress>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_extract => panic(ILL_TYPED_STACK) ... </k>
+       <stack> LENGTH : OFFSET : NAME : _ </stack>
+    requires isBytes(LENGTH) orBool isBytes(OFFSET) orBool isInt(NAME)
+
+  rule <k> box_extract => panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 3
+```
+
 ### Access to past transactions in the group
 
 *gaid*
