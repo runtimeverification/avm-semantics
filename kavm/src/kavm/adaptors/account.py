@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Union, cast
 
 from pyk.kast import KApply, KAst, KInner, KSort, KToken, Subst
 from pyk.kastManip import flatten_label, split_config_from
-from pyk.prelude import intToken
+from pyk.prelude.kint import intToken
 
 from kavm.constants import MIN_BALANCE
 from kavm.pyk_utils import AppCellMap, split_direct_subcells_from
