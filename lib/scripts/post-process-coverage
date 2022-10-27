@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+#
+# This is a script that implements a workaround to address an issue with the
+# 'publishCoverage' Jenkins plugin not being able to locate source files,
+# resulting in generating broken coverage reports.
+#
+# The workaround implemented by this script involves post-processing the
+# coverage information file 'coverage.xml' so that relative paths to files are
+# replaced by the corresponding absolute paths. This is a temporary workaround
+# until the issue with 'publishCoverage' gets properly resolved.
+#
+# Note that the script does not validate file names or their paths. It simply
+# computes the full path based on the information given in the `<source>`
+# element of the input file.
+#
+
+import sys
+import pathlib
+import xml.etree.ElementTree as ET
+
+def die(msg):
+    raise RuntimeError(msg)
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2: die(f"usage: {sys.argv[0]} <coverage_file>")
+
+    coverage_file = pathlib.Path(sys.argv[1])
+    if not coverage_file.exists(): die(f"Coverage file {sys.argv[1]} does not exist!")
+
+    tree = ET.parse(coverage_file)
+    root = tree.getroot()
+
+    path_prefix = None
+    for source in root.iter("source"):
+        path_prefix = source.text + "/"
+
+    for file in root.iter('class'):
+        relative_path = file.attrib["filename"]
+        file.attrib["filename"] = path_prefix + relative_path
+
+    tree.write(coverage_file)
+
