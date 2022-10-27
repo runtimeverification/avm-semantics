@@ -13,8 +13,12 @@ clean:
 
 THREADS := $(if $(THREADS),$(THREADS),1)
 PYTHON_VERSION := $(if $(PYTHON_VERSION),$(PYTHON_VERSION),3.10.6)
+POETRY_CACHE_DIR := ./../build/pypoetry
+POETRY_VIRTUALENVS_PATH=./../build/pypoetry/virtualenvs/
 POETRY_RUN := poetry run
 PYTEST_ARGS := -n $(THREADS)
+export $(POETRY_VIRTUALENVS_PATH)
+export $(POETRY_CACHE_DIR)
 
 check-python-version:
 	which python

@@ -8,6 +8,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  code-quality-checks:
+    name: 'Code Quality Checks'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v3
+      - name: 'Install dependencies'
+        run: |
+          curl -sSL https://install.python-poetry.org | sudo bash -c 'POETRY_HOME=/usr python3 -'
+          poetry --version
+      - name: 'Build kavm and run code quality checks'
+        run: make check-kavm-codestyle
+
   test-pr:
     name: 'Test PR'
     runs-on: [self-hosted, linux, normal]
@@ -27,9 +40,15 @@ jobs:
 
           KAVM_COMMIT="$(git rev-parse --short=7 HEAD)"
 
-          docker build . --file Dockerfile --build-arg K_VERSION=${K_VERSION} --tag runtimeverification/avm-semantics-ci:${KAVM_COMMIT} --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)
+          docker build .                                              \
+            --file Dockerfile                                         \
+            --build-arg K_VERSION=${K_VERSION}                        \
+            --tag runtimeverification/avm-semantics-ci:${KAVM_COMMIT} \
 
-          docker run --name avm-semantics-ci --rm -it --detach --workdir /opt/workspace --user $(id -u):$(id -g) -v ${HOME}:${HOME} -v "$(pwd):/opt/workspace" -v "/etc/passwd:/etc/passwd:ro" -v "/etc/group:/etc/group:ro" runtimeverification/avm-semantics-ci:${KAVM_COMMIT}
+          docker run --name avm-semantics-ci \
+                 --rm -it --detach           \
+                 --workdir /opt/workspace    \
+                 runtimeverification/avm-semantics-ci:${KAVM_COMMIT}
       - name: 'Build AVM semantics'
         run: docker exec -t avm-semantics-ci /bin/bash -c 'make build'
       - name: 'Test kavm kast'
