@@ -2051,10 +2051,15 @@ Stateful TEAL Operations
 *box_create*
 
 ```k
-  rule <k> box_create => . ... </k>
-       <stack> SIZE:Int : NAME:Bytes : XS => 1 : XS </stack>
-       <stacksize> S => S -Int 1 </stacksize>
-       <currentApplicationAddress> ADDR </currentApplicationAddress>
+  rule <k> box_create => #createBox(NAME, boxAcct(NAME), SIZE) ... </k>
+       <stack> SIZE:Int : NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+
+  syntax KItem ::= "#createBox" "(" Bytes "," Bytes "," Int ")"
+
+  rule <k> #createBox(NAME, ADDR, SIZE) => . ... </k>
+       <stack> XS => 1 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
        <account>
          <address> ADDR </address>
          <boxes>
@@ -2070,10 +2075,9 @@ Stateful TEAL Operations
     requires SIZE <=Int PARAM_MAX_BOX_SIZE
      andBool notBool(NAME in_boxes(<boxes> REST </boxes>))
 
-  rule <k> box_create => . ... </k>
-       <stack> SIZE:Int : NAME:Bytes : XS => 0 : XS </stack>
-       <stacksize> S => S -Int 1 </stacksize>
-       <currentApplicationAddress> ADDR </currentApplicationAddress>
+  rule <k> #createBox(NAME, ADDR, SIZE) => . ... </k>
+       <stack> XS => 0 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
        <account>
          <address> ADDR </address>
          <boxes>
@@ -2088,9 +2092,7 @@ Stateful TEAL Operations
     requires SIZE <=Int PARAM_MAX_BOX_SIZE
      andBool lengthBytes(BYTES) ==Int SIZE
 
-  rule <k> box_create => panic(CHANGED_BOX_SIZE) ... </k>
-       <stack> SIZE:Int : NAME:Bytes : _ </stack>
-       <currentApplicationAddress> ADDR </currentApplicationAddress>
+  rule <k> #createBox(NAME, ADDR, SIZE) => panic(CHANGED_BOX_SIZE) ... </k>
        <account>
          <address> ADDR </address>
          <boxes>

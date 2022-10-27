@@ -905,6 +905,52 @@ references and also to check that a resource is available.
 
   rule assetAvailable(_) => false [owise]
 
+  syntax Map ::= TValuePairList2Map(TValuePairList, TValueList, Bytes) [function, functional]
+  //----------------------------------------------------------------------
+//  rule TValuePairList2Map((A, B):TValuePair REST, APPS, DEFAULT) => ((A |-> APPS[B -Int 1]) TValuePairList2Map(REST, APPS, DEFAULT))
+//    requires B >=Int 1
+//  rule TValuePairList2Map((A, B):TValuePair, APPS, DEFAULT) => (A |-> APPS[B -Int 1])
+//    requires B >=Int 1
+  rule TValuePairList2Map((A, 0):TValuePair REST, APPS, DEFAULT) => ((A |-> DEFAULT) TValuePairList2Map(REST, APPS, DEFAULT))
+  rule TValuePairList2Map((A, 0):TValuePair, APPS, DEFAULT) => (A |-> DEFAULT)
+  rule TValuePairList2Map(.TValuePairList, _, _) => .Map
+
+  syntax Map ::= getBoxRefs(String) [function, functional]
+  syntax Map ::= getGroupBoxRefs(String) [function, functional]
+  syntax Map ::= getGroupBoxRefs(Map) [function, functional]
+  //--------------------------------------------------------
+
+  rule [[ getGroupBoxRefs(GROUP_ID) => getGroupBoxRefs(VALS) ]]
+       <txnIndexMapGroup>
+         <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
+         <txnIndexMapGroupValues> VALS </txnIndexMapGroupValues>
+       </txnIndexMapGroup>
+
+  rule getGroupBoxRefs( (_ |-> TXN_ID) REST) => getGroupBoxRefs(REST) getBoxRefs(TXN_ID)
+  rule getGroupBoxRefs( .Map) => .Map
+
+  rule [[ getBoxRefs(TXN_ID) => TValuePairList2Map(REFS, FA, getAppAddress({getGlobalField(CurrentApplicationID)}:>Int)) ]]
+       <transaction>
+         <txID> TXN_ID </txID>
+         <foreignApps> FA </foreignApps>
+         <boxReferences> REFS </boxReferences>
+         ...
+       </transaction>
+
+  rule [[ getBoxRefs(TXN_ID) => .Map ]]
+       <transaction>
+         <txID> TXN_ID </txID>
+         <txnTypeSpecificFields>
+           .AppCallTxFieldsCell
+           ...
+         </txnTypeSpecificFields>
+         ...
+       </transaction>
+
+  syntax Bytes ::= boxAcct(Bytes) [function, functional]
+  //--------------------------------------------------------------------
+  rule boxAcct(NAME) => {getGroupBoxRefs(getTxnGroupID(getCurrentTxn()))[NAME]}:>Bytes
+
 ```
 
 ### Transaction Index Accessors
