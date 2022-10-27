@@ -16,11 +16,15 @@ PYTHON_VERSION := $(if $(PYTHON_VERSION),$(PYTHON_VERSION),3.10.6)
 POETRY_RUN := poetry run
 PYTEST_ARGS := -n $(THREADS)
 
-build:
-	pyenv local $(PYTHON_VERSION) && poetry build
+check-python-version:
+	which python
+	python --version
 
-poetry-install:
-	pyenv local $(PYTHON_VERSION) && poetry install
+build: check-python-version
+	poetry build
+
+poetry-install: check-python-version
+	poetry install
 
 
 # Tests
