@@ -88,7 +88,7 @@ def generate_interpreter(
     hook_namespaces: Optional[List[str]] = None,
     hook_cpp_files: Optional[List[Path]] = None,
     hook_clang_flags: Optional[List[str]] = None,
-    coverage: bool =  False,
+    coverage: bool = False,
 ) -> None:
     '''Kompile KAVM to produce an LLVM-based interpreter'''
 
