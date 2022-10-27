@@ -2,7 +2,8 @@ from typing import Any
 
 import pytest
 from pyk.kast import KApply, KInner, KSort, KToken
-from pyk.prelude import intToken, stringToken
+from pyk.prelude.kint import intToken
+from pyk.prelude.string import stringToken
 
 from kavm.pyk_utils import maybe_tvalue, split_direct_subcells_from
 
