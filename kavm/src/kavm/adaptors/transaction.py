@@ -1,5 +1,5 @@
 from base64 import b64decode
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from algosdk.constants import APPCALL_TXN, ASSETTRANSFER_TXN, PAYMENT_TXN
 from algosdk.future.transaction import (
@@ -11,7 +11,7 @@ from algosdk.future.transaction import (
     SuggestedParams,
     Transaction,
 )
-from pyk.kast import KApply, KAst, KInner, KSort, KToken, Subst
+from pyk.kast import KApply, KInner, KSort, KToken, Subst
 from pyk.kastManip import free_vars, split_config_from
 
 from kavm.pyk_utils import maybe_tvalue, tvalue, tvalue_list
@@ -41,7 +41,7 @@ class KAVMApplyData:
         self._log_data: List[Any] = log_data if log_data else []
 
     @staticmethod
-    def from_k(kast_term: KAst) -> 'KAVMApplyData':
+    def from_k(kast_term: KInner) -> 'KAVMApplyData':
         """
         Construct an instance of KAVMApplyData from a K <applyData> cell
 
@@ -49,12 +49,12 @@ class KAVMApplyData:
         """
         (_, subst) = split_config_from(kast_term)
         return KAVMApplyData(
-            tx_scratch=subst['TXSCRATCH_CELL'],
-            inner_txns=subst['INNERTXNS_CELL'],
-            tx_config_asset=subst['TXCONFIGASSET_CELL'],
-            tx_application_id=subst['TXAPPLICATIONID_CELL'],
-            log_size=subst['LOGSIZE_CELL'],
-            log_data=subst['LOGDATA_CELL'],
+            tx_scratch={},  # tx_scratch=subst['TXSCRATCH_CELL'],
+            inner_txns=[],  # inner_txns=subst['INNERTXNS_CELL'],
+            tx_config_asset=int(cast(KToken, subst['TXCONFIGASSET_CELL']).token),
+            tx_application_id=int(cast(KToken, subst['TXAPPLICATIONID_CELL']).token),
+            log_size=int(cast(KToken, subst['LOGSIZE_CELL']).token),
+            log_data=[],  # log_data=subst['LOGDATA_CELL'],
         )
 
     def to_k(self) -> None:
@@ -214,7 +214,7 @@ class KAVMTransaction:
         ).apply(transaction_cell)
 
     @staticmethod
-    def transaction_from_k(kavm: Any, kast_term: KAst) -> 'KAVMTransaction':
+    def transaction_from_k(kavm: Any, kast_term: KInner) -> 'KAVMTransaction':
         """
         Covert a Kast term to one of the subclasses of the algosdk.Transaction
 
@@ -223,54 +223,54 @@ class KAVMTransaction:
         (_, tx_cell_subst) = split_config_from(kast_term)
 
         apply_data = None
-        txid = tx_cell_subst['TXID_CELL'].token.strip('"')
+        txid = cast(KToken, tx_cell_subst['TXID_CELL']).token.strip('"')
 
         sp = SuggestedParams(
-            int(tx_cell_subst['FEE_CELL'].token),
-            int(tx_cell_subst['FIRSTVALID_CELL'].token),
-            int(tx_cell_subst['LASTVALID_CELL'].token),
-            tx_cell_subst['GENESISHASH_CELL'].token,
+            int(cast(KToken, tx_cell_subst['FEE_CELL']).token),
+            int(cast(KToken, tx_cell_subst['FIRSTVALID_CELL']).token),
+            int(cast(KToken, tx_cell_subst['LASTVALID_CELL']).token),
+            cast(KToken, tx_cell_subst['GENESISHASH_CELL']).token,
             flat_fee=True,
         )
 
-        tx_type = tx_cell_subst['TXTYPE_CELL'].token.strip('"')
+        tx_type = cast(KToken, tx_cell_subst['TXTYPE_CELL']).token.strip('"')
         result = None
         if tx_type == PAYMENT_TXN:
             result = PaymentTxn(
-                sender=tx_cell_subst['SENDER_CELL'].token.strip('"'),
+                sender=cast(KToken, tx_cell_subst['SENDER_CELL']).token.strip('"'),
                 sp=sp,
-                receiver=tx_cell_subst['RECEIVER_CELL'].token.strip('"'),
-                amt=int(tx_cell_subst['AMOUNT_CELL'].token),
+                receiver=cast(KToken, tx_cell_subst['RECEIVER_CELL']).token.strip('"'),
+                amt=int(cast(KToken, tx_cell_subst['AMOUNT_CELL']).token),
             )
         elif tx_type == ASSETTRANSFER_TXN:
             result = AssetTransferTxn(
-                sender=tx_cell_subst['SENDER_CELL'].token.strip('"'),
+                sender=cast(KToken, tx_cell_subst['SENDER_CELL']).token.strip('"'),
                 sp=sp,
-                receiver=tx_cell_subst['ASSETRECEIVER_CELL'].token.strip('"'),
-                amt=int(tx_cell_subst['ASSETAMOUNT_CELL'].token.strip('"')),
-                index=int(tx_cell_subst['XFERASSET_CELL'].token.strip('"')),
+                receiver=cast(KToken, tx_cell_subst['ASSETRECEIVER_CELL']).token.strip('"'),
+                amt=int(cast(KToken, tx_cell_subst['ASSETAMOUNT_CELL']).token.strip('"')),
+                index=int(cast(KToken, tx_cell_subst['XFERASSET_CELL']).token.strip('"')),
             )
         elif tx_type == APPCALL_TXN:
             result = ApplicationCallTxn(
-                sender=tx_cell_subst['SENDER_CELL'].token.strip('"'),
+                sender=cast(KToken, tx_cell_subst['SENDER_CELL']).token.strip('"'),
                 sp=sp,
-                index=int(tx_cell_subst['APPLICATIONID_CELL'].token.strip('"')),
-                on_complete=OnComplete(int(tx_cell_subst['ONCOMPLETION_CELL'].token.strip('"'))),
+                index=int(cast(KToken, tx_cell_subst['APPLICATIONID_CELL']).token.strip('"')),
+                on_complete=OnComplete(int(cast(KToken, tx_cell_subst['ONCOMPLETION_CELL']).token.strip('"'))),
                 local_schema=StateSchema(
-                    int(tx_cell_subst['LOCALNUI_CELL'].token.strip('"')),
-                    int(tx_cell_subst['LOCALNBS_CELL'].token.strip('"')),
+                    int(cast(KToken, tx_cell_subst['LOCALNUI_CELL']).token.strip('"')),
+                    int(cast(KToken, tx_cell_subst['LOCALNBS_CELL']).token.strip('"')),
                 ),
                 global_schema=StateSchema(
-                    int(tx_cell_subst['GLOBALNUI_CELL'].token.strip('"')),
-                    int(tx_cell_subst['GLOBALNBS_CELL'].token.strip('"')),
+                    int(cast(KToken, tx_cell_subst['GLOBALNUI_CELL']).token.strip('"')),
+                    int(cast(KToken, tx_cell_subst['GLOBALNBS_CELL']).token.strip('"')),
                 ),
                 approval_program=b64decode(
-                    tx_cell_subst['APPROVALPROGRAM_CELL'].token.strip('"')
+                    cast(KToken, tx_cell_subst['APPROVALPROGRAM_CELL']).token.strip('"')
                     if hasattr(tx_cell_subst['APPROVALPROGRAM_CELL'], 'token')
                     else ''
                 ),
                 clear_program=b64decode(
-                    tx_cell_subst['CLEARSTATEPROGRAM_CELL'].token.strip('"')
+                    cast(KToken, tx_cell_subst['CLEARSTATEPROGRAM_CELL']).token.strip('"')
                     if hasattr(tx_cell_subst['CLEARSTATEPROGRAM_CELL'], 'token')
                     else ''
                 ),
@@ -282,8 +282,8 @@ class KAVMTransaction:
                 extra_pages=0,
             )
             apply_data = KAVMApplyData(
-                tx_config_asset=int(tx_cell_subst['TXCONFIGASSET_CELL'].token.strip('"')),
-                tx_application_id=int(tx_cell_subst['TXAPPLICATIONID_CELL'].token.strip('"')),
+                tx_config_asset=int(cast(KToken, tx_cell_subst['TXCONFIGASSET_CELL']).token.strip('"')),
+                tx_application_id=int(cast(KToken, tx_cell_subst['TXAPPLICATIONID_CELL']).token.strip('"')),
             )
         else:
             raise ValueError(f'Cannot instantiate a Transaction of an unexpected type {tx_type}')
