@@ -303,7 +303,7 @@ $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM
 	@rm -f $(KAVM_DEFINITION_DIR)/interpreter.o # make sure the llvm interpreter gets rebuilt
 	@rm -f $(KAVM_DEFINITION_DIR)/interpreter
 	$(VENV_ACTIVATE) && $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file) \
-		                        --backend llvm                                              \
+                            --backend llvm                                              \
                             -I "${KAVM_INCLUDE}/kframework"                             \
                             -I "${plugin_include}/kframework"                           \
                             --definition-dir "${KAVM_LIB}/${avm_kompiled}"              \
@@ -312,8 +312,7 @@ $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM
                             --hook-namespaces KRYPTO KAVM                               \
                             --hook-cpp-files $(HOOK_KAVM_FILES) $(PLUGIN_CPP_FILES)     \
                             --hook-clang-flags $(HOOK_CC_OPTS)                          \
-														--coverage
-
+                            --coverage
 
 
 clean-avm:
@@ -345,12 +344,25 @@ uninstall:
 	rm -rf $(DESTDIR)$(INSTALL_BIN)/kavm
 	rm -rf $(DESTDIR)$(INSTALL_LIB)/kavm
 
+# Coverage Processing
+# -------------------
+
+KCOVR:=$(KAVM_K_BIN)/kcovr
+
+coverage:
+	$(KCOVR) $(KAVM_DEFINITION_DIR)       \
+        -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
+
+# remove coverage execution logs from the kompiled directory
+clean-coverage:
+	rm -f $(KAVM_DEFINITION_DIR)/*_coverage.txt
+
 # Tests
 # -----
 
 KAVM_OPTIONS :=
 
-test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics-prove
+test: test-kavm-hooks test-kavm test-kavm-avm-simulation test-kavm-algod test-avm-semantics-prove
 
 ##########################################
 ## Standalone AVM LLVM Backend hooks tests
@@ -393,7 +405,6 @@ test-kavm-algod:
 ###########################
 test-kavm-avm-simulation:
 	$(MAKE) test-scenarios -C $(PY_KAVM_DIR)
-
 
 ###########################
 ## AVM Symbolic Proof Tests
