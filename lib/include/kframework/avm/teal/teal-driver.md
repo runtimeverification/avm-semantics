@@ -2180,6 +2180,61 @@ Stateful TEAL Operations
     requires S <Int 3
 ```
 
+*box_put*
+
+```k
+  syntax KItem ::= "#boxPut" "(" Bytes "," Bytes "," Bytes ")"
+
+  rule <k> box_put => #boxPut(NAME, {boxAcct(NAME)}:>Bytes, VAL) ... </k>
+       <stack> VAL:Bytes : NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxPut(NAME, ADDR, VAL) => . ...</k>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES => VAL </boxData>
+         </box>
+         ...
+       </account>
+    requires lengthBytes(VAL) ==Int lengthBytes(BYTES)
+
+  rule <k> #boxPut(NAME, ADDR, VAL) => panic(BOX_WRONG_LENGTH) ...</k>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires lengthBytes(VAL) =/=Int lengthBytes(BYTES)
+
+  rule <k> #boxPut(NAME, ADDR, VAL) => panic(BOX_NOT_FOUND) ...</k>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_put => panic(BOX_UNAVAILABLE) ... </k>
+       <stack> VAL:Bytes : NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_put => panic(ILL_TYPED_STACK) ... </k>
+       <stack> VAL : NAME : _ </stack>
+    requires isInt(VAL) orBool isInt(NAME)
+
+  rule <k> box_put => panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 2
+```
+
 *box_extract*
 
 ```k
@@ -2193,7 +2248,6 @@ Stateful TEAL Operations
   rule <k> #boxExtract(NAME, ADDR, OFFSET, LENGTH) => . ... </k>
        <stack> XS => substrBytes(BYTES, OFFSET, OFFSET +Int LENGTH) : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
-       <currentApplicationAddress> ADDR </currentApplicationAddress>
        <account>
          <address> ADDR </address>
          <box>
@@ -2236,6 +2290,63 @@ Stateful TEAL Operations
   rule <k> box_extract => panic(STACK_UNDERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S <Int 3
+```
+
+*box_get*
+
+```k
+  syntax KItem ::= "#boxGet" "(" Bytes "," Bytes ")"
+
+  rule <k> box_get => #boxGet(NAME, {boxAcct(NAME)}:>Bytes) ... </k>
+       <stack> NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxGet(NAME, ADDR) => . ... </k>
+       <stack> XS => BYTES : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires lengthBytes(BYTES) <Int MAX_BYTEARRAY_LEN
+
+  rule <k> #boxGet(NAME, ADDR) => panic(BYTES_OVERFLOW) ... </k>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires lengthBytes(BYTES) >=Int MAX_BYTEARRAY_LEN
+
+  rule <k> #boxGet(NAME, ADDR) => panic(BOX_NOT_FOUND) ... </k>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_get => panic(BOX_UNAVAILABLE) ... </k>
+       <stack> NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_get => panic(ILL_TYPED_STACK) ... </k>
+       <stack> NAME : _ </stack>
+    requires isInt(NAME)
+
+  rule <k> box_get => panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 1
 ```
 
 ### Access to past transactions in the group
