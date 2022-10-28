@@ -11,6 +11,7 @@ box_put
 
 byte "box1"
 box_get
+assert
 byte "abcde"
 ==
 assert
