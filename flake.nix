@@ -19,22 +19,9 @@
   outputs = { self, k-framework, nixpkgs, flake-utils, poetry2nix
     , blockchain-k-plugin, rv-utils, pyk }:
     let
-      buildInputs = pkgs: k:
-        with pkgs; [
-          autoconf
-          automake
-          cmake
-          clang
-          cryptopp.dev
-          gmp
-          openssl.dev
-          pkg-config
-          procps
-          libtool
-        ];
-
       overlay = final: prev:
         let
+          k = k-framework.packages.${prev.system}.k;
           kavm-deps = prev.stdenv.mkDerivation {
             pname = "kavm-deps";
             version = self.rev or "dirty";
@@ -77,21 +64,19 @@
               mv .build/usr/* $out/
             '';
           };
+
+          kavm-bin = prev.poetry2nix.mkPoetryApplication {
+            python = prev.python310;
+            projectDir = ./kavm;
+            overrides = prev.poetry2nix.overrides.withDefaults
+              (finalPython: prevPython: { pyk = prev.python310Packages.pyk; });
+            groups = [ ];
+            # We remove `"dev"` from `checkGroups`, so that poetry2nix does not try to resolve dev dependencies.
+            checkGroups = [ ];
+            propagatedBuildInputs = [ k prev.llvm-backend ];
+          };
         in {
-          inherit kavm-deps;
-          kavm = let
-            k = k-framework.packages.${prev.system}.k;
-            kavm-bin = prev.poetry2nix.mkPoetryApplication {
-              python = prev.python310;
-              projectDir = ./kavm;
-              overrides = prev.poetry2nix.overrides.withDefaults
-                (finalPython: prevPython: { pyk = prev.python310Packages.pyk; });
-              groups = [ ];
-              # We remove `"dev"` from `checkGroups`, so that poetry2nix does not try to resolve dev dependencies.
-              checkGroups = [ ];
-              propagatedBuildInputs = [ k prev.llvm-backend ];
-            };
-          in prev.stdenv.mkDerivation {
+          kavm = prev.stdenv.mkDerivation {
             pname = "kavm";
             version = self.rev or "dirty";
             buildInputs = with prev; [
@@ -138,7 +123,6 @@
               mkdir $out/bin
               ln -s ${kavm-bin}/bin/kavm $out/bin/
             '';
-
           };
 
         };
@@ -162,20 +146,6 @@
         };
       in {
         packages.default = pkgs.kavm;
-
-        apps = {
-          compare-profiles = flake-utils.lib.mkApp {
-            drv = pkgs.stdenv.mkDerivation {
-              name = "compare-profiles";
-              src = ./package/nix;
-              installPhase = ''
-                mkdir -p $out/bin
-                cp profile.py $out/bin/compare-profiles
-              '';
-            };
-          };
-        };
-
         packages = {
           inherit (pkgs) kavm kavm-deps;
 
