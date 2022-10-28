@@ -2,8 +2,7 @@ name: 'Master Push'
 on:
   push:
     branches:
-      # - master
-      - sam/nix-flake
+      - master
 
 jobs:
   nix-flake-release:
