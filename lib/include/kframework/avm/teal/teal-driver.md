@@ -2146,7 +2146,7 @@ Stateful TEAL Operations
        </account>
     requires (lengthBytes(VAL) +Int OFFSET) <Int lengthBytes(BYTES)
 
-  rule <k> #boxReplace(NAME, ADDR, OFFSET, VAL) => panic(BYTES_OVERFLOW) ...</k>
+  rule <k> #boxReplace(NAME, ADDR, OFFSET, VAL) => panic(BOX_OUT_OF_BOUNDS) ...</k>
        <account>
          <address> ADDR </address>
          <box>
@@ -2258,7 +2258,7 @@ Stateful TEAL Operations
        </account>
     requires (LENGTH +Int OFFSET) <Int lengthBytes(BYTES)
 
-  rule <k> #boxExtract(NAME, ADDR, OFFSET, LENGTH) => panic(BYTES_OVERFLOW) ... </k>
+  rule <k> #boxExtract(NAME, ADDR, OFFSET, LENGTH) => panic(BOX_OUT_OF_BOUNDS) ... </k>
        <account>
          <address> ADDR </address>
          <box>
@@ -2345,6 +2345,51 @@ Stateful TEAL Operations
     requires isInt(NAME)
 
   rule <k> box_get => panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 1
+```
+
+*box_len*
+
+```k
+  syntax KItem ::= "#boxLen" "(" Bytes "," Bytes ")"
+
+  rule <k> box_len => #boxLen(NAME, {boxAcct(NAME)}:>Bytes) ... </k>
+       <stack> NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxLen(NAME, ADDR) => . ... </k>
+       <stack> XS => lengthBytes(BYTES) : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+
+  rule <k> #boxLen(NAME, ADDR) => panic(BOX_NOT_FOUND) ... </k>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_len => panic(BOX_UNAVAILABLE) ... </k>
+       <stack> NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_len => panic(ILL_TYPED_STACK) ... </k>
+       <stack> NAME : _ </stack>
+    requires isInt(NAME)
+
+  rule <k> box_len => panic(STACK_UNDERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S <Int 1
 ```

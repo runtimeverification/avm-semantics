@@ -1,0 +1,12 @@
+#pragma version 8
+
+byte "box1"
+int 5000
+box_create
+assert
+
+byte "box1"
+box_get
+
+int 1
+return
