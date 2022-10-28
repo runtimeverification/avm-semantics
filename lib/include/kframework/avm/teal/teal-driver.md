@@ -2212,7 +2212,7 @@ Stateful TEAL Operations
        </account>
     requires lengthBytes(VAL) =/=Int lengthBytes(BYTES)
 
-  rule <k> #boxPut(NAME, ADDR, VAL) => panic(BOX_NOT_FOUND) ...</k>
+  rule <k> #boxPut(NAME, ADDR, VAL) => #createBox(NAME, ADDR, lengthBytes(VAL)) ~> #boxPut(NAME, ADDR, VAL) ...</k>
        <account>
          <address> ADDR </address>
          <boxes>

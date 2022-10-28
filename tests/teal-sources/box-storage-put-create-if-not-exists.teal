@@ -1,0 +1,33 @@
+#pragma version 8
+
+// Test doesn't yet exist
+byte "box1"
+box_len
+!
+assert
+pop
+
+// Should create box
+byte "box1"
+byte "abc"
+box_put
+
+// Test length correct
+byte "box1"
+box_len
+assert
+int 3
+==
+assert
+
+// Test contents correct
+byte "box1"
+box_get
+assert
+byte "abc"
+==
+assert
+
+
+int 1
+return
