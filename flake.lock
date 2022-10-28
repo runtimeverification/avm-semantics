@@ -878,14 +878,18 @@
         "poetry2nix": "poetry2nix_2"
       },
       "locked": {
-        "lastModified": 1666957596,
-        "narHash": "sha256-kX2xIePA94qhH2mNmzt+c+BBP2sUBUevXfDCpkzjlmc=",
-        "path": "/home/sam/git/pyk",
-        "type": "path"
+        "lastModified": 1666958302,
+        "narHash": "sha256-A3+XYM/oeUaX03ZTlH3FNY+wsrmq36yhFdvYolNGsd8=",
+        "owner": "runtimeverification",
+        "repo": "pyk",
+        "rev": "af9530cb219250c7ab9ef1114a70ac8c9b7a5205",
+        "type": "github"
       },
       "original": {
-        "path": "/home/sam/git/pyk",
-        "type": "path"
+        "owner": "runtimeverification",
+        "ref": "af9530c",
+        "repo": "pyk",
+        "type": "github"
       }
     },
     "pypi-deps-db": {
