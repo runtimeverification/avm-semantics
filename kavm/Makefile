@@ -25,6 +25,7 @@ ci-config:
 
 build:
 	poetry build
+
 poetry-install:
 	poetry install
 

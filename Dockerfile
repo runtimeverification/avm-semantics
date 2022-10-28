@@ -36,6 +36,10 @@ RUN set -ex \
     && pyenv install $PYTHON_VERSION \
     && pyenv global $PYTHON_VERSION  \
     && pyenv rehash
+RUN eval "$(pyenv init -)"
+
+# Install poetry
+RUN pip install poetry
 
 # Install poetry
 RUN pip install poetry
