@@ -2166,12 +2166,13 @@ Stateful TEAL Operations
   rule <k> loadGroupScratch(_, I) => panic(INVALID_SCRATCH_LOC) ... </k>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
-  rule <k> loadGroupScratch(GROUP_IDX, _) => panic(FUTURE_TXN) ... </k>
-    requires GROUP_IDX >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
-
   rule <k> loadGroupScratch(GROUP_IDX, _) => panic(TXN_OUT_OF_BOUNDS) ... </k>
     requires GROUP_IDX <Int 0 orBool GROUP_IDX >=Int {getGlobalField(GroupSize)}:>Int
-  
+
+  rule <k> loadGroupScratch(GROUP_IDX, _) => panic(FUTURE_TXN) ... </k>
+    requires GROUP_IDX >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+     andBool (GROUP_IDX >=Int 0 andBool GROUP_IDX <Int {getGlobalField(GroupSize)}:>Int)
+
   rule <k> loadGroupScratch(_, _) => panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
