@@ -27,36 +27,48 @@ jobs:
 
           KAVM_COMMIT="$(git rev-parse --short=7 HEAD)"
 
-          docker build . --file Dockerfile --build-arg K_VERSION=${K_VERSION} --tag runtimeverification/avm-semantics-ci:${KAVM_COMMIT} --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)
+          docker build .                                              \
+            --file Dockerfile                                         \
+            --build-arg K_VERSION=${K_VERSION}                        \
+            --tag runtimeverification/avm-semantics-ci:${KAVM_COMMIT}
 
-          docker run --name avm-semantics-ci --rm -it --detach --workdir /opt/workspace --user $(id -u):$(id -g) -v ${HOME}:${HOME} -v "$(pwd):/opt/workspace" -v "/etc/passwd:/etc/passwd:ro" -v "/etc/group:/etc/group:ro" runtimeverification/avm-semantics-ci:${KAVM_COMMIT}
+          docker run                        \
+            --name avm-semantics-ci         \
+            --rm                            \
+            --interactive                   \
+            --detach                        \
+            runtimeverification/avm-semantics-ci:${KAVM_COMMIT}
+
+          docker cp . avm-semantics-ci:/home/user
+          docker exec avm-semantics-ci chown -R user:user /home/user
+
       - name: 'Check code style'
-        run: docker exec -t avm-semantics-ci /bin/bash -c 'cd ./kavm/ && make ci-config && make check'
+        run: docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make check-kavm-codestyle'
       - name: 'Build AVM semantics'
-        run: docker exec -t avm-semantics-ci /bin/bash -c 'make build'
+        run: docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make build'
       - name: 'Test kavm kast'
         run: |
-          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-kast-teal'
-          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-kast-avm-scenario'
+          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-kast-teal'
+          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-kast-avm-scenario'
       - name: 'Test standalone AVM C++ hooks'
         run: |
-          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 build-kavm-hooks-tests'
+          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 build-kavm-hooks-tests'
       - name: 'Test AVM semantics --- scenarious'
         run: |
-          docker exec -t avm-semantics-ci /bin/bash -c 'THREADS=4 make test-kavm-avm-simulation'
+          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'THREADS=4 make test-kavm-avm-simulation'
       - name: 'Test AVM semantics --- algod integration'
         run: |
-          docker exec -t avm-semantics-ci /bin/bash -c 'THREADS=4 make test-kavm-algod'
+          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'THREADS=4 make test-kavm-algod'
       - name: 'Test AVM semantics --- proofs --- internal'
         run: |
-          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-internal-prove'
+          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-internal-prove'
       - name: 'Test AVM semantics --- proofs --- opcodes'
         run: |
-          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-opcode-prove'
+          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-opcode-prove'
       - name: 'Test AVM semantics --- proofs --- simple'
         run: |
-          docker exec -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-simple-prove'
+          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-simple-prove'
       - name: 'Tear down Docker'
         if: always()
         run: |
-          docker stop avm-semantics-ci
+          docker stop --time=0 avm-semantics-ci
