@@ -54,7 +54,10 @@
             dontUseCmakeConfigure = true;
 
             buildPhase = ''
-              make SHELL=${prev.bash}/bin/bash plugin-deps
+              make \
+                APPLE_SILICON=${if prev.stdenv.isAarch64 && prev.stdenv.isDarwin then "true" else "false"} \
+                SHELL=$SHELL \
+                plugin-deps
             '';
 
             enableParallelBuilding = true;
@@ -113,7 +116,10 @@
               mkdir -p .build/usr/
               cp -r ${kavm-deps}/* .build/usr/
               chmod -R u+w .build/
-              make SHELL=${prev.bash}/bin/bash VENV_ACTIVATE=true build
+              make \
+                SHELL=$SHELL VENV_ACTIVATE=true \
+                ${if prev.stdenv.isDarwin then "UNAME_S=" else ""} \
+                build
             '';
 
             installPhase = ''
