@@ -909,10 +909,10 @@ references and also to check that a resource is available.
   //----------------------------------------------------------------------
   rule TValuePairList2Map((A, B):TValuePair REST, APPS, DEFAULT) => ((A |-> getAppAddress({getTValueAt(B -Int 1, APPS)}:>Int)) TValuePairList2Map(REST, APPS, DEFAULT))
     requires B >=Int 1
-  rule TValuePairList2Map((A, B):TValuePair, APPS, DEFAULT) => (A |-> getAppAddress({getTValueAt(B -Int 1, APPS)}:>Int))
+  rule TValuePairList2Map((A, B):TValuePair, APPS, _) => (A |-> getAppAddress({getTValueAt(B -Int 1, APPS)}:>Int))
     requires B >=Int 1
   rule TValuePairList2Map((A, 0):TValuePair REST, APPS, DEFAULT) => ((A |-> DEFAULT) TValuePairList2Map(REST, APPS, DEFAULT))
-  rule TValuePairList2Map((A, 0):TValuePair, APPS, DEFAULT) => (A |-> DEFAULT)
+  rule TValuePairList2Map((A, 0):TValuePair, _, DEFAULT) => (A |-> DEFAULT)
   rule TValuePairList2Map(.TValuePairList, _, _) => .Map
 
   syntax Map ::= getBoxRefs(String) [function, functional]

@@ -2114,7 +2114,7 @@ Stateful TEAL Operations
     requires ADDR =/=K getGlobalField(CurrentApplicationAddress)
 
   rule <k> box_create => panic(BOX_UNAVAILABLE) ... </k>
-       <stack> SIZE:Int : NAME:Bytes : _</stack>
+       <stack> _:Int : NAME:Bytes : _</stack>
     requires boxAcct(NAME) ==K NoTValue
 
   rule <k> box_create => panic(BOX_TOO_LARGE) ... </k>
@@ -2162,7 +2162,7 @@ Stateful TEAL Operations
        </account>
     requires (lengthBytes(VAL) +Int OFFSET) >=Int lengthBytes(BYTES)
 
-  rule <k> #boxReplace(NAME, ADDR, OFFSET, VAL) => panic(BOX_NOT_FOUND) ...</k>
+  rule <k> #boxReplace(NAME, ADDR, _, _) => panic(BOX_NOT_FOUND) ...</k>
        <account>
          <address> ADDR </address>
          <boxes>
@@ -2173,7 +2173,7 @@ Stateful TEAL Operations
     requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
 
   rule <k> box_replace => panic(BOX_UNAVAILABLE) ... </k>
-       <stack> VAL:Bytes : OFFSET:Int : NAME:Bytes : _ </stack>
+       <stack> _:Bytes : _:Int : NAME:Bytes : _ </stack>
     requires boxAcct(NAME) ==K NoTValue
 
   rule <k> box_replace => panic(ILL_TYPED_STACK) ... </k>
@@ -2228,7 +2228,7 @@ Stateful TEAL Operations
     requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
 
   rule <k> box_put => panic(BOX_UNAVAILABLE) ... </k>
-       <stack> VAL:Bytes : NAME:Bytes : _ </stack>
+       <stack> _:Bytes : NAME:Bytes : _ </stack>
     requires boxAcct(NAME) ==K NoTValue
 
   rule <k> box_put => panic(ILL_TYPED_STACK) ... </k>
@@ -2274,7 +2274,7 @@ Stateful TEAL Operations
        </account>
     requires (LENGTH +Int OFFSET) >=Int lengthBytes(BYTES)
 
-  rule <k> #boxExtract(NAME, ADDR, OFFSET, LENGTH) => panic(BOX_NOT_FOUND) ... </k>
+  rule <k> #boxExtract(NAME, ADDR, _, _) => panic(BOX_NOT_FOUND) ... </k>
        <account>
          <address> ADDR </address>
          <boxes>
@@ -2285,7 +2285,7 @@ Stateful TEAL Operations
     requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
 
   rule <k> box_extract => panic(BOX_UNAVAILABLE) ... </k>
-       <stack> LENGTH:Int : OFFSET:Int : NAME:Bytes : _ </stack>
+       <stack> _:Int : _:Int : NAME:Bytes : _ </stack>
     requires boxAcct(NAME) ==K NoTValue
 
   rule <k> box_extract => panic(ILL_TYPED_STACK) ... </k>
@@ -2376,7 +2376,7 @@ Stateful TEAL Operations
              <boxName> NAME </boxName>
              <boxData> BYTES </boxData>
            </box>
-           REST
+           ...
          </boxes>
          ...
        </account>
@@ -2426,7 +2426,7 @@ Stateful TEAL Operations
              <boxName> NAME </boxName>
              <boxData> BYTES </boxData>
            </box>) => .Bag)
-           REST
+           ...
          </boxes>
          <minBalance> MIN_BALANCE => MIN_BALANCE -Int (2500 +Int (400 *Int (lengthBytes(NAME) +Int
          lengthBytes(BYTES)))) </minBalance>
