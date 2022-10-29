@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from pyk.kast import KAst, KInner
+from pyk.kast import KAst, KInner, KToken
 from pyk.kastManip import split_config_from
 
 from kavm.kavm import KAVM
@@ -69,7 +69,7 @@ def test_run_simulation(filename: str, expected_panic_code: int, expected_exit_c
 
     (_, subst) = split_config_from(cast(KInner, output_kast_term))
 
-    panic_code = int(subst['PANICCODE_CELL'].token)
+    panic_code = int(cast(KToken, subst['PANICCODE_CELL']).token)
 
     assert panic_code == expected_panic_code
     assert proc_result.returncode == expected_exit_code
