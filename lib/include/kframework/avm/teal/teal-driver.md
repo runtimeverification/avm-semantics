@@ -2071,6 +2071,7 @@ Stateful TEAL Operations
            </box>)
            REST
          </boxes>
+         <minBalance> MIN_BALANCE => MIN_BALANCE +Int (2500 +Int (400 *Int (lengthBytes(NAME) +Int SIZE))) </minBalance>
          ...
        </account>
     requires SIZE <=Int PARAM_MAX_BOX_SIZE
@@ -2427,6 +2428,8 @@ Stateful TEAL Operations
            </box>) => .Bag)
            REST
          </boxes>
+         <minBalance> MIN_BALANCE => MIN_BALANCE -Int (2500 +Int (400 *Int (lengthBytes(NAME) +Int
+         lengthBytes(BYTES)))) </minBalance>
          ...
        </account>
 

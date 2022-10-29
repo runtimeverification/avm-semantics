@@ -1,0 +1,37 @@
+#pragma version 8
+
+global CurrentApplicationAddress
+min_balance
+store 0
+
+byte "box1"
+int 32
+box_create
+assert
+
+load 0
+int 2500
++
+int 32
+int 4
++
+int 400
+*
++ // Min balance += 2500 + 400 * (len(n) + s)
+global CurrentApplicationAddress
+min_balance
+==
+assert
+
+byte "box1"
+box_del
+assert
+
+global CurrentApplicationAddress
+min_balance
+load 0
+==
+assert
+
+int 1
+return
