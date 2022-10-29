@@ -907,9 +907,9 @@ references and also to check that a resource is available.
 
   syntax Map ::= TValuePairList2Map(TValuePairList, TValueList, Bytes) [function, functional]
   //----------------------------------------------------------------------
-  rule TValuePairList2Map((A, B):TValuePair REST, APPS, DEFAULT) => ((A |-> APPS[B -Int 1]) TValuePairList2Map(REST, APPS, DEFAULT))
+  rule TValuePairList2Map((A, B):TValuePair REST, APPS, DEFAULT) => ((A |-> getAppAddress({getTValueAt(B -Int 1, APPS)}:>Int)) TValuePairList2Map(REST, APPS, DEFAULT))
     requires B >=Int 1
-  rule TValuePairList2Map((A, B):TValuePair, APPS, DEFAULT) => (A |-> APPS[B -Int 1])
+  rule TValuePairList2Map((A, B):TValuePair, APPS, DEFAULT) => (A |-> getAppAddress({getTValueAt(B -Int 1, APPS)}:>Int))
     requires B >=Int 1
   rule TValuePairList2Map((A, 0):TValuePair REST, APPS, DEFAULT) => ((A |-> DEFAULT) TValuePairList2Map(REST, APPS, DEFAULT))
   rule TValuePairList2Map((A, 0):TValuePair, APPS, DEFAULT) => (A |-> DEFAULT)

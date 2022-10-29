@@ -2075,6 +2075,7 @@ Stateful TEAL Operations
        </account>
     requires SIZE <=Int PARAM_MAX_BOX_SIZE
      andBool notBool(NAME in_boxes(<boxes> REST </boxes>))
+     andBool ADDR ==K getGlobalField(CurrentApplicationAddress) // Can only create a box in your own application
 
   rule <k> #createBox(NAME, ADDR, SIZE) => . ... </k>
        <stack> XS => 0 : XS </stack>
@@ -2107,6 +2108,9 @@ Stateful TEAL Operations
        </account>
     requires SIZE <=Int PARAM_MAX_BOX_SIZE
      andBool lengthBytes(BYTES) =/=Int SIZE
+
+  rule <k> #createBox(_, ADDR, _) => panic(BOX_CREATE_EXTERNAL) ... </k>
+    requires ADDR =/=K getGlobalField(CurrentApplicationAddress)
 
   rule <k> box_create => panic(BOX_UNAVAILABLE) ... </k>
        <stack> SIZE:Int : NAME:Bytes : _</stack>

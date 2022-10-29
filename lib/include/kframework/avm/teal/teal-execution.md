@@ -394,6 +394,7 @@ return code to 3 (see return codes below).
   syntax String ::= "BOX_UNAVAILABLE"            [macro]
   syntax String ::= "BOX_WRONG_LENGTH"           [macro]
   syntax String ::= "BOX_OUT_OF_BOUNDS"          [macro]
+  syntax String ::= "BOX_CREATE_EXTERNAL"        [macro]
   //----------------------------------------------------
   rule INVALID_OP_FOR_MODE => "invalid opcode for current execution mode"
   rule ERR_OPCODE          => "err opcode encountered"
@@ -436,6 +437,7 @@ return code to 3 (see return codes below).
   rule BOX_UNAVAILABLE     => "tried to access box not referenced in any transaction in this group"
   rule BOX_WRONG_LENGTH    => "tried to replace a box byte array with one of a different length"
   rule BOX_OUT_OF_BOUNDS   => "tried to access out of bounds of a box byte array"
+  rule BOX_CREATE_EXTERNAL => "tried to create a box for which a reference already exists tied to another application"
   //--------------------------------------------------------------------------------
 
   rule panicCode(INVALID_OP_FOR_MODE)        => 1
@@ -479,6 +481,7 @@ return code to 3 (see return codes below).
   rule panicCode(BOX_UNAVAILABLE)            => 39
   rule panicCode(BOX_WRONG_LENGTH)           => 40
   rule panicCode(BOX_OUT_OF_BOUNDS)          => 41
+  rule panicCode(BOX_CREATE_EXTERNAL)        => 42
 
 
   syntax KItem ::= panic(String)
