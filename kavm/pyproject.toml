@@ -15,6 +15,7 @@ readme = "README.md"
 python = "^3.10"
 py-algorand-sdk = "1.15.0"
 pyk = { git = "https://github.com/runtimeverification/pyk.git", tag="v0.1.30" }
+pycobertura = "^3.0.0"
 
 [tool.poetry.dev-dependencies]
 autoflake = "*"
