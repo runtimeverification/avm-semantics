@@ -65,7 +65,7 @@ The `TValue` sort represents all possible TEAL values.
 
   syntax TValuePair ::= "(" TValue "," TValue ")"
   syntax TValuePairNeList ::= TValuePair | TValuePair TValuePairNeList
-  syntax TValuePairList ::= ".TValuePairList" | TValuePairNeList
+  syntax TValuePairList ::= ".TValuePairList" [klabel(.TValuePairList), symbol] | TValuePairNeList
   syntax MaybeTValuePair ::= "NoTValuePair" | TValuePair
 ```
 

@@ -155,6 +155,7 @@ class KAVMTransaction:
                     if txn.clear_program
                     else kavm.parse_teal('int 1'),
                     'APPLICATIONARGS_CELL': tvalue_list(txn.app_args) if txn.app_args is not None else tvalue_list([]),
+                    'BOXREFERENCES_CELL': KApply('.TValuePairList'),
                     'FOREIGNAPPS_CELL': tvalue_list(txn.foreign_apps)
                     if txn.foreign_apps is not None
                     else tvalue_list([]),
@@ -190,6 +191,7 @@ class KAVMTransaction:
             {
                 'ACCOUNTS_CELL': tvalue_list([]),
                 'APPLICATIONARGS_CELL': tvalue_list([]),
+                'BOXREFERENCES_CELL': KApply('.TValuePairList'),
                 'FOREIGNAPPS_CELL': tvalue_list([]),
                 'FOREIGNASSETS_CELL': tvalue_list([]),
                 'TXNEXECUTIONCONTEXT_CELL': KToken('.K', KSort('K')),
