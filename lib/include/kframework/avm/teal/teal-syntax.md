@@ -244,6 +244,10 @@ module TEAL-OPCODES
   syntax AssertOpCode     ::= "assert"
   syntax SubroutineOpCode ::= "callsub" Label
                             | "retsub"
+                            | "proto" Int Int
+                            | "dupn" Int
+                            | "frame_dig" Int
+                            | "frame_bury" Int
 ```
 
 #### Stack Manipulation Operations
@@ -567,6 +571,12 @@ module TEAL-UNPARSER
   rule unparseTEAL(Lbl :)                         => Label2String(Lbl) +String ":"
   rule unparseTEAL(return)                        => "return"
   rule unparseTEAL(assert)                        => "assert"
+  rule unparseTEAL(callsub)                       => "callsub"
+  rule unparseTEAL(retsub)                        => "retsub"
+  rule unparseTEAL(proto N M)                     => "proto" +&+ Int2String(N) +&+ Int2String(M)
+  rule unparseTEAL(dupn N)                        => "dupn" +&+ Int2String(N)
+  rule unparseTEAL(frame_dig N)                   => "frame_dig" +&+ Int2String(N)
+  rule unparseTEAL(frame_bury N)                  => "frame_bury" +&+ Int2String(N)
   rule unparseTEAL(pop)                           => "pop"
   rule unparseTEAL(dup)                           => "dup"
   rule unparseTEAL(dup2)                          => "dup2"

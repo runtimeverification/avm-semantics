@@ -1,22 +1,67 @@
+```k
 module OPCODES-V5-SPEC
   imports VERIFICATION
+```
 
-// ecdsa_verify 	5 	x 	1700
-// ecdsa_pk_decompress 	5 	x 	650
-// ecdsa_pk_recover 	5 	x 	2000
+<table>
 
-// loads 	5 	heavy_check_mark 	1
+<thead>
+<tr><th> Opcode </th><th> AVM version </th><th> Status </th><th> Cost </th><th> K Claims </th></tr>
+</thead>
+
+<tbody>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> ecdsa_verify        </td><td> 5 </td><td> not implemented </td><td> 1700   </td>
+<td></td>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> ecdsa_pk_decompress        </td><td> 5 </td><td> not implemented </td><td> 650   </td>
+<td></td>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> ecdsa_pk_recover        </td><td> 5 </td><td> not implemented </td><td> 2000   </td>
+<td></td>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> loads </td><td> 5 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
 claim <k> loads => . </k>
       <stack> 5 : XS => 8 : XS </stack>
       <scratch> 5 |-> 8 </scratch>
+```
+</details>
+</td></tr>
 
-// stores 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> stores </td><td> 5 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
 claim <k> stores => . </k>
       <stack> 8 : 5 : XS => XS </stack>
       <stacksize> S => S -Int 2 </stacksize>
       <scratch> .Map => (5 |-> 8) </scratch>
+```
+</details>
+</td></tr>
 
-// cover 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> cover n </td><td> 5 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
 claim <k> cover 3 => . </k>
       <stack> 123 : 0 : 0 : 0 : XS => 0 : 0 : 0 : 123 : XS </stack>
       <stacksize> S </stacksize>
@@ -25,8 +70,17 @@ claim <k> cover 3 => . </k>
 claim <k> cover 3 => panic(STACK_UNDERFLOW) </k>
       <stack> 123 : 0 : 0 : .TStack </stack>
       <stacksize> 3 </stacksize>
+```
+</details>
+</td></tr>
 
-// uncover 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> uncover n </td><td> 5 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
 claim <k> uncover 3 => . </k>
       <stack> 0 : 0 : 0 : 123 : XS => 123 : 0 : 0 : 0 : XS </stack>
       <stacksize> S </stacksize>
@@ -35,32 +89,86 @@ claim <k> uncover 3 => . </k>
 claim <k> uncover 3 => panic(STACK_UNDERFLOW) </k>
       <stack> 123 : 0 : 0 : .TStack </stack>
       <stacksize> 3 </stacksize>
+```
+</details>
+</td></tr>
 
-// extract 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> extract s l </td><td> 5 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
 claim <k> extract 2 3 => . </k>
       <stack> b"abcdefg" : XS => b"cde" : XS </stack>
+```
+</details>
+</td></tr>
 
-// extract3 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> extract3 </td><td> 5 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
 claim <k> extract3 => . </k>
       <stack> 3 : 2 : b"abcdefg" : XS => b"cde" : XS </stack>
       <stacksize> S => S -Int 2 </stacksize>
+```
+</details>
+</td></tr>
 
-// extract_uint16 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> extract_uint16 </td><td> 5 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
 claim <k> extract_uint16 => . </k>
       <stack> 2 : b"\xff\xff\x00\x03\xff" : XS => 3 : XS </stack>
       <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// extract_uint32 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> extract_uint32 </td><td> 5 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
 claim <k> extract_uint32 => . </k>
       <stack> 2 : b"\xff\xff\x00\x00\x00\x03\xff" : XS => 3 : XS </stack>
       <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// extract_uint64 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> extract_uint64 </td><td> 5 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
 claim <k> extract_uint64 => . </k>
       <stack> 2 : b"\xff\xff\x00\x00\x00\x00\x00\x00\x00\x03\xff" : XS => 3 : XS </stack>
       <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// app_params_get 	5 	x 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> app_params_get </td><td> 5 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
 claim <k> app_params_get AppGlobalNumUint => . </k>
       <stack> APP:Int : XS => 1 : 3 : XS </stack>
       <stacksize> S => S +Int 1 </stacksize>
@@ -70,8 +178,17 @@ claim <k> app_params_get AppGlobalNumUint => . </k>
         ...
       </app>
   requires S <Int 1000 andBool S >=Int 1
+```
+</details>
+</td></tr>
 
-// log 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> log </td><td> 5 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
 claim <k> log => . </k>
       <stack> b"abc" : XS => XS </stack>
       <stacksize> S => S -Int 1 </stacksize>
@@ -84,8 +201,17 @@ claim <k> log => . </k>
       </transaction>
   requires LS <=Int 1024 -Int 3
    andBool size(LOG) <Int 32
+```
+</details>
+</td></tr>
 
-// itxn_begin 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> itxn_begin </td><td> 5 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> itxn_begin => . </k>
         <currentTx> "1" </currentTx>
         <transactions>
@@ -136,8 +262,17 @@ claim <k> log => . </k>
           )
         </innerTransactions>
         <nextGroupID> 32 => 33 </nextGroupID>
+```
+</details>
+</td></tr>
 
-// itxn_field 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> itxn_field </td><td> 5 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> itxn_field TypeEnum => . </k>
         <stack> 3 : XS => XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -173,7 +308,7 @@ claim <k> log => . </k>
           ListItem(
             <transaction>
               <txnTypeSpecificFields>
-                .Bag => 
+                .Bag =>
                 <assetConfigTxFields>
                   <configAsset> ?_ </configAsset>
                   <assetParams>
@@ -186,11 +321,19 @@ claim <k> log => . </k>
             </transaction>
           )
         </innerTransactions>
-        
+```
+</details>
+</td></tr>
 
-// itxn_submit 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> itxn_submit </td><td> 5 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> itxn_submit => . </k>
-        <currentTxnExecution> 
+        <currentTxnExecution>
           <pc> 0 </pc>
           <program> .Map </program>
           <jumped> true => false </jumped>
@@ -219,12 +362,12 @@ claim <k> log => . </k>
           ListItem(
             <transaction>
               <txID> _ </txID>
-              <txHeader> 
+              <txHeader>
                 <txType> b"pay" </txType>
                 <typeEnum> 1 </typeEnum>
                 <groupID> "2" </groupID>
                 <sender> b"application1" </sender>
-                ... 
+                ...
               </txHeader>
               <txnTypeSpecificFields>
                 <payTxFields>
@@ -257,8 +400,17 @@ claim <k> log => . </k>
             ...
           </account>
         </accountsMap>
+```
+</details>
+</td></tr>
 
-// itxn 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> itxn f </td><td> 5 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> itxn Sender => . </k>
         <stack> XS => SENDER:Bytes : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -274,8 +426,17 @@ claim <k> log => . </k>
           </transaction>
         </transactions>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// itxna 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> itxna f i </td><td> 5 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> itxna ApplicationArgs 1 => . </k>
         <stack> XS => 123 : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -291,8 +452,17 @@ claim <k> log => . </k>
           </transaction>
         </transactions>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// txnas 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> txnas f </td><td> 5 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> txnas Applications => . </k>
         <stack> 1 : XS => APPL : XS </stack>
         <stacksize> S </stacksize>
@@ -310,8 +480,17 @@ claim <k> log => . </k>
           <txnIndexMapGroupValues> (0 |-> TX_ID) ... </txnIndexMapGroupValues>
         </txnIndexMapGroup>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// gtxnas 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> gtxnas t f </td><td> 5 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> gtxnas 0 ApplicationArgs => . </k>
         <stack> 1 : XS => b"123" : XS </stack>
         <stacksize> S </stacksize>
@@ -338,8 +517,17 @@ claim <k> log => . </k>
           <txnIndexMapGroupValues> (2 |-> "2a") (0 |-> "0") </txnIndexMapGroupValues>
         </txnIndexMapGroup>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// gtxnsas 	5 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> gtxnsas f </td><td> 5 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> gtxnsas ApplicationArgs => . </k>
         <stack> 1 : 0 : XS => b"123" : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -366,7 +554,20 @@ claim <k> log => . </k>
           <txnIndexMapGroupValues> (2 |-> "2a") (0 |-> "0") </txnIndexMapGroupValues>
         </txnIndexMapGroup>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// args 	5 	heavy_check_mark 	1    
+<!----------------------------------------------------------------------------->
 
+<tr><td> args        </td><td> 5 </td><td> not implemented </td><td> 1700   </td>
+<td></td>
+
+<!----------------------------------------------------------------------------->
+
+</tbody>
+</table>
+
+```k
 endmodule
+```

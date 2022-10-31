@@ -1,5 +1,5 @@
 .PHONY: default all clean build install          \
-        poetry-install                           \
+        venv-config poetry-install               \
         test test-unit test-integration          \
         test-scenarios                           \
         format isort autoflake black             \
@@ -11,16 +11,24 @@ clean:
 	rm -rf dist .mypy_cache
 	find -type d -name __pycache__ -prune -exec rm -rf {} \;
 
+THREADS := $(if $(THREADS),$(THREADS),1)
+PYTHON_VERSION := $(if $(PYTHON_VERSION),$(PYTHON_VERSION),3.10.6)
+POETRY_RUN := poetry run
+PYTEST_ARGS := -n $(THREADS)
+
+venv-config:
+	mkdir -p .venv
+	poetry config --local virtualenvs.in-project true
+	poetry config --local virtualenvs.create true
+	poetry config --local virtualenvs.path .venv
+	poetry config --local virtualenvs.path
+
 build:
 	poetry build
 
-poetry-install:
+poetry-install: venv-config
 	poetry install
 
-POETRY_RUN := poetry run
-THREADS := $(if $(THREADS),$(THREADS),1)
-
-PYTEST_ARGS := -n $(THREADS)
 
 # Tests
 

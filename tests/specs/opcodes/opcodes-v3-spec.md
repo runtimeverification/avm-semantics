@@ -1,7 +1,23 @@
+```k
 module OPCODES-V3-SPEC
   imports VERIFICATION
+```
 
-// gtxns f 	3 	heavy_check_mark 	1
+<table>
+
+<thead>
+<tr><th> Opcode </th><th> AVM version </th><th> Status </th><th> Cost </th><th> K Claims </th></tr>
+</thead>
+
+<tbody>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> gtxns f </td><td> 3 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> gtxns Sender => . </k>
         <stack> 1 : XS => normalize(ADDR) : XS </stack>
         <stacksize> S </stacksize>
@@ -25,8 +41,17 @@ module OPCODES-V3-SPEC
           <txnIndexMapGroupValues> (0 |-> "1") (1 |-> "2") ... </txnIndexMapGroupValues>
         </txnIndexMapGroup>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// gtxnsa f i 	3 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> gtxnsa f i </td><td> 3 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> gtxnsa ApplicationArgs 1 => . </k>
         <stack> 1 : XS => 2 : XS </stack>
         <stacksize> S </stacksize>
@@ -50,8 +75,17 @@ module OPCODES-V3-SPEC
           <txnIndexMapGroupValues> (0 |-> "1") (1 |-> "2") ... </txnIndexMapGroupValues>
         </txnIndexMapGroup>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// assert 	3 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> assert </td><td> 3 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> assert => . </k>
         <stack> 0 : _ </stack>
         <returncode> _ => 3 </returncode>
@@ -64,18 +98,45 @@ module OPCODES-V3-SPEC
         <returncode> _ </returncode>
         <returnstatus> _ </returnstatus>
     requires N >=Int 1
-  
-// dig n 	3 	heavy_check_mark 	1
+```
+</details>
+</td></tr>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> dig n </td><td> 3 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> dig 3 => . </k>
         <stack> 4 : 5 : 6 : 7 : 8 : XS => 7 : 4 : 5 : 6 : 7: 8 : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
     requires S <Int 1000 andBool S >=Int 6
+```
+</details>
+</td></tr>
 
-// swap 	3 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> swap </td><td> 3 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> swap => . </k>
         <stack> 3 : 5 : XS => 5 : 3 : XS </stack>
+```
+</details>
+</td></tr>
 
-// select 	3 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> select </td><td> 3 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> select => . </k>
         <stack> 1 : A : _ : XS => A : XS </stack>
         <stacksize> S => S -Int 2 </stacksize>
@@ -83,12 +144,21 @@ module OPCODES-V3-SPEC
   claim <k> select => . </k>
         <stack> 0 : _ : B : XS => B : XS </stack>
         <stacksize> S => S -Int 2 </stacksize>
+```
+</details>
+</td></tr>
 
-// getbit 	3 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> getbit </td><td> 3 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> getbit => . </k>
         <stack> 0 : b"\x0f" : XS => 0 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
-        
+
   claim <k> getbit => . </k>
         <stack> 3 : b"\x0f" : XS => 0 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -100,23 +170,59 @@ module OPCODES-V3-SPEC
   claim <k> getbit => . </k>
         <stack> 7 : b"\x0f" : XS => 1 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// setbit 	3 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> setbit </td><td> 3 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> setbit => . </k>
         <stack> 1 : 0 : b"\x0f" : XS => b"\x8f" : XS </stack>
         <stacksize> S => S -Int 2 </stacksize>
+```
+</details>
+</td></tr>
 
-// getbyte 	3 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> getbyte </td><td> 3 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> getbyte => . </k>
         <stack> 3 : b"abc\x0fd" : XS => 15 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
+```
+</details>
+</td></tr>
 
-// setbyte 	3 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> setbyte </td><td> 3 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> setbyte => . </k>
         <stack> 4 : 3 : b"abc\x0fd" : XS => b"abc\x04d" : XS </stack>
         <stacksize> S => S -Int 2 </stacksize>
+```
+</details>
+</td></tr>
 
-// min_balance 	3 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> min_balance </td><td> 3 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> min_balance => . </k>
         <stack> normalize(ADDR:Bytes) : XS => MIN_BAL : XS </stack>
         <currentTx> TX_ID </currentTx>
@@ -131,17 +237,45 @@ module OPCODES-V3-SPEC
           <minBalance> MIN_BAL </minBalance>
           ...
         </account>
+```
+</details>
+</td></tr>
 
-// pushbytes bytes 	3 	heavy_check_mark 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> pushbytes bytes </td><td> 3 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> pushbytes "123" => . </k>
         <stack> XS => b"123" : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// pushint uint 	3 	heavy_check_mark 	1 
+<!----------------------------------------------------------------------------->
+
+<tr><td> pushint uint </td><td> 3 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> pushint 321 => . </k>
         <stack> XS => 321 : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
+<!----------------------------------------------------------------------------->
+
+</tbody>
+</table>
+
+```k
 endmodule
+```

@@ -11,11 +11,13 @@ from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Set, Tu
 
 from algosdk.future.transaction import Transaction
 from pyk.cli_utils import run_process
-from pyk.kast import KApply, KAst, KInner, KLabel, KSort, KToken, Subst
+from pyk.kast import KApply, KAst, KInner, KLabel, KSort, KToken, Subst, build_assoc, build_cons
 from pyk.kastManip import free_vars, inline_cell_maps
 from pyk.ktool.kprint import paren
 from pyk.ktool.krun import KRun
-from pyk.prelude import Sorts, build_assoc, build_cons, intToken, stringToken
+from pyk.prelude.k import K
+from pyk.prelude.kint import intToken
+from pyk.prelude.string import stringToken
 
 from kavm import constants
 from kavm.adaptors.account import KAVMAccount
@@ -138,7 +140,7 @@ class KAVM(KRun):
         input: str = 'json',
         output: str = 'kore',
         module: str = 'AVM-EXECUTION',
-        sort: Union[KSort, str] = Sorts.K,
+        sort: Union[KSort, str] = K,
         args: Iterable[str] = (),
     ) -> CompletedProcess:
         kast_command = ['kast', '--definition', str(self.definition_dir)]
@@ -156,7 +158,7 @@ class KAVM(KRun):
         input: str = 'json',
         output: str = 'kore',
         module: str = 'AVM-EXECUTION',
-        sort: Union[KSort, str] = Sorts.K,
+        sort: Union[KSort, str] = K,
         args: Iterable[str] = (),
     ) -> CompletedProcess:
         kast_command = ['kast', '--definition', str(self.definition_dir)]
@@ -198,12 +200,12 @@ class KAVM(KRun):
         return self.definition.empty_config(KSort('GeneratedTopCell'))
 
     @property
-    def current_config(self) -> KAst:
+    def current_config(self) -> KInner:
         """Return the current configuration KAST term"""
         return self._current_config
 
     @current_config.setter
-    def current_config(self, new_config: KAst) -> None:
+    def current_config(self, new_config: KInner) -> None:
         self._current_config = new_config
 
     @staticmethod
@@ -258,7 +260,7 @@ class KAVM(KRun):
             raise
         if isinstance(output, KAst) and krun_return_code == 0:
             # Finilize successful evaluation
-            self.current_config = output
+            self.current_config = cast(KInner, output)
             (_, subst) = carefully_split_config_from(cast(KInner, self.current_config), ignore_cells={'<transaction>'})
             # * update self.accounts with the new configuration cells
             modified_accounts = AccountCellMap(subst['ACCOUNTSMAP_CELL'])
@@ -286,7 +288,7 @@ class KAVM(KRun):
             app_call_fields['application-index'] = txn.apply_data._tx_application_id
         return {**common_fields, **app_call_fields}
 
-    def _initial_config(self) -> KAst:
+    def _initial_config(self) -> KInner:
         """
         Create the initial configuration term with cells containing defaults
         """
@@ -358,7 +360,7 @@ class KAVM(KRun):
     def simulation_config(
         self,
         transactions: List[KAVMTransaction],
-    ) -> KAst:
+    ) -> KInner:
         """
         Create a configuration to be passed to krun with --term
 
@@ -444,7 +446,7 @@ class KAVM(KRun):
                     proc_result.stderr.decode(sys.getfilesystemencoding()),
                 )
 
-            return (proc_result.returncode, inline_cell_maps(output_kast_term))
+            return (proc_result.returncode, inline_cell_maps(cast(KInner, output_kast_term)))
 
     def run_term(self, kore_file_name: str) -> CompletedProcess:
         """

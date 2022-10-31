@@ -1,9 +1,28 @@
+```k
 module OPCODES-V6-SPEC
   imports VERIFICATION
+```
 
-// bsqrt 	6 	not implemented 	40
+<table>
 
-// acct_params_get f 	6 	not implemented 	1
+<thead>
+<tr><th> Opcode </th><th> AVM version </th><th> Status </th><th> Cost </th><th> K Claims </th></tr>
+</thead>
+
+<tbody>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> bsqrt </td><td> 6 </td><td> not implemented </td><td> 40   </td>
+<td></td>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> acct_params_get f </td><td> 6 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> acct_params_get AcctBalance => . </k>
         <currentTx> TX_ID </currentTx>
         <transactions>
@@ -68,8 +87,17 @@ module OPCODES-V6-SPEC
           </account>
         </accountsMap>
     requires S >=Int 1 andBool S <Int 1000 andBool BAL >Int 0
+```
+</details>
+</td></tr>
 
-// divw 	6 	not implemented 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> divw </td><td> 6 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   // ((12345 + (3 << 64)) / 54321) = 1018763134351883
   claim <k> divw => . </k>
         <stack> 54321 : 12345 : 3 : XS => 1018763134351883 : XS </stack>
@@ -86,9 +114,17 @@ module OPCODES-V6-SPEC
         <stack> C : B : A : _ </stack>
     requires (isBytes(A) orBool isBytes(B) orBool isBytes(C))
      andBool C =/=K 0
+```
+</details>
+</td></tr>
 
+<!----------------------------------------------------------------------------->
 
-// itxn_next 	6 	implemented, not tested 	1
+<tr><td> itxn_next </td><td> 6 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
 claim <k> itxn_next => . </k>
       <currentTx> TX_ID </currentTx>
       <transactions>
@@ -139,8 +175,17 @@ claim <k> itxn_next => . </k>
             </transaction>))
       </innerTransactions>
       <nextGroupID> 3 </nextGroupID>
+```
+</details>
+</td></tr>
 
-// gitxn t f 	6 	implemented, not tested 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> gitxn t f </td><td> 6 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> gitxn 1 Sender => . </k>
         <stack> XS => SENDER:Bytes : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -156,8 +201,17 @@ claim <k> itxn_next => . </k>
           </transaction>
         </transactions>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// gitxna t f i 	6 	implemented, not tested 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> gitxna t f i </td><td> 6 </td><td> tested (not every field) </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> gitxna 1 ApplicationArgs 2 => . </k>
         <stack> XS => 123 : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
@@ -173,8 +227,17 @@ claim <k> itxn_next => . </k>
           </transaction>
         </transactions>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// gloadss 	6 	implemented, not tested 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> gloadss </td><td> 6 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> gloadss => . </k>
         <stack> 3 : 0 : XS => 123 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
@@ -202,8 +265,17 @@ claim <k> itxn_next => . </k>
           <txnIndexMapGroupValues> (0 |-> "1") (1 |-> "2") </txnIndexMapGroupValues>
         </txnIndexMapGroup>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// itxnas f 	6 	implemented 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> itxnas f </td><td> 6 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> itxnas ApplicationArgs => . </k>
         <stack> 1 : XS => 123 : XS </stack>
         <stacksize> S </stacksize>
@@ -219,8 +291,17 @@ claim <k> itxn_next => . </k>
           </transaction>
         </transactions>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
-// gitxnas t f 	6 	implemented 	1
+<!----------------------------------------------------------------------------->
+
+<tr><td> gitxnas f </td><td> 6 </td><td> tested </td><td> 1 </td>
+<td><details>
+<summary>K claims</summary>
+
+```k
   claim <k> gitxnas 1 ApplicationArgs => . </k>
         <stack> 2 : XS => 123 : XS </stack>
         <stacksize> S  </stacksize>
@@ -236,5 +317,15 @@ claim <k> itxn_next => . </k>
           </transaction>
         </transactions>
     requires S <Int 1000
+```
+</details>
+</td></tr>
 
+<!----------------------------------------------------------------------------->
+
+</tbody>
+</table>
+
+```k
 endmodule
+```

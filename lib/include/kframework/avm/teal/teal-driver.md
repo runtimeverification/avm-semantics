@@ -1078,6 +1078,18 @@ records the next program counter value on the call stack.
 Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL program. Either could be used to pass arguments or return results.
 
 ```k
+  //                          Next PC | Stack pointer | Num args | Num return vals
+  syntax StackFrame ::= frame(Int,      Int,            Int,       Int           )
+                      | frame(Int,      Int                                      )
+
+  syntax Int ::= getStackPtr() [function]
+
+  rule [[ getStackPtr() => PTR ]]
+       <callStack> ListItem(frame(_, PTR, _, _)) ... </callStack>
+
+  rule [[ getStackPtr() => PTR ]]
+       <callStack> ListItem(frame(_, PTR)) ... </callStack>
+
   rule <k> callsub TARGET => callSubroutine(TARGET) ... </k>
 
   rule <k> retsub => returnSubroutine() ... </k>
@@ -1090,7 +1102,8 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <pc> PC => getLabelAddress(TARGET) </pc>
        <jumped> _ => true </jumped>
        <labels> LL </labels>
-       <callStack> XS => ListItem(PC +Int 1) XS </callStack>
+       <stack> S </stack>
+       <callStack> XS => ListItem(frame(PC +Int 1, #sizeTStack(S))) XS </callStack>
     requires  (TARGET in_labels LL)
       andBool (size(XS) <Int MAX_CALLSTACK_DEPTH)
 
@@ -1107,11 +1120,46 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
   rule <k> returnSubroutine() => .K ... </k>
        <pc> _ => RETURN_PC </pc>
        <jumped> _ => true </jumped>
-       <callStack> ListItem(RETURN_PC) XS => XS </callStack>
+       <stack> S => #let CLRSTCK = #drop((#sizeTStack(S) -Int STACK_PTR) -Int RETS, S) #in
+             (#take(RETS, CLRSTCK) #drop(ARGS +Int RETS, CLRSTCK))
+       </stack>
+       <stacksize> SIZE => SIZE -Int (#sizeTStack(S) -Int STACK_PTR) -Int RETS </stacksize>
+       <callStack> ListItem(frame(RETURN_PC, STACK_PTR, ARGS, RETS)) XS => XS </callStack>
+
+  rule <k> returnSubroutine() => .K ... </k>
+       <pc> _ => RETURN_PC </pc>
+       <jumped> _ => true </jumped>
+       <callStack> ListItem(frame(RETURN_PC, _)) XS => XS </callStack>
 
   rule <k> returnSubroutine() => panic(CALLSTACK_UNDERFLOW) ... </k>
        <pc> _ </pc>
        <callStack> .List </callStack>
+
+  rule <k> proto ARGS RETS => . ... </k>
+       <callStack> ListItem(frame(_, _, _ => ARGS, _ => RETS)) ... </callStack>
+    requires (ARGS >=Int 0) andBool (RETS >=Int 0)
+
+  rule <k> proto ARGS RETS => . ... </k>
+       <callStack> ListItem(frame(RETURN_PC, STACK_PTR) => frame(RETURN_PC, STACK_PTR, ARGS, RETS)) ... </callStack>
+    requires (ARGS >=Int 0) andBool (RETS >=Int 0)
+
+  rule <k> dupn N => dupn (N -Int 1) ... </k>
+       <stack> X : XS => X : X : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires N >Int 0
+     andBool S <Int MAX_STACK_DEPTH
+
+  rule <k> dupn 0 => . ... </k>
+
+  rule <k> frame_dig N => . ... </k>
+       <stack> XS => XS{getStackPtr() +Int N} : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires S <Int MAX_STACK_DEPTH
+
+  rule <k> frame_bury N => . ... </k>
+       <stack> X : XS => XS{getStackPtr() +Int N <- X} </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
 ```
 
 ### Stack Manipulation
@@ -2168,12 +2216,13 @@ Stateful TEAL Operations
   rule <k> loadGroupScratch(_, I) => panic(INVALID_SCRATCH_LOC) ... </k>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
-  rule <k> loadGroupScratch(GROUP_IDX, _) => panic(FUTURE_TXN) ... </k>
-    requires GROUP_IDX >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
-
   rule <k> loadGroupScratch(GROUP_IDX, _) => panic(TXN_OUT_OF_BOUNDS) ... </k>
     requires GROUP_IDX <Int 0 orBool GROUP_IDX >=Int {getGlobalField(GroupSize)}:>Int
-  
+
+  rule <k> loadGroupScratch(GROUP_IDX, _) => panic(FUTURE_TXN) ... </k>
+    requires GROUP_IDX >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
+     andBool (GROUP_IDX >=Int 0 andBool GROUP_IDX <Int {getGlobalField(GroupSize)}:>Int)
+
   rule <k> loadGroupScratch(_, _) => panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
