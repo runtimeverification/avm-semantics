@@ -106,8 +106,8 @@
 
             postPatch = ''
               substituteInPlace ./Makefile \
-                --replace '$(MAKE) build -C $(PY_KAVM_DIR)' 'echo "Skip py-kavm"' \
-                --replace 'py-kavm $(VENV_DIR)/pyvenv.cfg' ' ' \
+                --replace 'pip install --editable $(PY_KAVM_DIR)' 'echo "Skip installing kavm with pip"' \
+                --replace '$(VENV_DIR)/pyvenv.cfg' ' ' \
                 --replace 'plugin-deps $(hook_includes)' '$(hook_includes)'
             '';
 

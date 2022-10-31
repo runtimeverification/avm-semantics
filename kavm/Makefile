@@ -1,5 +1,5 @@
 .PHONY: default all clean build install          \
-        poetry-install                           \
+        venv-config poetry-install               \
         test test-unit test-integration          \
         test-scenarios                           \
         format isort autoflake black             \
@@ -16,17 +16,17 @@ PYTHON_VERSION := $(if $(PYTHON_VERSION),$(PYTHON_VERSION),3.10.6)
 POETRY_RUN := poetry run
 PYTEST_ARGS := -n $(THREADS)
 
-ci-config:
-	poetry config virtualenvs.in-project true
-	poetry config virtualenvs.prefer-active-python true
-	poetry config --list
-	pyenv local $(PYTHON_VERSION)
-	poetry env use $(PYTHON_VERSION)
+venv-config:
+	mkdir -p .venv
+	poetry config --local virtualenvs.in-project true
+	poetry config --local virtualenvs.create true
+	poetry config --local virtualenvs.path .venv
+	poetry config --local virtualenvs.path
 
 build:
 	poetry build
 
-poetry-install:
+poetry-install: venv-config
 	poetry install
 
 
