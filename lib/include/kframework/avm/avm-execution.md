@@ -75,7 +75,7 @@ and the current configuration is frozen for examination.
 
   syntax AlgorandCommand ::= #evalNextTx()
 
-  rule <k> (#evalNextTx() ~> _) => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalNextTx() </k>
+  rule <k> #evalNextTx() => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalNextTx() ... </k>
        <deque> TXN_DEQUE </deque>
     requires TXN_DEQUE =/=K .List
 
