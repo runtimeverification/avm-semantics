@@ -111,19 +111,27 @@ TODO: if an account contains an app, the state specification must also contain t
     syntax KItem ::= #setupTransactions(JSON)
     //---------------------------------------
 
-    rule <k> #setupTransactions([TXN_JSON, REST]) => #addPaymentTxnJSON(TXN_JSON) ~> #setupTransactions([REST]) ... </k>
+    rule <k> #setupTransactions([TXN_JSON, REST]) => #addTxnJSON(TXN_JSON) ~> #setupTransactions([REST]) ... </k>
     rule <k> #setupTransactions([.JSONs]) => .K ... </k>
+
+    syntax KItem ::= #addTxnJSON(JSON)
+```
+
+```k
+  syntax TValueList ::= JSONList2TValueList(JSON) [function]
+
+  rule JSONList2TValueList([.JSONs]) => .TValueList
 ```
 
 ### Payment
 
 ```k
-    syntax KItem ::= #addPaymentTxnJSON(JSON)
-    //----------------------------------------
-    rule <k> #addPaymentTxnJSON({ "snd": SENDER:String
-                                , "rcv": RECEIVER:String
-                                , "amt": AMOUNT:Int
-                                })
+    rule <k> #addTxnJSON({
+                           "type": "pay",
+                           "snd": SENDER:String,
+                           "rcv": RECEIVER:String,
+                           "amt": AMOUNT:Int
+                         })
           => #pushTxnBack(<txID> Int2String(ID) </txID>) ...
         </k>
        <transactions>
@@ -150,6 +158,68 @@ TODO: if an account contains an app, the state specification must also contain t
        <nextGroupID> GROUP_ID </nextGroupID>
        <nextTxnID> ID => ID +Int 1 </nextTxnID>
 ```
+
+### Application Call
+
+```k
+    rule <k> #addTxnJSON({
+                           "snd":  SENDER:String,
+                           "type": "appl",
+                           "apid": APPLICATION_ID:Int,
+                           "apan": ON_COMPLETION:Int,
+                           "apat": ACCOUNTS:JSON,
+                           "apaa": APPLICATION_ARGS:JSON,
+                           "apfa": FOREIGN_APPS:JSON,
+                           "apas": FOREIGN_ASSETS:JSON,
+                           "apgs": { "nui": GLOBAL_NUM_UINTS:Int, "nbs": GLOBAL_NUM_BYTES:Int },
+                           "apls": { "nui": LOCAL_NUM_UINTS:Int, "nbs": LOCAL_NUM_BYTES:Int },
+                           "apep": EXTRA_PAGES:Int,
+                           "apap": APPROVAL_NAME:String,
+                           "apsu": CLEAR_STATE_NAME:String
+                         })
+          => #pushTxnBack(<txID> Int2String(ID) </txID>) ...
+        </k>
+        <transactions>
+         (.Bag =>
+         <transaction>
+           <txID> Int2String(ID) </txID>
+           <txHeader>
+             <sender>      DecodeAddressString(SENDER)   </sender>
+             <txType>      "appl"    </txType>
+             <typeEnum>    @ appl    </typeEnum>
+             <groupID>     Int2String(GROUP_ID) </groupID>
+             <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx>
+             ...           // other fields will receive default values
+           </txHeader>
+           <appCallTxFields>
+             <applicationID> APPLICATION_ID </applicationID>
+             <onCompletion> ON_COMPLETION </onCompletion>
+             <approvalProgramSrc> getTealByName(TEAL_PROGRAMS, APPROVAL_NAME):TealInputPgm </approvalProgramSrc>
+             <clearStateProgramSrc> getTealByName(TEAL_PROGRAMS, CLEAR_STATE_NAME):TealInputPgm </clearStateProgramSrc>
+             <accounts> JSONList2TValueList(ACCOUNTS) </accounts>
+             <applicationArgs> JSONList2TValueList(APPLICATION_ARGS) </applicationArgs>
+             <foreignApps> JSONList2TValueList(FOREIGN_APPS) </foreignApps>
+             <foreignAssets> JSONList2TValueList(FOREIGN_ASSETS) </foreignAssets>
+             <globalStateSchema>
+               <globalNui> GLOBAL_NUM_UINTS </globalNui>
+               <globalNbs> GLOBAL_NUM_BYTES </globalNbs>
+             </globalStateSchema>
+             <localStateSchema>
+               <localNui> LOCAL_NUM_UINTS </localNui>
+               <localNbs> LOCAL_NUM_BYTES </localNbs>
+             </localStateSchema>
+             <extraProgramPages> EXTRA_PAGES </extraProgramPages>
+             ...
+           </appCallTxFields>
+           ...
+         </transaction>)
+         TXNS
+       </transactions>
+       <tealPrograms> TEAL_PROGRAMS </tealPrograms>
+       <nextGroupID> GROUP_ID </nextGroupID>
+       <nextTxnID> ID => ID +Int 1 </nextTxnID>
+```
+
 
 ```k
 endmodule

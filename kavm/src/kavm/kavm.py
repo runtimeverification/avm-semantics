@@ -166,6 +166,16 @@ class KAVM(KRun):
             for app in acc['created-apps']:
                 teal_paths.add(app['params']['approval-program'])
                 teal_paths.add(app['params']['clear-state-program'])
+        try:
+            execute_transactions_stage = [stage for stage in avm_json['stages'] if stage['stage-type'] == 'execute-transactions'][0]
+        except KeyError:
+            print(f'Test file {input_file} does not contain an "execute-transactions" stage')
+            exit(1)
+        for txn in execute_transactions_stage['data']['transactions']:
+            if 'apap' in txn:
+                teal_paths.add(txn['apap'])
+            if 'apsu' in txn:
+                teal_paths.add(txn['apsu'])
 
         teal_programs: str = ''
         for teal_path in teal_paths:
