@@ -1,14 +1,9 @@
 import glob
-import json
 import os
-import sys
 from os.path import abspath
 from pathlib import Path
-from typing import cast
 
 import pytest
-from pyk.kast import KAst, KInner, KToken
-from pyk.kastManip import split_config_from
 
 from kavm.kavm import KAVM
 
