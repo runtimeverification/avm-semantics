@@ -314,6 +314,10 @@ $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM
                             --hook-cpp-files $(HOOK_KAVM_FILES) $(PLUGIN_CPP_FILES)     \
                             --hook-clang-flags $(HOOK_CC_OPTS)                          \
                             --coverage
+	kast --definition $(KAVM_DEFINITION_DIR) --gen-parser \
+             --module TEAL-SYNTAX                             \
+             --sort TealProgramsStore                         \
+             $(KAVM_DEFINITION_DIR)/parser_TealProgramsStore_TEAL-SYNTAX
 
 
 clean-avm:
@@ -321,7 +325,10 @@ clean-avm:
 	rm -rf $(KAVM_INCLUDE)
 
 generate-parsers:
-	kast --definition $(KAVM_DEFINITION_DIR) --gen-parser --module TEAL-SYNTAX --sort TealProgramsStore $(KAVM_DEFINITION_DIR)/parser_TealProgramsStore_TEAL-SYNTAX
+	kast --definition $(KAVM_DEFINITION_DIR) --gen-parser \
+             --module TEAL-SYNTAX                             \
+             --sort TealProgramsStore                         \
+             $(KAVM_DEFINITION_DIR)/parser_TealProgramsStore_TEAL-SYNTAX
 
 # Installation
 # ------------
