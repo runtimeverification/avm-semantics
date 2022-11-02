@@ -46,13 +46,30 @@ The elements of the stack are values of sort `TValue`, i.e. either `TUInt64` or 
 
 ## Element Access
 
-- `S [ N ]` accesses element $N$ of $S$.
+- `S [ N ]` accesses element $N$ (counting from the top of the stack) of $S$.
 ```k
   syntax TValue ::= TStack "[" Int "]" [function]
   // -----------------------------------------------------------
   rule (X : _):TStack [ N ] => X                  requires N ==Int 0
   rule XS             [ N ] => #drop(N, XS) [ 0 ] requires N  >Int 0
                                                    andBool N  <Int #sizeTStack(XS)
+```
+
+- `S { N }` accesses element $N$ (counting from the bottom of the stack) of $S$.
+```k
+  syntax TValue ::= TStack "{" Int "}" [function]
+  // --------------------------------------------
+  rule (X : XS):TStack { N } => X
+    requires N ==Int #sizeTStack(XS)
+  rule XS              { N } => #drop((#sizeTStack(XS) -Int N) -Int 1, XS) [ 0 ]
+    requires N  <Int #sizeTStack(XS)
+```
+
+- `S { N <- M }` set element $N$ (counting from the bottom of the stack) of $S$ to $M$.
+```k
+  syntax TStack ::= TStack "{" Int "<-" TValue "}" [function]
+  // --------------------------------------------------------
+  rule XS:TStack { N <- M } => #take((#sizeTStack(XS) -Int N) -Int 1, XS) M : #drop(#sizeTStack(XS) -Int N, XS) 
 ```
 
 ```k

@@ -55,7 +55,7 @@ export K_OPTS
 
 .PHONY: all clean distclean install uninstall                                         \
         deps k-deps libsecp256k1 libff plugin-deps hook-deps                          \
-        build build-avm build-kavm py-kavm                                            \
+        build build-avm build-kavm                                                    \
         test test-avm-semantics test-avm-semantics-prove                              \
         test-kavm test-kavm-kast test-kavm-kast-avm-scenario test-kavm-kast-teal      \
         test-kavm-hooks build-kavm-hooks-tests                                        \
@@ -219,9 +219,7 @@ venv: $(VENV_DIR)/pyvenv.cfg
 
 venv-clean:
 	rm -rf $(VENV_DIR)
-
-py-kavm:
-	$(MAKE) build -C $(PY_KAVM_DIR)
+	$(MAKE) clean -C $(PY_KAVM_DIR)
 
 check-kavm-codestyle:
 	$(MAKE) check -C $(PY_KAVM_DIR)
@@ -233,10 +231,10 @@ kavm_scripts := $(patsubst %, $(KAVM_SCRIPTS)/%, parse-avm-simulation.sh  parse-
 kavm_lib_files := version
 kavm_libs      := $(patsubst %, $(KAVM_LIB)/%, $(kavm_lib_files))
 
-build-kavm: $(KAVM_LIB)/version $(KAVM_DEFINITION_DIR)
+build-kavm: venv $(KAVM_LIB)/version $(KAVM_DEFINITION_DIR)
 
 # this target packages the Python-based kavm CLI
-$(KAVM_LIB)/version: $(includes) $(kavm_scripts) py-kavm $(VENV_DIR)/pyvenv.cfg
+$(KAVM_LIB)/version: $(includes) $(kavm_scripts) $(VENV_DIR)/pyvenv.cfg
 	@mkdir -p $(dir $@)
 	echo '== KAVM Version'    > $@
 	echo $(KAVM_RELEASE_TAG) >> $@
