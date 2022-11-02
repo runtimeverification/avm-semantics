@@ -135,6 +135,22 @@ Note that the applications and ASAs are part of the accounts' state as well, and
        <paniccode> PANIC_CODE </paniccode>
    requires RETURN_CODE ==Int EXPECTED_RETURN_CODE
     andBool PANIC_CODE ==Int EXPECTED_PANIC_CODE
+
+  rule <k> #checkExecutionResults(EXPECTED_RETURN_CODE, _)
+        => #testingPanic("Unexpected returncode:" +String Int2String(RETURN_CODE) +String
+                         ", expected " +String Int2String(EXPECTED_RETURN_CODE)) ...
+       </k>
+       <returncode> RETURN_CODE => 5 </returncode>
+   requires notBool (RETURN_CODE ==Int EXPECTED_RETURN_CODE)
+
+  rule <k> #checkExecutionResults(_, EXPECTED_PANIC_CODE)
+        => #testingPanic("Unexpected paniccode:" +String Int2String(PANIC_CODE) +String
+                         ", expected " +String Int2String(EXPECTED_PANIC_CODE)) ...
+       </k>
+       <returncode> _RETURN_CODE => 5 </returncode>
+       <paniccode>  PANIC_CODE       </paniccode>
+   requires notBool (PANIC_CODE ==Int EXPECTED_PANIC_CODE)
+
 ```
 
 ```k

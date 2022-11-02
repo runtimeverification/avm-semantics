@@ -358,6 +358,11 @@ $(BUILD_DIR)/coverage.xml: test-kavm-avm-simulation
         -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
 	$(KAVM_SCRIPTS)/post-process-coverage $(BUILD_DIR)/coverage.xml
 
+transient-coverage:
+	$(VENV_ACTIVATE) && $(KCOVR) $(KAVM_DEFINITION_DIR)       \
+        -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
+	$(KAVM_SCRIPTS)/post-process-coverage $(BUILD_DIR)/coverage.xml
+
 $(BUILD_DIR)/coverage.html: $(BUILD_DIR)/coverage.xml
 	$(VENV_ACTIVATE) && pycobertura show --format html $(BUILD_DIR)/coverage.xml > $(BUILD_DIR)/coverage.html
 
