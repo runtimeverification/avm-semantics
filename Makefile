@@ -347,17 +347,21 @@ uninstall:
 
 KCOVR:=$(KAVM_K_BIN)/kcovr
 
-coverage:
-	$(KCOVR) $(KAVM_DEFINITION_DIR)       \
+$(BUILD_DIR)/coverage.xml: test-kavm-avm-simulation
+	$(VENV_ACTIVATE) && $(KCOVR) $(KAVM_DEFINITION_DIR)       \
         -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
 	$(KAVM_SCRIPTS)/post-process-coverage $(BUILD_DIR)/coverage.xml
 
-coverage-html:
-	pycobertura show --format html $(BUILD_DIR)/coverage.xml > $(BUILD_DIR)/coverage.html
+$(BUILD_DIR)/coverage.html: $(BUILD_DIR)/coverage.xml
+	$(VENV_ACTIVATE) && pycobertura show --format html $(BUILD_DIR)/coverage.xml > $(BUILD_DIR)/coverage.html
+
+coverage-html: $(BUILD_DIR)/coverage.html
 
 # remove coverage execution logs from the kompiled directory
 clean-coverage:
 	rm -f $(KAVM_DEFINITION_DIR)/*_coverage.txt
+	rm -f $(BUILD_DIR)/coverage.xml
+	rm -f $(BUILD_DIR)/coverage.html
 
 # Tests
 # -----
