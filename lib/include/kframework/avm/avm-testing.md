@@ -5,8 +5,10 @@ requires "avm/blockchain.md"
 requires "avm/avm-configuration.md"
 requires "avm/avm-execution.md"
 requires "avm/algod/algod-models.md"
+requires "teal/teal-syntax.md"
 
 module AVM-TESTING-SYNTAX
+  imports TEAL-PARSER-SYNTAX
   imports STRING
   imports JSON
 
@@ -20,7 +22,6 @@ This module implements a testing framework that executes JSON-based test scenari
 
 ```k
 module AVM-TESTING
-  imports AVM-TESTING-SYNTAX
   imports INT
   imports LIST
   imports BYTES

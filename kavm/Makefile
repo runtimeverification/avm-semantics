@@ -1,7 +1,7 @@
 .PHONY: default all clean build install          \
         venv-config poetry-install               \
         test test-unit test-integration          \
-        test-scenarios                           \
+        test-scenarios test-bison-parsers        \
         format isort autoflake black             \
         check check-isort check-autoflake check-black check-flake8 check-mypy
 
@@ -38,7 +38,10 @@ test-unit: poetry-install
 	$(POETRY_RUN) python -m pytest $(PYTEST_ARGS) src/tests/unit
 
 test-scenarios: poetry-install
-	$(POETRY_RUN) python -m pytest --verbose $(PYTEST_ARGS) src/tests/scenarios
+	$(POETRY_RUN) python -m pytest --verbose $(PYTEST_ARGS) src/tests/semantics/test_avm_scenarios.py
+
+test-bison-parsers: poetry-install
+	$(POETRY_RUN) python -m pytest --verbose $(PYTEST_ARGS) src/tests/semantics/test_bison_parsers.py
 
 test-integration: test-integration-algod test-integration-kalgod
 
