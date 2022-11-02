@@ -59,7 +59,7 @@ class KAVM(KRun):
         if init_pyk:
             self._current_config = self._initial_config()
         else:
-            self._current_config = None
+            self._current_config = intToken(0)
 
     @property
     def logger(self) -> logging.Logger:
