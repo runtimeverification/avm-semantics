@@ -304,7 +304,6 @@ $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM
 	@rm -f $(KAVM_DEFINITION_DIR)/interpreter
 	$(VENV_ACTIVATE) && $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file) \
                             --backend llvm                                              \
-                            --gen-bison-parser                                          \
                             -I "${KAVM_INCLUDE}/kframework"                             \
                             -I "${plugin_include}/kframework"                           \
                             --definition-dir "${KAVM_LIB}/${avm_kompiled}"              \
@@ -322,6 +321,10 @@ clean-avm:
 	rm -rf $(KAVM_INCLUDE)
 
 generate-parsers:
+	kast --definition $(KAVM_DEFINITION_DIR) --gen-parser \
+             --module AVM-TESTING-SYNTAX                      \
+             --sort JSON                                      \
+             $(KAVM_DEFINITION_DIR)/parser_JSON_AVM-TESTING-SYNTAX
 	kast --definition $(KAVM_DEFINITION_DIR) --gen-parser \
              --module TEAL-SYNTAX                             \
              --sort TealProgramsStore                         \
