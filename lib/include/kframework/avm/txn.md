@@ -4,6 +4,7 @@ Algorand Transaction Representation
 ```k
 require "avm/teal/teal-fields.md"
 require "avm/teal/teal-types.md"
+require "avm/teal/teal-syntax.md"
 ```
 
 Transaction State Representation

@@ -6,8 +6,9 @@ requires "avm/itxn.md"
 requires "avm/teal/teal-syntax.md"
 requires "avm/teal/teal-driver.md"
 requires "avm/avm-configuration.md"
-requires "avm/avm-initialization.md"
+requires "avm/algod/algod-models.md"
 requires "avm/avm-txn-deque.md"
+requires "avm/avm-initialization.md"
 
 module AVM-EXECUTION-SYNTAX
   imports INT
@@ -17,10 +18,9 @@ module AVM-EXECUTION-SYNTAX
   imports ALGO-BLOCKCHAIN
   imports ALGO-TXN
   imports ALGO-ITXN
-  imports AVM-CONFIGURATION
-  imports AVM-INITIALIZATION
   imports TEAL-SYNTAX
   imports TEAL-DRIVER
+  imports AVM-INITIALIZATION
 ```
 
 Top-level model control rules
@@ -68,10 +68,10 @@ and the current configuration is frozen for examination.
   //-------------------------------------------
   rule <k> #setMode(MODE) => . ...</k>
        <mode> _ => MODE </mode>
-  
+
   // #evalTxGroup
   //---------------------------------------
-  rule <k> #evalTxGroup() => #initTxGroup() ~> #initTxnIndexMap() ~> #evalNextTx() ...</k>
+  rule <k> #evalTxGroup() => #initTxnIndexMap() ~> #evalNextTx() ...</k>
 
   syntax AlgorandCommand ::= #evalNextTx()
 

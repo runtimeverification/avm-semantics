@@ -22,7 +22,7 @@ KAVM_INCLUDE     := $(KAVM_LIB)/include
 KAVM_SCRIPTS     := $(KAVM_LIB)/scripts
 KAVM_K_BIN       := $(KAVM_LIB)/kframework/bin
 KAVM             := kavm
-KAVM_DEFINITION_DIR=$(abspath $(KAVM_LIB)/avm-llvm/avm-execution-kompiled/)
+KAVM_DEFINITION_DIR=$(abspath $(KAVM_LIB)/avm-llvm/avm-testing-kompiled/)
 export KAVM_LIB
 export KAVM_DEFINITION_DIR
 
@@ -278,7 +278,9 @@ avm_files    :=                            \
                 avm/teal/teal-fields.md    \
                 avm/teal/teal-stack.md     \
                 avm/teal/teal-syntax.md    \
-                avm/teal/teal-types.md
+                avm/teal/teal-types.md     \
+                avm/algod/algod-models.md  \
+                avm/avm-testing.md
 
 avm_includes := $(patsubst %, $(KAVM_INCLUDE)/kframework/%, $(avm_files))
 
@@ -290,9 +292,9 @@ ifeq ($(K_BACKEND),)
 endif
 
 avm_dir           := avm-llvm
-avm_main_module   := AVM-EXECUTION
-avm_syntax_module := TEAL-PARSER-SYNTAX
-avm_main_file     := avm/avm-execution.md
+avm_main_module   := AVM-TESTING
+avm_syntax_module := AVM-TESTING-SYNTAX
+avm_main_file     := avm/avm-testing.md
 avm_main_filename := $(basename $(notdir $(avm_main_file)))
 avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled/
 
@@ -304,6 +306,7 @@ $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM
 	@rm -f $(KAVM_DEFINITION_DIR)/interpreter
 	$(VENV_ACTIVATE) && $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file) \
                             --backend llvm                                              \
+                            --gen-bison-parser                                          \
                             -I "${KAVM_INCLUDE}/kframework"                             \
                             -I "${plugin_include}/kframework"                           \
                             --definition-dir "${KAVM_LIB}/${avm_kompiled}"              \
@@ -318,6 +321,9 @@ $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM
 clean-avm:
 	rm -rf $(KAVM_LIB)/$(avm_kompiled)
 	rm -rf $(KAVM_INCLUDE)
+
+generate-parsers:
+	kast --definition $(KAVM_DEFINITION_DIR) --gen-parser --module TEAL-SYNTAX --sort TealProgramsStore $(KAVM_DEFINITION_DIR)/parser_TealProgramsStore_TEAL-SYNTAX
 
 # Installation
 # ------------

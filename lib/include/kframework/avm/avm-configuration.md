@@ -1,4 +1,5 @@
 ```k
+requires "json.md"
 requires "avm/blockchain.md"
 requires "avm/teal/teal-syntax.md"
 requires "avm/teal/teal-stack.md"
@@ -9,6 +10,7 @@ Algorand Vitual Machine State
 
 ```k
 module AVM-CONFIGURATION
+  imports JSON
   imports INT
   imports LIST
   imports SET
@@ -18,7 +20,7 @@ module AVM-CONFIGURATION
 
   configuration
     <kavm>
-      <k> $PGM:AVMSimulation </k>
+      <k> $PGM:JSON </k>
       <returncode exit=""> 4 </returncode> // the simulator exit code
       <returnstatus>                       // the exit status message
         "Failure - AVM is stuck"
@@ -90,13 +92,16 @@ module AVM-CONFIGURATION
       // A ;-separated concatenation of their source code of TEAL contracts
       // should be supplied as `-cTEAL_PROGRAMS` configuration variuable
       // argument ot `krun`
-      <tealPrograms> $TEAL_PROGRAMS:TealPrograms </tealPrograms>
+      <tealPrograms> $TEAL_PROGRAMS:TealProgramsStore </tealPrograms>
     </kavm>
 
   // Top-level control of the semantics.
   // Defined in `avm-execution.md`
   syntax AVMSimulation
   syntax AlgorandCommand
+
+  // Defined in `avm-testing.md`
+  syntax TestingCommand
 
   // Control of transaction evaluation
   // Defined in `avm-execution.md`

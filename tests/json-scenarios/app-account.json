@@ -1,0 +1,45 @@
+{
+  "stages": [
+    {
+      "stage-type": "setup-network",
+      "data": {
+        "accounts": [
+          {
+            "address": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+            "amount": 1000000,
+            "created-apps": [
+              {
+                "id": 1,
+                "params": {
+                  "creator": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                  "approval-program": "approve.teal",
+                  "clear-state-program": "clear-basic.teal",
+                  "extra-progam-pages": 0,
+                  "local-state-schema": "",
+                  "global-state-schema": "",
+                  "global-state": 0
+                }
+              }
+            ]
+          },
+          {
+            "address": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    {
+      "stage-type": "execute-transactions",
+      "data": {
+        "transactions": [
+          {
+            "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+            "rcv": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
+            "amt": 100
+          }
+        ]
+      }
+    }
+  ]
+}

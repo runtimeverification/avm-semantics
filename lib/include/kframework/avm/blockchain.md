@@ -4,6 +4,7 @@ Algorand Blockchain Model
 ```k
 requires "avm/teal/teal-constants.md"
 requires "avm/teal/teal-fields.md"
+requires "avm/teal/teal-syntax.md"
 requires "avm/additional-fields.md"
 requires "avm/txn.md"
 requires "constants.md"
@@ -195,7 +196,6 @@ module ALGO-BLOCKCHAIN
   imports APPLICATIONS
   imports ASSETS
   imports ADDITIONAL-FIELDS
-  imports TEAL-SYNTAX
   imports TEAL-TYPES-SYNTAX
   imports MAP
 

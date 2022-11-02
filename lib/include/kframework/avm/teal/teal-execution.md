@@ -256,10 +256,14 @@ teal, failure means undoing changes made to the state (for more details, see
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - singleton stack with byte array type" </returnstatus>
 
+  // Leave the testing commands on the K cell
+  rule <k> #stopIfError() ~> X:TestingCommand => X:TestingCommand ~> #stopIfError() ... </k>
+
   // Consume the rest of the K cell if the execution terminated with an error
   rule <k> #stopIfError() ~> (_:KItem => .K) ... </k>
        <returncode> RETURN_CODE </returncode>
     requires RETURN_CODE =/=Int 0
+
 
   rule <k> #stopIfError() => .K </k>
        <returncode> RETURN_CODE </returncode>

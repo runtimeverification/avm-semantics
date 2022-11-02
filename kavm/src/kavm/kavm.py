@@ -38,13 +38,14 @@ class KAVM(KRun):
         use_directory: Any = None,
         faucet_address: Optional[str] = None,
         logger: Optional[logging.Logger] = None,
+        init_pyk: bool = False,
     ) -> None:
         super().__init__(definition_dir, use_directory=use_directory)
         if not logger:
             self._logger = _LOGGER
         else:
             self._logger = logger
-        KAVM._patch_symbol_table(self.symbol_table)
+        # KAVM._patch_symbol_table(self.symbol_table)
         self._accounts = AccountCellMap()
         self._apps = AppCellMap()
         self._committed_txns: Dict[str, Dict[str, Any]] = {}
@@ -55,7 +56,10 @@ class KAVM(KRun):
             #       the item's cells with vars. Is that intended?
             self._accounts['dummy'] = KAVMAccount('dummy')
             self._accounts[faucet_address] = self._faucet
-        self._current_config = self._initial_config()
+        if init_pyk:
+            self._current_config = self._initial_config()
+        else:
+            self._current_config = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -127,6 +131,52 @@ class KAVM(KRun):
         krun_command += [f'-cTEAL_PROGRAMS={teal_programs}']
         krun_command += [f'-pTEAL_PROGRAMS={str(teal_programs_parser)}']
         krun_command += ['--parser', str(avm_simulation_parser)]
+        krun_command += [str(input_file)]
+        krun_command += ['--depth', str(depth)] if depth else []
+        command_env = os.environ.copy()
+        command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
+
+        return run_process(krun_command, env=command_env, logger=self._logger, profile=profile, check=check)
+
+    def run_avm_json(
+        self,
+        input_file: Path,
+        teal_programs_parser: Path,
+        avm_json_parser: Path,
+        depth: Optional[int],
+        output: str = 'json',
+        profile: bool = False,
+        teal_sources_dir: Optional[Path] = None,
+        check: bool = True,
+    ) -> CompletedProcess:
+        """Run an AVM simulaion scenario with krun"""
+
+        if not teal_sources_dir:
+            teal_sources_dir = Path()
+
+        avm_json = json.loads(input_file.read_text())
+
+        teal_paths = set()
+        try:
+            setup_network_stage = [stage for stage in avm_json['stages'] if stage['stage-type'] == 'setup-network'][0]
+        except KeyError:
+            print(f'Test file {input_file} does not contain a "setup-network" stage')
+            exit(1)
+        for acc in setup_network_stage['data']['accounts']:
+            for app in acc['created-apps']:
+                teal_paths.add(app['params']['approval-program'])
+                teal_paths.add(app['params']['clear-state-program'])
+
+        teal_programs: str = ''
+        for teal_path in teal_paths:
+            teal_programs += f'"{teal_path}" : {(teal_sources_dir / teal_path).read_text()};'
+        teal_programs += '.TealPrograms'
+
+        krun_command = ['krun', '--definition', str(self.definition_dir)]
+        krun_command += ['--output', output]
+        krun_command += [f'-cTEAL_PROGRAMS={teal_programs}']
+        krun_command += [f'-pTEAL_PROGRAMS={str(teal_programs_parser)}']
+        krun_command += ['--parser', str(avm_json_parser)]
         krun_command += [str(input_file)]
         krun_command += ['--depth', str(depth)] if depth else []
         command_env = os.environ.copy()
