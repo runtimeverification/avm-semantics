@@ -795,7 +795,7 @@ App create
          </account>
          (.Bag =>
          (<account>
-           <address> getAppAddress(APP_ID) </address>
+           <address> getAppAddressBytes(APP_ID) </address>
            ...
          </account>))
          ...

@@ -11,6 +11,7 @@ module AVM-INITIALIZATION
   imports AVM-CONFIGURATION
   imports AVM-TXN-DEQUE
   imports TEAL-CONSTANTS
+  imports TEAL-TYPES
   imports ALGO-TXN
 ```
 
@@ -28,6 +29,29 @@ TODO: provide a default safe order.
 ```k
   syntax AlgorandCommand ::= #initTxGroup()
                            | #initGlobals()
+```
+
+### Input sanitation and normalization
+
+```k
+  syntax MaybeTValue ::= normalizeAddressString(String) [function]
+  // -------------------------------------------------------
+  rule normalizeAddressString(X) => NoTValue
+    requires X ==String "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
+  rule normalizeAddressString(X) => DecodeAddressString(X)
+
+  syntax TValue ::= normalizeAccountReference(TValue) [function]
+  // -----------------------------------------------------------
+  rule normalizeAccountReference(X:TUInt64) => X
+  rule normalizeAccountReference(S:String) => DecodeAddressString(S)
+  rule normalizeAccountReference(TA:TAddressLiteral) => TA
+
+  syntax TValueList ::= normalizeAccounts(TValueList) [function]
+  // -----------------------------------------------------------
+
+  rule normalizeAccounts(.TValueList) => .TValueList
+  rule normalizeAccounts(I:TValue) => normalizeAccountReference(I)
+  rule normalizeAccounts(I:TValue L:TValueNeList) => normalizeAccountReference(I) {normalizeAccounts(L)}:>TValueNeList
 ```
 
 The transaction is initialized first.
@@ -60,17 +84,17 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
          <transaction>
            <txID> Int2String(ID) </txID>
            <txHeader>
-             <sender>      SENDER   </sender>
-             <txType>      "pay"    </txType>
-             <typeEnum>    @ pay    </typeEnum>
+             <sender>      normalizeAddressString(SENDER)   </sender>
+             <txType>      "pay"                </txType>
+             <typeEnum>    @ pay                </typeEnum>
              <groupID>     Int2String(GROUP_ID) </groupID>
              <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx>    // for testing, we make these the same as sequential TxIDs
              ...                              // other fields will receive default values
            </txHeader>
            <payTxFields>
-             <receiver>         RECEIVER </receiver>
-             <amount>           AMOUNT </amount>
-             <closeRemainderTo> .Bytes </closeRemainderTo>
+             <receiver>         normalizeAddressString(RECEIVER) </receiver>
+             <amount>           AMOUNT               </amount>
+             <closeRemainderTo> .Bytes               </closeRemainderTo>
            </payTxFields>
            ...
          </transaction>
@@ -86,7 +110,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
 ```k
   syntax AlgorandCommand ::= "addAppCallTx" SenderCell ApplicationIDCell
                                             OnCompletionCell AccountsCell
-                                            ApplicationArgsCell ForeignAppsCell 
+                                            ApplicationArgsCell ForeignAppsCell
                                             ForeignAssetsCell
                                             GlobalNuiCell GlobalNbsCell
                                             LocalNuiCell LocalNbsCell
@@ -116,25 +140,25 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
          <transaction>
            <txID> Int2String(ID) </txID>
            <txHeader>
-             <sender>   SENDER   </sender>
-             <txType>   "appl"   </txType>
-             <typeEnum> @ appl   </typeEnum>
+             <sender>   normalizeAddressString(SENDER)   </sender>
+             <txType>   "appl"               </txType>
+             <typeEnum> @ appl               </typeEnum>
              <groupID>  Int2String(GROUP_ID) </groupID>
              <groupIdx> groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx> // for testing, we make these the same as sequential TxIDs
              ...                           // other fields will receive default values
            </txHeader>
            <appCallTxFields>
-             <applicationID>        APP_ID               </applicationID>
-             <onCompletion>         ON_COMPLETION        </onCompletion>
-             <accounts>             ACCOUNTS             </accounts>
-             <applicationArgs>      convertToBytes(ARGS) </applicationArgs>
-             <foreignApps>          APPS                 </foreignApps>
-             <foreignAssets>        ASSETS               </foreignAssets>
-             <globalNui>            GLOBAL_INTS          </globalNui>
-             <globalNbs>            GLOBAL_BYTES         </globalNbs>
-             <localNui>             LOCAL_INTS           </localNui>
-             <localNbs>             LOCAL_BYTES          </localNbs>
-             <extraProgramPages>    EXTRA_PAGES          </extraProgramPages>
+             <applicationID>        APP_ID                      </applicationID>
+             <onCompletion>         ON_COMPLETION               </onCompletion>
+             <accounts>             normalizeAccounts(ACCOUNTS) </accounts>
+             <applicationArgs>      convertToBytes(ARGS)        </applicationArgs>
+             <foreignApps>          APPS                        </foreignApps>
+             <foreignAssets>        ASSETS                      </foreignAssets>
+             <globalNui>            GLOBAL_INTS                 </globalNui>
+             <globalNbs>            GLOBAL_BYTES                </globalNbs>
+             <localNui>             LOCAL_INTS                  </localNui>
+             <localNbs>             LOCAL_BYTES                 </localNbs>
+             <extraProgramPages>    EXTRA_PAGES                 </extraProgramPages>
              <approvalProgramSrc>   getTealByIndex(TEAL_PGMS_LIST, APPROVAL_IDX)    </approvalProgramSrc>
              <clearStateProgramSrc> getTealByIndex(TEAL_PGMS_LIST, CLEAR_STATE_IDX) </clearStateProgramSrc>
              ...                            // other fields will receive default values
@@ -210,13 +234,13 @@ We do not currently model rewards, hence we initilize the network participation-
        <accountsMap>
          ACCOUNTS =>
          <account>
-           <address> ADDR </address>
-           <balance> BALANCE    </balance>
-           <key> ADDR </key>
-           <appsCreated> .Bag </appsCreated>
-           <appsOptedIn> .Bag </appsOptedIn>
-           <assetsCreated> .Bag </assetsCreated>
-           <assetsOptedIn> .Bag </assetsOptedIn>
+           <address>       normalizeB(String2TealAddress(ADDR)) </address>
+           <balance>       BALANCE          </balance>
+           <key>           normalizeB(String2TealAddress(ADDR)) </key>
+           <appsCreated>   .Bag             </appsCreated>
+           <appsOptedIn>   .Bag             </appsOptedIn>
+           <assetsCreated> .Bag             </assetsCreated>
+           <assetsOptedIn> .Bag             </assetsOptedIn>
            ...
          </account>
          ACCOUNTS
@@ -268,27 +292,27 @@ The asset initialization rule must be used *after* initializing accounts.
          <transaction>
            <txID> Int2String(TXN_ID) </txID>
            <txHeader>
-             <sender>      SENDER   </sender>
-             <txType>      "acfg"   </txType>
-             <typeEnum>    @ acfg   </typeEnum>
-             <groupID>     Int2String(GROUP_ID) </groupID>
-             <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx> // for testing, we make these the same as sequential TxIDs
+             <sender>   normalizeAddressString(SENDER)   </sender>
+             <txType>   "acfg"               </txType>
+             <typeEnum> @ acfg               </typeEnum>
+             <groupID>  Int2String(GROUP_ID) </groupID>
+             <groupIdx> groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx> // for testing, we make these the same as sequential TxIDs
              ...                           // other fields will receive default values
            </txHeader>
            <assetConfigTxFields>
              <configAsset> ASSET_ID </configAsset>           // the asset ID
              <assetParams>
-               <configTotal>         TOTAL         </configTotal>
-               <configDecimals>      DECIMALS      </configDecimals>
-               <configDefaultFrozen> FROZEN        </configDefaultFrozen>
-               <configUnitName>      UNIT_NAME     </configUnitName>
-               <configAssetName>     NAME          </configAssetName>
-               <configAssetURL>      ASSET_URL     </configAssetURL>
-               <configManagerAddr>   MGR_ADDR      </configManagerAddr>
-               <configMetaDataHash>  METADATA_HASH </configMetaDataHash>
-               <configReserveAddr>   RES_ADDR      </configReserveAddr>
-               <configFreezeAddr>    FRZ_ADDR      </configFreezeAddr>
-               <configClawbackAddr>  CLB_ADDR      </configClawbackAddr>
+               <configTotal>         TOTAL                </configTotal>
+               <configDecimals>      DECIMALS             </configDecimals>
+               <configDefaultFrozen> FROZEN               </configDefaultFrozen>
+               <configUnitName>      UNIT_NAME            </configUnitName>
+               <configAssetName>     NAME                 </configAssetName>
+               <configAssetURL>      ASSET_URL            </configAssetURL>
+               <configManagerAddr>   normalizeAddressString(MGR_ADDR) </configManagerAddr>
+               <configMetaDataHash>  METADATA_HASH        </configMetaDataHash>
+               <configReserveAddr>   normalizeAddressString(RES_ADDR) </configReserveAddr>
+               <configFreezeAddr>    normalizeAddressString(FRZ_ADDR) </configFreezeAddr>
+               <configClawbackAddr>  normalizeAddressString(CLB_ADDR) </configClawbackAddr>
              </assetParams>
            </assetConfigTxFields>
            ...
@@ -321,19 +345,19 @@ The asset initialization rule must be used *after* initializing accounts.
          <transaction>
            <txID> Int2String(TXN_ID) </txID>
            <txHeader>
-             <sender>   SENDER   </sender>
-             <txType>   "axfer"  </txType>
-             <typeEnum> @ axfer  </typeEnum>
+             <sender>   normalizeAddressString(SENDER)   </sender>
+             <txType>   "axfer"              </txType>
+             <typeEnum> @ axfer              </typeEnum>
              <groupID>  Int2String(GROUP_ID) </groupID>
              <groupIdx> groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx> // for testing, we make these the same as sequential TxIDs
              ...                         // other fields will receive default values
            </txHeader>
            <assetTransferTxFields>
-             <xferAsset>     ASSET_ID      </xferAsset>
-             <assetAmount>   AMOUNT        </assetAmount>
-             <assetASender>  CLAWBACK_FROM </assetASender>
-             <assetReceiver> RECEIVER      </assetReceiver>
-             <assetCloseTo>  CLOSE_TO      </assetCloseTo>
+             <xferAsset>     ASSET_ID                  </xferAsset>
+             <assetAmount>   AMOUNT                    </assetAmount>
+             <assetASender>  normalizeAddressString(CLAWBACK_FROM) </assetASender>
+             <assetReceiver> normalizeAddressString(RECEIVER)      </assetReceiver>
+             <assetCloseTo>  normalizeAddressString(CLOSE_TO)      </assetCloseTo>
              ...
            </assetTransferTxFields>
            ...
