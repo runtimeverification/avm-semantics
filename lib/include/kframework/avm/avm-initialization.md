@@ -87,7 +87,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
   syntax AlgorandCommand ::= "addAppCallTx" SenderCell ApplicationIDCell
                                             OnCompletionCell AccountsCell
                                             ApplicationArgsCell ForeignAppsCell 
-                                            ForeignAssetsCell
+                                            ForeignAssetsCell BoxReferencesCell
                                             GlobalNuiCell GlobalNbsCell
                                             LocalNuiCell LocalNbsCell
                                             ExtraProgramPagesCell
@@ -101,6 +101,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
                         <applicationArgs>   ARGS            </applicationArgs>
                         <foreignApps>       APPS            </foreignApps>
                         <foreignAssets>     ASSETS          </foreignAssets>
+                        <boxReferences>     BOX_REFS        </boxReferences>
                         <globalNui>         GLOBAL_INTS     </globalNui>
                         <globalNbs>         GLOBAL_BYTES    </globalNbs>
                         <localNui>          LOCAL_INTS      </localNui>
@@ -130,6 +131,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
              <applicationArgs>      convertToBytes(ARGS) </applicationArgs>
              <foreignApps>          APPS                 </foreignApps>
              <foreignAssets>        ASSETS               </foreignAssets>
+             <boxReferences>        BOX_REFS             </boxReferences>
              <globalNui>            GLOBAL_INTS          </globalNui>
              <globalNbs>            GLOBAL_BYTES         </globalNbs>
              <localNui>             LOCAL_INTS           </localNui>

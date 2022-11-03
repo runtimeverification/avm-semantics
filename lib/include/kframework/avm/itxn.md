@@ -346,6 +346,7 @@ module ALGO-ITXN
              <applicationArgs>      .TValueList          </applicationArgs>
              <foreignApps>          .TValueList          </foreignApps>
              <foreignAssets>        .TValueList          </foreignAssets>
+             <boxReferences>         .TValuePairList     </boxReferences>
              <globalStateSchema>
                <globalNui> 0 </globalNui>
                <globalNbs> 0 </globalNbs>
