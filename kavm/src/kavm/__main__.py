@@ -136,6 +136,7 @@ def exec_run(
                 print(proc_result.stdout)
             exit(proc_result.returncode)
         elif input_file.suffix == '.json':
+            print("test1")
             proc_result = kavm.run_avm_json(
                 input_file=input_file,
                 output=output,

@@ -151,6 +151,8 @@ class KAVM(KRun):
     ) -> CompletedProcess:
         """Run an AVM simulaion scenario with krun"""
 
+        print("test2")
+
         if not teal_sources_dir:
             teal_sources_dir = Path()
 
@@ -182,6 +184,8 @@ class KAVM(KRun):
             teal_programs += f'"{teal_path}" : {(teal_sources_dir / teal_path).read_text()};'
         teal_programs += '.TealPrograms'
 
+        print("test3")
+
         krun_command = ['krun', '--definition', str(self.definition_dir)]
         krun_command += ['--output', output]
         krun_command += [f'-cTEAL_PROGRAMS={teal_programs}']
@@ -191,6 +195,11 @@ class KAVM(KRun):
         krun_command += ['--depth', str(depth)] if depth else []
         command_env = os.environ.copy()
         command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
+
+        print("test4")
+
+        for line in krun_command:
+            print(line, end="\n")
 
         return run_process(krun_command, env=command_env, logger=self._logger, profile=profile, check=check)
 

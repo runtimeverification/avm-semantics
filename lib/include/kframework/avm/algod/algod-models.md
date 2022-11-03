@@ -90,15 +90,15 @@ TODO: if an account contains an app, the state specification must also contain t
              <appsCreated>
              (.Bag => <app>
                         <appID>            APP_ID                                                      </appID>
-                        <approvalPgmSrc>   getTealByName(TEAL_PROGRAMS, APPROVAL_NAME):TealInputPgm    </approvalPgmSrc>
-                        <clearStatePgmSrc> getTealByName(TEAL_PROGRAMS, CLEAR_STATE_NAME):TealInputPgm </clearStatePgmSrc>
+ //                       <approvalPgmSrc>   getTealByName(TEAL_PROGRAMS, APPROVAL_NAME):TealInputPgm    </approvalPgmSrc>
+ //                       <clearStatePgmSrc> getTealByName(TEAL_PROGRAMS, CLEAR_STATE_NAME):TealInputPgm </clearStatePgmSrc>
                           ...
                        </app>)
              ...
              </appsCreated>
              ...
            </account>
-           <tealPrograms> TEAL_PROGRAMS </tealPrograms>
+//           <tealPrograms> TEAL_PROGRAMS </tealPrograms>
        requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR
     rule <k> #addAccountJSON(INPUT:JSON) => #panic("Invalid app JSON:" +String JSON2String(INPUT)) ... </k> [owise]
 ```
@@ -194,8 +194,8 @@ TODO: if an account contains an app, the state specification must also contain t
            <appCallTxFields>
              <applicationID> APPLICATION_ID </applicationID>
              <onCompletion> ON_COMPLETION </onCompletion>
-             <approvalProgramSrc> getTealByName(TEAL_PROGRAMS, APPROVAL_NAME):TealInputPgm </approvalProgramSrc>
-             <clearStateProgramSrc> getTealByName(TEAL_PROGRAMS, CLEAR_STATE_NAME):TealInputPgm </clearStateProgramSrc>
+//             <approvalProgramSrc> getTealByName(TEAL_PROGRAMS, APPROVAL_NAME):TealInputPgm </approvalProgramSrc>
+//             <clearStateProgramSrc> getTealByName(TEAL_PROGRAMS, CLEAR_STATE_NAME):TealInputPgm </clearStateProgramSrc>
              <accounts> JSONList2TValueList(ACCOUNTS) </accounts>
              <applicationArgs> JSONList2TValueList(APPLICATION_ARGS) </applicationArgs>
              <foreignApps> JSONList2TValueList(FOREIGN_APPS) </foreignApps>
@@ -215,7 +215,7 @@ TODO: if an account contains an app, the state specification must also contain t
          </transaction>)
          TXNS
        </transactions>
-       <tealPrograms> TEAL_PROGRAMS </tealPrograms>
+//       <tealPrograms> TEAL_PROGRAMS </tealPrograms>
        <nextGroupID> GROUP_ID </nextGroupID>
        <nextTxnID> ID => ID +Int 1 </nextTxnID>
 ```

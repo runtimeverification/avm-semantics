@@ -1,0 +1,6 @@
+#pragma version 8
+
+lbl1:
+
+int 1
+return

@@ -105,7 +105,7 @@ Pragmas are applied directly, and then the `#LoadPgm` performs program pre-proce
      andBool (notBool isLabelCode(Op))
 
   rule <k> #LoadPgm( (L:) Pgm, PC ) => #LoadPgm( Pgm, PC +Int 1 ) ... </k>
-       <program> PGM => PGM[PC <- (L:)] </program>
+       <program> PGM => PGM[PC <- (L:):LabelCode] </program>
        <labels> LL => LL[L <- PC] </labels>
     requires notBool (L in_labels LL)
 
@@ -124,7 +124,7 @@ Pragmas are applied directly, and then the `#LoadPgm` performs program pre-proce
      andBool (notBool isLabelCode(Op))
 
   rule <k> #LoadPgm( (L:) , PC ) => .K ... </k>
-       <program> PGM => PGM[PC <- (L:)] </program>
+       <program> PGM => PGM[PC <- (L:):LabelCode] </program>
        <labels> LL => LL[L <- PC] </labels>
     requires notBool (L in_labels LL)
 
