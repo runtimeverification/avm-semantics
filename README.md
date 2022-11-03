@@ -141,8 +141,8 @@ This project contains facilities to generate coverage metrics for K rewrite rule
 
 To generate the coverage report for the AVM simulation scenarious squite ([`tests/scenarios/`](tests/scenarios/)), run the following command:
 
-```
+```bash
   make clean-coverage && make test-kavm-avm-simulation && make coverage
-``
+```
 
 This command generates a `.build/coverage.xml` file. This file contains information about the K rewrite rules that have been exercised for all tests in the ([`tests/scenarios/`](tests/scenarios/)) directory.
