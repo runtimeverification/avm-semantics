@@ -9,6 +9,7 @@ module TEAL-EXECUTION
   imports TEAL-OPCODES
   imports TEAL-SYNTAX
   imports TEAL-STACK
+  imports TEAL-TYPES
   imports TEAL-INTERPRETER-STATE
 ```
 
@@ -53,7 +54,7 @@ there may be some remaining artefacts of the previous transaction's TEAL.
 ```k
   rule <k> #initApp(APP_ID) => . ...</k>
        <currentApplicationID> _ => APP_ID </currentApplicationID>
-       <currentApplicationAddress> _ => getAppAddress(APP_ID)       </currentApplicationAddress>
+       <currentApplicationAddress> _ => getAppAddressBytes(APP_ID) </currentApplicationAddress>
        <activeApps> (.Set => SetItem(APP_ID)) REST </activeApps>
        <lastTxnGroupID> _ => "" </lastTxnGroupID>
        <mode> _ => stateful </mode>
