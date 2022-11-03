@@ -1,11 +1,11 @@
 declareTealSource "asset-holding-get-asset-invalid.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 300000 </balance>;
+addAccount <address> "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE" </address> <balance> 300000 </balance>;
 
 #initTxGroup();
 
-addAssetConfigTx <sender>              b"1"       </sender>
+addAssetConfigTx <sender>              "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"       </sender>
                  <configAsset>         0          </configAsset>
                  <configTotal>         12345      </configTotal>
                  <configDecimals>      0          </configDecimals>
@@ -14,13 +14,13 @@ addAssetConfigTx <sender>              b"1"       </sender>
                  <configAssetName>     "testcoin" </configAssetName>
                  <configAssetURL>      NoTValue   </configAssetURL>
                  <configMetaDataHash>  NoTValue   </configMetaDataHash>
-                 <configManagerAddr>   b"1"       </configManagerAddr>
-                 <configReserveAddr>   NoTValue   </configReserveAddr>
-                 <configFreezeAddr>    NoTValue   </configFreezeAddr>
-                 <configClawbackAddr>  NoTValue   </configClawbackAddr>;
+                 <configManagerAddr>   "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"       </configManagerAddr>
+                 <configReserveAddr>   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"   </configReserveAddr>
+                 <configFreezeAddr>    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"   </configFreezeAddr>
+                 <configClawbackAddr>  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"   </configClawbackAddr>;
 
 // Add app
-addAppCallTx <sender>            b"1"        </sender>
+addAppCallTx <sender>            "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>

@@ -1,13 +1,13 @@
 declareTealSource "min-balance-asset-opt-out.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 400000 </balance>;
-addAccount <address> b"2" </address> <balance> 200000 </balance>;
+addAccount <address> "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE" </address> <balance> 400000 </balance>;
+addAccount <address> "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA" </address> <balance> 200000 </balance>;
 
 #initTxGroup();
 
 // Add asset
-addAssetConfigTx <sender>              b"1"        </sender>
+addAssetConfigTx <sender>              "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"        </sender>
                  <configAsset>         0           </configAsset>
                  <configTotal>         500         </configTotal>
                  <configDecimals>      0           </configDecimals>
@@ -16,29 +16,29 @@ addAssetConfigTx <sender>              b"1"        </sender>
                  <configAssetName>     "testcoin"  </configAssetName>
                  <configAssetURL>      NoTValue    </configAssetURL>
                  <configMetaDataHash>  NoTValue    </configMetaDataHash>
-                 <configManagerAddr>   b"1"        </configManagerAddr>
-                 <configReserveAddr>   NoTValue    </configReserveAddr>
-                 <configFreezeAddr>    NoTValue    </configFreezeAddr>
-                 <configClawbackAddr>  NoTValue    </configClawbackAddr>;
+                 <configManagerAddr>   "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE" </configManagerAddr>
+                 <configReserveAddr>   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" </configReserveAddr>
+                 <configFreezeAddr>    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" </configFreezeAddr>
+                 <configClawbackAddr>  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" </configClawbackAddr>;
 
-// Opt b"2" in to asset
-addAssetTransferTx <sender>        b"2"     </sender>
+// Opt "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA" in to asset
+addAssetTransferTx <sender>        "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"     </sender>
                    <xferAsset>     1        </xferAsset>
                    <assetAmount>   0        </assetAmount>
-                   <assetASender>  NoTValue </assetASender>
-                   <assetReceiver> b"2"     </assetReceiver>
-                   <assetCloseTo>  NoTValue </assetCloseTo>;
+                   <assetASender>  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" </assetASender>
+                   <assetReceiver> "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA" </assetReceiver>
+                   <assetCloseTo>  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" </assetCloseTo>;
 
-// Opt b"2" out of asset
-addAssetTransferTx <sender>        b"2"     </sender>
+// Opt "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA" out of asset
+addAssetTransferTx <sender>        "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"     </sender>
                    <xferAsset>     1        </xferAsset>
                    <assetAmount>   0        </assetAmount>
-                   <assetASender>  NoTValue </assetASender>
-                   <assetReceiver> b"2"     </assetReceiver>
-                   <assetCloseTo>  b"1"     </assetCloseTo>;
+                   <assetASender>  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" </assetASender>
+                   <assetReceiver> "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA" </assetReceiver>
+                   <assetCloseTo>  "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE" </assetCloseTo>;
 
 // Create app 1
-addAppCallTx <sender>            b"1"        </sender>
+addAppCallTx <sender>            "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
@@ -54,7 +54,7 @@ addAppCallTx <sender>            b"1"        </sender>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 // Call test code
-addAppCallTx <sender>            b"2"        </sender>
+addAppCallTx <sender>            "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"        </sender>
              <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
