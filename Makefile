@@ -55,7 +55,7 @@ export K_OPTS
 
 .PHONY: all clean distclean install uninstall                                         \
         deps k-deps libsecp256k1 libff plugin-deps hook-deps                          \
-        build build-avm build-kavm py-kavm                                            \
+        build build-avm build-kavm                                                    \
         test test-avm-semantics test-avm-semantics-prove                              \
         test-kavm test-kavm-kast test-kavm-kast-avm-scenario test-kavm-kast-teal      \
         test-kavm-hooks build-kavm-hooks-tests                                        \
@@ -219,9 +219,10 @@ venv: $(VENV_DIR)/pyvenv.cfg
 
 venv-clean:
 	rm -rf $(VENV_DIR)
+	$(MAKE) clean -C $(PY_KAVM_DIR)
 
-py-kavm:
-	$(MAKE) build -C $(PY_KAVM_DIR)
+check-kavm-codestyle:
+	$(MAKE) check -C $(PY_KAVM_DIR)
 
 includes := $(avm_includes) $(plugin_includes) $(plugin_c_includes) $(hook_includes)
 
@@ -230,10 +231,10 @@ kavm_scripts := $(patsubst %, $(KAVM_SCRIPTS)/%, parse-avm-simulation.sh  parse-
 kavm_lib_files := version
 kavm_libs      := $(patsubst %, $(KAVM_LIB)/%, $(kavm_lib_files))
 
-build-kavm: $(KAVM_LIB)/version $(KAVM_DEFINITION_DIR)
+build-kavm: venv $(KAVM_LIB)/version $(KAVM_DEFINITION_DIR)
 
 # this target packages the Python-based kavm CLI
-$(KAVM_LIB)/version: $(includes) $(kavm_scripts) py-kavm $(VENV_DIR)/pyvenv.cfg
+$(KAVM_LIB)/version: $(includes) $(kavm_scripts) $(VENV_DIR)/pyvenv.cfg
 	@mkdir -p $(dir $@)
 	echo '== KAVM Version'    > $@
 	echo $(KAVM_RELEASE_TAG) >> $@
@@ -300,7 +301,7 @@ $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM
 	@rm -f $(KAVM_DEFINITION_DIR)/interpreter.o # make sure the llvm interpreter gets rebuilt
 	@rm -f $(KAVM_DEFINITION_DIR)/interpreter
 	$(VENV_ACTIVATE) && $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file) \
-		                        --backend llvm                                              \
+                            --backend llvm                                              \
                             -I "${KAVM_INCLUDE}/kframework"                             \
                             -I "${plugin_include}/kframework"                           \
                             --definition-dir "${KAVM_LIB}/${avm_kompiled}"              \
@@ -308,8 +309,8 @@ $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM
                             --syntax-module $(avm_syntax_module)                        \
                             --hook-namespaces KRYPTO KAVM                               \
                             --hook-cpp-files $(HOOK_KAVM_FILES) $(PLUGIN_CPP_FILES)     \
-                            --hook-clang-flags $(HOOK_CC_OPTS)
-
+                            --hook-clang-flags $(HOOK_CC_OPTS)                          \
+                            --coverage
 
 
 clean-avm:
@@ -341,12 +342,33 @@ uninstall:
 	rm -rf $(DESTDIR)$(INSTALL_BIN)/kavm
 	rm -rf $(DESTDIR)$(INSTALL_LIB)/kavm
 
+# Coverage Processing
+# -------------------
+
+KCOVR:=$(KAVM_K_BIN)/kcovr
+
+$(BUILD_DIR)/coverage.xml: test-kavm-avm-simulation
+	$(VENV_ACTIVATE) && $(KCOVR) $(KAVM_DEFINITION_DIR)       \
+        -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
+	$(KAVM_SCRIPTS)/post-process-coverage $(BUILD_DIR)/coverage.xml
+
+$(BUILD_DIR)/coverage.html: $(BUILD_DIR)/coverage.xml
+	$(VENV_ACTIVATE) && pycobertura show --format html $(BUILD_DIR)/coverage.xml > $(BUILD_DIR)/coverage.html
+
+coverage-html: $(BUILD_DIR)/coverage.html
+
+# remove coverage execution logs from the kompiled directory
+clean-coverage:
+	rm -f $(KAVM_DEFINITION_DIR)/*_coverage.txt
+	rm -f $(BUILD_DIR)/coverage.xml
+	rm -f $(BUILD_DIR)/coverage.html
+
 # Tests
 # -----
 
 KAVM_OPTIONS :=
 
-test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics-prove
+test: test-kavm-hooks test-kavm test-kavm-avm-simulation test-kavm-algod test-avm-semantics-prove
 
 ##########################################
 ## Standalone AVM LLVM Backend hooks tests
@@ -390,17 +412,17 @@ test-kavm-algod:
 test-kavm-avm-simulation:
 	$(MAKE) test-scenarios -C $(PY_KAVM_DIR)
 
-
 ###########################
 ## AVM Symbolic Proof Tests
 ###########################
-avm_prove_simple_specs := $(wildcard tests/specs/simple/*-spec.k)
-avm_prove_internal_specs :=  $(wildcard tests/specs/internal/*-spec.md)
-avm_prove_opcode_specs :=  $(wildcard tests/specs/opcodes/*-spec.md)
 avm_prove_specs_failing := $(shell cat tests/failing-symbolic.list)
-avm_prove_specs_passing := $(filter-out $(avm_prove_specs_failing), $(avm_prove_opcodes_specs) $(avm_prove_internal_specs) $(avm_prove_simple_specs) )
+avm_prove_internal_specs := $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/internal/*-spec.k))
+avm_prove_simple_specs := $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/simple/*-spec.k))
+avm_prove_opcode_specs :=  $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/opcodes/*-spec.md))
 
-test-avm-semantics-prove: $(avm_prove_specs_passing:=.prove)
+test-avm-semantics-internal-prove: $(avm_prove_internal_specs:=.prove)
+test-avm-semantics-opcode-prove: $(avm_prove_opcode_specs:=.prove)
+test-avm-semantics-simple-prove: $(avm_prove_simple_specs:=.prove)
 
 tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
 	$(VENV_ACTIVATE) && \

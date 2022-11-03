@@ -190,7 +190,8 @@ module OPCODES-V4-SPEC
 
 ```k
   claim <k> callsub LABEL => . </k>
-        <callStack> (.List => ListItem(CURRENT_PC +Int 1)) CS </callStack>
+        <stack> STACK </stack>
+        <callStack> (.List => ListItem(frame(CURRENT_PC +Int 1, #sizeTStack(STACK)))) CS </callStack>
         <pc> CURRENT_PC:Int => JUMP_PC </pc>
         <labels> .Map[LABEL <- JUMP_PC] </labels>
         <jumped> _ => true </jumped>
@@ -207,7 +208,7 @@ module OPCODES-V4-SPEC
 
 ```k
   claim <k> retsub => . </k>
-        <callStack> (ListItem(RET_PC) => .List) _ </callStack>
+        <callStack> (ListItem(frame(RET_PC, _)) => .List) _ </callStack>
         <pc> _ => RET_PC </pc>
         <jumped> _ => true </jumped>
 ```

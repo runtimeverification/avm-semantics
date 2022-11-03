@@ -135,6 +135,18 @@ After installing `direnv`, run `direnv allow` to activate the settings for the p
 
 Feel free to ignore `direnv` if you prefer your global installation of K.
 
+### Rule Coverage
+
+This project contains facilities to generate coverage metrics for K rewrite rules that were executed by `kavm run`. This is helpful in ensuring that the test suite contains input programs that exercise all rewrite rules in the semantics.
+
+To generate the coverage report for the AVM simulation scenarious squite ([`tests/scenarios/`](tests/scenarios/)), run the following command:
+
+```bash
+  make clean-coverage && make test-kavm-avm-simulation && make coverage
+``
+
+This command generates a `.build/coverage.xml` file. This file contains information about the K rewrite rules that have been exercised for all tests in the ([`tests/scenarios/`](tests/scenarios/)) directory.
+
 ### Profiling
 
 We use [`pytest-profiling`](https://pypi.org/project/pytest-profiling/) to generate profiling data for `py-algorand-sdk`-based integration tests.
@@ -146,6 +158,7 @@ For example, here are the steps required to profile `kavm/src/tests/algod_integr
 
 1. Change into the `kavm` directory
 2. Run the test with `--profile` and using the KAVM backend (`kalgod`):
+
 ```bash
 poetry run python -m pytest --profile --backend=kalgod src/tests/algod_integration/test_faucet.py # run the test with KAVM
 ```
