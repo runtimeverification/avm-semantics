@@ -1,4 +1,4 @@
-ARG K_DISTRO=focal
+ARG K_DISTRO=jammy
 ARG K_VERSION
 FROM runtimeverificationinc/kframework-k:ubuntu-${K_DISTRO}-${K_VERSION}
 
