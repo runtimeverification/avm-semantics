@@ -382,9 +382,11 @@ module TEAL-SYNTAX
                    | TealOpCodeOrLabel TealPgm
   syntax TealInputPgm ::= TealPragmas TealPgm | TealPgm
 
-//  syntax TealPrograms ::= TealInputPgm ";" TealPrograms | ".TealPrograms" [klabel(.TealPrograms), symbol]
-    syntax TealProgramsStore ::= String ":" TealInputPgm ";" TealProgramsStore
-                               | ".TealPrograms" [klabel(.TealPrograms), symbol]
+  syntax TealProgramsStoreKey   ::= String
+  syntax TealProgramsStoreValue ::= TealInputPgm [prec(3)]
+  syntax TealProgramsStoreItem  ::= TealProgramsStoreKey "|->" TealProgramsStoreValue
+  syntax TealProgramsStore      ::= ".TealProgramsStore" [klabel(.TealPrograms), symbol]
+                                  |  TealProgramsStoreItem ";" TealProgramsStore
 
 ```
 
@@ -392,18 +394,12 @@ We provide a function to extract a teal program by index from the syntactic list
 If the requested index is out of bounds, a trivial error program is returned.
 
 ```k
-//  syntax TealInputPgm ::= getTealByIndex(TealPrograms, Int) [function]
-//  //------------------------------------------------------------------
-//  rule getTealByIndex(PGM;_, 0) => PGM
-//  rule getTealByIndex(_;REST, IDX) => getTealByIndex(REST, IDX -Int 1)
-//    requires IDX >Int 0
-//  rule getTealByIndex(.TealPrograms, _) => #pragma version 3 err
-  syntax TealInputPgm ::= getTealByName(TealProgramsStore, String) [function]
-  //------------------------------------------------------------------
-  rule getTealByName(NAME:PGM;_, NAME) => PGM
-  rule getTealByName(OTHER_NAME:_;REST, NAME) => getTealByName(REST, NAME)
+  syntax TealInputPgm ::= getTealByName(TealProgramsStore, TealProgramsStoreKey) [function]
+  //---------------------------------------------------------------------------------------
+  rule getTealByName(NAME       |-> PGM;_   , NAME) => PGM
+  rule getTealByName(OTHER_NAME |-> _  ;REST, NAME) => getTealByName(REST, NAME)
     requires notBool (OTHER_NAME ==String NAME)
-  rule getTealByName(.TealPrograms, _) => err
+  rule getTealByName(.TealProgramsStore, _) => err
 endmodule
 ```
 
