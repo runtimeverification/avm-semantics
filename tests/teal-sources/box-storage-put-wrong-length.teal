@@ -1,0 +1,13 @@
+#pragma version 8
+
+byte "box1"
+int 5
+box_create
+assert
+
+byte "box1"
+byte "abcdef"
+box_put
+
+int 1
+return

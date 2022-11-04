@@ -1,0 +1,17 @@
+#pragma version 8
+
+byte "box1"
+int 10
+box_create
+assert
+
+byte "box1"
+box_len
+assert
+
+int 10
+==
+assert
+
+int 1
+return
