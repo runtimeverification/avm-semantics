@@ -169,8 +169,8 @@ class KAVM(KRun):
 
         teal_programs: str = ''
         for teal_path in teal_paths:
-            teal_programs += f'"{teal_path}" : {(teal_sources_dir / teal_path).read_text()};'
-        teal_programs += '.TealPrograms'
+            teal_programs += f'"{teal_path}" |-> {(teal_sources_dir / teal_path).read_text()};'
+        teal_programs += '.TealProgramsStore'
 
         krun_command = ['krun', '--definition', str(self.definition_dir)]
         krun_command += ['--output', output]
