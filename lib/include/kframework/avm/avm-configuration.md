@@ -27,6 +27,7 @@ module AVM-CONFIGURATION
         "Failure - AVM is stuck"
       </returnstatus>
       <paniccode> 0 </paniccode>
+      <panicstatus> "" </panicstatus>
 
       // The transaction group as submitted
       <transactions/>
