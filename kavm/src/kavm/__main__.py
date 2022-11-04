@@ -101,6 +101,7 @@ def exec_run(
     input_file: Path,
     teal_sources_dir: Path,
     teal_programs_parser: Path,
+    teal_parser: Path,
     avm_simulation_parser: Path,
     avm_json_parser: Path,
     output: str,
@@ -116,6 +117,8 @@ def exec_run(
 
     if not teal_programs_parser:
         teal_programs_parser = kavm_lib_dir / 'scripts/parse-teal-programs.sh'
+    if not teal_parser:
+        teal_parser = definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
     if not avm_simulation_parser:
         avm_simulation_parser = kavm_lib_dir / 'scripts/parse-avm-simulation.sh'
     if not avm_json_parser:
@@ -143,6 +146,7 @@ def exec_run(
                 profile=profile,
                 teal_sources_dir=teal_sources_dir,
                 teal_programs_parser=teal_programs_parser,
+                teal_parser=teal_parser,
                 avm_json_parser=avm_json_parser,
                 depth=depth,
             )
@@ -291,7 +295,13 @@ def create_argument_parser() -> ArgumentParser:
         '--teal-programs-parser',
         dest='teal_programs_parser',
         type=file_path,
-        help='Path to the executable to parse .teals files containing TealPrograms terms',
+        help='Path to the executable to parse TealProgramStore objects containing TealPrograms terms',
+    )
+    run_subparser.add_argument(
+        '--teal-parser',
+        dest='teal_parser',
+        type=file_path,
+        help='Path to the executable to parse .teal files containing TealPrograms terms',
     )
     run_subparser.add_argument(
         '--avm-simulation-parser',

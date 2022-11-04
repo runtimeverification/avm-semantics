@@ -142,6 +142,7 @@ class KAVM(KRun):
         self,
         input_file: Path,
         teal_programs_parser: Path,
+        teal_parser: Path,
         avm_json_parser: Path,
         depth: Optional[int],
         output: str = 'json',
@@ -150,8 +151,6 @@ class KAVM(KRun):
         check: bool = True,
     ) -> CompletedProcess:
         """Run an AVM simulaion scenario with krun"""
-
-        print("test2")
 
         if not teal_sources_dir:
             teal_sources_dir = Path()
@@ -173,33 +172,47 @@ class KAVM(KRun):
         except KeyError:
             print(f'Test file {input_file} does not contain an "execute-transactions" stage')
             exit(1)
+        teal_pgsm = {}
         for txn in execute_transactions_stage['data']['transactions']:
             if 'apap' in txn:
                 teal_paths.add(txn['apap'])
             if 'apsu' in txn:
                 teal_paths.add(txn['apsu'])
 
-        teal_programs: str = ''
-        for teal_path in teal_paths:
-            teal_programs += f'"{teal_path}" : {(teal_sources_dir / teal_path).read_text()};'
-        teal_programs += '.TealPrograms'
 
-        print("test3")
+        def run_process_on_bison_parser(path):
+            print(teal_programs_parser)
+            command = [teal_parser] + [str(path)]
+            res = subprocess.run(command, stdout=subprocess.PIPE, check=True, text=True)
+
+            return res.stdout
+
+        teal_programs: str = ''
+        map_union_op = "Lbl'Unds'Map'Unds'{}"
+        map_item_op = "Lbl'UndsPipe'-'-GT-Unds'{}"
+        empty_map_label = "Lbl'Stop'Map{}()"
+        current_teal_pgms_map = empty_map_label
+        for teal_path in teal_paths:
+            teal_path_parsed = 'inj{SortString{},SortKItem{}}(\\dv{SortString{}}("' + str(teal_path) + '"))'
+            teal_parsed = 'inj{SortTealInputPgm{},SortKItem{}}(' + run_process_on_bison_parser(teal_sources_dir / teal_path) + ')'
+            teal_kore_map_item = map_item_op + '(' + teal_path_parsed +',' + teal_parsed + ')'
+            current_teal_pgms_map = map_union_op + "(" + current_teal_pgms_map + "," + teal_kore_map_item + ")"
+
+        teal_programs += '.TealPrograms'
 
         krun_command = ['krun', '--definition', str(self.definition_dir)]
         krun_command += ['--output', output]
-        krun_command += [f'-cTEAL_PROGRAMS={teal_programs}']
-        krun_command += [f'-pTEAL_PROGRAMS={str(teal_programs_parser)}']
+        krun_command += [f'-cTEAL_PROGRAMS={current_teal_pgms_map}']
+#        krun_command += [f'-cTEAL_PROGRAMS="abc" |-> 1']
+        krun_command += [f'-pTEAL_PROGRAMS=cat']
         krun_command += ['--parser', str(avm_json_parser)]
         krun_command += [str(input_file)]
         krun_command += ['--depth', str(depth)] if depth else []
+        krun_command += ['--profile'] if profile else []
+        krun_command += ['--no-expand-macros']
+
         command_env = os.environ.copy()
         command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
-
-        print("test4")
-
-        for line in krun_command:
-            print(line, end="\n")
 
         return run_process(krun_command, env=command_env, logger=self._logger, profile=profile, check=check)
 

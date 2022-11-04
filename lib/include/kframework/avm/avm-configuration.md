@@ -93,7 +93,8 @@ module AVM-CONFIGURATION
       // A ;-separated concatenation of their source code of TEAL contracts
       // should be supplied as `-cTEAL_PROGRAMS` configuration variuable
       // argument ot `krun`
-      <tealPrograms> $TEAL_PROGRAMS:TealProgramsStore </tealPrograms>
+      <tealPrograms> $TEAL_PROGRAMS:Map </tealPrograms>
+//      <tealPrograms123> $TEAL_PROGRAMS:Map </tealPrograms123>
     </kavm>
 
   syntax TealProgramsStore1 ::= String ":" TestValue ";" TealProgramsStore1

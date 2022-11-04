@@ -7,24 +7,11 @@
           {
             "address": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
             "amount": 10000000000,
-            "created-apps": [
-              {
-                "id": 1,
-                "params": {
-                  "creator": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
-                  "approval-program": "approve.teal",
-                  "clear-state-program": "clear-basic.teal",
-                  "extra-progam-pages": 0,
-                  "local-state-schema": "",
-                  "global-state-schema": "",
-                  "global-state": 0
-                }
-              }
-            ]
+            "created-apps": []
           },
           {
             "address": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
-            "amount": 1,
+            "amount": 10000000000,
             "created-apps": []
           }
         ]
@@ -35,10 +22,25 @@
       "data": {
         "transactions": [
           {
-            "type": "pay",
             "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
-            "rcv": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
-            "amt": 100000
+            "type": "appl",
+            "apid": 0,
+            "apan": 1,
+            "apat": ["WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM"],
+            "apaa": [],
+            "apfa": [],
+            "apas": [],
+            "apgs": {
+              "nui": 0,
+              "nbs": 0
+            },
+            "apls": {
+              "nui": 0,
+              "nbs": 0
+            },
+            "apep": 0,
+            "apap": "app-opted-in.teal",
+            "apsu": "clear-basic.teal"
           }
         ]
       },

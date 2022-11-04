@@ -22,7 +22,7 @@
             "apid": 0,
             "apan": 0,
             "apat": [],
-            "apaa": [ 1 ],
+            "apaa": [1],
             "apfa": [],
             "apas": [],
             "apgs": {
@@ -34,7 +34,49 @@
               "nbs": 0
             },
             "apep": 0,
-            "apap": "test.teal",
+            "apap": "log-gtxn.teal",
+            "apsu": "clear-basic.teal"
+          },
+          {
+            "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+            "type": "appl",
+            "apid": 1,
+            "apan": 0,
+            "apat": [],
+            "apaa": [2],
+            "apfa": [],
+            "apas": [],
+            "apgs": {
+              "nui": 0,
+              "nbs": 0
+            },
+            "apls": {
+              "nui": 0,
+              "nbs": 0
+            },
+            "apep": 0,
+            "apap": "log-gtxn.teal",
+            "apsu": "clear-basic.teal"
+          },
+          {
+            "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+            "type": "appl",
+            "apid": 1,
+            "apan": 0,
+            "apat": [],
+            "apaa": [3],
+            "apfa": [],
+            "apas": [],
+            "apgs": {
+              "nui": 0,
+              "nbs": 0
+            },
+            "apls": {
+              "nui": 0,
+              "nbs": 0
+            },
+            "apep": 0,
+            "apap": "log-gtxn.teal",
             "apsu": "clear-basic.teal"
           }
         ]

@@ -222,6 +222,11 @@ We expose several functions for working with lists.
   rule append(V, V':TValue   ) => V' V
   rule append(V, .TValueList ) => V
 
+  syntax TValueNeList ::= prepend(TValue, TValueList) [function]
+  // -----------------------------------------------------------
+  rule prepend(V, V':TValueNeList) => V V'
+  rule prepend(V, .TValueList) => V
+
   syntax TValuePairList ::= reverse(TValuePairList) [function]
   // ---------------------------------------------------------
   rule reverse(V:TValuePair VL) => append(V, reverse(VL))
