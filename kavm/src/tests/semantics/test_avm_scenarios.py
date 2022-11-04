@@ -25,7 +25,7 @@ def test_run_simulation(filename: str) -> None:
     kavm = KAVM(definition_dir=Path(os.path.join(project_path, str(kavm_definition_dir))), init_pyk=False)
 
     avm_json_parser = project_path / kavm_definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
-    teal_programs_parser = project_path / kavm_definition_dir / 'parser_TealProgramsStore_TEAL-SYNTAX'
+    teal_programs_parser = project_path / kavm_definition_dir / 'parser_TealProgramsStore_TEAL-PARSER-SYNTAX'
     proc_result = kavm.run_avm_json(
         input_file=Path(filename),
         output='json',
