@@ -7,7 +7,8 @@
           {
             "address": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
             "amount": 10000000000,
-            "created-apps": []
+            "created-apps": [],
+            "created-assets":[]
           }
         ]
       }

@@ -43,9 +43,10 @@ TODO: if an account contains an app, the state specification must also contain t
     //------------------------------------
     rule <k> #addAccountJSON({ "address": ADDR:String
                              , "amount": BALANCE:Int
-                             , "created-apps": APPS
+                             , "created-apps": [APPS:JSONs]
+                             , "created-assets": [ASSETS:JSONs]
                              }
-             ) => #setupApplications(APPS) ... </k>
+             ) => #setupApplications([APPS]) ~> #setupAssets([ASSETS]) ... </k>
          <accountsMap>
            (.Bag =>
            <account>
@@ -61,6 +62,68 @@ TODO: if an account contains an app, the state specification must also contain t
            ...
          </accountsMap>
     rule <k> #addAccountJSON(INPUT:JSON) => #panic("Invalid account JSON:" +String JSON2String(INPUT)) ... </k> [owise]
+```
+
+### Assets
+
+```k
+    syntax KItem ::= #setupAssets(JSON)
+    //---------------------------------
+
+    rule <k> #setupAssets([ASSET_JSON, REST]) => #addAssetJSON(ASSET_JSON) ~> #setupAssets([REST]) ... </k>
+    rule <k> #setupAssets([.JSONs]) => .K ... </k>
+
+    syntax KItem ::= #addAssetJSON(JSON)
+
+    rule <k> #addAssetJSON({
+                             "index": INDEX:Int,
+                             "params": {
+                               "clawback": CLAWBACK_ADDR:String,
+                               "creator": CREATOR_ADDR_STR:String,
+                               "decimals": DECIMALS:Int,
+                               "default-frozen": DEFAULT_FROZEN:Bool,
+                               "freeze": FREEZE_ADDR:String,
+                               "manager": MANAGER_ADDR:String,
+                               "metadata-hash": METADATA_HASH:String,
+                               "name": ASSET_NAME:String,
+                               "reserve": RESERVE_ADDR:String,
+                               "total": TOTAL:Int,
+                               "unit-name": UNIT_NAME:String,
+                               "url": URL:String
+                             }
+                           }) => .K ... </k>
+         <account>
+           <address> CREATOR_ADDR </address>
+           <assetsCreated>
+             .Bag =>
+             <asset>
+               <assetID> INDEX </assetID>
+               <assetName> String2Bytes(ASSET_NAME) </assetName>
+               <assetUnitName> String2Bytes(UNIT_NAME) </assetUnitName>
+               <assetTotal> TOTAL </assetTotal>
+               <assetDecimals> DECIMALS </assetDecimals>
+               <assetDefaultFrozen> bool2Int(DEFAULT_FROZEN) </assetDefaultFrozen>
+               <assetURL> String2Bytes(URL) </assetURL>
+               <assetMetaDataHash> String2Bytes(METADATA_HASH) </assetMetaDataHash>
+               <assetManagerAddr> DecodeAddressString(MANAGER_ADDR) </assetManagerAddr>
+               <assetReserveAddr> DecodeAddressString(RESERVE_ADDR) </assetReserveAddr>
+               <assetFreezeAddr> DecodeAddressString(FREEZE_ADDR) </assetFreezeAddr>
+               <assetClawbackAddr> DecodeAddressString(CLAWBACK_ADDR) </assetClawbackAddr>
+             </asset>
+             ...
+           </assetsCreated>
+           <assetsOptedIn>
+             ASSETS_OPTED_IN =>
+             <optInAsset>
+               <optInAssetID>      INDEX       </optInAssetID>
+               <optInAssetBalance> TOTAL          </optInAssetBalance>
+               <optInAssetFrozen>  bool2Int(DEFAULT_FROZEN) </optInAssetFrozen>
+             </optInAsset>
+             ASSETS_OPTED_IN
+           </assetsOptedIn>
+           ...
+         </account>
+       requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR
 ```
 
 ### Applications
@@ -100,7 +163,7 @@ TODO: if an account contains an app, the state specification must also contain t
            </account>
            <tealPrograms> TEAL_PROGRAMS </tealPrograms>
        requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR
-    rule <k> #addAccountJSON(INPUT:JSON) => #panic("Invalid app JSON:" +String JSON2String(INPUT)) ... </k> [owise]
+    rule <k> #addApplicationJSON(INPUT:JSON) => #panic("Invalid app JSON:" +String JSON2String(INPUT)) ... </k> [owise]
 ```
 
 ### Assets

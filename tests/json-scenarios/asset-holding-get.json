@@ -8,7 +8,31 @@
             "address": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
             "amount": 10000000000,
             "created-apps": [],
-            "created-assets":[]
+            "created-assets": [
+               {
+                 "index": 1,
+                 "params": {
+                   "clawback": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+                   "creator": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                   "decimals": 0,
+                   "default-frozen": false,
+                   "freeze": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+                   "manager": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                   "metadata-hash": "",
+                   "name": "testcoin",
+                   "reserve": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+                   "total": 12345,
+                   "unit-name": "testcoins",
+                   "url": ""
+                 }
+               }
+            ]
+          },
+          {
+            "address": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
+            "amount": 10000000000,
+            "created-apps": [],
+            "created-assets": []
           }
         ]
       }
@@ -21,9 +45,9 @@
             "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
             "type": "appl",
             "apid": 0,
-            "apan": 0,
+            "apan": 1,
             "apat": [],
-            "apaa": [1],
+            "apaa": [],
             "apfa": [],
             "apas": [],
             "apgs": {
@@ -35,7 +59,28 @@
               "nbs": 0
             },
             "apep": 0,
-            "apap": "log-gtxn.teal",
+            "apap": "asset-holding-get.teal",
+            "apsu": "clear-basic.teal"
+          },
+          {
+            "snd": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
+            "type": "appl",
+            "apid": 1,
+            "apan": 1,
+            "apat": [],
+            "apaa": [],
+            "apfa": [],
+            "apas": [],
+            "apgs": {
+              "nui": 0,
+              "nbs": 0
+            },
+            "apls": {
+              "nui": 0,
+              "nbs": 0
+            },
+            "apep": 0,
+            "apap": "asset-holding-get.teal",
             "apsu": "clear-basic.teal"
           },
           {
@@ -43,10 +88,10 @@
             "type": "appl",
             "apid": 1,
             "apan": 0,
-            "apat": [],
-            "apaa": [2],
+            "apat": ["WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM"],
+            "apaa": [],
             "apfa": [],
-            "apas": [],
+            "apas": [1],
             "apgs": {
               "nui": 0,
               "nbs": 0
@@ -56,28 +101,7 @@
               "nbs": 0
             },
             "apep": 0,
-            "apap": "log-gtxn.teal",
-            "apsu": "clear-basic.teal"
-          },
-          {
-            "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
-            "type": "appl",
-            "apid": 1,
-            "apan": 0,
-            "apat": [],
-            "apaa": [3],
-            "apfa": [],
-            "apas": [],
-            "apgs": {
-              "nui": 0,
-              "nbs": 0
-            },
-            "apls": {
-              "nui": 0,
-              "nbs": 0
-            },
-            "apep": 0,
-            "apap": "log-gtxn.teal",
+            "apap": "asset-holding-get.teal",
             "apsu": "clear-basic.teal"
           }
         ]
