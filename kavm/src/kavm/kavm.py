@@ -1,28 +1,24 @@
 import json
 import logging
 import os
-import re
 import subprocess
-import sys
-import tempfile
 from pathlib import Path
-from subprocess import CalledProcessError, CompletedProcess
-from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Set, Tuple, Union, cast
+from subprocess import CompletedProcess
+from typing import Any, Callable, Dict, Final, Iterable, Optional, Union, List
+import tempfile
 
 from algosdk.future.transaction import Transaction
 from pyk.cli_utils import run_process
-from pyk.kast import KApply, KAst, KInner, KLabel, KSort, KToken, Subst, build_assoc, build_cons
-from pyk.kastManip import free_vars, inline_cell_maps
+from pyk.kast import KInner, KSort
 from pyk.ktool.kprint import paren
 from pyk.ktool.krun import KRun
 from pyk.prelude.k import K
 from pyk.prelude.kint import intToken
-from pyk.prelude.string import stringToken
 
 from kavm import constants
 from kavm.adaptors.account import KAVMAccount
 from kavm.adaptors.transaction import KAVMTransaction
-from kavm.pyk_utils import AccountCellMap, AppCellMap, TransactionCellMap, carefully_split_config_from
+from kavm.pyk_utils import AccountCellMap, AppCellMap
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -36,51 +32,35 @@ class KAVM(KRun):
         self,
         definition_dir: Path,
         use_directory: Any = None,
-        faucet_address: Optional[str] = None,
         logger: Optional[logging.Logger] = None,
         init_pyk: bool = False,
+        teals_parser: Optional[Path] = None,
+        scenario_parser: Optional[Path] = None,
     ) -> None:
         super().__init__(definition_dir, use_directory=use_directory)
         if not logger:
             self._logger = _LOGGER
         else:
             self._logger = logger
-        # KAVM._patch_symbol_table(self.symbol_table)
-        self._accounts = AccountCellMap()
-        self._apps = AppCellMap()
-        self._committed_txns: Dict[str, Dict[str, Any]] = {}
-        if faucet_address is not None:
-            self._faucet = KAVMAccount(faucet_address, constants.FAUCET_ALGO_SUPPLY)
-            # TODO: possible bug in pyk, if a Map cell only contains one item,
-            #       split_config_from will recurse into the Map cell and substitute
-            #       the item's cells with vars. Is that intended?
-            self._accounts['dummy'] = KAVMAccount('dummy')
-            self._accounts[faucet_address] = self._faucet
-        if init_pyk:
-            self._current_config = self._initial_config()
-        else:
-            self._current_config = intToken(0)
+        self._teals_parser = (
+            teals_parser if teals_parser else definition_dir / 'parser_TealProgramsStore_TEAL-PARSER-SYNTAX'
+        )
+        self._scenario_parser = (
+            scenario_parser if scenario_parser else definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
+        )
 
     @property
     def logger(self) -> logging.Logger:
         return self._logger
 
-    @property
-    def accounts(self) -> AccountCellMap:
-        return self._accounts
+    # @property
+    # def accounts(self) -> AccountCellMap:
+    #     return self._accounts
 
-    @property
-    def apps(self) -> AppCellMap:
-        return self._apps
-
-    @property
-    def faucet(self) -> KAVMAccount:
-        return self._faucet
-
-    @property
-    def next_valid_txid(self) -> str:
-        """Return a txid consequative to the last commited one"""
-        return str(int(sorted(self._committed_txns.keys())[-1]) + 1) if len(self._committed_txns) > 0 else str(0)
+    # @property
+    # def next_valid_txid(self) -> str:
+    #     """Return a txid consequative to the last commited one"""
+    #     return str(int(sorted(self._committed_txns.keys())[-1]) + 1) if len(self._committed_txns) > 0 else str(0)
 
     @staticmethod
     def prove(
@@ -101,88 +81,61 @@ class KAVM(KRun):
 
         return subprocess.run(command, check=True, text=True)
 
-    def run_avm_simulation(
-        self,
-        input_file: Path,
-        teal_programs_parser: Path,
-        avm_simulation_parser: Path,
-        depth: Optional[int],
-        output: str = 'json',
-        profile: bool = False,
-        teal_sources_dir: Optional[Path] = None,
-        check: bool = True,
-    ) -> CompletedProcess:
-        """Run an AVM simulaion scenario with krun"""
-
-        if not teal_sources_dir:
-            teal_sources_dir = Path()
-
-        raw_avm_simulation = input_file.read_text()
-
-        teal_paths = re.findall(r'declareTealSource "(.+?)";', raw_avm_simulation)
-
+    @staticmethod
+    def paste_teals(teals: Dict[str, str]) -> str:
         teal_programs: str = ''
-        for teal_path in teal_paths:
-            teal_programs += f'{(teal_sources_dir / teal_path).read_text()};'
-        teal_programs += '.TealPrograms'
+        for k, v in teals.items():
+            teal_programs += f'"{k}" |-> {v};'
+        teal_programs += '.TealProgramsStore'
+        return teal_programs
 
-        krun_command = ['krun', '--definition', str(self.definition_dir)]
-        krun_command += ['--output', output]
-        krun_command += [f'-cTEAL_PROGRAMS={teal_programs}']
-        krun_command += [f'-pTEAL_PROGRAMS={str(teal_programs_parser)}']
-        krun_command += ['--parser', str(avm_simulation_parser)]
-        krun_command += [str(input_file)]
-        krun_command += ['--depth', str(depth)] if depth else []
-        command_env = os.environ.copy()
-        command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
-
-        return run_process(krun_command, env=command_env, logger=self._logger, profile=profile, check=check)
-
-    def run_avm_json(
-        self,
-        input_file: Path,
-        teal_programs_parser: Path,
-        avm_json_parser: Path,
-        depth: Optional[int],
-        output: str = 'json',
-        profile: bool = False,
-        teal_sources_dir: Optional[Path] = None,
-        check: bool = True,
-    ) -> CompletedProcess:
-        """Run an AVM simulaion scenario with krun"""
-
-        if not teal_sources_dir:
-            teal_sources_dir = Path()
-
-        avm_json = json.loads(input_file.read_text())
-
+    @staticmethod
+    def extract_teals(scenario: str, teal_sources_dir: Path) -> Dict[str, str]:
+        """Extract TEAL programs filenames and source code from a test scenario"""
+        parsed_scenario = json.loads(scenario)
         teal_paths = set()
         try:
-            setup_network_stage = [stage for stage in avm_json['stages'] if stage['stage-type'] == 'setup-network'][0]
+            setup_network_stage = [
+                stage for stage in parsed_scenario['stages'] if stage['stage-type'] == 'setup-network'
+            ][0]
         except KeyError:
-            print(f'Test file {input_file} does not contain a "setup-network" stage')
+            print(f'Test scenario {scenario} does not contain a "setup-network" stage')
             exit(1)
         for acc in setup_network_stage['data']['accounts']:
             for app in acc['created-apps']:
                 teal_paths.add(app['params']['approval-program'])
                 teal_paths.add(app['params']['clear-state-program'])
+        return {teal_path: (teal_sources_dir / teal_path).read_text() for teal_path in teal_paths}
 
-        teal_programs: str = ''
-        for teal_path in teal_paths:
-            teal_programs += f'"{teal_path}" |-> {(teal_sources_dir / teal_path).read_text()};'
-        teal_programs += '.TealProgramsStore'
+    def run_avm_json(
+        self,
+        scenario: str,
+        teals: str,
+        depth: Optional[int],
+        output: str = 'none',
+        profile: bool = False,
+        check: bool = True,
+    ) -> CompletedProcess:
+        """Run an AVM simulaion scenario with krun"""
 
-        krun_command = ['krun', '--definition', str(self.definition_dir)]
-        krun_command += ['--output', output]
-        krun_command += [f'-cTEAL_PROGRAMS={teal_programs}']
-        krun_command += [f'-pTEAL_PROGRAMS={str(teal_programs_parser)}']
-        krun_command += ['--parser', str(avm_json_parser)]
-        krun_command += [str(input_file)]
-        krun_command += ['--depth', str(depth)] if depth else []
-        command_env = os.environ.copy()
-        command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
+        with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_scenario_file, tempfile.NamedTemporaryFile(
+            'w+t', delete=False
+        ) as tmp_teals_file:
+            tmp_scenario_file.write(scenario)
+            tmp_scenario_file.seek(0)
+            tmp_teals_file.write(teals)
 
-        return run_process(krun_command, env=command_env, logger=self._logger, profile=profile, check=check)
+            krun_command = ['krun', '--definition', str(self.definition_dir)]
+            krun_command += ['--output', output]
+            krun_command += [f'-cTEAL_PROGRAMS={teals}']
+            krun_command += [f'-pTEAL_PROGRAMS={str(self._teals_parser)}']
+            krun_command += ['--parser', str(self._scenario_parser)]
+            krun_command += ['--depth', str(depth)] if depth else []
+            krun_command += [tmp_scenario_file.name]
+            command_env = os.environ.copy()
+            command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
+
+            return run_process(krun_command, env=command_env, logger=self._logger, profile=profile, check=check)
 
     def kast(
         self,
@@ -220,301 +173,74 @@ class KAVM(KRun):
         command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
         return run_process(kast_command, env=command_env, logger=self._logger, profile=True)
 
-    def parse_teal(self, teal_expr: str, input: str = 'program', output: str = 'json') -> KAst:
-        """Parse a TEAL progam from the provided input string"""
-        kast_command = ['kast', '--definition', str(self.definition_dir)]
-        kast_command += ['--input', input, '--output', output]
-        kast_command += ['--module', 'TEAL-PARSER-SYNTAX']
-        kast_command += ['--sort', 'TealInputPgm']
-        kast_command += ['--expression', teal_expr]
-        command_env = os.environ.copy()
-        command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
-        proc_result = run_process(kast_command, env=command_env, logger=self._logger, profile=True)
-        try:
-            output_kast_term = KAst.from_dict(json.loads(proc_result.stdout)['term'])
-            return output_kast_term
-        except json.JSONDecodeError:
-            logging.critical(
-                proc_result.returncode,
-                proc_result.stderr.decode(sys.getfilesystemencoding()),
-            )
-            raise
-
     @staticmethod
     def _patch_symbol_table(symbol_table: Dict[str, Callable[..., str]]) -> None:
         symbol_table['_+Int_'] = paren(symbol_table['_+Int_'])
 
-    @property
-    def _empty_config(self) -> KInner:
-        """Return the KAST term for the empty generated top cell"""
-        return self.definition.empty_config(KSort('GeneratedTopCell'))
+    # @property
+    # def _empty_config(self) -> KInner:
+    #     """Return the KAST term for the empty generated top cell"""
+    #     return self.definition.empty_config(KSort('GeneratedTopCell'))
 
-    @property
-    def current_config(self) -> KInner:
-        """Return the current configuration KAST term"""
-        return self._current_config
+    # @property
+    # def current_config(self) -> KInner:
+    #     """Return the current configuration KAST term"""
+    #     return self._current_config
 
-    @current_config.setter
-    def current_config(self, new_config: KInner) -> None:
-        self._current_config = new_config
+    # @current_config.setter
+    # def current_config(self, new_config: KInner) -> None:
+    #     self._current_config = new_config
 
-    @staticmethod
-    def transactions_cell(txns: List[KAVMTransaction]) -> KInner:
-        """Concatenate several transactions"""
-        if len(txns) > 1:
-            return build_assoc(
-                KApply('.TransactionCellMap'),
-                KLabel('_TransactionCellMap_'),
-                [txn.transaction_cell for txn in txns],
-            )
-        elif len(txns) == 1:
-            return KApply(
-                '_TransactionCellMap_',
-                args=[txns[0].transaction_cell, KApply('.TransactionCellMap')],
-            )
-        else:
-            return KApply('.TransactionCellMap')
+    # def eval_transactions(self, txns: List[KAVMTransaction], new_addresses: Optional[Set[str]]) -> Any:
+    #     """
+    #     Evaluate a transaction group
 
-    def eval_transactions(self, txns: List[KAVMTransaction], new_addresses: Optional[Set[str]]) -> Any:
-        """
-        Evaluate a transaction group
+    #     Parameters
+    #     ----------
+    #     txns
+    #         transaction group
+    #     new_addresses
+    #         Algorand addresses discovered while pre-precessing the transactions in the KAVMClinet class
 
-        Parameters
-        ----------
-        txns
-            transaction group
-        new_addresses
-            Algorand addresses discovered while pre-precessing the transactions in the KAVMClinet class
+    #     Embed the group into the current configuration, and trigger its evaluation
 
-        Embed the group into the current configuration, and trigger its evaluation
+    #     If the group is accepted, put resulting configuration as the new current, and roll back if regected.
+    #     """
 
-        If the group is accepted, put resulting configuration as the new current, and roll back if regected.
-        """
+    #     if not new_addresses:
+    #         new_addresses = set()
 
-        if not new_addresses:
-            new_addresses = set()
+    #     # start tracking any newly discovered addresses with empty accounts
+    #     for addr in new_addresses.difference(self.accounts.keys()):
+    #         self.accounts[addr] = KAVMAccount(addr)
 
-        # start tracking any newly discovered addresses with empty accounts
-        for addr in new_addresses.difference(self.accounts.keys()):
-            self.accounts[addr] = KAVMAccount(addr)
+    #     self.current_config = self.simulation_config(txns)
 
-        self.current_config = self.simulation_config(txns)
-
-        # construct the KAVM configuration and run it via krun
-        try:
-            (krun_return_code, output) = self._run_with_current_config()
-        except Exception:
-            self.logger.critical(
-                f'Transaction group evaluation failed, last configuration was: {self.pretty_print(self._current_config)}'
-            )
-            raise
-        if isinstance(output, KAst) and krun_return_code == 0:
-            # Finilize successful evaluation
-            self.current_config = cast(KInner, output)
-            (_, subst) = carefully_split_config_from(cast(KInner, self.current_config), ignore_cells={'<transaction>'})
-            # * update self.accounts with the new configuration cells
-            modified_accounts = AccountCellMap(subst['ACCOUNTSMAP_CELL'])
-            for address in self.accounts.keys():
-                self.accounts[address] = modified_accounts[address]
-                # * update self.apps with the new configuration cells
-                for appid, app in self.accounts[address]._apps_created.items():
-                    self.apps[appid] = app
-            # * TODO: update self.assets with the new configuration cells
-            # * save committed txns
-            post_txns = TransactionCellMap(self, subst['TRANSACTIONS_CELL'])
-            for txn in post_txns.values():
-                self._committed_txns[txn.txid] = self._commit_transaction(txn)
-            return {'txId': f'{txns[0].txid}'}
-        else:
-            self.logger.critical(output)
-            exit(krun_return_code)
-
-    def _commit_transaction(self, txn: KAVMTransaction) -> Dict[str, Any]:
-        '''Convert an accepted KAVMTransaction into a py-algorand-sdk friendly representation'''
-        committed_txn: Transaction = txn.sdk_txn
-        common_fields = {'confirmed-round': 1}
-        app_call_fields = {}
-        if committed_txn.type == 'appl':
-            app_call_fields['application-index'] = txn.apply_data._tx_application_id
-        return {**common_fields, **app_call_fields}
-
-    def _initial_config(self) -> KInner:
-        """
-        Create the initial configuration term with cells containing defaults
-        """
-        teal_cell_subst = Subst(
-            {
-                'PC_CELL': intToken(0),
-                'PROGRAM_CELL': KApply('.Map'),
-                'MODE_CELL': KToken('stateless', KSort('TealMode')),
-                'VERSION_CELL': intToken(4),
-                'STACK_CELL': KApply('.TStack'),
-                'STACKSIZE_CELL': intToken(0),
-                'JUMPED_CELL': KToken('false', KSort('Bool')),
-                'LABELS_CELL': KApply('.Map'),
-                'CALLSTACK_CELL': KApply('.List'),
-                'SCRATCH_CELL': KApply('.Map'),
-                'INTCBLOCK_CELL': KApply('.Map'),
-                'BYTECBLOCK_CELL': KApply('.Map'),
-            }
-        )
-
-        config = self._empty_config
-        return teal_cell_subst.compose(
-            Subst(
-                {
-                    'ACCOUNTSMAP_CELL': cast(KInner, self.accounts.k_cell),
-                    'TRANSACTIONS_CELL': KAVM.transactions_cell([]),
-                    'GROUPSIZE_CELL': intToken(0),
-                    # TODO: CURRENTTX_CELL should be of sort String in the semantics
-                    'CURRENTTX_CELL': KToken('"0"', KSort('String')),
-                    'TOUCHEDACCOUNTS_CELL': KApply('.Set'),
-                    'GLOBALROUND_CELL': intToken(6),
-                    'LATESTTIMESTAMP_CELL': intToken(50),
-                    'CURRENTAPPLICATIONID_CELL': intToken(-1),
-                    'CURRENTAPPLICATIONADDRESS_CELL': KToken('b"-1"', KSort('Bytes')),
-                    'APPCREATOR_CELL': KApply('.Map'),
-                    'ASSETCREATOR_CELL': KApply('.Map'),
-                    'EFFECTS_CELL': KApply('.List'),
-                    'LASTTXNGROUPID_CELL': KToken('"0"', KSort('String')),
-                    'ACTIVEAPPS_CELL': KApply('.Set'),
-                    'INNERTRANSACTIONS_CELL': KApply('.List'),
-                    'BLOCKS_CELL': KApply('.Map'),
-                    'BLOCKHEIGHT_CELL': intToken(0),
-                    'TEALPROGRAMS_CELL': KApply('.TealPrograms'),
-                    'RETURNCODE_CELL': intToken(4),
-                    'PANICCODE_CELL': intToken(0),
-                    'RETURNSTATUS_CELL': stringToken('Failure - program is stuck'),
-                    'K_CELL': KApply(
-                        '.AS_AVM-EXECUTION-SYNTAX_AVMSimulation',
-                    ),
-                    'DEQUE_CELL': build_cons(
-                        KApply('.List'),
-                        KLabel('_List_'),
-                        [],
-                    ),
-                    'DEQUEINDEXSET_CELL': build_cons(
-                        KApply('.Set'),
-                        KLabel('_Set_', KSort('Set')),
-                        [],
-                    ),
-                    'GENERATEDCOUNTER_CELL': intToken(0),
-                    'NEXTAPPID_CELL': intToken(1),
-                    'NEXTASSETID_CELL': intToken(1),
-                    'NEXTTXNID_CELL': intToken(1000),
-                    'NEXTGROUPID_CELL': intToken(1),
-                }
-            )
-        ).apply(config)
-
-    def simulation_config(
-        self,
-        transactions: List[KAVMTransaction],
-    ) -> KInner:
-        """
-        Create a configuration to be passed to krun with --term
-
-        The configuratiuon is constructed from self._init_cofig() by substituting
-        TRANSACTIONS_CELL for transactions and ACCOUNTSMAP_CELL for self.accounts.values()
-        """
-        txids = [txn.txid for txn in transactions]
-        self.logger.debug(f'Preparing simulation config for txn ids: {txids}')
-
-        (current_symbolic_config, current_subst) = carefully_split_config_from(
-            cast(KInner, self._current_config), ignore_cells={'<transaction>'}
-        )
-
-        control_subst = Subst(
-            {
-                'RETURNCODE_CELL': intToken(4),
-                'RETURNSTATUS_CELL': stringToken('Failure - program is stuck'),
-                'K_CELL': KApply(
-                    '#evalTxGroup()_AVM-EXECUTION_AlgorandCommand',
-                ),
-                'TXNINDEXMAP_CELL': KApply('.TxnIndexMapGroupCellMap'),
-            }
-        )
-
-        txns_and_accounts_subst = Subst(
-            {
-                'ACCOUNTSMAP_CELL': cast(KInner, self.accounts.k_cell),
-                'TRANSACTIONS_CELL': KAVM.transactions_cell(transactions),
-                'GROUPSIZE_CELL': intToken(len(transactions)),
-                'CURRENTTX_CELL': KToken('"' + transactions[0].txid + '"', KSort('String')),
-                'TOUCHEDACCOUNTS_CELL': KApply('.Set'),
-                'K_CELL': KApply(
-                    '#evalTxGroup()_ALGO-ITXN_AlgorandCommand',
-                ),
-                'DEQUE_CELL': build_cons(
-                    KApply('.List'),
-                    KLabel('_List_'),
-                    [KApply(KLabel('ListItem'), stringToken(x)) for x in txids],
-                ),
-                'DEQUEINDEXSET_CELL': build_cons(
-                    KApply('.Set'),
-                    KLabel('_Set_', KSort('Set')),
-                    [KApply(KLabel('SetItem'), stringToken(x)) for x in txids],
-                ),
-                'CURRENTAPPLICATIONID_CELL': intToken(-1),
-                'CURRENTAPPLICATIONADDRESS_CELL': KToken('b"-1"', KSort('Bytes')),
-            }
-        )
-
-        return (
-            Subst(current_subst).compose(control_subst).compose(txns_and_accounts_subst).apply(current_symbolic_config)
-        )
-
-    def _run_with_current_config(self) -> Tuple[int, Union[KAst, str]]:
-        """
-        Run the AVM simulation from the configuration specified by self.current_config.
-
-        If successful, put the resulting configuration as the new current config.
-        """
-        configuration = self.current_config
-        vars = free_vars(cast(KInner, configuration))
-        assert len(vars) == 0, f'Cannot run from current configuration due to unbound variables {vars}'
-
-        with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_kast_json_file, tempfile.NamedTemporaryFile(
-            'w+t', delete=False
-        ) as tmp_kore_file:
-            tmp_kast_json_file.write(json.dumps({'format': 'KAST', 'version': 2, 'term': configuration.to_dict()}))
-
-            kore_term = self.kast(
-                input_file=Path(tmp_kast_json_file.name),
-                module='AVM-EXECUTION',
-                sort=KSort('GeneratedTopCell'),
-                input='json',
-                output='kore',
-            ).stdout
-            tmp_kore_file.write(kore_term)
-            proc_result = self.run_term(tmp_kore_file.name)
-            try:
-                output_kast_term = KAst.from_dict(json.loads(proc_result.stdout)['term'])
-            except json.JSONDecodeError:
-                return (
-                    proc_result.returncode,
-                    proc_result.stderr.decode(sys.getfilesystemencoding()),
-                )
-
-            return (proc_result.returncode, inline_cell_maps(cast(KInner, output_kast_term)))
-
-    def run_term(self, kore_file_name: str) -> CompletedProcess:
-        """
-        Execute krun --term, passing the supplied configuration as a KORE term
-        """
-        krun_command = ['krun', '--definition', str(self.definition_dir)]
-        krun_command += ['--output', 'json']
-        krun_command += ['--term']
-        krun_command += ['--parser', 'cat']
-        krun_command += [kore_file_name]
-        command_env = os.environ.copy()
-        command_env['KAVM_DEFITION_DIR'] = str(self.definition_dir)
-
-        try:
-            return run_process(krun_command, env=command_env, logger=self._logger, profile=True)
-        except CalledProcessError as err:
-            raise RuntimeError(
-                f'Command krun exited with code {err.returncode} for: {kore_file_name}',
-                err.stdout,
-                err.stderr,
-            ) from err
+    #     # construct the KAVM configuration and run it via krun
+    #     try:
+    #         (krun_return_code, output) = self._run_with_current_config()
+    #     except Exception:
+    #         self.logger.critical(
+    #             f'Transaction group evaluation failed, last configuration was: {self.pretty_print(self._current_config)}'
+    #         )
+    #         raise
+    #     if isinstance(output, KAst) and krun_return_code == 0:
+    #         # Finilize successful evaluation
+    #         self.current_config = cast(KInner, output)
+    #         (_, subst) = carefully_split_config_from(cast(KInner, self.current_config), ignore_cells={'<transaction>'})
+    #         # * update self.accounts with the new configuration cells
+    #         modified_accounts = AccountCellMap(subst['ACCOUNTSMAP_CELL'])
+    #         for address in self.accounts.keys():
+    #             self.accounts[address] = modified_accounts[address]
+    #             # * update self.apps with the new configuration cells
+    #             for appid, app in self.accounts[address]._apps_created.items():
+    #                 self.apps[appid] = app
+    #         # * TODO: update self.assets with the new configuration cells
+    #         # * save committed txns
+    #         post_txns = TransactionCellMap(self, subst['TRANSACTIONS_CELL'])
+    #         for txn in post_txns.values():
+    #             self._committed_txns[txn.txid] = self._commit_transaction(txn)
+    #         return {'txId': f'{txns[0].txid}'}
+    #     else:
+    #         self.logger.critical(output)
+    #         exit(krun_return_code)

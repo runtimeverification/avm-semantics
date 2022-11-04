@@ -135,45 +135,10 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
                         <extraProgramPages> EXTRA_PAGES     </extraProgramPages>
                         <approvalPgmIdx>    APPROVAL_IDX    </approvalPgmIdx>
                         <clearStatePgmIdx>  CLEAR_STATE_IDX </clearStatePgmIdx>
-       => #pushTxnBack(<txID> Int2String(ID) </txID>)
+       => .K
            ...
        </k>
-       <transactions>
-         TXNS =>
-         <transaction>
-           <txID> Int2String(ID) </txID>
-           <txHeader>
-             <sender>   normalizeAddressString(SENDER)   </sender>
-             <txType>   "appl"               </txType>
-             <typeEnum> @ appl               </typeEnum>
-             <groupID>  Int2String(GROUP_ID) </groupID>
-             <groupIdx> groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx> // for testing, we make these the same as sequential TxIDs
-             ...                           // other fields will receive default values
-           </txHeader>
-           <appCallTxFields>
-             <applicationID>        APP_ID                      </applicationID>
-             <onCompletion>         ON_COMPLETION               </onCompletion>
-             <accounts>             normalizeAccounts(ACCOUNTS) </accounts>
-             <applicationArgs>      convertToBytes(ARGS)        </applicationArgs>
-             <foreignApps>          APPS                        </foreignApps>
-             <foreignAssets>        ASSETS                      </foreignAssets>
-             <globalNui>            GLOBAL_INTS                 </globalNui>
-             <globalNbs>            GLOBAL_BYTES                </globalNbs>
-             <localNui>             LOCAL_INTS                  </localNui>
-             <localNbs>             LOCAL_BYTES                 </localNbs>
-             <extraProgramPages>    EXTRA_PAGES                 </extraProgramPages>
-             <approvalProgramSrc>   getTealByIndex(TEAL_PGMS_LIST, APPROVAL_IDX)    </approvalProgramSrc>
-             <clearStateProgramSrc> getTealByIndex(TEAL_PGMS_LIST, CLEAR_STATE_IDX) </clearStateProgramSrc>
-             ...                            // other fields will receive default values
-           </appCallTxFields>
-           ...
-         </transaction>
-         TXNS
-       </transactions>
-       <nextGroupID> GROUP_ID </nextGroupID>
-       <nextTxnID> ID => ID +Int 1 </nextTxnID>
-       <tealPrograms> TEAL_PGMS_LIST </tealPrograms>
-       requires notBool (Int2String(ID) in_txns(<transactions> TXNS </transactions>))
+
 ```
 
 ### Globals Initialization

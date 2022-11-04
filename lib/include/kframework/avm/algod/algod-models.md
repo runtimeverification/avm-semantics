@@ -41,11 +41,24 @@ TODO: if an account contains an app, the state specification must also contain t
 ```k
     syntax KItem ::= #addAccountJSON(JSON)
     //------------------------------------
-    rule <k> #addAccountJSON({ "address": ADDR:String
-                             , "amount": BALANCE:Int
-                             , "created-apps": APPS
-                             }
-             ) => #setupApplications(APPS) ... </k>
+    rule <k> #addAccountJSON({"address": ADDR:String,
+                              "amount": BALANCE:Int,
+                              "amount-without-pending-rewards": null,
+                              "apps-local-state": null,
+                              "apps-total-schema": null,
+                              "assets": null,
+                              "created-apps": APPS,
+                              "created-assets": null,
+                              "participation": null,
+                              "pending-rewards": null,
+                              "reward-base": null,
+                              "rewards": null,
+                              "round": null,
+                              "status": null,
+                              "sig-type": null,
+                              "auth-addr": null
+                             })
+         => #setupApplications(APPS) ... </k>
          <accountsMap>
            (.Bag =>
            <account>
@@ -70,7 +83,8 @@ TODO: if an account contains an app, the state specification must also contain t
     //---------------------------------------
 
     rule <k> #setupApplications([APP_JSON, REST]) => #addApplicationJSON(APP_JSON) ~> #setupApplications([REST]) ... </k>
-    rule <k> #setupApplications([.JSONs]) => .K ... </k>
+    rule <k> #setupApplications([.JSONs])         => .K ... </k>
+    rule <k> #setupApplications(null)             => .K ... </k>
 
     syntax KItem ::= #addApplicationJSON(JSON)
     //----------------------------------------
@@ -100,7 +114,7 @@ TODO: if an account contains an app, the state specification must also contain t
            </account>
            <tealPrograms> TEAL_PROGRAMS </tealPrograms>
        requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR
-    rule <k> #addAccountJSON(INPUT:JSON) => #panic("Invalid app JSON:" +String JSON2String(INPUT)) ... </k> [owise]
+    rule <k> #addApplicationJSON(INPUT:JSON) => #panic("Invalid app JSON:" +String JSON2String(INPUT)) ... </k> [owise]
 ```
 
 ### Assets
@@ -108,9 +122,17 @@ TODO: if an account contains an app, the state specification must also contain t
 ## Transactions
 
 ```k
+
+    syntax String ::= #getTxnJSONType(JSON) [function]
+    //------------------------------------------------
+    rule #getTxnJSONType({ "type": TYPE:String,  _}) => TYPE
+    rule #getTxnJSONType({ KEY: _, REST}) => #getTxnJSONType(REST)
+      requires notBool (KEY ==String "type")
+    rule #getTxnJSONType({ .JSONs }) => "undef"
+
+
     syntax KItem ::= #setupTransactions(JSON)
     //---------------------------------------
-
     rule <k> #setupTransactions([TXN_JSON, REST]) => #addPaymentTxnJSON(TXN_JSON) ~> #setupTransactions([REST]) ... </k>
     rule <k> #setupTransactions([.JSONs]) => .K ... </k>
 ```
@@ -120,9 +142,14 @@ TODO: if an account contains an app, the state specification must also contain t
 ```k
     syntax KItem ::= #addPaymentTxnJSON(JSON)
     //----------------------------------------
-    rule <k> #addPaymentTxnJSON({ "snd": SENDER:String
-                                , "rcv": RECEIVER:String
-                                , "amt": AMOUNT:Int
+    rule <k> #addPaymentTxnJSON({ "amt": AMOUNT:Int,
+                                  "fee": _FEE:Int,
+                                  "gh": _,
+                                  "grp": GROUP_ID:String,
+                                  "lv": 1,
+                                  "rcv": RECEIVER:String,
+                                  "snd": SENDER:String,
+                                  "type": "pay"
                                 })
           => #pushTxnBack(<txID> Int2String(ID) </txID>) ...
         </k>
@@ -134,8 +161,8 @@ TODO: if an account contains an app, the state specification must also contain t
              <sender>      DecodeAddressString(SENDER)   </sender>
              <txType>      "pay"    </txType>
              <typeEnum>    @ pay    </typeEnum>
-             <groupID>     Int2String(GROUP_ID) </groupID>
-             <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx>
+             <groupID>     GROUP_ID </groupID>
+             <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>
              ...           // other fields will receive default values
            </txHeader>
            <payTxFields>
@@ -147,7 +174,6 @@ TODO: if an account contains an app, the state specification must also contain t
          </transaction>
          TXNS
        </transactions>
-       <nextGroupID> GROUP_ID </nextGroupID>
        <nextTxnID> ID => ID +Int 1 </nextTxnID>
 ```
 

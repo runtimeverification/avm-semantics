@@ -5,7 +5,7 @@ from pyk.kast import KApply, KInner, KSort, KToken
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
 
-from kavm.pyk_utils import maybe_tvalue, split_direct_subcells_from
+from kavm.pyk_utils import map_bytes_bytes, maybe_tvalue, split_direct_subcells_from
 
 
 @pytest.mark.parametrize(

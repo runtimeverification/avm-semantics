@@ -7,6 +7,7 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from subprocess import CalledProcessError
 from typing import Any, Final, List, Optional
+import json
 
 from pyk.cli_utils import dir_path, file_path
 
@@ -136,12 +137,14 @@ def exec_run(
                 print(proc_result.stdout)
             exit(proc_result.returncode)
         elif input_file.suffix == '.json':
+            avm_json = json.loads(input_file.read_text())
+            teals = KAVM.paste_teals(KAVM.extract_teals(scenario=avm_json, teal_sources_dir=teal_sources_dir))
             proc_result = kavm.run_avm_json(
                 input_file=input_file,
                 output=output,
                 profile=profile,
-                teal_sources_dir=teal_sources_dir,
-                teal_programs_parser=teal_programs_parser,
+                teals=teals,
+                teals_parser=teal_programs_parser,
                 avm_json_parser=avm_json_parser,
                 depth=depth,
             )

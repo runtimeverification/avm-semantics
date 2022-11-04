@@ -3,15 +3,23 @@ import os
 from base64 import b64encode
 from pathlib import Path
 from pprint import PrettyPrinter
-from typing import Any, Dict, List, Optional
+from subprocess import CalledProcessError
+from typing import Any, Dict, List, Optional, Iterable
+import json
+import tempfile
 
 import msgpack
 from algosdk import encoding
 from algosdk.future.transaction import Transaction
 from algosdk.v2client import algod
-from pyk.kastManip import split_config_from
 
-from kavm.adaptors.transaction import KAVMTransaction
+from pyk.kastManip import split_config_from
+from pyk.kore.parser import KoreParser
+
+# from kavm.adaptors.transaction import KAVMTransaction
+from kavm import constants
+from kavm.adaptors.algod_transaction import KAVMTransaction
+from kavm.adaptors.algod_account import KAVMAccount
 from kavm.kavm import KAVM
 
 
@@ -44,19 +52,25 @@ class KAVMClient(algod.AlgodClient):
     * pretend it is algod.
     """
 
-    def __init__(self, algod_token: str, algod_address: str, faucet_address: Optional[str]) -> None:
+    def __init__(self, algod_token: str, algod_address: str, faucet_address: str) -> None:
         super().__init__(algod_token, algod_address)
         self.algodLogger = logging.getLogger(f'${__name__}.algodLogger')
         self.pretty_printer = PrettyPrinter(width=41, compact=True)
         self.set_log_level(logging.DEBUG)
 
+        # self._apps = AppCellMap()
+        self._committed_txns: Dict[str, Dict[str, Any]] = {}
+        self._faucet_address = faucet_address
+        self._accounts: Dict[str, KAVMAccount] = {
+            self._faucet_address: KAVMAccount(address=faucet_address, amount=constants.FAUCET_ALGO_SUPPLY)
+        }
         # Initialize KAVM, fetching the K definition dir from the environment
         definition_dir = os.environ.get('KAVM_DEFINITION_DIR')
         if definition_dir is not None:
             self.kavm = KAVM(
                 definition_dir=Path(definition_dir),
-                faucet_address=faucet_address,
                 logger=self.algodLogger,
+                init_pyk=False,
             )
         else:
             self.algodLogger.critical('Cannot initialize KAVM: KAVM_DEFINITION_DIR env variable is not set')
@@ -149,31 +163,54 @@ class KAVMClient(algod.AlgodClient):
         if requrl == '/transactions':
             assert data is not None, 'attempt to submit an empty transaction group!'
             # decode signed transactions from binary into py-algorand-sdk objects
-            txns = [t.dictify()['txn'] for t in msgpack_decode_txn_list(data)]
+            txns = [t.transaction for t in msgpack_decode_txn_list(data)]
             txn_msg = self.pretty_printer.pformat(txns)
             algod_debug_log_msg = f'POST {requrl} {txn_msg}'
             # log decoded transaction as submitted
             self.algodLogger.debug(algod_debug_log_msg)
 
-            # we'll need tpo keep track of all addresses the transactions mention to
-            # make KAVM aware of the new ones
-            known_addresses = set()
-            # kavm_txns will hold the KAst terms of the transactions
-            kavm_txns = []
-            # TODO: make txid more smart than just the counter
-            for txid_offset, signed_txn in enumerate(msgpack_decode_txn_list(data)):
-                known_addresses.add(signed_txn.transaction.sender)
-                if hasattr(signed_txn.transaction, 'receiver'):
-                    known_addresses.add(signed_txn.transaction.receiver)
-                txid = str(int(self.kavm.next_valid_txid) + txid_offset)
-                kavm_txn = KAVMTransaction(self.kavm, signed_txn.transaction, txid)
-                self.algodLogger.debug(f'Submitting txn with id: {kavm_txn.txid}')
-                kavm_txns.append(kavm_txn)
+            # we'll need too keep track of all addresses the transactions mention to
+            # make KAVM aware of the new ones, so we preprocess the transactions
+            # to dicover new addresses and initialize them with 0 balance
+            for txn in txns:
+                if not txn.sender in self._accounts.keys():
+                    self._accounts[txn.sender] = KAVMAccount(address=txn.sender, amount=0)
+                if hasattr(txn, 'receiver'):
+                    if not txn.receiver in self._accounts.keys():
+                        self._accounts[txn.receiver] = KAVMAccount(address=txn.receiver, amount=0)
 
-            return self.kavm.eval_transactions(kavm_txns, known_addresses)
+            scenario = KAVMClient._construct_scenario(
+                accounts=self._accounts.values(), transactions=[t.dictify() for t in txns]
+            )
+            self.algodLogger.debug(self.pretty_printer.pformat(scenario))
+            self.algodLogger.debug(self.pretty_printer.pformat(json.dumps(scenario)))
+
+            try:
+                proc_result = self.kavm.run_avm_json(
+                    scenario=f'{json.dumps(scenario)}', teals='.TealProgramsStore', depth=0, output='pretty'
+                )
+            except CalledProcessError as e:
+                self.algodLogger.debug(e.stdout)
+
+            # return self.kavm.eval_transactions(kavm_txns, known_addresses)
         elif requrl == '/teal/compile':
             assert data is not None, 'attempt to compile an empty TEAL program!'
             # we do not actually compile the program since KAVM needs the source code
             return {'result': b64encode(data)}
         else:
             raise NotImplementedError(f'Endpoint not implemented: {requrl}')
+
+    @staticmethod
+    def _construct_scenario(accounts: Iterable[KAVMAccount], transactions: Iterable[Transaction]) -> Dict[str, Any]:
+        """Construct a JSON simulation scenario to run on KAVM"""
+        return {
+            "stages": [
+                {"stage-type": "setup-network", "data": {"accounts": [acc.dictify() for acc in accounts]}},
+                {
+                    "stage-type": "execute-transactions",
+                    "data": {"transactions": [KAVMTransaction.sanitize_byte_fields(txn) for txn in transactions]},
+                    "expected-returncode": 0,
+                    "expected-paniccode": 0,
+                },
+            ]
+        }

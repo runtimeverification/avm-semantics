@@ -1,5 +1,6 @@
 import glob
 import os
+import json
 from os.path import abspath
 from pathlib import Path
 
@@ -22,18 +23,19 @@ def test_run_simulation(filename: str) -> None:
 
     kavm_definition_dir = Path(str(os.environ.get('KAVM_DEFINITION_DIR')))
 
-    kavm = KAVM(definition_dir=Path(os.path.join(project_path, str(kavm_definition_dir))), init_pyk=False)
+    kavm = KAVM(definition_dir=Path(os.path.join(project_path, str(kavm_definition_dir))))
 
-    avm_json_parser = project_path / kavm_definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
-    teal_programs_parser = project_path / kavm_definition_dir / 'parser_TealProgramsStore_TEAL-SYNTAX'
-    proc_result = kavm.run_avm_json(
-        input_file=Path(filename),
-        output='json',
-        profile=True,
-        teal_sources_dir=Path(os.path.join(project_path, 'tests/teal-sources/')),
-        teal_programs_parser=teal_programs_parser,
-        avm_json_parser=avm_json_parser,
-        depth=0,
-        check=False,
+    scenario = Path(filename).read_text()
+
+    teals = KAVM.paste_teals(
+        KAVM.extract_teals(scenario=scenario, teal_sources_dir=Path(os.path.join(project_path, 'tests/teal-sources/')))
     )
+    proc_result = kavm.run_avm_json(
+        scenario=scenario,
+        output='none',
+        profile=True,
+        teals=teals,
+        depth=0,
+    )
+
     assert proc_result.returncode == 0

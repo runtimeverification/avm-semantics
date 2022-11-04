@@ -5,7 +5,7 @@ from collections.abc import MutableMapping
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, Union, cast
 
 from algosdk.future.transaction import OnComplete
-from pyk.kast import KApply, KAst, KInner, KLabel, KVariable, build_cons, top_down
+from pyk.kast import KApply, KAst, KInner, KLabel, KSort, KToken, KVariable, build_assoc, build_cons, top_down
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
 
@@ -18,9 +18,15 @@ def maybe_tvalue(value: Optional[Union[str, int, bytes]]) -> KInner:
     elif type(value) is OnComplete:
         return intToken(int(value))
     elif type(value) is str:
-        return stringToken(value)
+        if len(value):
+            return stringToken(value)
+        else:
+            return KApply('NoTValue')
     elif type(value) is bytes:
-        return stringToken(b64encode(value).decode('utf8'))
+        if len(value):
+            return stringToken(b64encode(value).decode('utf8'))
+        else:
+            return KApply('NoTValue')
     else:
         raise TypeError()
 
@@ -43,6 +49,32 @@ def tvalue_list(value: List[Union[str, int, bytes]]) -> KInner:
         return KApply('.TValueList')
     else:
         raise NotImplementedError()
+
+
+def map_bytes_bytes(d: Dict[str, str]) -> KInner:
+    """Convert a Dict[str, str] into a K Bytes to Bytes Map"""
+    return build_assoc(
+        KApply('.Map'),
+        KLabel('_Map_'),
+        [
+            KApply(
+                '_|->_', [KToken(token=f'b"{k}"', sort=KSort('Bytes')), KToken(token=f'b"{v}"', sort=KSort('Bytes'))]
+            )
+            for k, v in d.items()
+        ],
+    )
+
+
+def map_bytes_ints(d: Dict[str, int]) -> KInner:
+    """Convert a Dict[str, int] into a K Bytes to Int Map"""
+    return build_assoc(
+        KApply('.Map'),
+        KLabel('_Map_'),
+        [
+            KApply('_|->_', [KToken(token=f'b"{k}"', sort=KSort('Bytes')), KToken(str(v), sort=KSort('Int'))])
+            for k, v in d.items()
+        ],
+    )
 
 
 def split_direct_subcells_from(configuration: KInner) -> Tuple[KInner, Any]:
