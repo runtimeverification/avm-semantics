@@ -14,6 +14,7 @@ addAppCallTx <sender>            b"1"        </sender>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
+             <boxReferences>     .TValuePairList </boxReferences>
              <globalNui>         4           </globalNui>
              <globalNbs>         5           </globalNbs>
              <localNui>          6           </localNui>
@@ -30,6 +31,7 @@ addAppCallTx <sender>            b"2"        </sender>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
+             <boxReferences>     .TValuePairList </boxReferences>
              <globalNui>         0           </globalNui>
              <globalNbs>         0           </globalNbs>
              <localNui>          0           </localNui>
@@ -46,6 +48,7 @@ addAppCallTx <sender>            b"2"         </sender>
              <applicationArgs>   .TValueList  </applicationArgs>
              <foreignApps>       .TValueList  </foreignApps>
              <foreignAssets>     .TValueList  </foreignAssets>
+             <boxReferences>     .TValuePairList </boxReferences>
              <globalNui>         0            </globalNui>
              <globalNbs>         0            </globalNbs>
              <localNui>          0            </localNui>
@@ -62,6 +65,7 @@ addAppCallTx <sender>            b"2"        </sender>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
+             <boxReferences>     .TValuePairList </boxReferences>
              <globalNui>         0           </globalNui>
              <globalNbs>         0           </globalNbs>
              <localNui>          0           </localNui>

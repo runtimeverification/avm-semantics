@@ -29,6 +29,7 @@ module TEAL-OPCODES
                         | ScratchOpCode
                         | BranchingOpCode
                         | StackOpCode
+                        | BoxStorageOpCode
   syntax SigOpCode    ::= SigVerOpCode | ArgOpCode           // Opcodes used only by stateless TEAL
   syntax AppOpCode    ::= StateOpCode
                         | TxnGroupStateOpCode
@@ -319,6 +320,18 @@ module TEAL-OPCODES
                               | "app_local_put"
 ```
 
+#### Box storage
+
+```k
+  syntax BoxStorageOpCode ::= "box_create"
+                            | "box_extract"
+                            | "box_replace"
+                            | "box_del"
+                            | "box_len"
+                            | "box_get"
+                            | "box_put"
+```
+
 #### Access to past transactions in the group
 
 ```k
@@ -607,6 +620,13 @@ module TEAL-UNPARSER
   rule unparseTEAL(asset_holding_get FieldName)   => "asset_holding_get" +&+ TealField2String(FieldName:AssetHoldingField)
   rule unparseTEAL(app_local_get_ex)              => "app_local_get_ex"
   rule unparseTEAL(app_local_put)                 => "app_local_put"
+  rule unparseTEAL(box_create)                    => "box_create"
+  rule unparseTEAL(box_extract)                   => "box_extract"
+  rule unparseTEAL(box_replace)                   => "box_replace"
+  rule unparseTEAL(box_del)                       => "box_del"
+  rule unparseTEAL(box_len)                       => "box_len"
+  rule unparseTEAL(box_get)                       => "box_get"
+  rule unparseTEAL(box_put)                       => "box_put"
   rule unparseTEAL(gaid N)                        => "gaid" +&+ Int2String(N)
   rule unparseTEAL(gload N M)                     => "gload" +&+ Int2String(N) +&+ Int2String(M)
   rule unparseTEAL(gaids)                         => "gaids"

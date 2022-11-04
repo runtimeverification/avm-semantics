@@ -1,0 +1,45 @@
+#pragma version 8
+
+  txn ApplicationArgs 0
+  btoi
+  int 1
+  ==
+  bnz lbl1
+
+  txn ApplicationArgs 0
+  btoi
+  int 2
+  ==
+  bnz lbl2
+
+  txn ApplicationArgs 0
+  btoi
+  int 3
+  ==
+  bnz lbl3
+
+  err
+lbl1:
+
+  b end
+lbl2:
+
+  b end
+
+lbl3:
+
+  byte "box1"
+  int 32
+  box_create
+  assert
+
+  byte "box1"
+  int 10
+  byte "abc"
+  box_replace
+
+  b end
+end:
+
+  int 1
+  return
