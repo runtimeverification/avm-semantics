@@ -198,12 +198,9 @@ class KAVM(KRun):
             teal_kore_map_item = map_item_op + '(' + teal_path_parsed +',' + teal_parsed + ')'
             current_teal_pgms_map = map_union_op + "(" + current_teal_pgms_map + "," + teal_kore_map_item + ")"
 
-        teal_programs += '.TealPrograms'
-
         krun_command = ['krun', '--definition', str(self.definition_dir)]
         krun_command += ['--output', output]
         krun_command += [f'-cTEAL_PROGRAMS={current_teal_pgms_map}']
-#        krun_command += [f'-cTEAL_PROGRAMS="abc" |-> 1']
         krun_command += [f'-pTEAL_PROGRAMS=cat']
         krun_command += ['--parser', str(avm_json_parser)]
         krun_command += [str(input_file)]

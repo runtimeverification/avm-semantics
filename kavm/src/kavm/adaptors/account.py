@@ -88,6 +88,7 @@ class KAVMAccount:
                 KApply('<appsOptedIn>', [KApply('.OptInAppCellMap')]),
                 KApply('<assetsCreated>', [KApply('.AssetCellMap')]),
                 KApply('<assetsOptedIn>', [KApply('.OptInAssetCellMap')]),
+                KApply('<boxes>', [KApply('.BoxCellMap')]),
             ],
         )
 

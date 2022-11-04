@@ -123,7 +123,7 @@ def exec_run(
         avm_simulation_parser = kavm_lib_dir / 'scripts/parse-avm-simulation.sh'
     if not avm_json_parser:
         avm_json_parser = definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
-        teal_programs_parser = definition_dir / 'parser_TealProgramsStore_TEAL-SYNTAX'
+        teal_programs_parser = definition_dir / 'parser_TealProgramsStore_TEAL-PARSER-SYNTAX'
     try:
         if input_file.suffix == '.avm-simulation':
             proc_result = kavm.run_avm_simulation(

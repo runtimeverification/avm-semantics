@@ -12,6 +12,7 @@ addAppCallTx <sender>            b"1"        </sender>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       3           </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
+             <boxReferences>     .TValuePairList </boxReferences>
              <globalNui>         3           </globalNui>
              <globalNbs>         0           </globalNbs>
              <localNui>          0           </localNui>
