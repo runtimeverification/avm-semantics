@@ -65,7 +65,7 @@ The `TValue` sort represents all possible TEAL values.
 
   syntax TValuePair ::= "(" TValue "," TValue ")"
   syntax TValuePairNeList ::= TValuePair | TValuePair TValuePairNeList
-  syntax TValuePairList ::= ".TValuePairList" | TValuePairNeList
+  syntax TValuePairList ::= ".TValuePairList" [klabel(.TValuePairList), symbol] | TValuePairNeList
   syntax MaybeTValuePair ::= "NoTValuePair" | TValuePair
 ```
 
@@ -225,10 +225,22 @@ We expose several functions for working with lists.
   rule contains(V1:TValue                , V2:TValue) => V1 ==K V2
   rule contains(              .TValueList,  _:TValue) => false 
 
+  syntax Bool ::= contains(TValuePairList, TValuePair) [function, functional]
+  // ----------------------------------------------------------------
+  rule contains(V1:TValuePair  _:TValuePairNeList, V1:TValuePair) => true
+  rule contains(V1:TValuePair VL:TValuePairNeList, V2:TValuePair) => contains(VL, V2) requires V1 =/=K V2
+  rule contains(V1:TValuePair                    , V2:TValuePair) => V1 ==K V2
+  rule contains(              .TValuePairList,      _:TValuePair) => false 
+
   syntax TValueNeList ::= reverse(TValueNeList) [function]
   // -----------------------------------------------------
   rule reverse(V:TValue VL) => append(V, reverse(VL))
   rule reverse(V:TValue   ) => V
+
+  syntax TValuePairList ::= concat(TValuePairList, TValuePairList) [function]
+  // ------------------------------------------------------------------------
+  rule concat(V1:TValuePair V1S:TValuePairNeList, V2S:TValuePairList) => concat(V1S, append(V1, V2S))
+  rule concat(.TValuePairList, V2S:TValuePairList) => V2S
 
   syntax TValueNeList ::= append(TValue, TValueList) [function]
   // ----------------------------------------------------------

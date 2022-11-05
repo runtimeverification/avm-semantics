@@ -111,7 +111,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
   syntax AlgorandCommand ::= "addAppCallTx" SenderCell ApplicationIDCell
                                             OnCompletionCell AccountsCell
                                             ApplicationArgsCell ForeignAppsCell
-                                            ForeignAssetsCell
+                                            ForeignAssetsCell BoxReferencesCell
                                             GlobalNuiCell GlobalNbsCell
                                             LocalNuiCell LocalNbsCell
                                             ExtraProgramPagesCell
@@ -125,6 +125,7 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
                         <applicationArgs>   ARGS            </applicationArgs>
                         <foreignApps>       APPS            </foreignApps>
                         <foreignAssets>     ASSETS          </foreignAssets>
+                        <boxReferences>     BOX_REFS        </boxReferences>
                         <globalNui>         GLOBAL_INTS     </globalNui>
                         <globalNbs>         GLOBAL_BYTES    </globalNbs>
                         <localNui>          LOCAL_INTS      </localNui>
@@ -148,17 +149,18 @@ withing the group, with it's `<txID>`. Transaction IDs will be assigned sequenti
              ...                           // other fields will receive default values
            </txHeader>
            <appCallTxFields>
-             <applicationID>        APP_ID                      </applicationID>
-             <onCompletion>         ON_COMPLETION               </onCompletion>
+             <applicationID>        APP_ID               </applicationID>
+             <onCompletion>         ON_COMPLETION        </onCompletion>
              <accounts>             normalizeAccounts(ACCOUNTS) </accounts>
-             <applicationArgs>      convertToBytes(ARGS)        </applicationArgs>
-             <foreignApps>          APPS                        </foreignApps>
-             <foreignAssets>        ASSETS                      </foreignAssets>
-             <globalNui>            GLOBAL_INTS                 </globalNui>
-             <globalNbs>            GLOBAL_BYTES                </globalNbs>
-             <localNui>             LOCAL_INTS                  </localNui>
-             <localNbs>             LOCAL_BYTES                 </localNbs>
-             <extraProgramPages>    EXTRA_PAGES                 </extraProgramPages>
+             <applicationArgs>      convertToBytes(ARGS) </applicationArgs>
+             <foreignApps>          APPS                 </foreignApps>
+             <foreignAssets>        ASSETS               </foreignAssets>
+             <boxReferences>        BOX_REFS             </boxReferences>
+             <globalNui>            GLOBAL_INTS          </globalNui>
+             <globalNbs>            GLOBAL_BYTES         </globalNbs>
+             <localNui>             LOCAL_INTS           </localNui>
+             <localNbs>             LOCAL_BYTES          </localNbs>
+             <extraProgramPages>    EXTRA_PAGES          </extraProgramPages>
              <approvalProgramSrc>   getTealByIndex(TEAL_PGMS_LIST, APPROVAL_IDX)    </approvalProgramSrc>
              <clearStateProgramSrc> getTealByIndex(TEAL_PGMS_LIST, CLEAR_STATE_IDX) </clearStateProgramSrc>
              ...                            // other fields will receive default values

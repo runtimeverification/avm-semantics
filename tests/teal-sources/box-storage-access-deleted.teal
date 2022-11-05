@@ -1,0 +1,18 @@
+#pragma version 8
+
+byte "box1"
+int 32
+box_create
+assert
+
+byte "box1"
+box_del
+assert
+
+byte "box1"
+int 10
+int 3
+box_extract
+
+int 1
+return

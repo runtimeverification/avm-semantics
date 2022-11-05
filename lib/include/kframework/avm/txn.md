@@ -73,6 +73,7 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
         <applicationArgs>      .TValueList </applicationArgs> // maximum size is 2KB, and all args are internally byte strings
         <foreignApps>          .TValueList </foreignApps>
         <foreignAssets>        .TValueList </foreignAssets>
+        <boxReferences>        .TValuePairList </boxReferences>
         <globalStateSchema>
           <globalNui> NoTValue </globalNui>
           <globalNbs> NoTValue </globalNbs>
