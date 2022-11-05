@@ -163,6 +163,7 @@ module ALGO-TXN
   imports TEAL-TYPES
   imports SET
   imports LIST
+  imports BYTES-HOOKED
 ```
 
 *Transaction Group Configuration*
@@ -836,12 +837,6 @@ module ALGO-TXN
        => true
 
   rule _ in_calledApps( <transactions> .Bag </transactions> ) => false
-```
-
-```k
-  syntax Bytes ::= getAppAddress(Int) [function, functional]
-  //---------------------------------------------------------
-  rule getAppAddress(APP_ID) => b"application" +Bytes String2Bytes(Int2String(APP_ID))
 ```
 
 ```k
