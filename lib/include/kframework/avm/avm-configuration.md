@@ -95,33 +95,7 @@ module AVM-CONFIGURATION
       // should be supplied as `-cTEAL_PROGRAMS` configuration variuable
       // argument ot `krun`
       <tealPrograms> $TEAL_PROGRAMS:Map </tealPrograms>
-//      <tealPrograms123> $TEAL_PROGRAMS:Map </tealPrograms123>
     </kavm>
-
-  syntax TealProgramsStore1 ::= String ":" TestValue ";" TealProgramsStore1
-                              | ".abcd"
-
-  syntax TestValue ::= TealPragmasTest TealPgmTest | TealPgmTest
-  syntax TealPragmasTest ::= "#pragma version 8"
-
-  syntax TealOpCodeTest ::= "abcd"
-
-  syntax lexical DigitTest     = r"[0-9]"
-//  syntax lexical HexDigitTest  = r"[0-9a-fA-F]"
-  syntax lexical AlphaTest     = r"[a-zA-Z]"
-//  syntax lexical AlnumTest     = r"{AlphaTest}|{DigitTest}"
-//  syntax lexical AlnumUbarTest = r"{AlnumTest}|_"
-//  syntax lexical SpecialTest   = r"[-!?+<>=/*]"
-  syntax LabelTest           ::= r"({DigitTest}|{AlphaTest})+" [token]
-
-//  syntax LabelTest ::= Int [token, prec(100)]
-
-  syntax LabelCodeTest ::= Id ":"
-
-  syntax TealPgmTest ::= TealOpCodeOrLabelTest
-                       | TealOpCodeOrLabelTest TealPgmTest
-
-  syntax TealOpCodeOrLabelTest ::= TealOpCodeTest | LabelCodeTest
 
   // Top-level control of the semantics.
   // Defined in `avm-execution.md`
@@ -246,11 +220,11 @@ To perform jumps, we maintain a map of labels to their program addresses and a `
 ```k
   syntax LabelMap ::= Map
 
-  syntax Bool ::= Id "in_labels" LabelMap [function]
+  syntax Bool ::= Label "in_labels" LabelMap [function]
   // --------------------------------------------------
   rule L in_labels LL => L in_keys(LL)
 
-  syntax Int ::= getLabelAddress(Id) [function]
+  syntax Int ::= getLabelAddress(Label) [function]
   // ---------------------------------------------
   rule [[ getLabelAddress(L) => {LL[L]}:>Int ]]
        <labels> LL </labels>

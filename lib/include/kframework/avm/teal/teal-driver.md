@@ -1055,7 +1055,7 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
 #### Jump internal rules
 
 ```k
-  syntax KItem ::= jump(Id)
+  syntax KItem ::= jump(Label)
   //--------------------------
   rule <k> jump(L) => .K ... </k>
        <pc> _ => getLabelAddress(L) </pc>
@@ -1092,7 +1092,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
 
   rule <k> retsub => returnSubroutine() ... </k>
 
-  syntax KItem ::= callSubroutine(Id)
+  syntax KItem ::= callSubroutine(Label)
   //------------------------------------
   // TODO: what happens if the pc value after call is invalid? What to do? Terminate or panic?
   // For now we do nothing, and thus trigger termination via `#fetchInstruction()`.

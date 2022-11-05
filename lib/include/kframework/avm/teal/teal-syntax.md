@@ -15,7 +15,6 @@ TEAL Opcode Grammar
 module TEAL-OPCODES
   import TEAL-CONSTANTS
   import TEAL-FIELDS
-  import ID-SYNTAX
 
   syntax PseudoOpCode                              // Pseudo opcodes abstracting other TEAL opcodes
   syntax OpCode       ::= "NoOpCode"               // Opcodes shared by stateless and stateful TEAL
@@ -238,12 +237,12 @@ module TEAL-OPCODES
                            | AssertOpCode
                            | SubroutineOpCode
 
-  syntax CondBranchOpCode ::= "bnz" Id          // forward branch offset, big endian
-                            | "bz"  Id          // forward branch offset, big endian
-  syntax JumpOpCode       ::= "b"   Id          // forward branch offset, big endian
+  syntax CondBranchOpCode ::= "bnz" Label          // forward branch offset, big endian
+                            | "bz"  Label          // forward branch offset, big endian
+  syntax JumpOpCode       ::= "b"   Label          // forward branch offset, big endian
   syntax ReturnOpCode     ::= "return"
   syntax AssertOpCode     ::= "assert"
-  syntax SubroutineOpCode ::= "callsub" Id
+  syntax SubroutineOpCode ::= "callsub" Label
                             | "retsub"
                             | "proto" Int Int
                             | "dupn" Int
@@ -375,12 +374,11 @@ TEAL Program Definition
 ```k
 module TEAL-SYNTAX
   import TEAL-OPCODES
-  import ID-SYNTAX
   import INT
   import STRING
   import BOOL
 
-  syntax LabelCode ::= Id ":"
+  syntax LabelCode ::= Label ":"
 
   syntax TealOpCode ::= PseudoOpCode | OpCode | SigOpCode | AppOpCode
   syntax TealOpCodeOrLabel ::= TealOpCode | LabelCode
@@ -435,7 +433,6 @@ would confuse the K tokenizer when parsing our core semantic rules.
 ```k
 module TEAL-PARSER-SYNTAX
   imports TEAL-SYNTAX
-  imports ID-SYNTAX
 ```
 
 We define the syntax of TEAL's comments (using K's built-in sort `#Layout`), along with TEAL's labels and hexadecimal byte literals.
@@ -451,10 +448,10 @@ We define the syntax of TEAL's comments (using K's built-in sort `#Layout`), alo
   syntax lexical AlnumUbar = r"{Alnum}|_"
   syntax lexical Special   = r"[-!?+<>=/*]"
 
-//  syntax Label           ::= r"({AlnumUbar}|{Special})+" [token]
-  syntax Label           ::= Id                          [token]
+  syntax Label           ::= r"({AlnumUbar}|{Special})+" [token]
   syntax HexToken        ::= r"0x{HexDigit}+"            [prec(2),token]
   syntax TAddressLiteral ::= r"[0-9A-Z]{58}"             [prec(1),token]
+  syntax #UpperID ::= TAddressLiteral [token]
 ```
 
 NOTE: the following definitions are _disabled_.
