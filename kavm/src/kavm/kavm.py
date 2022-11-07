@@ -181,7 +181,6 @@ class KAVM(KRun):
                 teal_paths.add(txn['apsu'])
 
         def run_process_on_bison_parser(path: Path) -> str:
-            print(teal_programs_parser)
             command = [teal_parser] + [str(path)]
             res = subprocess.run(command, stdout=subprocess.PIPE, check=True, text=True)
 

@@ -289,12 +289,6 @@ def create_argument_parser() -> ArgumentParser:
         required=True,
     )
     run_subparser.add_argument(
-        '--teal-programs-parser',
-        dest='teal_programs_parser',
-        type=file_path,
-        help='Path to the executable to parse TealProgramStore objects containing TealPrograms terms',
-    )
-    run_subparser.add_argument(
         '--teal-parser',
         dest='teal_parser',
         type=file_path,
