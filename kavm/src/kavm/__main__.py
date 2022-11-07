@@ -143,7 +143,6 @@ def exec_run(
                 output=output,
                 profile=profile,
                 teal_sources_dir=teal_sources_dir,
-                teal_programs_parser=teal_programs_parser,
                 teal_parser=teal_parser,
                 avm_json_parser=avm_json_parser,
                 depth=depth,
