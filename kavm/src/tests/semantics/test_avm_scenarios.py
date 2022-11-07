@@ -32,7 +32,6 @@ def test_run_simulation(filename: str) -> None:
         output='none',
         profile=True,
         teal_sources_dir=Path(os.path.join(project_path, 'tests/teal-sources/')),
-        teal_programs_parser=teal_programs_parser,
         teal_parser=teal_parser,
         avm_json_parser=avm_json_parser,
         depth=0,
