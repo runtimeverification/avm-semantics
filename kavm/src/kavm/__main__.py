@@ -100,7 +100,6 @@ def exec_run(
     definition_dir: Path,
     input_file: Path,
     teal_sources_dir: Path,
-    teal_programs_parser: Path,
     teal_parser: Path,
     avm_simulation_parser: Path,
     avm_json_parser: Path,
