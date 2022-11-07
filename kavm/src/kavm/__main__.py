@@ -114,30 +114,14 @@ def exec_run(
         raise RuntimeError('Cannot access KAVM_LIB environment variable. Is it set?')
     kavm_lib_dir = Path(str(os.environ.get('KAVM_LIB')))
 
-    if not teal_programs_parser:
-        teal_programs_parser = kavm_lib_dir / 'scripts/parse-teal-programs.sh'
     if not teal_parser:
         teal_parser = definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
     if not avm_simulation_parser:
         avm_simulation_parser = kavm_lib_dir / 'scripts/parse-avm-simulation.sh'
     if not avm_json_parser:
         avm_json_parser = definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
-        teal_programs_parser = definition_dir / 'parser_TealProgramsStore_TEAL-PARSER-SYNTAX'
     try:
-        if input_file.suffix == '.avm-simulation':
-            proc_result = kavm.run_avm_simulation(
-                input_file=input_file,
-                output=output,
-                profile=profile,
-                teal_sources_dir=teal_sources_dir,
-                teal_programs_parser=teal_programs_parser,
-                avm_simulation_parser=avm_simulation_parser,
-                depth=depth,
-            )
-            if not output == 'none':
-                print(proc_result.stdout)
-            exit(proc_result.returncode)
-        elif input_file.suffix == '.json':
+        if input_file.suffix == '.json':
             proc_result = kavm.run_avm_json(
                 input_file=input_file,
                 output=output,

@@ -327,10 +327,6 @@ generate-parsers:
              $(KAVM_DEFINITION_DIR)/parser_JSON_AVM-TESTING-SYNTAX
 	kast --definition $(KAVM_DEFINITION_DIR) --gen-parser \
              --module TEAL-PARSER-SYNTAX                      \
-             --sort TealProgramsStore                         \
-             $(KAVM_DEFINITION_DIR)/parser_TealProgramsStore_TEAL-PARSER-SYNTAX
-	kast --definition $(KAVM_DEFINITION_DIR) --gen-parser \
-             --module TEAL-PARSER-SYNTAX                      \
              --sort TealInputPgm                              \
              $(KAVM_DEFINITION_DIR)/parser_TealInputPgm_TEAL-PARSER-SYNTAX
 

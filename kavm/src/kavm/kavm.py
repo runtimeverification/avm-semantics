@@ -101,47 +101,9 @@ class KAVM(KRun):
 
         return subprocess.run(command, check=True, text=True)
 
-    def run_avm_simulation(
-        self,
-        input_file: Path,
-        teal_programs_parser: Path,
-        avm_simulation_parser: Path,
-        depth: Optional[int],
-        output: str = 'json',
-        profile: bool = False,
-        teal_sources_dir: Optional[Path] = None,
-        check: bool = True,
-    ) -> CompletedProcess:
-        """Run an AVM simulaion scenario with krun"""
-
-        if not teal_sources_dir:
-            teal_sources_dir = Path()
-
-        raw_avm_simulation = input_file.read_text()
-
-        teal_paths = re.findall(r'declareTealSource "(.+?)";', raw_avm_simulation)
-
-        teal_programs: str = ''
-        for teal_path in teal_paths:
-            teal_programs += f'{(teal_sources_dir / teal_path).read_text()};'
-        teal_programs += '.TealPrograms'
-
-        krun_command = ['krun', '--definition', str(self.definition_dir)]
-        krun_command += ['--output', output]
-        krun_command += [f'-cTEAL_PROGRAMS={teal_programs}']
-        krun_command += [f'-pTEAL_PROGRAMS={str(teal_programs_parser)}']
-        krun_command += ['--parser', str(avm_simulation_parser)]
-        krun_command += [str(input_file)]
-        krun_command += ['--depth', str(depth)] if depth else []
-        command_env = os.environ.copy()
-        command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
-
-        return run_process(krun_command, env=command_env, logger=self._logger, profile=profile, check=check)
-
     def run_avm_json(
         self,
         input_file: Path,
-        teal_programs_parser: Path,
         teal_parser: Path,
         avm_json_parser: Path,
         depth: Optional[int],

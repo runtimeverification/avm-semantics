@@ -394,6 +394,8 @@ module TEAL-SYNTAX
   syntax TealPgm ::= TealOpCodeOrLabel
                    | TealOpCodeOrLabel TealPgm
   syntax TealInputPgm ::= TealPragmas TealPgm | TealPgm
+
+endmodule
 ```
 
 ### TEAL Program Parser
