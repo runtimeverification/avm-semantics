@@ -223,8 +223,6 @@ TODO: if an account contains an app, the state specification must also contain t
 ### Payment
 
 ```k
-    syntax KItem ::= #addPaymentTxnJSON(JSON)
-    //----------------------------------------
     rule <k> #addTxnJSON({ "amt": AMOUNT:Int,
                            "fee": _FEE:Int,
                            "gh": _,
@@ -264,19 +262,23 @@ TODO: if an account contains an app, the state specification must also contain t
 
 ```k
     rule <k> #addTxnJSON({
-                           "snd":  SENDER:String,
-                           "type": "appl",
-                           "apid": APPLICATION_ID:Int,
-                           "apan": ON_COMPLETION:Int,
-                           "apat": ACCOUNTS:JSON,
                            "apaa": APPLICATION_ARGS:JSON,
-                           "apfa": FOREIGN_APPS:JSON,
-                           "apas": FOREIGN_ASSETS:JSON,
-                           "apgs": { "nui": GLOBAL_NUM_UINTS:Int, "nbs": GLOBAL_NUM_BYTES:Int },
-                           "apls": { "nui": LOCAL_NUM_UINTS:Int, "nbs": LOCAL_NUM_BYTES:Int },
-                           "apep": EXTRA_PAGES:Int,
+                           "apan": ON_COMPLETION:Int,
                            "apap": APPROVAL_NAME:String,
-                           "apsu": CLEAR_STATE_NAME:String
+                           "apas": FOREIGN_ASSETS:JSON,
+                           "apat": ACCOUNTS:JSON,
+                           "apep": EXTRA_PAGES:Int,
+                           "apfa": FOREIGN_APPS:JSON,
+                           "apgs": { "nui": GLOBAL_NUM_UINTS:Int, "nbs": GLOBAL_NUM_BYTES:Int },
+                           "apid": APPLICATION_ID:Int,
+                           "apls": { "nui": LOCAL_NUM_UINTS:Int, "nbs": LOCAL_NUM_BYTES:Int },
+                           "apsu": CLEAR_STATE_NAME:String,
+                           "fee": _FEE:Int,
+                           "gh": _,
+                           "grp": GROUP_ID:String,
+                           "lv": 1,
+                           "snd":  SENDER:String,
+                           "type": "appl"
                          })
           => #pushTxnBack(<txID> Int2String(ID) </txID>) ...
         </k>
@@ -288,8 +290,8 @@ TODO: if an account contains an app, the state specification must also contain t
              <sender>      DecodeAddressString(SENDER)   </sender>
              <txType>      "appl"    </txType>
              <typeEnum>    @ appl    </typeEnum>
-             <groupID>     Int2String(GROUP_ID) </groupID>
-             <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx>
+             <groupID>     GROUP_ID </groupID>
+             <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>
              ...           // other fields will receive default values
            </txHeader>
            <appCallTxFields>
@@ -317,7 +319,6 @@ TODO: if an account contains an app, the state specification must also contain t
          TXNS
        </transactions>
        <tealPrograms> TEAL_PROGRAMS </tealPrograms>
-       <nextGroupID> GROUP_ID </nextGroupID>
        <nextTxnID> ID => ID +Int 1 </nextTxnID>
 ```
 
@@ -325,9 +326,6 @@ TODO: if an account contains an app, the state specification must also contain t
 
 ```k
     rule <k> #addTxnJSON({
-                           "snd":  SENDER:String,
-                           "type": "acfg",
-                           "caid": ASSET_ID:Int,
                            "apar": {
                              "t": TOTAL:Int,
                              "dc": DECIMALS:Int,
@@ -340,7 +338,14 @@ TODO: if an account contains an app, the state specification must also contain t
                              "r": RESERVE_ADDR:String,
                              "f": FREEZE_ADDR:String,
                              "c": CLAWBACK_ADDR:String
-                           }
+                           },
+                           "caid": ASSET_ID:Int,
+                           "fee": _FEE:Int,
+                           "gh": _,
+                           "grp": GROUP_ID:String,
+                           "lv": 1,
+                           "snd":  SENDER:String,
+                           "type": "acfg"
                          })
           => #pushTxnBack(<txID> Int2String(ID) </txID>) ...
         </k>
@@ -352,8 +357,8 @@ TODO: if an account contains an app, the state specification must also contain t
              <sender>      DecodeAddressString(SENDER)   </sender>
              <txType>      "acfg"    </txType>
              <typeEnum>    @ acfg    </typeEnum>
-             <groupID>     Int2String(GROUP_ID) </groupID>
-             <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx>
+             <groupID>     GROUP_ID </groupID>
+             <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>
              ...           // other fields will receive default values
            </txHeader>
            <assetConfigTxFields>
@@ -377,7 +382,6 @@ TODO: if an account contains an app, the state specification must also contain t
          TXNS
        </transactions>
        <tealPrograms> TEAL_PROGRAMS </tealPrograms>
-       <nextGroupID> GROUP_ID </nextGroupID>
        <nextTxnID> ID => ID +Int 1 </nextTxnID>
 ```
 

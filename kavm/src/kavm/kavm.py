@@ -16,6 +16,7 @@ from pyk.prelude.k import K
 from pyk.prelude.kint import intToken
 
 from kavm import constants
+from kavm.scenario import KAVMScenario
 from kavm.adaptors.account import KAVMAccount
 from kavm.adaptors.transaction import KAVMTransaction
 from kavm.pyk_utils import AccountCellMap, AppCellMap
@@ -127,12 +128,11 @@ class KAVM(KRun):
     ) -> CompletedProcess:
         """Run an AVM simulaion scenario with krun"""
 
-        with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_scenario_file, tempfile.NamedTemporaryFile(
-            'w+t', delete=False
-        ) as tmp_teals_file:
-            tmp_scenario_file.write(scenario)
-            tmp_scenario_file.seek(0)
-            tmp_teals_file.write(teals)
+        sanitized_scenario = KAVMScenario.from_json(scenario).to_json()
+
+        with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_scenario_file:
+            tmp_scenario_file.write(sanitized_scenario)
+            tmp_scenario_file.flush()
 
             krun_command = ['krun', '--definition', str(self.definition_dir)]
             krun_command += ['--output', output]
