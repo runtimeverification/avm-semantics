@@ -14,7 +14,9 @@ class KAVMAccount(models.Account):
     Convenience class bundling an Algorand address with its associated KAVM entities
     """
 
-    def validate(self):
+    inverted_attribute_map = {v: k for k, v in models.Account.attribute_map.items()}
+
+    def validate(self) -> bool:
         """Validate min_balance and perhaps some other fields"""
         raise NotImplementedError()
 

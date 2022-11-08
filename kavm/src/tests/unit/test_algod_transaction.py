@@ -2,18 +2,20 @@ import pytest
 from algosdk import account
 from algosdk.future.transaction import ApplicationCreateTxn, OnComplete, PaymentTxn, StateSchema, SuggestedParams
 
-from kavm.adaptors.transaction import KAVMTransaction
+# from kavm.adaptors.transaction import KAVMTransaction
+from kavm.adaptors.algod_transaction import KAVMTransaction, transaction_k_term
 from kavm.kavm import KAVM
 
 
 def test_payment_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
     """Converting a transaction to the KAVM representation and back yeilds the same transaction"""
-    private_key_sender, sender = account.generate_account()
-    private_key_receiver, receiver = account.generate_account()
+    _, sender = account.generate_account()
+    _, receiver = account.generate_account()
     amount = 10000
     txn = PaymentTxn(sender, suggested_params, receiver, amount)
-    kavm_transaction = KAVMTransaction(kavm, txn, '0')
-    parsed_txn = KAVMTransaction.transaction_from_k(kavm, kavm_transaction.transaction_cell).sdk_txn
+    txn_term = transaction_k_term(kavm, txn, "1")
+    # kavm_transaction = KAVMTransaction(kavm, txn, '0')
+    parsed_txn = KAVMTransaction.from_k_cell(txn_term)
     assert parsed_txn.dictify() == txn.dictify()
 
 
@@ -84,7 +86,7 @@ def test_application_call_txn_encode_decode(kavm: KAVM, suggested_params: Sugges
 
 # @pytest.mark.skip(reason="ApplicationCreateTxn is not yet supported")
 def test_application_create_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
-    private_key_creator, creator = account.generate_account()
+    _, creator = account.generate_account()
     local_schema = StateSchema(num_uints=0, num_byte_slices=0)
     global_schema = StateSchema(num_uints=0, num_byte_slices=0)
     # approval_program = b'\x01 \x01\x00"'  # int 0
@@ -100,42 +102,41 @@ def test_application_create_txn_encode_decode(kavm: KAVM, suggested_params: Sugg
         global_schema,
         local_schema,
     )
-    kavm_transaction = KAVMTransaction(kavm, txn, '0')
-    parsed_txn = KAVMTransaction.transaction_from_k(kavm, kavm_transaction.transaction_cell)
-    parsed_txn._apply_data
-    assert parsed_txn.sdk_txn.dictify() == txn.dictify()
+    txn_term = transaction_k_term(kavm, txn, "1")
+    parsed_txn = KAVMTransaction.from_k_cell(txn_term)
+    assert parsed_txn.dictify() == txn.dictify()
 
 
-@pytest.mark.skip(reason="ApplicationUpdateTxn is not yet supported")
-def test_application_update_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
-    raise AssertionError()
+# @pytest.mark.skip(reason="ApplicationUpdateTxn is not yet supported")
+# def test_application_update_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
+#     raise AssertionError()
 
 
-@pytest.mark.skip(reason="ApplicationDeleteTxn is not yet supported")
-def test_application_delete_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
-    raise AssertionError()
+# @pytest.mark.skip(reason="ApplicationDeleteTxn is not yet supported")
+# def test_application_delete_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
+#     raise AssertionError()
 
 
-@pytest.mark.skip(reason="ApplicationOptInTxn is not yet supported")
-def test_application_opt_in_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
-    raise AssertionError()
+# @pytest.mark.skip(reason="ApplicationOptInTxn is not yet supported")
+# def test_application_opt_in_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
+#     raise AssertionError()
 
 
-@pytest.mark.skip(reason="ApplicationCloseOutTxn is not yet supported")
-def test_application_close_out_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
-    raise AssertionError()
+# @pytest.mark.skip(reason="ApplicationCloseOutTxn is not yet supported")
+# def test_application_close_out_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
+#     raise AssertionError()
 
 
-@pytest.mark.skip(reason="ApplicationClearStateTxn is not yet supported")
-def test_application_clear_state_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
-    raise AssertionError()
+# @pytest.mark.skip(reason="ApplicationClearStateTxn is not yet supported")
+# def test_application_clear_state_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
+#     raise AssertionError()
 
 
-@pytest.mark.skip(reason="ApplicationNoOpTxn is not yet supported")
-def test_application_no_op_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
-    raise AssertionError()
+# @pytest.mark.skip(reason="ApplicationNoOpTxn is not yet supported")
+# def test_application_no_op_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
+#     raise AssertionError()
 
 
-@pytest.mark.skip(reason="StateProofTxn is not yet supported")
-def test_state_proof_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
-    raise AssertionError()
+# @pytest.mark.skip(reason="StateProofTxn is not yet supported")
+# def test_state_proof_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
+#     raise AssertionError()

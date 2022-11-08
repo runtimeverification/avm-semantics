@@ -1,12 +1,12 @@
 import glob
 import os
-import json
 from os.path import abspath
 from pathlib import Path
 
 import pytest
 
 from kavm.kavm import KAVM
+from kavm.scenario import KAVMScenario
 
 project_path = abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
 
@@ -25,13 +25,13 @@ def test_run_simulation(filename: str) -> None:
 
     kavm = KAVM(definition_dir=Path(os.path.join(project_path, str(kavm_definition_dir))))
 
-    scenario = Path(filename).read_text()
+    scenario = KAVMScenario.from_json(Path(filename).read_text())
 
-    teals = kavm.extract_teals(
-        scenario=scenario, teal_sources_dir=Path(os.path.join(project_path, 'tests/teal-sources/'))
+    teals = kavm.parse_teals(
+        teal_paths=scenario._teal_files, teal_sources_dir=Path(os.path.join(project_path, 'tests/teal-sources/'))
     )
     proc_result = kavm.run_avm_json(
-        scenario=scenario,
+        scenario=scenario.to_json(),
         output='none',
         profile=True,
         teals=teals,

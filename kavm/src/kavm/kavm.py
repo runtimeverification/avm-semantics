@@ -1,25 +1,18 @@
-import json
 import logging
 import os
 import subprocess
+import tempfile
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Any, Callable, Dict, Final, Iterable, Optional, Union, List
-import tempfile
+from typing import Any, Callable, Dict, Final, Iterable, Optional, Union
 
-from algosdk.future.transaction import Transaction
 from pyk.cli_utils import run_process
-from pyk.kast import KInner, KSort
+from pyk.kast import KSort
 from pyk.ktool.kprint import paren
 from pyk.ktool.krun import KRun
 from pyk.prelude.k import K
-from pyk.prelude.kint import intToken
 
-from kavm import constants
 from kavm.scenario import KAVMScenario
-from kavm.adaptors.account import KAVMAccount
-from kavm.adaptors.transaction import KAVMTransaction
-from kavm.pyk_utils import AccountCellMap, AppCellMap
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -70,32 +63,55 @@ class KAVM(KRun):
 
         return subprocess.run(command, check=True, text=True)
 
-    def extract_teals(self, scenario: str, teal_sources_dir: Path) -> str:
-        """Extract TEAL programs filenames and source code from a test scenario"""
-        parsed_scenario = json.loads(scenario)
-        teal_paths = set()
-        try:
-            setup_network_stage = [
-                stage for stage in parsed_scenario['stages'] if stage['stage-type'] == 'setup-network'
-            ][0]
-        except KeyError as e:
-            raise ValueError(f'Test scenario {scenario} does not contain a "setup-network" stage') from e
-        for acc in setup_network_stage['data']['accounts']:
-            for app in acc['created-apps']:
-                teal_paths.add(app['params']['approval-program'])
-                teal_paths.add(app['params']['clear-state-program'])
+    # def extract_teals(self, scenario: str, teal_sources_dir: Path) -> str:
+    #     """Extract TEAL programs filenames and source code from a test scenario"""
+    #     parsed_scenario = json.loads(scenario)
+    #     teal_paths = set()
+    #     try:
+    #         setup_network_stage = [
+    #             stage for stage in parsed_scenario['stages'] if stage['stage-type'] == 'setup-network'
+    #         ][0]
+    #     except KeyError as e:
+    #         raise ValueError(f'Test scenario {scenario} does not contain a "setup-network" stage') from e
+    #     for acc in setup_network_stage['data']['accounts']:
+    #         for app in acc['created-apps']:
+    #             teal_paths.add(app['params']['approval-program'])
+    #             teal_paths.add(app['params']['clear-state-program'])
 
-        try:
-            execute_transactions_stage = [
-                stage for stage in parsed_scenario['stages'] if stage['stage-type'] == 'execute-transactions'
-            ][0]
-        except KeyError as e:
-            raise ValueError(f'Test scenario {scenario} does not contain an "execute-transactions" stage') from e
-        for txn in execute_transactions_stage['data']['transactions']:
-            if 'apap' in txn:
-                teal_paths.add(txn['apap'])
-            if 'apsu' in txn:
-                teal_paths.add(txn['apsu'])
+    #     try:
+    #         execute_transactions_stage = [
+    #             stage for stage in parsed_scenario['stages'] if stage['stage-type'] == 'execute-transactions'
+    #         ][0]
+    #     except KeyError as e:
+    #         raise ValueError(f'Test scenario {scenario} does not contain an "execute-transactions" stage') from e
+    #     for txn in execute_transactions_stage['data']['transactions']:
+    #         if 'apap' in txn:
+    #             teal_paths.add(txn['apap'])
+    #         if 'apsu' in txn:
+    #             teal_paths.add(txn['apsu'])
+
+    #     def run_process_on_bison_parser(path: Path) -> str:
+    #         command = [self._teal_parser] + [str(path)]
+    #         res = subprocess.run(command, stdout=subprocess.PIPE, check=True, text=True)
+
+    #         return res.stdout
+
+    #     map_union_op = "Lbl'Unds'Map'Unds'{}"
+    #     map_item_op = "Lbl'UndsPipe'-'-GT-Unds'{}"
+    #     empty_map_label = "Lbl'Stop'Map{}()"
+    #     current_teal_pgms_map = empty_map_label
+    #     for teal_path in teal_paths:
+    #         teal_path_parsed = 'inj{SortString{},SortKItem{}}(\\dv{SortString{}}("' + str(teal_path) + '"))'
+    #         teal_parsed = (
+    #             'inj{SortTealInputPgm{},SortKItem{}}(' + run_process_on_bison_parser(teal_sources_dir / teal_path) + ')'
+    #         )
+    #         teal_kore_map_item = map_item_op + '(' + teal_path_parsed + ',' + teal_parsed + ')'
+    #         current_teal_pgms_map = map_union_op + "(" + current_teal_pgms_map + "," + teal_kore_map_item + ")"
+
+    #     return current_teal_pgms_map
+
+    def parse_teals(self, teal_paths: Iterable[str], teal_sources_dir: Path) -> str:
+        """Extract TEAL programs filenames and source code from a test scenario"""
 
         def run_process_on_bison_parser(path: Path) -> str:
             command = [self._teal_parser] + [str(path)]
@@ -135,7 +151,7 @@ class KAVM(KRun):
             tmp_scenario_file.flush()
 
             krun_command = ['krun', '--definition', str(self.definition_dir)]
-            krun_command += ['--output', output]
+            krun_command += ['--output', 'none' if output == 'final-state-json' else output]
             krun_command += [f'-cTEAL_PROGRAMS={teals}']
             krun_command += ['-pTEAL_PROGRAMS=cat']
             krun_command += ['--parser', str(self._scenario_parser)]
@@ -144,7 +160,9 @@ class KAVM(KRun):
             command_env = os.environ.copy()
             command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
 
-            return run_process(krun_command, env=command_env, logger=self._logger, profile=profile, check=check)
+            return run_process(
+                krun_command, env=command_env, logger=self._logger, profile=profile, check=check, pipe_stderr=True
+            )
 
     def kast(
         self,

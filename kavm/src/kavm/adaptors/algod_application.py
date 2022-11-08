@@ -14,13 +14,16 @@ from kavm.pyk_utils import map_bytes_bytes, map_bytes_ints
 
 
 class KAVMApplicationParams(models.ApplicationParams):
-    pass
+
+    inverted_attribute_map = {v: k for k, v in models.ApplicationParams.attribute_map.items()}
 
 
 class KAVMApplication(models.Application):
     """
     Convenience class abstracting an Algorand smart contract (aka stateful application)
     """
+
+    inverted_attribute_map = {v: k for k, v in models.Application.attribute_map.items()}
 
     @staticmethod
     def from_k_cell(term: KInner, creator: str) -> 'KAVMApplication':

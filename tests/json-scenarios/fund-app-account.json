@@ -14,10 +14,15 @@
                   "creator": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
                   "approval-program": "approve.teal",
                   "clear-state-program": "clear-basic.teal",
-                  "extra-progam-pages": 0,
-                  "local-state-schema": "",
-                  "global-state-schema": "",
-                  "global-state": 0
+                  "local-state-schema": {
+                      "nui": 0,
+                      "nbs": 0
+                  },
+                  "global-state-schema": {
+                      "nui": 0,
+                      "nbs": 0
+                  },
+                  "global-state": null
                 }
               }
             ],

@@ -373,11 +373,6 @@ transient-coverage:
 $(BUILD_DIR)/coverage.html: $(BUILD_DIR)/coverage.xml
 	$(VENV_ACTIVATE) && pycobertura show --format html $(BUILD_DIR)/coverage.xml > $(BUILD_DIR)/coverage.html
 
-transient-coverage:
-	$(VENV_ACTIVATE) && $(KCOVR) $(KAVM_DEFINITION_DIR) \
-        -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
-	$(KAVM_SCRIPTS)/post-process-coverage $(BUILD_DIR)/coverage.xml
-
 coverage-html: $(BUILD_DIR)/coverage.html
 
 # remove coverage execution logs from the kompiled directory
