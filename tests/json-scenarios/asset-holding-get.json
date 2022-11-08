@@ -1,113 +1,117 @@
 {
-  "stages": [
-    {
-      "stage-type": "setup-network",
-      "data": {
-        "accounts": [
-          {
-            "address": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
-            "amount": 10000000000,
-            "created-apps": [],
-            "created-assets": [
-               {
-                 "index": 1,
-                 "params": {
-                   "clawback": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
-                   "creator": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
-                   "decimals": 0,
-                   "default-frozen": false,
-                   "freeze": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
-                   "manager": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
-                   "metadata-hash": "",
-                   "name": "testcoin",
-                   "reserve": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
-                   "total": 12345,
-                   "unit-name": "testcoins",
-                   "url": ""
-                 }
-               }
-            ]
-          },
-          {
-            "address": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
-            "amount": 10000000000,
-            "created-apps": [],
-            "created-assets": []
-          }
-        ]
-      }
-    },
-    {
-      "stage-type": "execute-transactions",
-      "data": {
-        "transactions": [
-          {
-            "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
-            "type": "appl",
-            "apid": 0,
-            "apan": 1,
-            "apat": [],
-            "apaa": [],
-            "apfa": [],
-            "apas": [],
-            "apgs": {
-              "nui": 0,
-              "nbs": 0
+    "stages": [
+        {
+            "stage-type": "setup-network",
+            "data": {
+                "accounts": [
+                    {
+                        "address": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "amount": 400000,
+                        "created-apps": [],
+                        "created-assets": []
+                    },
+                    {
+                        "address": "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA",
+                        "amount": 200000,
+                        "created-apps": [],
+                        "created-assets": []
+                    }
+                ]
+            }
+        },
+        {
+            "stage-type": "execute-transactions",
+            "data": {
+                "transactions": [
+                    {
+                        "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "type": "acfg",
+                        "caid": 0,
+                        "apar": {
+                            "t": 12345,
+                            "dc": 0,
+                            "df": false,
+                            "un": "testcoins",
+                            "an": "testcoin",
+                            "au": "",
+                            "am": "",
+                            "m": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                            "r": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+                            "f": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+                            "c": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
+                        }
+                    },
+                    {
+                        "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "type": "appl",
+                        "apid": 0,
+                        "apan": 1,
+                        "apat": [],
+                        "apaa": [],
+                        "apfa": [],
+                        "apas": [],
+                        "apgs": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apls": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apep": 0,
+                        "apap": "asset-holding-get.teal",
+                        "apsu": "clear-basic.teal"
+                    },
+                    {
+                        "snd": "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA",
+                        "type": "appl",
+                        "apid": 1,
+                        "apan": 1,
+                        "apat": [],
+                        "apaa": [],
+                        "apfa": [],
+                        "apas": [],
+                        "apgs": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apls": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apep": 0,
+                        "apap": "asset-holding-get.teal",
+                        "apsu": "clear-basic.teal"
+                    },
+                    {
+                        "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "type": "appl",
+                        "apid": 1,
+                        "apan": 0,
+                        "apat": [
+                            "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"
+                        ],
+                        "apaa": [],
+                        "apfa": [],
+                        "apas": [
+                            1
+                        ],
+                        "apgs": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apls": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apep": 0,
+                        "apap": "asset-holding-get.teal",
+                        "apsu": "clear-basic.teal"
+                    }
+                ]
             },
-            "apls": {
-              "nui": 0,
-              "nbs": 0
-            },
-            "apep": 0,
-            "apap": "asset-holding-get.teal",
-            "apsu": "clear-basic.teal"
-          },
-          {
-            "snd": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
-            "type": "appl",
-            "apid": 1,
-            "apan": 1,
-            "apat": [],
-            "apaa": [],
-            "apfa": [],
-            "apas": [],
-            "apgs": {
-              "nui": 0,
-              "nbs": 0
-            },
-            "apls": {
-              "nui": 0,
-              "nbs": 0
-            },
-            "apep": 0,
-            "apap": "asset-holding-get.teal",
-            "apsu": "clear-basic.teal"
-          },
-          {
-            "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
-            "type": "appl",
-            "apid": 1,
-            "apan": 0,
-            "apat": ["WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM"],
-            "apaa": [],
-            "apfa": [],
-            "apas": [1],
-            "apgs": {
-              "nui": 0,
-              "nbs": 0
-            },
-            "apls": {
-              "nui": 0,
-              "nbs": 0
-            },
-            "apep": 0,
-            "apap": "asset-holding-get.teal",
-            "apsu": "clear-basic.teal"
-          }
-        ]
-      },
-      "expected-returncode": 0,
-      "expected-paniccode": 0
-    }
-  ]
+            "expected-returncode": 0,
+            "expected-paniccode": 0
+        }
+    ]
 }
