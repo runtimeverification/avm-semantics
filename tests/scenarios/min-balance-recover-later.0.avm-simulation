@@ -1,14 +1,14 @@
 declareTealSource "clear-basic.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 100000 </balance>;
-addAccount <address> b"2" </address> <balance> 100000000 </balance>;
+addAccount <address> "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE" </address> <balance> 100000 </balance>;
+addAccount <address> "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA" </address> <balance> 100000000 </balance>;
 
 #initTxGroup();
 
 // Add app, bringing min balance to 200000. This is higher than the current balance, but it is still OK if we
 // fund our account later in the transaction group.
-addAppCallTx <sender>            b"1"        </sender>
+addAppCallTx <sender>            "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
@@ -24,9 +24,9 @@ addAppCallTx <sender>            b"1"        </sender>
              <approvalPgmIdx>    0           </approvalPgmIdx>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
-// Pay b"1", bringing their balance up to the new minimum.
-addPaymentTx <sender>   b"2"  </sender>
-             <receiver> b"1"  </receiver>
+// Pay "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE", bringing their balance up to the new minimum.
+addPaymentTx <sender>   "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"  </sender>
+             <receiver> "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"  </receiver>
              <amount>   100000 </amount>;
 
 #initGlobals(); #evalTxGroup(); .AS

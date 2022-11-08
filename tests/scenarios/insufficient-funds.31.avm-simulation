@@ -1,19 +1,19 @@
 declareTealSource "clear-basic.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 200000 </balance>;
-addAccount <address> b"2" </address> <balance> 10000000 </balance>;
+addAccount <address> "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE" </address> <balance> 200000 </balance>;
+addAccount <address> "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA" </address> <balance> 10000000 </balance>;
 
 #initTxGroup();
 
-// Pay b"2". This should fail even though later in the same group the funds are given back, because it would
-// cause b"1"'s balance to go negative.
-addPaymentTx <sender>   b"1"  </sender>
-             <receiver> b"2"  </receiver>
+// Pay "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA". This should fail even though later in the same group the funds are given back, because it would
+// cause "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"'s balance to go negative.
+addPaymentTx <sender>   "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"  </sender>
+             <receiver> "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"  </receiver>
              <amount>   300000 </amount>;
 
-addPaymentTx <sender>   b"2"  </sender>
-             <receiver> b"1"  </receiver>
+addPaymentTx <sender>   "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"  </sender>
+             <receiver> "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"  </receiver>
              <amount>   300000 </amount>;
 
 #initGlobals(); #evalTxGroup(); .AS

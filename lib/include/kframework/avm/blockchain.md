@@ -347,7 +347,7 @@ Accessor functions
          ...
        </account>
 
-  rule [[ getAppParamsField(AppAddress, APP) => getAppAddress(APP) ]]
+  rule [[ getAppParamsField(AppAddress, APP) => getAppAddressBytes(APP) ]]
        <accountsMap> AM </accountsMap>
     requires APP in_apps(<accountsMap> AM </accountsMap>)
 
@@ -907,9 +907,9 @@ references and also to check that a resource is available.
 
   syntax Map ::= TValuePairList2Map(TValuePairList, TValueList, Bytes) [function, functional]
   //----------------------------------------------------------------------
-  rule TValuePairList2Map((A, B):TValuePair REST, APPS, DEFAULT) => ((A |-> getAppAddress({getTValueAt(B -Int 1, APPS)}:>Int)) TValuePairList2Map(REST, APPS, DEFAULT))
+  rule TValuePairList2Map((A, B):TValuePair REST, APPS, DEFAULT) => ((A |-> getAppAddressBytes({getTValueAt(B -Int 1, APPS)}:>Int)) TValuePairList2Map(REST, APPS, DEFAULT))
     requires B >=Int 1
-  rule TValuePairList2Map((A, B):TValuePair, APPS, _) => (A |-> getAppAddress({getTValueAt(B -Int 1, APPS)}:>Int))
+  rule TValuePairList2Map((A, B):TValuePair, APPS, _) => (A |-> getAppAddressBytes({getTValueAt(B -Int 1, APPS)}:>Int))
     requires B >=Int 1
   rule TValuePairList2Map((A, 0):TValuePair REST, APPS, DEFAULT) => ((A |-> DEFAULT) TValuePairList2Map(REST, APPS, DEFAULT))
   rule TValuePairList2Map((A, 0):TValuePair, _, DEFAULT) => (A |-> DEFAULT)
@@ -929,7 +929,7 @@ references and also to check that a resource is available.
   rule getGroupBoxRefs( (_ |-> TXN_ID) REST) => getGroupBoxRefs(REST) getBoxRefs(TXN_ID)
   rule getGroupBoxRefs( .Map) => .Map
 
-  rule [[ getBoxRefs(TXN_ID) => TValuePairList2Map(REFS, FA, getAppAddress({getGlobalField(CurrentApplicationID)}:>Int)) ]]
+  rule [[ getBoxRefs(TXN_ID) => TValuePairList2Map(REFS, FA, getAppAddressBytes({getGlobalField(CurrentApplicationID)}:>Int)) ]]
        <transaction>
          <txID> TXN_ID </txID>
          <foreignApps> FA </foreignApps>
