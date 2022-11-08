@@ -580,6 +580,7 @@ module OPCODES-V2-SPEC
         <stacksize> 2 => 1 </stacksize>
         <currentApplicationID> APP_ID:Int </currentApplicationID>
         <activeApps> (SetItem(APP_ID) .Set) => .Set </activeApps>
+        <paniccode> 0 </paniccode>
         <returncode> 4 => 0 </returncode>
         <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
 

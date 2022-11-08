@@ -14,8 +14,48 @@ module AVM-INITIALIZATION
   imports AVM-CONFIGURATION
   imports AVM-TXN-DEQUE
   imports TEAL-CONSTANTS
+  imports TEAL-TYPES
   imports ALGO-TXN
 ```
+
+This module contains the rules that will initialize AVM with the Algorand blockchain state
+and the supplied transaction group.
+
+AVM Initialization
+------------------
+
+Initialize the network state with *concrete* test data.
+The ordered in which these rules are applied matters! Details TBD.
+TODO: provide a default safe order.
+
+```k
+  syntax AlgorandCommand ::= #initTxGroup()
+                           | #initGlobals()
+```
+
+### Input sanitation and normalization
+
+```k
+  syntax MaybeTValue ::= normalizeAddressString(String) [function]
+  // -------------------------------------------------------
+  rule normalizeAddressString(X) => NoTValue
+    requires X ==String "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
+  rule normalizeAddressString(X) => DecodeAddressString(X)
+
+  syntax TValue ::= normalizeAccountReference(TValue) [function]
+  // -----------------------------------------------------------
+  rule normalizeAccountReference(X:TUInt64) => X
+  rule normalizeAccountReference(S:String) => DecodeAddressString(S)
+  rule normalizeAccountReference(TA:TAddressLiteral) => TA
+
+  syntax TValueList ::= normalizeAccounts(TValueList) [function]
+  // -----------------------------------------------------------
+
+  rule normalizeAccounts(.TValueList) => .TValueList
+  rule normalizeAccounts(I:TValue) => normalizeAccountReference(I)
+  rule normalizeAccounts(I:TValue L:TValueNeList) => normalizeAccountReference(I) {normalizeAccounts(L)}:>TValueNeList
+```
+**TODO**: transaction IDs and group indices need be assigned differently for real blockchain transactions.
 
 ### Globals Initialization
 

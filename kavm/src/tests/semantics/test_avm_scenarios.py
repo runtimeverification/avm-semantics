@@ -25,13 +25,13 @@ def test_run_simulation(filename: str) -> None:
     kavm = KAVM(definition_dir=Path(os.path.join(project_path, str(kavm_definition_dir))), init_pyk=False)
 
     avm_json_parser = project_path / kavm_definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
-    teal_programs_parser = project_path / kavm_definition_dir / 'parser_TealProgramsStore_TEAL-PARSER-SYNTAX'
+    teal_parser = project_path / kavm_definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
     proc_result = kavm.run_avm_json(
         input_file=Path(filename),
-        output='json',
+        output='none',
         profile=True,
         teal_sources_dir=Path(os.path.join(project_path, 'tests/teal-sources/')),
-        teal_programs_parser=teal_programs_parser,
+        teal_parser=teal_parser,
         avm_json_parser=avm_json_parser,
         depth=0,
         check=False,

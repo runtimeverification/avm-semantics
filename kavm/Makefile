@@ -14,7 +14,7 @@ clean:
 THREADS := $(if $(THREADS),$(THREADS),1)
 PYTHON_VERSION := $(if $(PYTHON_VERSION),$(PYTHON_VERSION),3.10.6)
 POETRY_RUN := poetry run
-PYTEST_ARGS := -n $(THREADS)
+PYTEST_ARGS := -n $(THREADS) $(if $(PYTEST_PROFILING),--profile,)
 
 venv-config:
 	mkdir -p .venv
@@ -50,6 +50,15 @@ test-integration-algod: poetry-install
 
 test-integration-kalgod:
 	$(POETRY_RUN) python -m pytest $(PYTEST_ARGS) --backend=kalgod src/tests/algod_integration
+
+# Profiling
+
+clean-profiling:
+	rm -rf ./prof
+
+# generate a Markdown report (into stdout) based on the currently present profiling information
+transient-profiling-report:
+	@$(POETRY_RUN) python -m profiling ./prof/combined.prof
 
 # Checks and formatting
 

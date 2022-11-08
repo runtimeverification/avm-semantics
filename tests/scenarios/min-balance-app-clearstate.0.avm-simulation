@@ -1,13 +1,13 @@
 declareTealSource "min-balance-app-clearstate.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 1485000 </balance>;
-addAccount <address> b"2" </address> <balance> 721000 </balance>;
+addAccount <address> "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE" </address> <balance> 1485000 </balance>;
+addAccount <address> "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA" </address> <balance> 721000 </balance>;
 
 #initTxGroup();
 
-// Add app 1 and opt in b"1"
-addAppCallTx <sender>            b"1"        </sender>
+// Add app 1 and opt in "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"
+addAppCallTx <sender>            "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
@@ -23,8 +23,8 @@ addAppCallTx <sender>            b"1"        </sender>
              <approvalPgmIdx>    0           </approvalPgmIdx>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
-// Opt in b"2"
-addAppCallTx <sender>            b"2"        </sender>
+// Opt in "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"
+addAppCallTx <sender>            "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"        </sender>
              <applicationID>     1           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
@@ -41,7 +41,7 @@ addAppCallTx <sender>            b"2"        </sender>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 // Clear state
-addAppCallTx <sender>            b"2"         </sender>
+addAppCallTx <sender>            "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"         </sender>
              <applicationID>     1            </applicationID>
              <onCompletion>      @ ClearState </onCompletion>
              <accounts>          .TValueList  </accounts>
@@ -57,8 +57,8 @@ addAppCallTx <sender>            b"2"         </sender>
              <approvalPgmIdx>    0            </approvalPgmIdx>
              <clearStatePgmIdx>  1            </clearStatePgmIdx>;
 
-// Call test code from b"2"
-addAppCallTx <sender>            b"2"        </sender>
+// Call test code from "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"
+addAppCallTx <sender>            "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"        </sender>
              <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>

@@ -343,6 +343,7 @@ claim <k> log => . </k>
           <lastTxnGroupID> "1" </lastTxnGroupID>
           ...
         </currentTxnExecution>
+        <paniccode> 0 </paniccode>
         <returncode> 4 => 0 </returncode>
         <returnstatus> _ => "Success - transaction group accepted" </returnstatus>
         <activeApps> SetItem(1) => .Set </activeApps>

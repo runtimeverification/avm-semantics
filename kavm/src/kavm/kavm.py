@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import re
 import subprocess
 import sys
 import tempfile
@@ -101,47 +100,10 @@ class KAVM(KRun):
 
         return subprocess.run(command, check=True, text=True)
 
-    def run_avm_simulation(
-        self,
-        input_file: Path,
-        teal_programs_parser: Path,
-        avm_simulation_parser: Path,
-        depth: Optional[int],
-        output: str = 'json',
-        profile: bool = False,
-        teal_sources_dir: Optional[Path] = None,
-        check: bool = True,
-    ) -> CompletedProcess:
-        """Run an AVM simulaion scenario with krun"""
-
-        if not teal_sources_dir:
-            teal_sources_dir = Path()
-
-        raw_avm_simulation = input_file.read_text()
-
-        teal_paths = re.findall(r'declareTealSource "(.+?)";', raw_avm_simulation)
-
-        teal_programs: str = ''
-        for teal_path in teal_paths:
-            teal_programs += f'{(teal_sources_dir / teal_path).read_text()};'
-        teal_programs += '.TealPrograms'
-
-        krun_command = ['krun', '--definition', str(self.definition_dir)]
-        krun_command += ['--output', output]
-        krun_command += [f'-cTEAL_PROGRAMS={teal_programs}']
-        krun_command += [f'-pTEAL_PROGRAMS={str(teal_programs_parser)}']
-        krun_command += ['--parser', str(avm_simulation_parser)]
-        krun_command += [str(input_file)]
-        krun_command += ['--depth', str(depth)] if depth else []
-        command_env = os.environ.copy()
-        command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
-
-        return run_process(krun_command, env=command_env, logger=self._logger, profile=profile, check=check)
-
     def run_avm_json(
         self,
         input_file: Path,
-        teal_programs_parser: Path,
+        teal_parser: Path,
         avm_json_parser: Path,
         depth: Optional[int],
         output: str = 'json',
@@ -166,19 +128,47 @@ class KAVM(KRun):
             for app in acc['created-apps']:
                 teal_paths.add(app['params']['approval-program'])
                 teal_paths.add(app['params']['clear-state-program'])
+        try:
+            execute_transactions_stage = [
+                stage for stage in avm_json['stages'] if stage['stage-type'] == 'execute-transactions'
+            ][0]
+        except KeyError:
+            print(f'Test file {input_file} does not contain an "execute-transactions" stage')
+            exit(1)
+        for txn in execute_transactions_stage['data']['transactions']:
+            if 'apap' in txn:
+                teal_paths.add(txn['apap'])
+            if 'apsu' in txn:
+                teal_paths.add(txn['apsu'])
 
-        teal_programs: str = ''
+        def run_process_on_bison_parser(path: Path) -> str:
+            command = [teal_parser] + [str(path)]
+            res = subprocess.run(command, stdout=subprocess.PIPE, check=True, text=True)
+
+            return res.stdout
+
+        map_union_op = "Lbl'Unds'Map'Unds'{}"
+        map_item_op = "Lbl'UndsPipe'-'-GT-Unds'{}"
+        empty_map_label = "Lbl'Stop'Map{}()"
+        current_teal_pgms_map = empty_map_label
         for teal_path in teal_paths:
-            teal_programs += f'"{teal_path}" |-> {(teal_sources_dir / teal_path).read_text()};'
-        teal_programs += '.TealProgramsStore'
+            teal_path_parsed = 'inj{SortString{},SortKItem{}}(\\dv{SortString{}}("' + str(teal_path) + '"))'
+            teal_parsed = (
+                'inj{SortTealInputPgm{},SortKItem{}}(' + run_process_on_bison_parser(teal_sources_dir / teal_path) + ')'
+            )
+            teal_kore_map_item = map_item_op + '(' + teal_path_parsed + ',' + teal_parsed + ')'
+            current_teal_pgms_map = map_union_op + "(" + current_teal_pgms_map + "," + teal_kore_map_item + ")"
 
         krun_command = ['krun', '--definition', str(self.definition_dir)]
         krun_command += ['--output', output]
-        krun_command += [f'-cTEAL_PROGRAMS={teal_programs}']
-        krun_command += [f'-pTEAL_PROGRAMS={str(teal_programs_parser)}']
+        krun_command += [f'-cTEAL_PROGRAMS={current_teal_pgms_map}']
+        krun_command += ['-pTEAL_PROGRAMS=cat']
         krun_command += ['--parser', str(avm_json_parser)]
         krun_command += [str(input_file)]
         krun_command += ['--depth', str(depth)] if depth else []
+        krun_command += ['--profile'] if profile else []
+        krun_command += ['--no-expand-macros']
+
         command_env = os.environ.copy()
         command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
 

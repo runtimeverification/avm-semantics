@@ -395,24 +395,6 @@ module TEAL-SYNTAX
                    | TealOpCodeOrLabel TealPgm
   syntax TealInputPgm ::= TealPragmas TealPgm | TealPgm
 
-  syntax TealProgramsStoreKey   ::= String
-  syntax TealProgramsStoreValue ::= TealInputPgm [prec(3)]
-  syntax TealProgramsStoreItem  ::= TealProgramsStoreKey "|->" TealProgramsStoreValue
-  syntax TealProgramsStore      ::= ".TealProgramsStore" [klabel(.TealPrograms), symbol]
-                                  |  TealProgramsStoreItem ";" TealProgramsStore
-
-```
-
-We provide a function to extract a teal program by index from the syntactic list of input programs.
-If the requested index is out of bounds, a trivial error program is returned.
-
-```k
-  syntax TealInputPgm ::= getTealByName(TealProgramsStore, TealProgramsStoreKey) [function]
-  //---------------------------------------------------------------------------------------
-  rule getTealByName(NAME       |-> PGM;_   , NAME) => PGM
-  rule getTealByName(OTHER_NAME |-> _  ;REST, NAME) => getTealByName(REST, NAME)
-    requires notBool (OTHER_NAME ==String NAME)
-  rule getTealByName(.TealProgramsStore, _) => err
 endmodule
 ```
 
@@ -451,6 +433,7 @@ We define the syntax of TEAL's comments (using K's built-in sort `#Layout`), alo
   syntax Label           ::= r"({AlnumUbar}|{Special})+" [token]
   syntax HexToken        ::= r"0x{HexDigit}+"            [prec(2),token]
   syntax TAddressLiteral ::= r"[0-9A-Z]{58}"             [prec(1),token]
+//  syntax #UpperID ::= TAddressLiteral [token]
 ```
 
 NOTE: the following definitions are _disabled_.
