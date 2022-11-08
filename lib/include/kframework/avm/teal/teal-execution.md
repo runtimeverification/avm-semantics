@@ -2,6 +2,7 @@
 requires "avm/teal/teal-syntax.md"
 requires "avm/avm-configuration.md"
 requires "avm/avm-limits.md"
+requires "avm/panics.md"
 
 module TEAL-EXECUTION
   imports AVM-CONFIGURATION
@@ -11,6 +12,7 @@ module TEAL-EXECUTION
   imports TEAL-STACK
   imports TEAL-TYPES
   imports TEAL-INTERPRETER-STATE
+  imports AVM-PANIC
 ```
 
 TEAL Interpreter Initialization
@@ -220,6 +222,10 @@ teal, failure means undoing changes made to the state (for more details, see
   syntax KItem ::= #stopIfError()
 
   rule <k> #finalizeExecution() => #deactivateApp() ~> #calcReturn() ~> #stopIfError() ... </k>
+    requires getTxnField(getCurrentTxn(), TxType) ==K (@ appl)
+
+  rule <k> #finalizeExecution() => #calcReturn() ~> #stopIfError() ... </k>
+    requires getTxnField(getCurrentTxn(), TxType) =/=K (@ appl)
 
   rule <k> #deactivateApp() => . ... </k>
        <currentApplicationID> APP_ID </currentApplicationID>
@@ -501,8 +507,6 @@ return code to 3 (see return codes below).
   rule panicCode(BOX_CREATE_EXTERNAL)        => 42
 
 
-  syntax KItem ::= panic(String)
-  // ---------------------------
   rule <k> panic(S) => #finalizeExecution() ... </k>
        <paniccode> _ => panicCode(S) </paniccode>
        <panicstatus> _ => S </panicstatus>

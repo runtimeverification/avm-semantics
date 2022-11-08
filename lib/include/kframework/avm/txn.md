@@ -134,11 +134,11 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
   //                   3. Revoke an asset (having an asset asender, from which asset will be revoked)
   configuration
     <assetTransferTxFields multiplicity="?">
-      <xferAsset>     NoTValue </xferAsset>
-      <assetAmount>   NoTValue </assetAmount>
-      <assetReceiver> NoTValue </assetReceiver>
-      <assetASender>  NoTValue </assetASender>
-      <assetCloseTo>  NoTValue </assetCloseTo>
+      <xferAsset>     0 </xferAsset>
+      <assetAmount>   0 </assetAmount>
+      <assetReceiver> .Bytes </assetReceiver>
+      <assetASender>  .Bytes </assetASender>
+      <assetCloseTo>  .Bytes </assetCloseTo>
     </assetTransferTxFields>
 ```
 

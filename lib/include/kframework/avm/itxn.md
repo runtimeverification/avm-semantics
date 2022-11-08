@@ -258,9 +258,9 @@ module ALGO-ITXN
            <assetTransferTxFields>
              <xferAsset>     0                           </xferAsset>
              <assetAmount>   0                           </assetAmount>
-             <assetReceiver> getGlobalField(ZeroAddress) </assetReceiver>
-             <assetASender>  getGlobalField(ZeroAddress) </assetASender>
-             <assetCloseTo>  getGlobalField(ZeroAddress) </assetCloseTo>
+             <assetReceiver> {getGlobalField(ZeroAddress)}:>Bytes </assetReceiver>
+             <assetASender>  {getGlobalField(ZeroAddress)}:>Bytes </assetASender>
+             <assetCloseTo>  {getGlobalField(ZeroAddress)}:>Bytes </assetCloseTo>
            </assetTransferTxFields>
            ...
          </transaction>)
