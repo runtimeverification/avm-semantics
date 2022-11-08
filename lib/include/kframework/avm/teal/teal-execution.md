@@ -106,7 +106,7 @@ Pragmas are applied directly, and then the `#LoadPgm` performs program pre-proce
      andBool (notBool isLabelCode(Op))
 
   rule <k> #LoadPgm( (L:) Pgm, PC ) => #LoadPgm( Pgm, PC +Int 1 ) ... </k>
-       <program> PGM => PGM[PC <- (L:)] </program>
+       <program> PGM => PGM[PC <- (L:):LabelCode] </program>
        <labels> LL => LL[L <- PC] </labels>
     requires notBool (L in_labels LL)
 
@@ -125,7 +125,7 @@ Pragmas are applied directly, and then the `#LoadPgm` performs program pre-proce
      andBool (notBool isLabelCode(Op))
 
   rule <k> #LoadPgm( (L:) , PC ) => .K ... </k>
-       <program> PGM => PGM[PC <- (L:)] </program>
+       <program> PGM => PGM[PC <- (L:):LabelCode] </program>
        <labels> LL => LL[L <- PC] </labels>
     requires notBool (L in_labels LL)
 
@@ -228,6 +228,7 @@ teal, failure means undoing changes made to the state (for more details, see
   rule <k> #calcReturn() => .K ... </k>
        <stack> I : .TStack </stack>
        <stacksize> SIZE </stacksize>
+       <paniccode> 0 </paniccode>
        <returncode> 4 => 0 </returncode>
        <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
     requires I >Int 0 andBool SIZE ==Int 1
@@ -235,6 +236,7 @@ teal, failure means undoing changes made to the state (for more details, see
   rule <k> #calcReturn() => .K ... </k>
        <stack> I : .TStack </stack>
        <stacksize> _ </stacksize>
+       <paniccode> 0 </paniccode>
        <returncode> 4 => 1 </returncode>
        <returnstatus> _ => "Failure - zero-valued singleton stack" </returnstatus>
     requires 0 >=Int I
@@ -242,29 +244,39 @@ teal, failure means undoing changes made to the state (for more details, see
   rule <k> #calcReturn() => .K ... </k>
        <stack> _ </stack>
        <stacksize> SIZE </stacksize>
+       <paniccode> 0 </paniccode>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - stack size greater than 1" </returnstatus>
     requires SIZE >Int 1
 
   rule <k> #calcReturn() => .K ... </k>
        <stack> .TStack </stack>
+       <paniccode> 0 </paniccode>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - empty stack" </returnstatus>
 
   rule <k> #calcReturn() => .K ... </k>
        <stack> (_:Bytes) : .TStack </stack>
        <stacksize> _ </stacksize>
+       <paniccode> 0 </paniccode>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - singleton stack with byte array type" </returnstatus>
+
+  rule <k> #calcReturn() => .K ... </k>
+       <paniccode> PANIC_CODE </paniccode>
+       <panicstatus> S </panicstatus>
+       <returncode> 4 => 3 </returncode>
+       <returnstatus> _ => "Failure - panic: " +String S </returnstatus>
+    requires PANIC_CODE =/=Int 0
 
   // Leave the testing commands on the K cell
   rule <k> #stopIfError() ~> X:TestingCommand => X:TestingCommand ~> #stopIfError() ... </k>
 
   // Consume the rest of the K cell if the execution terminated with an error
-  rule <k> #stopIfError() ~> (_:KItem => .K) ... </k>
+  rule <k> #stopIfError() ~> (ITEM:KItem => .K) ... </k>
        <returncode> RETURN_CODE </returncode>
     requires RETURN_CODE =/=Int 0
-
+     andBool notBool(isTestingCommand(ITEM))
 
   rule <k> #stopIfError() => .K </k>
        <returncode> RETURN_CODE </returncode>
@@ -393,6 +405,13 @@ return code to 3 (see return codes below).
   syntax String ::= "KEY_TOO_LARGE"              [macro]
   syntax String ::= "BYTE_VALUE_TOO_LARGE"       [macro]
   syntax String ::= "KEY_VALUE_TOO_LARGE"        [macro]
+  syntax String ::= "BOX_TOO_LARGE"              [macro]
+  syntax String ::= "CHANGED_BOX_SIZE"           [macro]
+  syntax String ::= "BOX_NOT_FOUND"              [macro]
+  syntax String ::= "BOX_UNAVAILABLE"            [macro]
+  syntax String ::= "BOX_WRONG_LENGTH"           [macro]
+  syntax String ::= "BOX_OUT_OF_BOUNDS"          [macro]
+  syntax String ::= "BOX_CREATE_EXTERNAL"        [macro]
   //----------------------------------------------------
   rule INVALID_OP_FOR_MODE => "invalid opcode for current execution mode"
   rule ERR_OPCODE          => "err opcode encountered"
@@ -429,6 +448,13 @@ return code to 3 (see return codes below).
   rule BYTE_VALUE_TOO_LARGE => "tried to store too large of a byte value"
   rule KEY_VALUE_TOO_LARGE => "sum of key length and value length is too high"
   rule ASSERTION_VIOLATION => "assertion violation"
+  rule BOX_TOO_LARGE       => "tried to create a box which is too large"
+  rule CHANGED_BOX_SIZE    => "called box_create on existing box with a different size"
+  rule BOX_NOT_FOUND       => "tried to access a box name that doesn't exist"
+  rule BOX_UNAVAILABLE     => "tried to access box not referenced in any transaction in this group"
+  rule BOX_WRONG_LENGTH    => "tried to replace a box byte array with one of a different length"
+  rule BOX_OUT_OF_BOUNDS   => "tried to access out of bounds of a box byte array"
+  rule BOX_CREATE_EXTERNAL => "tried to create a box for which a reference already exists tied to another application"
   //--------------------------------------------------------------------------------
 
   rule panicCode(INVALID_OP_FOR_MODE)        => 1
@@ -466,14 +492,20 @@ return code to 3 (see return codes below).
   rule panicCode(BYTE_VALUE_TOO_LARGE)       => 33
   rule panicCode(KEY_VALUE_TOO_LARGE)        => 34
   rule panicCode(ASSERTION_VIOLATION)        => 35
+  rule panicCode(BOX_TOO_LARGE)              => 36
+  rule panicCode(CHANGED_BOX_SIZE)           => 37
+  rule panicCode(BOX_NOT_FOUND)              => 38
+  rule panicCode(BOX_UNAVAILABLE)            => 39
+  rule panicCode(BOX_WRONG_LENGTH)           => 40
+  rule panicCode(BOX_OUT_OF_BOUNDS)          => 41
+  rule panicCode(BOX_CREATE_EXTERNAL)        => 42
 
 
   syntax KItem ::= panic(String)
   // ---------------------------
-  rule <k> panic(S) ~> _ => .K </k>
-       <returncode> _ => 3 </returncode>
-       <returnstatus> _ => "Failure - panic: " +String S </returnstatus>
+  rule <k> panic(S) => #finalizeExecution() ... </k>
        <paniccode> _ => panicCode(S) </paniccode>
+       <panicstatus> _ => S </panicstatus>
 ```
 
 ```k

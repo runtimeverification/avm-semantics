@@ -47,8 +47,8 @@ TODO: if an account contains an app, the state specification must also contain t
                               "apps-local-state": null,
                               "apps-total-schema": null,
                               "assets": null,
-                              "created-apps": APPS,
-                              "created-assets": null,
+                              "created-apps": [APPS:JSONs],
+                              "created-assets": [ASSETS:JSONs],
                               "participation": null,
                               "pending-rewards": null,
                               "reward-base": null,
@@ -58,7 +58,7 @@ TODO: if an account contains an app, the state specification must also contain t
                               "sig-type": null,
                               "auth-addr": null
                              })
-         => #setupApplications(APPS) ... </k>
+          => #setupApplications([APPS]) ~> #setupAssets([ASSETS]) ... </k>
          <accountsMap>
            (.Bag =>
            <account>
@@ -74,6 +74,68 @@ TODO: if an account contains an app, the state specification must also contain t
            ...
          </accountsMap>
     rule <k> #addAccountJSON(INPUT:JSON) => #panic("Invalid account JSON:" +String JSON2String(INPUT)) ... </k> [owise]
+```
+
+### Assets
+
+```k
+    syntax KItem ::= #setupAssets(JSON)
+    //---------------------------------
+
+    rule <k> #setupAssets([ASSET_JSON, REST]) => #addAssetJSON(ASSET_JSON) ~> #setupAssets([REST]) ... </k>
+    rule <k> #setupAssets([.JSONs]) => .K ... </k>
+
+    syntax KItem ::= #addAssetJSON(JSON)
+
+    rule <k> #addAssetJSON({
+                             "index": INDEX:Int,
+                             "params": {
+                               "clawback": CLAWBACK_ADDR:String,
+                               "creator": CREATOR_ADDR_STR:String,
+                               "decimals": DECIMALS:Int,
+                               "default-frozen": DEFAULT_FROZEN:Bool,
+                               "freeze": FREEZE_ADDR:String,
+                               "manager": MANAGER_ADDR:String,
+                               "metadata-hash": METADATA_HASH:String,
+                               "name": ASSET_NAME:String,
+                               "reserve": RESERVE_ADDR:String,
+                               "total": TOTAL:Int,
+                               "unit-name": UNIT_NAME:String,
+                               "url": URL:String
+                             }
+                           }) => .K ... </k>
+         <account>
+           <address> CREATOR_ADDR </address>
+           <assetsCreated>
+             .Bag =>
+             <asset>
+               <assetID> INDEX </assetID>
+               <assetName> String2Bytes(ASSET_NAME) </assetName>
+               <assetUnitName> String2Bytes(UNIT_NAME) </assetUnitName>
+               <assetTotal> TOTAL </assetTotal>
+               <assetDecimals> DECIMALS </assetDecimals>
+               <assetDefaultFrozen> bool2Int(DEFAULT_FROZEN) </assetDefaultFrozen>
+               <assetURL> String2Bytes(URL) </assetURL>
+               <assetMetaDataHash> String2Bytes(METADATA_HASH) </assetMetaDataHash>
+               <assetManagerAddr> DecodeAddressString(MANAGER_ADDR) </assetManagerAddr>
+               <assetReserveAddr> DecodeAddressString(RESERVE_ADDR) </assetReserveAddr>
+               <assetFreezeAddr> DecodeAddressString(FREEZE_ADDR) </assetFreezeAddr>
+               <assetClawbackAddr> DecodeAddressString(CLAWBACK_ADDR) </assetClawbackAddr>
+             </asset>
+             ...
+           </assetsCreated>
+           <assetsOptedIn>
+             ASSETS_OPTED_IN =>
+             <optInAsset>
+               <optInAssetID>      INDEX       </optInAssetID>
+               <optInAssetBalance> TOTAL          </optInAssetBalance>
+               <optInAssetFrozen>  bool2Int(DEFAULT_FROZEN) </optInAssetFrozen>
+             </optInAsset>
+             ASSETS_OPTED_IN
+           </assetsOptedIn>
+           ...
+         </account>
+       requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR
 ```
 
 ### Applications
@@ -104,8 +166,8 @@ TODO: if an account contains an app, the state specification must also contain t
              <appsCreated>
              (.Bag => <app>
                         <appID>            APP_ID                                                      </appID>
-                        <approvalPgmSrc>   getTealByName(TEAL_PROGRAMS, APPROVAL_NAME):TealInputPgm    </approvalPgmSrc>
-                        <clearStatePgmSrc> getTealByName(TEAL_PROGRAMS, CLEAR_STATE_NAME):TealInputPgm </clearStatePgmSrc>
+                        <approvalPgmSrc>   {TEAL_PROGRAMS[ APPROVAL_NAME ]}:>TealInputPgm </approvalPgmSrc>
+                        <clearStatePgmSrc> {TEAL_PROGRAMS[ CLEAR_STATE_NAME ]}:>TealInputPgm </clearStatePgmSrc>
                           ...
                        </app>)
              ...
@@ -133,8 +195,29 @@ TODO: if an account contains an app, the state specification must also contain t
 
     syntax KItem ::= #setupTransactions(JSON)
     //---------------------------------------
-    rule <k> #setupTransactions([TXN_JSON, REST]) => #addPaymentTxnJSON(TXN_JSON) ~> #setupTransactions([REST]) ... </k>
+
+    rule <k> #setupTransactions([TXN_JSON, REST]) => #addTxnJSON(TXN_JSON) ~> #setupTransactions([REST]) ... </k>
     rule <k> #setupTransactions([.JSONs]) => .K ... </k>
+
+    syntax KItem ::= #addTxnJSON(JSON)
+```
+
+```k
+  syntax TValueList ::= JSONList2BytesList(JSON) [function]
+
+  rule JSONList2BytesList([.JSONs]) => .TValueList
+  rule JSONList2BytesList([ I:Int , REST ]) => prepend(Int2Bytes(I, BE, Unsigned), JSONList2BytesList( [ REST ] ))
+  rule JSONList2BytesList([ S:String , REST ]) => prepend(String2Bytes(S), JSONList2BytesList( [ REST ] ))
+
+  syntax TValueList ::= JSONIntList2TUint64List(JSON) [function]
+
+  rule JSONIntList2TUint64List([.JSONs]) => .TValueList
+  rule JSONIntList2TUint64List([I:Int, REST]) => prepend(I, JSONIntList2TUint64List([REST]))
+
+  syntax TValueList ::= JSONAccountsList2BytesList(JSON) [function]
+
+  rule JSONAccountsList2BytesList([.JSONs]) => .TValueList
+  rule JSONAccountsList2BytesList([S:String, REST]) => prepend(DecodeAddressString(S), JSONAccountsList2BytesList([REST]))
 ```
 
 ### Payment
@@ -142,15 +225,15 @@ TODO: if an account contains an app, the state specification must also contain t
 ```k
     syntax KItem ::= #addPaymentTxnJSON(JSON)
     //----------------------------------------
-    rule <k> #addPaymentTxnJSON({ "amt": AMOUNT:Int,
-                                  "fee": _FEE:Int,
-                                  "gh": _,
-                                  "grp": GROUP_ID:String,
-                                  "lv": 1,
-                                  "rcv": RECEIVER:String,
-                                  "snd": SENDER:String,
-                                  "type": "pay"
-                                })
+    rule <k> #addTxnJSON({ "amt": AMOUNT:Int,
+                           "fee": _FEE:Int,
+                           "gh": _,
+                           "grp": GROUP_ID:String,
+                           "lv": 1,
+                           "rcv": RECEIVER:String,
+                           "snd": SENDER:String,
+                           "type": "pay"
+                         })
           => #pushTxnBack(<txID> Int2String(ID) </txID>) ...
         </k>
        <transactions>
@@ -176,6 +259,128 @@ TODO: if an account contains an app, the state specification must also contain t
        </transactions>
        <nextTxnID> ID => ID +Int 1 </nextTxnID>
 ```
+
+### Application Call
+
+```k
+    rule <k> #addTxnJSON({
+                           "snd":  SENDER:String,
+                           "type": "appl",
+                           "apid": APPLICATION_ID:Int,
+                           "apan": ON_COMPLETION:Int,
+                           "apat": ACCOUNTS:JSON,
+                           "apaa": APPLICATION_ARGS:JSON,
+                           "apfa": FOREIGN_APPS:JSON,
+                           "apas": FOREIGN_ASSETS:JSON,
+                           "apgs": { "nui": GLOBAL_NUM_UINTS:Int, "nbs": GLOBAL_NUM_BYTES:Int },
+                           "apls": { "nui": LOCAL_NUM_UINTS:Int, "nbs": LOCAL_NUM_BYTES:Int },
+                           "apep": EXTRA_PAGES:Int,
+                           "apap": APPROVAL_NAME:String,
+                           "apsu": CLEAR_STATE_NAME:String
+                         })
+          => #pushTxnBack(<txID> Int2String(ID) </txID>) ...
+        </k>
+        <transactions>
+         (.Bag =>
+         <transaction>
+           <txID> Int2String(ID) </txID>
+           <txHeader>
+             <sender>      DecodeAddressString(SENDER)   </sender>
+             <txType>      "appl"    </txType>
+             <typeEnum>    @ appl    </typeEnum>
+             <groupID>     Int2String(GROUP_ID) </groupID>
+             <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx>
+             ...           // other fields will receive default values
+           </txHeader>
+           <appCallTxFields>
+             <applicationID> APPLICATION_ID </applicationID>
+             <onCompletion> ON_COMPLETION </onCompletion>
+             <approvalProgramSrc> {TEAL_PROGRAMS[ APPROVAL_NAME ]}:>TealInputPgm </approvalProgramSrc>
+             <clearStateProgramSrc> {TEAL_PROGRAMS[ CLEAR_STATE_NAME ]}:>TealInputPgm </clearStateProgramSrc>
+             <accounts> JSONAccountsList2BytesList(ACCOUNTS) </accounts>
+             <applicationArgs> JSONList2BytesList(APPLICATION_ARGS) </applicationArgs>
+             <foreignApps> JSONIntList2TUint64List(FOREIGN_APPS) </foreignApps>
+             <foreignAssets> JSONIntList2TUint64List(FOREIGN_ASSETS) </foreignAssets>
+             <globalStateSchema>
+               <globalNui> GLOBAL_NUM_UINTS </globalNui>
+               <globalNbs> GLOBAL_NUM_BYTES </globalNbs>
+             </globalStateSchema>
+             <localStateSchema>
+               <localNui> LOCAL_NUM_UINTS </localNui>
+               <localNbs> LOCAL_NUM_BYTES </localNbs>
+             </localStateSchema>
+             <extraProgramPages> EXTRA_PAGES </extraProgramPages>
+             ...
+           </appCallTxFields>
+           ...
+         </transaction>)
+         TXNS
+       </transactions>
+       <tealPrograms> TEAL_PROGRAMS </tealPrograms>
+       <nextGroupID> GROUP_ID </nextGroupID>
+       <nextTxnID> ID => ID +Int 1 </nextTxnID>
+```
+
+### Asset configure
+
+```k
+    rule <k> #addTxnJSON({
+                           "snd":  SENDER:String,
+                           "type": "acfg",
+                           "caid": ASSET_ID:Int,
+                           "apar": {
+                             "t": TOTAL:Int,
+                             "dc": DECIMALS:Int,
+                             "df": DEFAULT_FROZEN:Bool,
+                             "un": UNIT_NAME:String,
+                             "an": ASSET_NAME:String,
+                             "au": URL:String,
+                             "am": METADATA_HASH:String,
+                             "m": MANAGER_ADDR:String,
+                             "r": RESERVE_ADDR:String,
+                             "f": FREEZE_ADDR:String,
+                             "c": CLAWBACK_ADDR:String
+                           }
+                         })
+          => #pushTxnBack(<txID> Int2String(ID) </txID>) ...
+        </k>
+        <transactions>
+         (.Bag =>
+         <transaction>
+           <txID> Int2String(ID) </txID>
+           <txHeader>
+             <sender>      DecodeAddressString(SENDER)   </sender>
+             <txType>      "acfg"    </txType>
+             <typeEnum>    @ acfg    </typeEnum>
+             <groupID>     Int2String(GROUP_ID) </groupID>
+             <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx>
+             ...           // other fields will receive default values
+           </txHeader>
+           <assetConfigTxFields>
+             <configAsset> ASSET_ID </configAsset>
+             <assetParams>
+               <configTotal> TOTAL </configTotal>
+               <configDecimals> DECIMALS </configDecimals>
+               <configDefaultFrozen> bool2Int(DEFAULT_FROZEN) </configDefaultFrozen>
+               <configUnitName> String2Bytes(UNIT_NAME) </configUnitName>
+               <configAssetName> String2Bytes(ASSET_NAME) </configAssetName>
+               <configAssetURL> String2Bytes(URL) </configAssetURL>
+               <configMetaDataHash> String2Bytes(METADATA_HASH) </configMetaDataHash>
+               <configManagerAddr> DecodeAddressString(MANAGER_ADDR) </configManagerAddr>
+               <configReserveAddr> DecodeAddressString(RESERVE_ADDR) </configReserveAddr>
+               <configFreezeAddr> DecodeAddressString(FREEZE_ADDR) </configFreezeAddr>
+               <configClawbackAddr> DecodeAddressString(CLAWBACK_ADDR) </configClawbackAddr>
+             </assetParams>
+           </assetConfigTxFields>
+           ...
+         </transaction>)
+         TXNS
+       </transactions>
+       <tealPrograms> TEAL_PROGRAMS </tealPrograms>
+       <nextGroupID> GROUP_ID </nextGroupID>
+       <nextTxnID> ID => ID +Int 1 </nextTxnID>
+```
+
 
 ```k
 endmodule

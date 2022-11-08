@@ -18,7 +18,6 @@ module AVM-INITIALIZATION
   imports ALGO-TXN
 ```
 
-
 This module contains the rules that will initialize AVM with the Algorand blockchain state
 and the supplied transaction group.
 
@@ -56,90 +55,7 @@ TODO: provide a default safe order.
   rule normalizeAccounts(I:TValue) => normalizeAccountReference(I)
   rule normalizeAccounts(I:TValue L:TValueNeList) => normalizeAccountReference(I) {normalizeAccounts(L)}:>TValueNeList
 ```
-
-The transaction is initialized first.
-
-### Transaction Group Initialization
-```k
-  rule <k> #initTxGroup() => .K ... </k>
-```
-
-### Transactions
-
-By convention, we initialise the `<groupIdx>` cell, which tracks the transaction's position
-withing the group, with it's `<txID>`. Transaction IDs will be assigned sequentially.
-
 **TODO**: transaction IDs and group indices need be assigned differently for real blockchain transactions.
-
-#### Payment Transaction
-
-```k
-  syntax AlgorandCommand ::= "addPaymentTx" SenderCell ReceiverCell AmountCell
-  //-----------------------------------------------------------------------------------
-  rule <k> addPaymentTx <sender>   SENDER   </sender>
-                        <receiver> RECEIVER </receiver>
-                        <amount>   AMOUNT   </amount>
-       => #pushTxnBack(<txID> Int2String(ID) </txID>)
-           ...
-       </k>
-       <transactions>
-         TXNS =>
-         <transaction>
-           <txID> Int2String(ID) </txID>
-           <txHeader>
-             <sender>      normalizeAddressString(SENDER)   </sender>
-             <txType>      "pay"                </txType>
-             <typeEnum>    @ pay                </typeEnum>
-             <groupID>     Int2String(GROUP_ID) </groupID>
-             <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx>    // for testing, we make these the same as sequential TxIDs
-             ...                              // other fields will receive default values
-           </txHeader>
-           <payTxFields>
-             <receiver>         normalizeAddressString(RECEIVER) </receiver>
-             <amount>           AMOUNT               </amount>
-             <closeRemainderTo> .Bytes               </closeRemainderTo>
-           </payTxFields>
-           ...
-         </transaction>
-         TXNS
-       </transactions>
-       <nextGroupID> GROUP_ID </nextGroupID>
-       <nextTxnID> ID => ID +Int 1 </nextTxnID>
-       requires notBool (Int2String(ID) in_txns(<transactions> TXNS </transactions>))
-```
-
-#### Application Call Transaction
-
-```k
-  syntax AlgorandCommand ::= "addAppCallTx" SenderCell ApplicationIDCell
-                                            OnCompletionCell AccountsCell
-                                            ApplicationArgsCell ForeignAppsCell
-                                            ForeignAssetsCell
-                                            GlobalNuiCell GlobalNbsCell
-                                            LocalNuiCell LocalNbsCell
-                                            ExtraProgramPagesCell
-                                            "<approvalPgmIdx>" Int "</approvalPgmIdx>"
-                                            "<clearStatePgmIdx>" Int "</clearStatePgmIdx>"
-  //-----------------------------------------------------------
-  rule <k> addAppCallTx <sender>            SENDER          </sender>
-                        <applicationID>     APP_ID          </applicationID>
-                        <onCompletion>      ON_COMPLETION   </onCompletion>
-                        <accounts>          ACCOUNTS        </accounts>
-                        <applicationArgs>   ARGS            </applicationArgs>
-                        <foreignApps>       APPS            </foreignApps>
-                        <foreignAssets>     ASSETS          </foreignAssets>
-                        <globalNui>         GLOBAL_INTS     </globalNui>
-                        <globalNbs>         GLOBAL_BYTES    </globalNbs>
-                        <localNui>          LOCAL_INTS      </localNui>
-                        <localNbs>          LOCAL_BYTES     </localNbs>
-                        <extraProgramPages> EXTRA_PAGES     </extraProgramPages>
-                        <approvalPgmIdx>    APPROVAL_IDX    </approvalPgmIdx>
-                        <clearStatePgmIdx>  CLEAR_STATE_IDX </clearStatePgmIdx>
-       => .K
-           ...
-       </k>
-
-```
 
 ### Globals Initialization
 

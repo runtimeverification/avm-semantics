@@ -20,12 +20,14 @@
                   "global-state": 0
                 }
               }
-            ]
+            ],
+            "created-assets":[]
           },
           {
             "address": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
             "amount": 1,
-            "created-apps": []
+            "created-apps": [],
+            "created-assets":[]
           }
         ]
       }
@@ -35,6 +37,7 @@
       "data": {
         "transactions": [
           {
+            "type": "pay",
             "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
             "rcv": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
             "amt": 100000

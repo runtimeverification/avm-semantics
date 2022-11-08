@@ -17,6 +17,7 @@ module AVM-CONFIGURATION
   imports ALGO-BLOCKCHAIN
   imports TEAL-INTERPRETER-STATE
   imports TEAL-SYNTAX
+  imports ID-SYNTAX
 
   configuration
     <kavm>
@@ -26,6 +27,7 @@ module AVM-CONFIGURATION
         "Failure - AVM is stuck"
       </returnstatus>
       <paniccode> 0 </paniccode>
+      <panicstatus> "" </panicstatus>
 
       // The transaction group as submitted
       <transactions/>
@@ -92,7 +94,7 @@ module AVM-CONFIGURATION
       // A ;-separated concatenation of their source code of TEAL contracts
       // should be supplied as `-cTEAL_PROGRAMS` configuration variuable
       // argument ot `krun`
-      <tealPrograms> $TEAL_PROGRAMS:TealProgramsStore </tealPrograms>
+      <tealPrograms> $TEAL_PROGRAMS:Map </tealPrograms>
     </kavm>
 
   // Top-level control of the semantics.

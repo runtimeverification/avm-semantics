@@ -1,0 +1,13 @@
+#pragma version 8
+
+byte "box2"
+int 32
+box_create
+
+byte "box1"
+int 10
+int 3
+box_extract
+
+int 1
+return

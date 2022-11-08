@@ -132,7 +132,7 @@ Note that the applications and ASAs are part of the accounts' state as well, and
   rule <k> #checkExecutionResults(EXPECTED_RETURN_CODE, EXPECTED_PANIC_CODE)
         => .K ...
        </k>
-       <returncode> RETURN_CODE </returncode>
+       <returncode> RETURN_CODE => 0 </returncode>
        <paniccode> PANIC_CODE </paniccode>
    requires RETURN_CODE ==Int EXPECTED_RETURN_CODE
     andBool PANIC_CODE ==Int EXPECTED_PANIC_CODE

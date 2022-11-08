@@ -222,6 +222,12 @@ module ALGO-BLOCKCHAIN
           <appsOptedIn/>
           <assetsCreated/>
           <assetsOptedIn/>
+          <boxes>
+            <box multiplicity="*" type="Map">
+              <boxName> .Bytes </boxName>
+              <boxData> .Bytes </boxData>
+            </box>
+          </boxes>
         </account>
       </accountsMap>
       <appCreator>   .Map </appCreator>   // AppID |-> Creator's address
@@ -705,6 +711,31 @@ Accessor functions
 
   rule _ in_accounts( <accountsMap> .Bag </accountsMap> ) => false
 
+  syntax Bool ::= Bytes "in_boxes" "(" BoxesCell ")" [function]
+  //-----------------------------------------------------------
+  rule NAME in_boxes(
+              <boxes>
+                <box>
+                  <boxName> NAME </boxName>
+                  ...
+                </box>
+                ...
+              </boxes>
+            ) => true
+
+  rule NAME in_boxes(
+              <boxes>
+                <box>
+                  <boxName> NAME' </boxName>
+                  ...
+                </box>
+                REST
+              </boxes>
+            ) => NAME in_boxes(<boxes> REST </boxes>)
+    requires NAME =/=K NAME'
+
+  rule _ in_boxes(<boxes> .Bag </boxes>) => false
+
 
   syntax Bool ::= TValue "in_optedInApps" "(" AppsOptedInCell ")" [function]
   //-----------------------------------------------------------------------
@@ -873,6 +904,56 @@ references and also to check that a resource is available.
     requires contains(getTxnField(getCurrentTxn(), Assets), A)
 
   rule assetAvailable(_) => false [owise]
+
+  syntax Map ::= TValuePairList2Map(TValuePairList, TValueList, Bytes) [function, functional]
+  //----------------------------------------------------------------------
+  rule TValuePairList2Map((A, B):TValuePair REST, APPS, DEFAULT) => ((A |-> getAppAddressBytes({getTValueAt(B -Int 1, APPS)}:>Int)) TValuePairList2Map(REST, APPS, DEFAULT))
+    requires B >=Int 1
+  rule TValuePairList2Map((A, B):TValuePair, APPS, _) => (A |-> getAppAddressBytes({getTValueAt(B -Int 1, APPS)}:>Int))
+    requires B >=Int 1
+  rule TValuePairList2Map((A, 0):TValuePair REST, APPS, DEFAULT) => ((A |-> DEFAULT) TValuePairList2Map(REST, APPS, DEFAULT))
+  rule TValuePairList2Map((A, 0):TValuePair, _, DEFAULT) => (A |-> DEFAULT)
+  rule TValuePairList2Map(.TValuePairList, _, _) => .Map
+
+  syntax Map ::= getBoxRefs(String) [function, functional]
+  syntax Map ::= getGroupBoxRefs(String) [function, functional]
+  syntax Map ::= getGroupBoxRefs(Map) [function, functional]
+  //--------------------------------------------------------
+
+  rule [[ getGroupBoxRefs(GROUP_ID) => getGroupBoxRefs(VALS) ]]
+       <txnIndexMapGroup>
+         <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
+         <txnIndexMapGroupValues> VALS </txnIndexMapGroupValues>
+       </txnIndexMapGroup>
+
+  rule getGroupBoxRefs( (_ |-> TXN_ID) REST) => getGroupBoxRefs(REST) getBoxRefs(TXN_ID)
+  rule getGroupBoxRefs( .Map) => .Map
+
+  rule [[ getBoxRefs(TXN_ID) => TValuePairList2Map(REFS, FA, getAppAddressBytes({getGlobalField(CurrentApplicationID)}:>Int)) ]]
+       <transaction>
+         <txID> TXN_ID </txID>
+         <foreignApps> FA </foreignApps>
+         <boxReferences> REFS </boxReferences>
+         ...
+       </transaction>
+
+  rule [[ getBoxRefs(TXN_ID) => .Map ]]
+       <transaction>
+         <txID> TXN_ID </txID>
+         <txnTypeSpecificFields>
+           .AppCallTxFieldsCell
+           ...
+         </txnTypeSpecificFields>
+         ...
+       </transaction>
+
+  syntax MaybeTValue ::= boxAcct(Bytes) [function, functional]
+  //--------------------------------------------------------------------
+  rule boxAcct(NAME) => {getGroupBoxRefs(getTxnGroupID(getCurrentTxn()))[NAME]}:>Bytes
+    requires NAME in_keys(getGroupBoxRefs(getTxnGroupID(getCurrentTxn())))
+
+  rule boxAcct(_) => NoTValue [owise]
+
 
 ```
 

@@ -27,8 +27,8 @@ def test_run_simulation(filename: str) -> None:
 
     scenario = Path(filename).read_text()
 
-    teals = KAVM.paste_teals(
-        KAVM.extract_teals(scenario=scenario, teal_sources_dir=Path(os.path.join(project_path, 'tests/teal-sources/')))
+    teals = kavm.extract_teals(
+        scenario=scenario, teal_sources_dir=Path(os.path.join(project_path, 'tests/teal-sources/'))
     )
     proc_result = kavm.run_avm_json(
         scenario=scenario,

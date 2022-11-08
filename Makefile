@@ -327,10 +327,6 @@ generate-parsers:
              $(KAVM_DEFINITION_DIR)/parser_JSON_AVM-TESTING-SYNTAX
 	kast --definition $(KAVM_DEFINITION_DIR) --gen-parser \
              --module TEAL-PARSER-SYNTAX                      \
-             --sort TealProgramsStore                         \
-             $(KAVM_DEFINITION_DIR)/parser_TealProgramsStore_TEAL-PARSER-SYNTAX
-	kast --definition $(KAVM_DEFINITION_DIR) --gen-parser \
-             --module TEAL-PARSER-SYNTAX                      \
              --sort TealInputPgm                              \
              $(KAVM_DEFINITION_DIR)/parser_TealInputPgm_TEAL-PARSER-SYNTAX
 
@@ -376,6 +372,11 @@ transient-coverage:
 
 $(BUILD_DIR)/coverage.html: $(BUILD_DIR)/coverage.xml
 	$(VENV_ACTIVATE) && pycobertura show --format html $(BUILD_DIR)/coverage.xml > $(BUILD_DIR)/coverage.html
+
+transient-coverage:
+	$(VENV_ACTIVATE) && $(KCOVR) $(KAVM_DEFINITION_DIR) \
+        -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
+	$(KAVM_SCRIPTS)/post-process-coverage $(BUILD_DIR)/coverage.xml
 
 coverage-html: $(BUILD_DIR)/coverage.html
 

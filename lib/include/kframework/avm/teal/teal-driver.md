@@ -1036,7 +1036,7 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
         <stack> (I:Int) : _XS => I : .TStack </stack>
         <stacksize> _ => 1 </stacksize>
 
-  rule <k> _: => .K ... </k>
+  rule <k> (_ :):LabelCode => .K ... </k>
 
   rule <k> assert => .K ... </k>
        <stack> (X:Int) : XS => XS </stack>
@@ -2090,6 +2090,418 @@ Stateful TEAL Operations
     requires S >=Int MAX_STACK_DEPTH
 
   rule <k> acct_params_get _ => panic(STACK_UNDERFLOW) ...</k>
+       <stacksize> S </stacksize>
+    requires S <Int 1
+```
+
+### Box storage
+
+*box_create*
+
+```k
+  rule <k> box_create => #createBox(NAME, {boxAcct(NAME)}:>Bytes, SIZE) ... </k>
+       <stack> SIZE:Int : NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  syntax KItem ::= "#createBox" "(" Bytes "," Bytes "," Int ")"
+
+  rule <k> #createBox(NAME, ADDR, SIZE) => . ... </k>
+       <stack> XS => 1 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           (.Bag =>
+           <box>
+             <boxName> NAME </boxName>
+             <boxData> padLeftBytes(.Bytes, SIZE, 0) </boxData>
+           </box>)
+           REST
+         </boxes>
+         <minBalance> MIN_BALANCE => MIN_BALANCE +Int (2500 +Int (400 *Int (lengthBytes(NAME) +Int SIZE))) </minBalance>
+         ...
+       </account>
+    requires SIZE <=Int PARAM_MAX_BOX_SIZE
+     andBool notBool(NAME in_boxes(<boxes> REST </boxes>))
+     andBool ADDR ==K getGlobalField(CurrentApplicationAddress) // Can only create a box in your own application
+
+  rule <k> #createBox(NAME, ADDR, SIZE) => . ... </k>
+       <stack> XS => 0 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           <box>
+             <boxName> NAME </boxName>
+             <boxData> BYTES </boxData>
+           </box>
+           ...
+         </boxes>
+         ...
+       </account>
+    requires SIZE <=Int PARAM_MAX_BOX_SIZE
+     andBool lengthBytes(BYTES) ==Int SIZE
+
+  rule <k> #createBox(NAME, ADDR, SIZE) => panic(CHANGED_BOX_SIZE) ... </k>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           <box>
+             <boxName> NAME </boxName>
+             <boxData> BYTES </boxData>
+           </box>
+           ...
+         </boxes>
+         ...
+       </account>
+    requires SIZE <=Int PARAM_MAX_BOX_SIZE
+     andBool lengthBytes(BYTES) =/=Int SIZE
+
+  rule <k> #createBox(_, ADDR, _) => panic(BOX_CREATE_EXTERNAL) ... </k>
+    requires ADDR =/=K getGlobalField(CurrentApplicationAddress)
+
+  rule <k> box_create => panic(BOX_UNAVAILABLE) ... </k>
+       <stack> _:Int : NAME:Bytes : _</stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_create => panic(BOX_TOO_LARGE) ... </k>
+       <stack> SIZE:Int : _ : _ </stack>
+    requires SIZE >Int PARAM_MAX_BOX_SIZE
+
+  rule <k> box_create => panic(ILL_TYPED_STACK) ... </k>
+       <stack> SIZE : NAME : _ </stack>
+    requires isBytes(SIZE) orBool isInt(NAME)
+
+  rule <k> box_create => panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 2
+```
+
+*box_replace*
+
+```k
+  syntax KItem ::= "#boxReplace" "(" Bytes "," Bytes "," Int "," Bytes ")"
+
+  rule <k> box_replace => #boxReplace(NAME, {boxAcct(NAME)}:>Bytes, OFFSET, VAL) ... </k>
+       <stack> VAL:Bytes : OFFSET:Int : NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 3 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxReplace(NAME, ADDR, OFFSET, VAL) => . ...</k>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES => replaceAtBytes(BYTES, OFFSET, VAL) </boxData>
+         </box>
+         ...
+       </account>
+    requires (lengthBytes(VAL) +Int OFFSET) <Int lengthBytes(BYTES)
+
+  rule <k> #boxReplace(NAME, ADDR, OFFSET, VAL) => panic(BOX_OUT_OF_BOUNDS) ...</k>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires (lengthBytes(VAL) +Int OFFSET) >=Int lengthBytes(BYTES)
+
+  rule <k> #boxReplace(NAME, ADDR, _, _) => panic(BOX_NOT_FOUND) ...</k>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_replace => panic(BOX_UNAVAILABLE) ... </k>
+       <stack> _:Bytes : _:Int : NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_replace => panic(ILL_TYPED_STACK) ... </k>
+       <stack> VAL : OFFSET : NAME : _ </stack>
+    requires isInt(VAL) orBool isBytes(OFFSET) orBool isInt(NAME)
+
+  rule <k> box_replace => panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 3
+```
+
+*box_put*
+
+```k
+  syntax KItem ::= "#boxPut" "(" Bytes "," Bytes "," Bytes ")"
+
+  rule <k> box_put => #boxPut(NAME, {boxAcct(NAME)}:>Bytes, VAL) ... </k>
+       <stack> VAL:Bytes : NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxPut(NAME, ADDR, VAL) => . ...</k>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES => VAL </boxData>
+         </box>
+         ...
+       </account>
+    requires lengthBytes(VAL) ==Int lengthBytes(BYTES)
+
+  rule <k> #boxPut(NAME, ADDR, VAL) => panic(BOX_WRONG_LENGTH) ...</k>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires lengthBytes(VAL) =/=Int lengthBytes(BYTES)
+
+  rule <k> #boxPut(NAME, ADDR, VAL) => #createBox(NAME, ADDR, lengthBytes(VAL)) ~> #boxPut(NAME, ADDR, VAL) ...</k>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_put => panic(BOX_UNAVAILABLE) ... </k>
+       <stack> _:Bytes : NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_put => panic(ILL_TYPED_STACK) ... </k>
+       <stack> VAL : NAME : _ </stack>
+    requires isInt(VAL) orBool isInt(NAME)
+
+  rule <k> box_put => panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 2
+```
+
+*box_extract*
+
+```k
+  syntax KItem ::= "#boxExtract" "(" Bytes "," Bytes "," Int "," Int ")"
+
+  rule <k> box_extract => #boxExtract(NAME, {boxAcct(NAME)}:>Bytes, OFFSET, LENGTH) ... </k>
+       <stack> LENGTH:Int : OFFSET:Int : NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 3 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxExtract(NAME, ADDR, OFFSET, LENGTH) => . ... </k>
+       <stack> XS => substrBytes(BYTES, OFFSET, OFFSET +Int LENGTH) : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires (LENGTH +Int OFFSET) <Int lengthBytes(BYTES)
+
+  rule <k> #boxExtract(NAME, ADDR, OFFSET, LENGTH) => panic(BOX_OUT_OF_BOUNDS) ... </k>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires (LENGTH +Int OFFSET) >=Int lengthBytes(BYTES)
+
+  rule <k> #boxExtract(NAME, ADDR, _, _) => panic(BOX_NOT_FOUND) ... </k>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_extract => panic(BOX_UNAVAILABLE) ... </k>
+       <stack> _:Int : _:Int : NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_extract => panic(ILL_TYPED_STACK) ... </k>
+       <stack> LENGTH : OFFSET : NAME : _ </stack>
+    requires isBytes(LENGTH) orBool isBytes(OFFSET) orBool isInt(NAME)
+
+  rule <k> box_extract => panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 3
+```
+
+*box_get*
+
+```k
+  syntax KItem ::= "#boxGet" "(" Bytes "," Bytes ")"
+
+  rule <k> box_get => #boxGet(NAME, {boxAcct(NAME)}:>Bytes) ... </k>
+       <stack> NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxGet(NAME, ADDR) => . ... </k>
+       <stack> XS => 1 : BYTES : XS </stack>
+       <stacksize> S => S +Int 2 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires lengthBytes(BYTES) <Int MAX_BYTEARRAY_LEN
+
+  rule <k> #boxGet(NAME, ADDR) => . ... </k>
+       <stack> XS => 0 : .Bytes : XS </stack>
+       <stacksize> S => S +Int 2 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> #boxGet(NAME, ADDR) => panic(BYTES_OVERFLOW) ... </k>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires lengthBytes(BYTES) >=Int MAX_BYTEARRAY_LEN
+
+  rule <k> box_get => panic(BOX_UNAVAILABLE) ... </k>
+       <stack> NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_get => panic(ILL_TYPED_STACK) ... </k>
+       <stack> NAME : _ </stack>
+    requires isInt(NAME)
+
+  rule <k> box_get => panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 1
+```
+
+*box_len*
+
+```k
+  syntax KItem ::= "#boxLen" "(" Bytes "," Bytes ")"
+
+  rule <k> box_len => #boxLen(NAME, {boxAcct(NAME)}:>Bytes) ... </k>
+       <stack> NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxLen(NAME, ADDR) => . ... </k>
+       <stack> XS => 1 : lengthBytes(BYTES) : XS </stack>
+       <stacksize> S => S +Int 2 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           <box>
+             <boxName> NAME </boxName>
+             <boxData> BYTES </boxData>
+           </box>
+           ...
+         </boxes>
+         ...
+       </account>
+
+  rule <k> #boxLen(NAME, ADDR) => . ... </k>
+       <stack> XS => 0 : 0 : XS </stack>
+       <stacksize> S => S +Int 2 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_len => panic(BOX_UNAVAILABLE) ... </k>
+       <stack> NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_len => panic(ILL_TYPED_STACK) ... </k>
+       <stack> NAME : _ </stack>
+    requires isInt(NAME)
+
+  rule <k> box_len => panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 1
+```
+
+*box_len*
+
+```k
+  syntax KItem ::= "#boxDel" "(" Bytes "," Bytes ")"
+
+  rule <k> box_del => #boxDel(NAME, {boxAcct(NAME)}:>Bytes) ... </k>
+       <stack> NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxDel(NAME, ADDR) => . ... </k>
+       <stack> XS => 1 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           ((<box>
+             <boxName> NAME </boxName>
+             <boxData> BYTES </boxData>
+           </box>) => .Bag)
+           ...
+         </boxes>
+         <minBalance> MIN_BALANCE => MIN_BALANCE -Int (2500 +Int (400 *Int (lengthBytes(NAME) +Int
+         lengthBytes(BYTES)))) </minBalance>
+         ...
+       </account>
+
+  rule <k> #boxDel(NAME, ADDR) => . ... </k>
+       <stack> XS => 0 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_del => panic(BOX_UNAVAILABLE) ... </k>
+       <stack> NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_del => panic(ILL_TYPED_STACK) ... </k>
+       <stack> NAME : _ </stack>
+    requires isInt(NAME)
+
+  rule <k> box_del => panic(STACK_UNDERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S <Int 1
 ```

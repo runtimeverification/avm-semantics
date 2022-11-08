@@ -101,7 +101,7 @@ def exec_run(
     definition_dir: Path,
     input_file: Path,
     teal_sources_dir: Path,
-    teal_programs_parser: Path,
+    teal_parser: Path,
     avm_simulation_parser: Path,
     avm_json_parser: Path,
     output: str,
@@ -109,44 +109,27 @@ def exec_run(
     depth: Optional[int],
     **kwargs: Any,
 ) -> None:
-    kavm = KAVM(definition_dir=definition_dir, init_pyk=False)
+    kavm = KAVM(definition_dir=definition_dir)
 
     if not os.environ.get('KAVM_LIB'):
         raise RuntimeError('Cannot access KAVM_LIB environment variable. Is it set?')
     kavm_lib_dir = Path(str(os.environ.get('KAVM_LIB')))
 
-    if not teal_programs_parser:
-        teal_programs_parser = kavm_lib_dir / 'scripts/parse-teal-programs.sh'
+    if not teal_parser:
+        teal_parser = definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
     if not avm_simulation_parser:
         avm_simulation_parser = kavm_lib_dir / 'scripts/parse-avm-simulation.sh'
     if not avm_json_parser:
         avm_json_parser = definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
-        teal_programs_parser = definition_dir / 'parser_TealProgramsStore_TEAL-PARSER-SYNTAX'
     try:
-        if input_file.suffix == '.avm-simulation':
-            proc_result = kavm.run_avm_simulation(
-                input_file=input_file,
-                output=output,
-                profile=profile,
-                teal_sources_dir=teal_sources_dir,
-                teal_programs_parser=teal_programs_parser,
-                avm_simulation_parser=avm_simulation_parser,
-                depth=depth,
-            )
-            if not output == 'none':
-                print(proc_result.stdout)
-            exit(proc_result.returncode)
-        elif input_file.suffix == '.json':
-            avm_json = json.loads(input_file.read_text())
-            teals = KAVM.paste_teals(KAVM.extract_teals(scenario=avm_json, teal_sources_dir=teal_sources_dir))
+        if input_file.suffix == '.json':
+            scenario = input_file.read_text()
             proc_result = kavm.run_avm_json(
-                input_file=input_file,
+                scenario=scenario,
+                teals=kavm.extract_teals(scenario, teal_sources_dir),
                 output=output,
                 profile=profile,
-                teals=teals,
-                teals_parser=teal_programs_parser,
-                avm_json_parser=avm_json_parser,
-                depth=depth,
+                depth=depth if depth else 0,
             )
             if not output == 'none':
                 print(proc_result.stdout)
@@ -290,10 +273,10 @@ def create_argument_parser() -> ArgumentParser:
         required=True,
     )
     run_subparser.add_argument(
-        '--teal-programs-parser',
-        dest='teal_programs_parser',
+        '--teal-parser',
+        dest='teal_parser',
         type=file_path,
-        help='Path to the executable to parse .teals files containing TealPrograms terms',
+        help='Path to the executable to parse .teal files containing TealPrograms terms',
     )
     run_subparser.add_argument(
         '--avm-simulation-parser',

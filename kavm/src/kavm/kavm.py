@@ -33,8 +33,7 @@ class KAVM(KRun):
         definition_dir: Path,
         use_directory: Any = None,
         logger: Optional[logging.Logger] = None,
-        init_pyk: bool = False,
-        teals_parser: Optional[Path] = None,
+        teal_parser: Optional[Path] = None,
         scenario_parser: Optional[Path] = None,
     ) -> None:
         super().__init__(definition_dir, use_directory=use_directory)
@@ -42,9 +41,7 @@ class KAVM(KRun):
             self._logger = _LOGGER
         else:
             self._logger = logger
-        self._teals_parser = (
-            teals_parser if teals_parser else definition_dir / 'parser_TealProgramsStore_TEAL-PARSER-SYNTAX'
-        )
+        self._teal_parser = teal_parser if teal_parser else definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
         self._scenario_parser = (
             scenario_parser if scenario_parser else definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
         )
@@ -52,15 +49,6 @@ class KAVM(KRun):
     @property
     def logger(self) -> logging.Logger:
         return self._logger
-
-    # @property
-    # def accounts(self) -> AccountCellMap:
-    #     return self._accounts
-
-    # @property
-    # def next_valid_txid(self) -> str:
-    #     """Return a txid consequative to the last commited one"""
-    #     return str(int(sorted(self._committed_txns.keys())[-1]) + 1) if len(self._committed_txns) > 0 else str(0)
 
     @staticmethod
     def prove(
@@ -81,16 +69,7 @@ class KAVM(KRun):
 
         return subprocess.run(command, check=True, text=True)
 
-    @staticmethod
-    def paste_teals(teals: Dict[str, str]) -> str:
-        teal_programs: str = ''
-        for k, v in teals.items():
-            teal_programs += f'"{k}" |-> {v};'
-        teal_programs += '.TealProgramsStore'
-        return teal_programs
-
-    @staticmethod
-    def extract_teals(scenario: str, teal_sources_dir: Path) -> Dict[str, str]:
+    def extract_teals(self, scenario: str, teal_sources_dir: Path) -> str:
         """Extract TEAL programs filenames and source code from a test scenario"""
         parsed_scenario = json.loads(scenario)
         teal_paths = set()
@@ -98,14 +77,44 @@ class KAVM(KRun):
             setup_network_stage = [
                 stage for stage in parsed_scenario['stages'] if stage['stage-type'] == 'setup-network'
             ][0]
-        except KeyError:
-            print(f'Test scenario {scenario} does not contain a "setup-network" stage')
-            exit(1)
+        except KeyError as e:
+            raise ValueError(f'Test scenario {scenario} does not contain a "setup-network" stage') from e
         for acc in setup_network_stage['data']['accounts']:
             for app in acc['created-apps']:
                 teal_paths.add(app['params']['approval-program'])
                 teal_paths.add(app['params']['clear-state-program'])
-        return {teal_path: (teal_sources_dir / teal_path).read_text() for teal_path in teal_paths}
+
+        try:
+            execute_transactions_stage = [
+                stage for stage in parsed_scenario['stages'] if stage['stage-type'] == 'execute-transactions'
+            ][0]
+        except KeyError as e:
+            raise ValueError(f'Test scenario {scenario} does not contain an "execute-transactions" stage') from e
+        for txn in execute_transactions_stage['data']['transactions']:
+            if 'apap' in txn:
+                teal_paths.add(txn['apap'])
+            if 'apsu' in txn:
+                teal_paths.add(txn['apsu'])
+
+        def run_process_on_bison_parser(path: Path) -> str:
+            command = [self._teal_parser] + [str(path)]
+            res = subprocess.run(command, stdout=subprocess.PIPE, check=True, text=True)
+
+            return res.stdout
+
+        map_union_op = "Lbl'Unds'Map'Unds'{}"
+        map_item_op = "Lbl'UndsPipe'-'-GT-Unds'{}"
+        empty_map_label = "Lbl'Stop'Map{}()"
+        current_teal_pgms_map = empty_map_label
+        for teal_path in teal_paths:
+            teal_path_parsed = 'inj{SortString{},SortKItem{}}(\\dv{SortString{}}("' + str(teal_path) + '"))'
+            teal_parsed = (
+                'inj{SortTealInputPgm{},SortKItem{}}(' + run_process_on_bison_parser(teal_sources_dir / teal_path) + ')'
+            )
+            teal_kore_map_item = map_item_op + '(' + teal_path_parsed + ',' + teal_parsed + ')'
+            current_teal_pgms_map = map_union_op + "(" + current_teal_pgms_map + "," + teal_kore_map_item + ")"
+
+        return current_teal_pgms_map
 
     def run_avm_json(
         self,
@@ -128,7 +137,7 @@ class KAVM(KRun):
             krun_command = ['krun', '--definition', str(self.definition_dir)]
             krun_command += ['--output', output]
             krun_command += [f'-cTEAL_PROGRAMS={teals}']
-            krun_command += [f'-pTEAL_PROGRAMS={str(self._teals_parser)}']
+            krun_command += ['-pTEAL_PROGRAMS=cat']
             krun_command += ['--parser', str(self._scenario_parser)]
             krun_command += ['--depth', str(depth)] if depth else []
             krun_command += [tmp_scenario_file.name]

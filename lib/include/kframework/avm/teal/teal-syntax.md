@@ -29,6 +29,7 @@ module TEAL-OPCODES
                         | ScratchOpCode
                         | BranchingOpCode
                         | StackOpCode
+                        | BoxStorageOpCode
   syntax SigOpCode    ::= SigVerOpCode | ArgOpCode           // Opcodes used only by stateless TEAL
   syntax AppOpCode    ::= StateOpCode
                         | TxnGroupStateOpCode
@@ -319,6 +320,18 @@ module TEAL-OPCODES
                               | "app_local_put"
 ```
 
+#### Box storage
+
+```k
+  syntax BoxStorageOpCode ::= "box_create"
+                            | "box_extract"
+                            | "box_replace"
+                            | "box_del"
+                            | "box_len"
+                            | "box_get"
+                            | "box_put"
+```
+
 #### Access to past transactions in the group
 
 ```k
@@ -382,24 +395,6 @@ module TEAL-SYNTAX
                    | TealOpCodeOrLabel TealPgm
   syntax TealInputPgm ::= TealPragmas TealPgm | TealPgm
 
-  syntax TealProgramsStoreKey   ::= String
-  syntax TealProgramsStoreValue ::= TealInputPgm [prec(3)]
-  syntax TealProgramsStoreItem  ::= TealProgramsStoreKey "|->" TealProgramsStoreValue
-  syntax TealProgramsStore      ::= ".TealProgramsStore" [klabel(.TealPrograms), symbol]
-                                  |  TealProgramsStoreItem ";" TealProgramsStore
-
-```
-
-We provide a function to extract a teal program by index from the syntactic list of input programs.
-If the requested index is out of bounds, a trivial error program is returned.
-
-```k
-  syntax TealInputPgm ::= getTealByName(TealProgramsStore, TealProgramsStoreKey) [function]
-  //---------------------------------------------------------------------------------------
-  rule getTealByName(NAME       |-> PGM;_   , NAME) => PGM
-  rule getTealByName(OTHER_NAME |-> _  ;REST, NAME) => getTealByName(REST, NAME)
-    requires notBool (OTHER_NAME ==String NAME)
-  rule getTealByName(.TealProgramsStore, _) => err
 endmodule
 ```
 
@@ -438,6 +433,7 @@ We define the syntax of TEAL's comments (using K's built-in sort `#Layout`), alo
   syntax Label           ::= r"({AlnumUbar}|{Special})+" [token]
   syntax HexToken        ::= r"0x{HexDigit}+"            [prec(2),token]
   syntax TAddressLiteral ::= r"[0-9A-Z]{58}"             [prec(1),token]
+//  syntax #UpperID ::= TAddressLiteral [token]
 ```
 
 NOTE: the following definitions are _disabled_.
@@ -607,6 +603,13 @@ module TEAL-UNPARSER
   rule unparseTEAL(asset_holding_get FieldName)   => "asset_holding_get" +&+ TealField2String(FieldName:AssetHoldingField)
   rule unparseTEAL(app_local_get_ex)              => "app_local_get_ex"
   rule unparseTEAL(app_local_put)                 => "app_local_put"
+  rule unparseTEAL(box_create)                    => "box_create"
+  rule unparseTEAL(box_extract)                   => "box_extract"
+  rule unparseTEAL(box_replace)                   => "box_replace"
+  rule unparseTEAL(box_del)                       => "box_del"
+  rule unparseTEAL(box_len)                       => "box_len"
+  rule unparseTEAL(box_get)                       => "box_get"
+  rule unparseTEAL(box_put)                       => "box_put"
   rule unparseTEAL(gaid N)                        => "gaid" +&+ Int2String(N)
   rule unparseTEAL(gload N M)                     => "gload" +&+ Int2String(N) +&+ Int2String(M)
   rule unparseTEAL(gaids)                         => "gaids"
