@@ -15,6 +15,7 @@ module TXN-FIELDS
   imports TEAL-FIELDS
   imports TEAL-SYNTAX
   imports BYTES
+  imports AVM-CONSTANTS
 ```
 
 *Pseudo fields*
@@ -111,17 +112,17 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
     <assetConfigTxFields multiplicity="?">
       <configAsset> NoTValue </configAsset>           // the asset ID
       <assetParams>
-        <configTotal>         NoTValue </configTotal>
-        <configDecimals>      NoTValue </configDecimals>
-        <configDefaultFrozen> NoTValue </configDefaultFrozen>
-        <configUnitName>      NoTValue </configUnitName>
-        <configAssetName>     NoTValue </configAssetName>
-        <configAssetURL>      NoTValue </configAssetURL>
-        <configMetaDataHash>  NoTValue </configMetaDataHash>
-        <configManagerAddr>   NoTValue </configManagerAddr>
-        <configReserveAddr>   NoTValue </configReserveAddr>
-        <configFreezeAddr>    NoTValue </configFreezeAddr>
-        <configClawbackAddr>  NoTValue </configClawbackAddr>
+        <configTotal>         0        </configTotal>
+        <configDecimals>      0        </configDecimals>
+        <configDefaultFrozen> 0        </configDefaultFrozen>
+        <configUnitName>      .Bytes   </configUnitName>
+        <configAssetName>     .Bytes   </configAssetName>
+        <configAssetURL>      .Bytes   </configAssetURL>
+        <configMetaDataHash>  .Bytes   </configMetaDataHash>
+        <configManagerAddr>   PARAM_ZERO_ADDR </configManagerAddr>
+        <configReserveAddr>   PARAM_ZERO_ADDR </configReserveAddr>
+        <configFreezeAddr>    PARAM_ZERO_ADDR </configFreezeAddr>
+        <configClawbackAddr>  PARAM_ZERO_ADDR </configClawbackAddr>
       </assetParams>
     </assetConfigTxFields>
 ```

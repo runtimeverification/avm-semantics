@@ -531,10 +531,10 @@ Modify asset
          <assetClawbackAddr>  _ => CLAWB_ADDR        </assetClawbackAddr>
          ...
        </asset>
-    requires isTValue(MANAGER_ADDR) 
-      orBool isTValue(RESERVE_ADDR) 
-      orBool isTValue(FREEZE_ADDR) 
-      orBool isTValue(CLAWB_ADDR)
+    requires MANAGER_ADDR =/=K getGlobalField(ZeroAddress)
+      orBool RESERVE_ADDR =/=K getGlobalField(ZeroAddress)
+      orBool FREEZE_ADDR  =/=K getGlobalField(ZeroAddress)
+      orBool CLAWB_ADDR   =/=K getGlobalField(ZeroAddress)
 ```
 
 Destroy asset
@@ -554,10 +554,10 @@ transaction by the lack of any asset parameters.""
          <txID>                TXN_ID          </txID>
          <sender>              SENDER          </sender>
          <configAsset>         ASSET_ID:TValue </configAsset>
-         <configManagerAddr>   NoTValue        </configManagerAddr>
-         <configReserveAddr>   NoTValue        </configReserveAddr>
-         <configFreezeAddr>    NoTValue        </configFreezeAddr>
-         <configClawbackAddr>  NoTValue        </configClawbackAddr>
+         <configManagerAddr>   MANAGER_ADDR    </configManagerAddr>
+         <configReserveAddr>   RESERVE_ADDR    </configReserveAddr>
+         <configFreezeAddr>    FREEZE_ADDR     </configFreezeAddr>
+         <configClawbackAddr>  CLAWB_ADDR      </configClawbackAddr>
          ...
        </transaction>
        <account>
@@ -583,6 +583,10 @@ transaction by the lack of any asset parameters.""
          ...
        </account>
        <assetCreator> (ASSET_ID |-> CREATOR) => .Map ...</assetCreator>
+    requires MANAGER_ADDR ==K getGlobalField(ZeroAddress)
+     andBool RESERVE_ADDR ==K getGlobalField(ZeroAddress)
+     andBool FREEZE_ADDR  ==K getGlobalField(ZeroAddress)
+     andBool CLAWB_ADDR   ==K getGlobalField(ZeroAddress)
 ```
 
 Modify/delete asset no permission case
