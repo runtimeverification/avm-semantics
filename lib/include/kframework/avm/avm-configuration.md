@@ -19,7 +19,7 @@ module AVM-CONFIGURATION
   imports TEAL-INTERPRETER-STATE
   imports TEAL-SYNTAX
   imports ID-SYNTAX
-  imports AVM-PANIC
+  imports AVM-PANI
 
   configuration
     <kavm>

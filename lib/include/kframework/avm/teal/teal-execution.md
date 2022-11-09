@@ -506,7 +506,6 @@ return code to 3 (see return codes below).
   rule panicCode(BOX_OUT_OF_BOUNDS)          => 41
   rule panicCode(BOX_CREATE_EXTERNAL)        => 42
 
-
   rule <k> panic(S) => #finalizeExecution() ... </k>
        <paniccode> _ => panicCode(S) </paniccode>
        <panicstatus> _ => S </panicstatus>
