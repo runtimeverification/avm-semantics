@@ -222,10 +222,10 @@ teal, failure means undoing changes made to the state (for more details, see
   syntax KItem ::= #stopIfError()
 
   rule <k> #finalizeExecution() => #deactivateApp() ~> #calcReturn() ~> #stopIfError() ... </k>
-    requires getTxnField(getCurrentTxn(), TxType) ==K (@ appl)
+    requires getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)
 
   rule <k> #finalizeExecution() => #calcReturn() ~> #stopIfError() ... </k>
-    requires getTxnField(getCurrentTxn(), TxType) =/=K (@ appl)
+    requires getTxnField(getCurrentTxn(), TypeEnum) =/=K (@ appl)
 
   rule <k> #deactivateApp() => . ... </k>
        <currentApplicationID> APP_ID </currentApplicationID>
