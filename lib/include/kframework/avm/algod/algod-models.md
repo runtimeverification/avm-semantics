@@ -444,13 +444,19 @@ TODO: if an account contains an app, the state specification must also contain t
 
 ```k
     rule <k> #addTxnJSON({
+                           "aamt": AMOUNT:Int,
+                           "aclose": CLOSE_TO:String,
+                           "arcv": RECEIVER:String,
+                           "asnd": ASSET_SENDER:String,
+                           "fee": _FEE:Int,
+                           "fv": _FIRST_VALID:Int,
+                           "gen": _GEN:String,
+                           "gh": _,
+                           "grp": GROUP_ID:String,
+                           "lv": _LAST_VALID:Int,
                            "snd": SENDER:String,
                            "type": "axfer",
-                           "xaid": ASSET_ID:Int,
-                           "aamt": AMOUNT:Int,
-                           "asnd": ASSET_SENDER:String,
-                           "arcv": RECEIVER:String,
-                           "aclose": CLOSE_TO:String
+                           "xaid": ASSET_ID:Int
                          })
           => #pushTxnBack(<txID> Int2String(ID) </txID>) ...
         </k>
@@ -462,8 +468,8 @@ TODO: if an account contains an app, the state specification must also contain t
              <sender>      DecodeAddressString(SENDER)   </sender>
              <txType>      "axfer"    </txType>
              <typeEnum>    @ axfer    </typeEnum>
-             <groupID>     Int2String(GROUP_ID) </groupID>
-             <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx>
+             <groupID>     GROUP_ID </groupID>
+             <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>
              ...           // other fields will receive default values
            </txHeader>
            <assetTransferTxFields>
@@ -477,7 +483,6 @@ TODO: if an account contains an app, the state specification must also contain t
          </transaction>
          TXNS
        </transactions>
-       <nextGroupID> GROUP_ID </nextGroupID>
        <nextTxnID> ID => ID +Int 1 </nextTxnID>
 ```
 
