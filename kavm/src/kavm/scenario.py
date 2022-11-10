@@ -88,6 +88,8 @@ class KAVMScenario:
                     txn_dict['apap'] = None
                 if not 'apsu' in txn_dict:
                     txn_dict['apsu'] = None
+                if not 'apbx' in txn_dict:
+                    txn_dict['apbx'] = []
             return txn_dict
 
         result = []
