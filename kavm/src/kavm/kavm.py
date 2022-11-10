@@ -157,11 +157,11 @@ class KAVM(KRun):
             tmp_teals_file.flush()
 
             krun_command = ['krun', '--definition', str(self.definition_dir)]
-            krun_command += ['--output', 'none' if output == 'final-state-json' else output]
             krun_command += [f'-cTEAL_PROGRAMS={tmp_teals_file.name}']
             krun_command += [f'-pTEAL_PROGRAMS={str(self._catcat_parser)}']
             krun_command += ['--parser', str(self._scenario_parser)]
             krun_command += ['--depth', str(depth)] if depth else []
+            krun_command += ['--output', 'none' if output == 'final-state-json' else output]
             krun_command += [tmp_scenario_file.name]
             command_env = os.environ.copy()
             command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
