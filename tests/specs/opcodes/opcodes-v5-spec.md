@@ -354,6 +354,8 @@ claim <k> log => . </k>
             <txID> "1" </txID>
             <groupID> "1" </groupID>
             <sender> b"3" </sender>
+            <typeEnum> @ appl </typeEnum>
+            <txType> "appl" </txType>
             <resume> true </resume>
             ...
           </transaction>

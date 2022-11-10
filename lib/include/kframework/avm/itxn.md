@@ -167,10 +167,10 @@ module ALGO-ITXN
                <configAssetName>     .Bytes                      </configAssetName>
                <configAssetURL>      .Bytes                      </configAssetURL>
                <configMetaDataHash>  .Bytes                      </configMetaDataHash>
-               <configManagerAddr>   getGlobalField(ZeroAddress) </configManagerAddr>
-               <configReserveAddr>   getGlobalField(ZeroAddress) </configReserveAddr>
-               <configFreezeAddr>    getGlobalField(ZeroAddress) </configFreezeAddr>
-               <configClawbackAddr>  getGlobalField(ZeroAddress) </configClawbackAddr>
+               <configManagerAddr>   PARAM_ZERO_ADDR             </configManagerAddr>
+               <configReserveAddr>   PARAM_ZERO_ADDR             </configReserveAddr>
+               <configFreezeAddr>    PARAM_ZERO_ADDR             </configFreezeAddr>
+               <configClawbackAddr>  PARAM_ZERO_ADDR             </configClawbackAddr>
              </assetParams>
            </assetConfigTxFields>
            ...
@@ -258,9 +258,9 @@ module ALGO-ITXN
            <assetTransferTxFields>
              <xferAsset>     0                           </xferAsset>
              <assetAmount>   0                           </assetAmount>
-             <assetReceiver> getGlobalField(ZeroAddress) </assetReceiver>
-             <assetASender>  getGlobalField(ZeroAddress) </assetASender>
-             <assetCloseTo>  getGlobalField(ZeroAddress) </assetCloseTo>
+             <assetReceiver> {getGlobalField(ZeroAddress)}:>Bytes </assetReceiver>
+             <assetASender>  {getGlobalField(ZeroAddress)}:>Bytes </assetASender>
+             <assetCloseTo>  {getGlobalField(ZeroAddress)}:>Bytes </assetCloseTo>
            </assetTransferTxFields>
            ...
          </transaction>)

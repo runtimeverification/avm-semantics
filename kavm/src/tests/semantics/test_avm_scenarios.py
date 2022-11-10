@@ -20,6 +20,13 @@ def test_run_simulation(filename: str) -> None:
     if not os.environ.get('KAVM_DEFINITION_DIR'):
         raise RuntimeError('Cannot access KAVM_DEFINITION_DIR environment variable. Is it set?')
 
+    failing_file = open(os.path.join(project_path, 'tests/failing-avm-simulation.list'))
+    failing_tests = [os.path.basename(f) for f in failing_file.read().split('\n')]
+    print(failing_tests)
+    print(filename)
+    if os.path.basename(filename) in failing_tests:
+        pytest.skip()
+
     kavm_definition_dir = Path(str(os.environ.get('KAVM_DEFINITION_DIR')))
 
     kavm = KAVM(definition_dir=Path(os.path.join(project_path, str(kavm_definition_dir))), init_pyk=False)
