@@ -1,9 +1,13 @@
 """Command-line interface for KAVM"""
 
+import json
 import logging
 import os
+import shutil
 import sys
+import tempfile
 from argparse import ArgumentParser, Namespace
+from base64 import b64decode
 from pathlib import Path
 from subprocess import CalledProcessError
 from typing import Any, Final, List, Optional
@@ -11,6 +15,7 @@ from typing import Any, Final, List, Optional
 from pyk.cli_utils import dir_path, file_path
 
 from kavm.kompile import kompile
+from kavm.scenario import KAVMScenario
 
 from .kavm import KAVM
 
@@ -108,7 +113,7 @@ def exec_run(
     depth: Optional[int],
     **kwargs: Any,
 ) -> None:
-    kavm = KAVM(definition_dir=definition_dir, init_pyk=False)
+    kavm = KAVM(definition_dir=definition_dir)
 
     if not os.environ.get('KAVM_LIB'):
         raise RuntimeError('Cannot access KAVM_LIB environment variable. Is it set?')
@@ -122,17 +127,35 @@ def exec_run(
         avm_json_parser = definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
     try:
         if input_file.suffix == '.json':
-            proc_result = kavm.run_avm_json(
-                input_file=input_file,
-                output=output,
-                profile=profile,
-                teal_sources_dir=teal_sources_dir,
-                teal_parser=teal_parser,
-                avm_json_parser=avm_json_parser,
-                depth=depth,
-            )
-            if not output == 'none':
+            scenario = KAVMScenario.from_json(input_file.read_text())
+            with tempfile.TemporaryDirectory() as decompiled_teal_dir:
+                src_files = os.listdir(teal_sources_dir)
+                for file_name in src_files:
+                    full_file_name = os.path.join(teal_sources_dir, file_name)
+                    if os.path.isfile(full_file_name):
+                        shutil.copy(full_file_name, decompiled_teal_dir)
+                # BEWARE OF HACKKY CODE!
+                # if a teal file name does not end with `.teal`, it must be a base64 encoded source code.
+                # we dum this source code into a temporary directory for parsing, with the filename being the
+                # base64 encoded code itself
+                for teal in scenario._teal_files:
+                    if not teal.endswith('.teal'):
+                        with open(str(Path(decompiled_teal_dir) / teal), "w+t") as f:
+                            f.write(b64decode(teal).decode('utf-8'))
+                proc_result = kavm.run_avm_json(
+                    scenario=scenario.to_json(),
+                    teals=kavm.parse_teals(scenario._teal_files, Path(decompiled_teal_dir)),
+                    output=output,
+                    profile=profile,
+                    depth=depth if depth else 0,
+                )
+            if not output in ['none', 'final-state-json']:
                 print(proc_result.stdout)
+            if output == 'final-state-json' and proc_result.returncode == 0:
+                print(json.dumps(json.loads(proc_result.stderr), indent=4))
+            if proc_result.returncode:
+                print(proc_result.stdout)
+                print(proc_result.stderr)
             exit(proc_result.returncode)
         else:
             print(f'Unrecornised input file extension: {input_file.suffix}')
@@ -295,7 +318,7 @@ def create_argument_parser() -> ArgumentParser:
         dest='output',
         type=str,
         help='Output mode',
-        choices=['pretty', 'json', 'kore', 'kast', 'none'],
+        choices=['pretty', 'json', 'kore', 'kast', 'none', 'final-state-json'],
         required=True,
     )
     run_subparser.add_argument(

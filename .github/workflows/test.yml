@@ -85,9 +85,9 @@ jobs:
       - name: 'Test AVM semantics --- scenarious'
         run: |
           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'THREADS=4 make test-kavm-avm-simulation'
-      # - name: 'Test AVM semantics --- algod integration'
-      #   run: |
-      #     docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'THREADS=4 make test-kavm-algod'
+      - name: 'Test AVM semantics --- algod integration'
+        run: |
+          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'THREADS=4 make test-kavm-algod'
       # - name: 'Test AVM semantics --- proofs --- internal'
       #   run: |
       #     docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-internal-prove'

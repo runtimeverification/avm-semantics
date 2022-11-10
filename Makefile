@@ -330,6 +330,8 @@ generate-parsers:
              --module TEAL-PARSER-SYNTAX                      \
              --sort TealInputPgm                              \
              $(KAVM_DEFINITION_DIR)/parser_TealInputPgm_TEAL-PARSER-SYNTAX
+	echo 'cat $$(cat $$1)' > $(KAVM_DEFINITION_DIR)/catcat
+	@chmod +x $(KAVM_DEFINITION_DIR)/catcat
 
 # Installation
 # ------------
@@ -373,11 +375,6 @@ transient-coverage:
 
 $(BUILD_DIR)/coverage.html: $(BUILD_DIR)/coverage.xml
 	$(VENV_ACTIVATE) && pycobertura show --format html $(BUILD_DIR)/coverage.xml > $(BUILD_DIR)/coverage.html
-
-transient-coverage:
-	$(VENV_ACTIVATE) && $(KCOVR) $(KAVM_DEFINITION_DIR) \
-        -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
-	$(KAVM_SCRIPTS)/post-process-coverage $(BUILD_DIR)/coverage.xml
 
 coverage-html: $(BUILD_DIR)/coverage.html
 

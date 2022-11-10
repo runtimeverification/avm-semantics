@@ -39,12 +39,24 @@ TODO: if an account contains an app, the state specification must also contain t
 ```k
     syntax KItem ::= #addAccountJSON(JSON)
     //------------------------------------
-    rule <k> #addAccountJSON({ "address": ADDR:String
-                             , "amount": BALANCE:Int
-                             , "created-apps": [APPS:JSONs]
-                             , "created-assets": [ASSETS:JSONs]
-                             }
-             ) => #setupApplications([APPS]) ~> #setupAssets([ASSETS]) ... </k>
+    rule <k> #addAccountJSON({"address": ADDR:String,
+                              "amount": BALANCE:Int,
+                              "amount-without-pending-rewards": null,
+                              "apps-local-state": null,
+                              "apps-total-schema": null,
+                              "assets": null,
+                              "created-apps": [APPS:JSONs],
+                              "created-assets": [ASSETS:JSONs],
+                              "participation": null,
+                              "pending-rewards": null,
+                              "reward-base": null,
+                              "rewards": null,
+                              "round": null,
+                              "status": null,
+                              "sig-type": null,
+                              "auth-addr": null
+                             })
+          => #setupApplications([APPS]) ~> #setupAssets([ASSETS]) ... </k>
          <accountsMap>
            (.Bag =>
            <account>
@@ -60,6 +72,52 @@ TODO: if an account contains an app, the state specification must also contain t
            ...
          </accountsMap>
     rule <k> #addAccountJSON(INPUT:JSON) => panic("Invalid account JSON:" +String JSON2String(INPUT)) ... </k> [owise]
+
+    syntax JSONs ::= #dumpAccounts(AccountsMapCell)            [function]
+                   | #dumpAccountsImpl(JSONs, AccountsMapCell) [function]
+    //-------------------------------------------------------------------
+    rule #dumpAccounts(<accountsMap> ACCTS </accountsMap>)
+      => #dumpAccountsImpl((.JSONs), <accountsMap> ACCTS </accountsMap>)
+    rule #dumpAccountsImpl(
+         (SERIALIZED:JSONs),
+         <accountsMap>
+           <account> ACCT </account>
+           REST
+         </accountsMap>)
+      => #dumpAccountsImpl((#dumpAccountJSON(<account> ACCT </account>) , SERIALIZED) , <accountsMap> REST </accountsMap>)
+    rule #dumpAccountsImpl(
+         (SERIALIZED:JSONs),
+         <accountsMap>
+           .Bag
+         </accountsMap>)
+      => SERIALIZED
+
+    syntax JSON ::= #dumpAccountJSON(AccountCell) [function]
+    //------------------------------------------------------
+    rule #dumpAccountJSON(
+             <account>
+               <address> ADDR:Bytes </address>
+               <balance> BALANCE:Int </balance>
+               <appsCreated> APPS </appsCreated>
+               ...
+             </account>)
+          => {"address": EncodeAddressBytes(ADDR),
+              "amount": BALANCE,
+              "amount-without-pending-rewards": null,
+              "apps-local-state": null,
+              "apps-total-schema": null,
+              "assets": null,
+              "created-apps": [#dumpApps(EncodeAddressBytes(ADDR),<appsCreated> APPS </appsCreated>)],
+              "created-assets": [.JSONs],
+              "participation": null,
+              "pending-rewards": null,
+              "reward-base": null,
+              "rewards": null,
+              "round": null,
+              "status": null,
+              "sig-type": null,
+              "auth-addr": null
+             }
 ```
 
 ### Assets
@@ -193,7 +251,8 @@ TODO: if an account contains an app, the state specification must also contain t
     //---------------------------------------
 
     rule <k> #setupApplications([APP_JSON, REST]) => #addApplicationJSON(APP_JSON) ~> #setupApplications([REST]) ... </k>
-    rule <k> #setupApplications([.JSONs]) => .K ... </k>
+    rule <k> #setupApplications([.JSONs])         => .K ... </k>
+    rule <k> #setupApplications(null)             => .K ... </k>
 
     syntax KItem ::= #addApplicationJSON(JSON)
     //----------------------------------------
@@ -201,10 +260,9 @@ TODO: if an account contains an app, the state specification must also contain t
                                  , "params": { "creator"            : CREATOR_ADDR_STR:String
                                              , "approval-program"   : APPROVAL_NAME:String
                                              , "clear-state-program": CLEAR_STATE_NAME:String
-                                             , "extra-progam-pages" : EXTRA_PAGES:Int
-                                             , "local-state-schema" : LOCAL_STATE_SCHEMA:String
-                                             , "global-state-schema": GLOBAL_STATE_SCHEMA:String
-                                             , "global-state"       : GLOBAL_STATE:Int
+                                             , "local-state-schema" : { "nui": LOCAL_NUM_UINTS:Int, "nbs": LOCAL_NUM_BYTES:Int }
+                                             , "global-state-schema": { "nui": GLOBAL_NUM_UINTS:Int, "nbs": GLOBAL_NUM_BYTES:Int }
+                                             , "global-state"       : _GLOBAL_STATE
                                              }
                                  }
              ) => .K ... </k>
@@ -212,9 +270,20 @@ TODO: if an account contains an app, the state specification must also contain t
              <address> CREATOR_ADDR </address>
              <appsCreated>
              (.Bag => <app>
-                        <appID>            APP_ID                                                      </appID>
-                        <approvalPgmSrc>   {TEAL_PROGRAMS[ APPROVAL_NAME ]}:>TealInputPgm </approvalPgmSrc>
+                        <appID>            APP_ID                                            </appID>
+                        <approvalPgm>  APPROVAL_NAME                                     </approvalPgm>
+                        <approvalPgmSrc>   {TEAL_PROGRAMS[ APPROVAL_NAME ]}:>TealInputPgm    </approvalPgmSrc>
+                        <clearStatePgm> CLEAR_STATE_NAME                                 </clearStatePgm>
                         <clearStatePgmSrc> {TEAL_PROGRAMS[ CLEAR_STATE_NAME ]}:>TealInputPgm </clearStatePgmSrc>
+                        <globalState>
+                          <globalNumInts>   GLOBAL_NUM_UINTS      </globalNumInts>
+                          <globalNumBytes>  GLOBAL_NUM_BYTES      </globalNumBytes>
+                          ...
+                        </globalState>
+                        <localState>
+                          <localNumInts>    LOCAL_NUM_UINTS       </localNumInts>
+                          <localNumBytes>   LOCAL_NUM_BYTES       </localNumBytes>
+                        </localState>
                           ...
                        </app>)
              ...
@@ -224,6 +293,62 @@ TODO: if an account contains an app, the state specification must also contain t
            <tealPrograms> TEAL_PROGRAMS </tealPrograms>
        requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR
     rule <k> #addApplicationJSON(INPUT:JSON) => panic("Invalid app JSON:" +String JSON2String(INPUT)) ... </k> [owise]
+
+    syntax JSONs ::= #dumpApps(String, AppsCreatedCell)            [function]
+                   | #dumpAppsImpl(String, JSONs, AppsCreatedCell) [function]
+    //-----------------------------------------------------------------------
+    rule #dumpApps((CREATOR:String), <appsCreated> APPS </appsCreated>)
+      => #dumpAppsImpl((CREATOR:String), (.JSONs), <appsCreated> APPS </appsCreated>)
+    rule #dumpAppsImpl(
+         (CREATOR:String),
+         (SERIALIZED:JSONs),
+         <appsCreated>
+           <app> APP </app>
+           REST
+         </appsCreated>)
+      => #dumpAppsImpl((CREATOR:String), (#dumpAppJSON((CREATOR:String), <app> APP </app>) , SERIALIZED) , <appsCreated> REST </appsCreated>)
+    rule #dumpAppsImpl(
+         (CREATOR:String),
+         (SERIALIZED:JSONs),
+         <appsCreated>
+           .Bag
+         </appsCreated>)
+      => SERIALIZED
+
+
+    syntax JSON ::= #dumpAppJSON(String, AppCell) [function]
+    //------------------------------------------------------
+    rule #dumpAppJSON(
+             (CREATOR:String),
+             <app>
+               <appID>             APP_ID:Int              </appID>
+               <approvalPgm>   APPROVAL_NAME:String           </approvalPgm>
+               <clearStatePgm> CLEAR_STATE_NAME:String        </clearStatePgm>
+               <globalState>
+                 <globalNumInts>   GLOBAL_NUM_UINTS      </globalNumInts>
+                 <globalNumBytes>  GLOBAL_NUM_BYTES      </globalNumBytes>
+//                 <globalBytes>     _GLOBAL_UINTS       </globalBytes>
+//                 <globalInts>      _GLOBAL_BYTES       </globalInts>
+                 ...
+               </globalState>
+               <localState>
+                 <localNumInts>    LOCAL_NUM_UINTS       </localNumInts>
+                 <localNumBytes>   LOCAL_NUM_BYTES       </localNumBytes>
+               </localState>
+               <extraPages>        EXTRA_PAGES           </extraPages>
+               ...
+             </app>)
+          => { "id": APP_ID
+             , "params": { "creator"            : CREATOR
+                         , "approval-program"   : APPROVAL_NAME
+                         , "clear-state-program": CLEAR_STATE_NAME
+                         , "local-state-schema" : { "nui": maybeTUInt64(LOCAL_NUM_UINTS, 0)
+                                                  , "nbs": maybeTUInt64(LOCAL_NUM_BYTES, 0) }
+                         , "global-state-schema": { "nui": maybeTUInt64(GLOBAL_NUM_UINTS, 0)
+                                                  , "nbs": maybeTUInt64(GLOBAL_NUM_BYTES, 0) }
+                         , "global-state"       : null
+                         }
+             }
 ```
 
 ### Assets
@@ -231,6 +356,15 @@ TODO: if an account contains an app, the state specification must also contain t
 ## Transactions
 
 ```k
+
+    syntax String ::= #getTxnJSONType(JSON) [function]
+    //------------------------------------------------
+    rule #getTxnJSONType({ "type": TYPE:String,  _}) => TYPE
+    rule #getTxnJSONType({ KEY: _, REST}) => #getTxnJSONType(REST)
+      requires notBool (KEY ==String "type")
+    rule #getTxnJSONType({ .JSONs }) => "undef"
+
+
     syntax KItem ::= #setupTransactions(JSON)
     //---------------------------------------
 
@@ -269,11 +403,16 @@ TODO: if an account contains an app, the state specification must also contain t
 ### Payment
 
 ```k
-    rule <k> #addTxnJSON({
-                           "type": "pay",
-                           "snd": SENDER:String,
+    rule <k> #addTxnJSON({ "amt": AMOUNT:Int,
+                           "fee": _FEE:Int,
+                           "fv": _FIRST_VALID:Int,
+                           "gen": _GEN:String,
+                           "gh": _,
+                           "grp": GROUP_ID:String,
+                           "lv": _LAST_VALID:Int,
                            "rcv": RECEIVER:String,
-                           "amt": AMOUNT:Int
+                           "snd": SENDER:String,
+                           "type": "pay"
                          })
           => #pushTxnBack(<txID> Int2String(ID) </txID>) ...
         </k>
@@ -285,8 +424,8 @@ TODO: if an account contains an app, the state specification must also contain t
              <sender>      DecodeAddressString(SENDER)   </sender>
              <txType>      "pay"    </txType>
              <typeEnum>    @ pay    </typeEnum>
-             <groupID>     Int2String(GROUP_ID) </groupID>
-             <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx>
+             <groupID>     GROUP_ID </groupID>
+             <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>
              ...           // other fields will receive default values
            </txHeader>
            <payTxFields>
@@ -298,7 +437,6 @@ TODO: if an account contains an app, the state specification must also contain t
          </transaction>
          TXNS
        </transactions>
-       <nextGroupID> GROUP_ID </nextGroupID>
        <nextTxnID> ID => ID +Int 1 </nextTxnID>
 ```
 
@@ -306,13 +444,19 @@ TODO: if an account contains an app, the state specification must also contain t
 
 ```k
     rule <k> #addTxnJSON({
+                           "aamt": AMOUNT:Int,
+                           "aclose": CLOSE_TO:String,
+                           "arcv": RECEIVER:String,
+                           "asnd": ASSET_SENDER:String,
+                           "fee": _FEE:Int,
+                           "fv": _FIRST_VALID:Int,
+                           "gen": _GEN:String,
+                           "gh": _,
+                           "grp": GROUP_ID:String,
+                           "lv": _LAST_VALID:Int,
                            "snd": SENDER:String,
                            "type": "axfer",
-                           "xaid": ASSET_ID:Int,
-                           "aamt": AMOUNT:Int,
-                           "asnd": ASSET_SENDER:String,
-                           "arcv": RECEIVER:String,
-                           "aclose": CLOSE_TO:String
+                           "xaid": ASSET_ID:Int
                          })
           => #pushTxnBack(<txID> Int2String(ID) </txID>) ...
         </k>
@@ -324,8 +468,8 @@ TODO: if an account contains an app, the state specification must also contain t
              <sender>      DecodeAddressString(SENDER)   </sender>
              <txType>      "axfer"    </txType>
              <typeEnum>    @ axfer    </typeEnum>
-             <groupID>     Int2String(GROUP_ID) </groupID>
-             <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx>
+             <groupID>     GROUP_ID </groupID>
+             <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>
              ...           // other fields will receive default values
            </txHeader>
            <assetTransferTxFields>
@@ -339,7 +483,6 @@ TODO: if an account contains an app, the state specification must also contain t
          </transaction>
          TXNS
        </transactions>
-       <nextGroupID> GROUP_ID </nextGroupID>
        <nextTxnID> ID => ID +Int 1 </nextTxnID>
 ```
 
@@ -347,20 +490,26 @@ TODO: if an account contains an app, the state specification must also contain t
 
 ```k
     rule <k> #addTxnJSON({
-                           "snd":  SENDER:String,
-                           "type": "appl",
-                           "apid": APPLICATION_ID:Int,
-                           "apan": ON_COMPLETION:Int,
-                           "apat": ACCOUNTS:JSON,
                            "apaa": APPLICATION_ARGS:JSON,
-                           "apfa": FOREIGN_APPS:JSON,
+                           "apan": ON_COMPLETION:Int,
+                           "apap": APPROVAL_NAME:JSON,
                            "apas": FOREIGN_ASSETS:JSON,
+                           "apat": ACCOUNTS:JSON,
                            "apbx": BOX_REFS:JSON,
-                           "apgs": { "nui": GLOBAL_NUM_UINTS:Int, "nbs": GLOBAL_NUM_BYTES:Int },
-                           "apls": { "nui": LOCAL_NUM_UINTS:Int, "nbs": LOCAL_NUM_BYTES:Int },
                            "apep": EXTRA_PAGES:Int,
-                           "apap": APPROVAL_NAME:String,
-                           "apsu": CLEAR_STATE_NAME:String
+                           "apfa": FOREIGN_APPS:JSON,
+                           "apgs": { "nui": GLOBAL_NUM_UINTS:Int, "nbs": GLOBAL_NUM_BYTES:Int },
+                           "apid": APPLICATION_ID:Int,
+                           "apls": { "nui": LOCAL_NUM_UINTS:Int, "nbs": LOCAL_NUM_BYTES:Int },
+                           "apsu": CLEAR_STATE_NAME:JSON,
+                           "fee": _FEE:Int,
+                           "fv": _FIRST_VALID:Int,
+                           "gen": _GEN:String,
+                           "gh": _,
+                           "grp": GROUP_ID:String,
+                           "lv": _LAST_VALID:Int,
+                           "snd":  SENDER:String,
+                           "type": "appl"
                          })
           => #pushTxnBack(<txID> Int2String(ID) </txID>) ...
         </k>
@@ -372,15 +521,21 @@ TODO: if an account contains an app, the state specification must also contain t
              <sender>      DecodeAddressString(SENDER)   </sender>
              <txType>      "appl"    </txType>
              <typeEnum>    @ appl    </typeEnum>
-             <groupID>     Int2String(GROUP_ID) </groupID>
-             <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx>
+             <groupID>     GROUP_ID </groupID>
+             <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>
              ...           // other fields will receive default values
            </txHeader>
            <appCallTxFields>
              <applicationID> APPLICATION_ID </applicationID>
              <onCompletion> ON_COMPLETION </onCompletion>
-             <approvalProgramSrc> {TEAL_PROGRAMS[ APPROVAL_NAME ]}:>TealInputPgm </approvalProgramSrc>
-             <clearStateProgramSrc> {TEAL_PROGRAMS[ CLEAR_STATE_NAME ]}:>TealInputPgm </clearStateProgramSrc>
+             <approvalProgramSrc>
+               #if isString(progamFromJSON(APPROVAL_NAME)) #then {TEAL_PROGRAMS[ APPROVAL_NAME ]}:>TealInputPgm #else err:TealInputPgm #fi
+              </approvalProgramSrc>
+             <clearStateProgramSrc>
+               #if isString(progamFromJSON(CLEAR_STATE_NAME)) #then {TEAL_PROGRAMS[ CLEAR_STATE_NAME ]}:>TealInputPgm #else err:TealInputPgm #fi
+             </clearStateProgramSrc>
+             <approvalProgram>      progamFromJSON(APPROVAL_NAME)     </approvalProgram>
+             <clearStateProgram>    progamFromJSON(CLEAR_STATE_NAME)  </clearStateProgram>
              <accounts> JSONAccountsList2BytesList(ACCOUNTS) </accounts>
              <applicationArgs> JSONList2BytesList(APPLICATION_ARGS) </applicationArgs>
              <foreignApps> JSONIntList2TUint64List(FOREIGN_APPS) </foreignApps>
@@ -402,17 +557,18 @@ TODO: if an account contains an app, the state specification must also contain t
          TXNS
        </transactions>
        <tealPrograms> TEAL_PROGRAMS </tealPrograms>
-       <nextGroupID> GROUP_ID </nextGroupID>
        <nextTxnID> ID => ID +Int 1 </nextTxnID>
+
+    syntax MaybeTValue ::= progamFromJSON(JSON) [function, functional]
+    //----------------------------------------------------------------
+    rule progamFromJSON(PGM:String) => PGM
+    rule progamFromJSON(_)          => NoTValue [owise]
 ```
 
 ### Asset configure
 
 ```k
     rule <k> #addTxnJSON({
-                           "snd":  SENDER:String,
-                           "type": "acfg",
-                           "caid": ASSET_ID:Int,
                            "apar": {
                              "t": TOTAL:Int,
                              "dc": DECIMALS:Int,
@@ -425,7 +581,16 @@ TODO: if an account contains an app, the state specification must also contain t
                              "r": RESERVE_ADDR:String,
                              "f": FREEZE_ADDR:String,
                              "c": CLAWBACK_ADDR:String
-                           }
+                           },
+                           "caid": ASSET_ID:Int,
+                           "fee": _FEE:Int,
+                           "fv": _FIRST_VALID:Int,
+                           "gen": _GEN:String,
+                           "gh": _,
+                           "grp": GROUP_ID:String,
+                           "lv": _LAST_VALID:Int,
+                           "snd":  SENDER:String,
+                           "type": "acfg"
                          })
           => #pushTxnBack(<txID> Int2String(ID) </txID>) ...
         </k>
@@ -437,8 +602,8 @@ TODO: if an account contains an app, the state specification must also contain t
              <sender>      DecodeAddressString(SENDER)   </sender>
              <txType>      "acfg"    </txType>
              <typeEnum>    @ acfg    </typeEnum>
-             <groupID>     Int2String(GROUP_ID) </groupID>
-             <groupIdx>    groupSize(Int2String(GROUP_ID), <transactions> TXNS </transactions>) </groupIdx>
+             <groupID>     GROUP_ID </groupID>
+             <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>
              ...           // other fields will receive default values
            </txHeader>
            <assetConfigTxFields>
@@ -462,10 +627,63 @@ TODO: if an account contains an app, the state specification must also contain t
          TXNS
        </transactions>
        <tealPrograms> TEAL_PROGRAMS </tealPrograms>
-       <nextGroupID> GROUP_ID </nextGroupID>
        <nextTxnID> ID => ID +Int 1 </nextTxnID>
 ```
 
+
+```k
+    syntax JSONs ::= #dumpConfirmedTransactions(TransactionsCell)            [function]
+                   | #dumpConfirmedTransactionsImpl(JSONs, TransactionsCell) [function]
+    //-------------------------------------------------------------------
+    rule #dumpConfirmedTransactions(<transactions> TXNS </transactions>)
+      => #dumpConfirmedTransactionsImpl((.JSONs), <transactions> TXNS </transactions>)
+    rule #dumpConfirmedTransactionsImpl(
+         (SERIALIZED:JSONs),
+         <transactions>
+           <transaction> TXN </transaction>
+           REST
+         </transactions>)
+      => #dumpConfirmedTransactionsImpl((#dumpConfirmedTransactionJSON(<transaction> TXN </transaction>) , SERIALIZED) , <transactions> REST </transactions>)
+    rule #dumpConfirmedTransactionsImpl(
+         (SERIALIZED:JSONs),
+         <transactions>
+           .Bag
+         </transactions>)
+      => SERIALIZED
+
+    syntax JSON ::= #dumpConfirmedTransactionJSON(TransactionCell) [function]
+    //-----------------------------------------------------------------------
+    rule #dumpConfirmedTransactionJSON(
+          <transaction>
+            <txID> TX_ID:String </txID>
+            <applyData>
+              <txConfigAsset>   CREATED_ASSET_ID </txConfigAsset>
+              <txApplicationID> CREATED_APP_ID   </txApplicationID>
+              <log>
+                <logData> _LOG_DATA  </logData>
+                <logSize> _LOG_SIZE </logSize>
+              </log>
+              ...
+            </applyData>
+            ...
+          </transaction>)
+          =>{ "id"     : TX_ID
+            , "params" : { "asset-index": maybeTUInt64(CREATED_ASSET_ID, 0)
+                       , "application-index": maybeTUInt64(CREATED_APP_ID, 0)
+                       , "close-rewards": null
+                       , "closing-amount": null
+                       , "asset-closing-amount": null
+                       , "confirmed-round": 1
+                       , "receiver-rewards": null
+                       , "sender-rewards": null
+                       , "local-state-delta": null
+                       , "global-state-delta": null
+                       , "logs": null
+                       , "inner-txns": null
+                       , "txn": null
+                       }
+            }
+```
 
 ```k
 endmodule

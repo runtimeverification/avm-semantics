@@ -31,6 +31,7 @@ module AVM-TESTING
   imports AVM-CONFIGURATION
   imports ALGOD-MODELS
   imports AVM-EXECUTION
+  imports K-IO
 ```
 
 ```k
@@ -130,7 +131,7 @@ Note that the applications and ASAs are part of the accounts' state as well, and
   syntax TestingCommand ::= #checkExecutionResults(Int, Int)
   //--------------------------------------------------------
   rule <k> #checkExecutionResults(EXPECTED_RETURN_CODE, EXPECTED_PANIC_CODE)
-        => .K ...
+        => #dumpFinalState() ...
        </k>
        <returncode> RETURN_CODE => 0 </returncode>
        <paniccode> PANIC_CODE </paniccode>
@@ -151,6 +152,16 @@ Note that the applications and ASAs are part of the accounts' state as well, and
        <returncode> _RETURN_CODE => 5 </returncode>
        <paniccode>  PANIC_CODE       </paniccode>
    requires notBool (PANIC_CODE ==Int EXPECTED_PANIC_CODE)
+
+  syntax TestingCommand ::= #dumpFinalState()
+  //-----------------------------------------
+  rule <k> #dumpFinalState()
+        => #log(JSON2String({ "accounts": [ #dumpAccounts(<accountsMap> ACCS </accountsMap>)]
+                            , "transactions": [ #dumpConfirmedTransactions(<transactions> TXNS </transactions>)]}))
+            ...
+       </k>
+       <accountsMap>  ACCS </accountsMap>
+       <transactions> TXNS </transactions>
 
 ```
 
