@@ -1,1 +1,2 @@
-tests/scenarios/opcode-budget-test.0.avm-simulation
+tests/json-scenarios/opcode-budget-test.json
+tests/json-scenarios/txnas-stacksize.json

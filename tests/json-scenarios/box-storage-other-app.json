@@ -1,0 +1,81 @@
+{
+    "stages": [
+        {
+            "stage-type": "setup-network",
+            "data": {
+                "accounts": [
+                    {
+                        "address": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "amount": 2000000,
+                        "created-apps": [],
+                        "created-assets": []
+                    }
+                ]
+            }
+        },
+        {
+            "stage-type": "execute-transactions",
+            "data": {
+                "transactions": [
+                    {
+                        "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "type": "appl",
+                        "apid": 0,
+                        "apan": 0,
+                        "apat": [],
+                        "apaa": [
+                            1
+                        ],
+                        "apfa": [],
+                        "apas": [],
+                        "apbx": [],
+                        "apgs": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apls": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apep": 0,
+                        "apap": "box-storage-other-app.teal",
+                        "apsu": "clear-basic.teal"
+                    },
+                    {
+                        "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "type": "appl",
+                        "apid": 0,
+                        "apan": 0,
+                        "apat": [],
+                        "apaa": [
+                            2
+                        ],
+                        "apfa": [
+                            1
+                        ],
+                        "apas": [],
+                        "apbx": [
+                            {
+                                "n": "box1",
+                                "i": 1
+                            }
+                        ],
+                        "apgs": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apls": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apep": 0,
+                        "apap": "box-storage-other-app.teal",
+                        "apsu": "clear-basic.teal"
+                    }
+                ]
+            },
+            "expected-returncode": 0,
+            "expected-paniccode": 0
+        }
+    ]
+}

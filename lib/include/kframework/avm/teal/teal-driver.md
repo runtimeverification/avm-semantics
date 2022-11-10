@@ -9,6 +9,7 @@ requires "avm/itxn.md"
 requires "avm/teal/teal-syntax.md"
 requires "avm/teal/teal-stack.md"
 requires "avm/teal/teal-execution.md"
+requires "avm/panics.md"
 ```
 
 TEAL Interpreter
@@ -24,6 +25,7 @@ module TEAL-DRIVER
   imports TEAL-EXECUTION
   imports TEAL-STACK
   imports KRYPTO
+  imports AVM-PANIC
 ```
 
 This module describes the semantics of TEAL opcodes.

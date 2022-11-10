@@ -88,6 +88,15 @@ module OPCODES-V3-SPEC
 ```k
   claim <k> assert => . </k>
         <stack> 0 : _ </stack>
+        <currentTx> TX_ID </currentTx>
+        <transactions>
+          <transaction>
+            <txID> TX_ID </txID>
+            <typeEnum> @ appl </typeEnum>
+            <txType> "appl" </txType>
+            ...
+          </transaction>
+        </transactions>
         <returncode> 4 => 3 </returncode>
         <currentApplicationID> APP_ID </currentApplicationID>
         <activeApps> SetItem(APP_ID) => .Set </activeApps>

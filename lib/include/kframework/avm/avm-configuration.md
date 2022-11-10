@@ -3,6 +3,7 @@ requires "json.md"
 requires "avm/blockchain.md"
 requires "avm/teal/teal-syntax.md"
 requires "avm/teal/teal-stack.md"
+requires "avm/panics.md"
 ```
 
 Algorand Vitual Machine State
@@ -18,6 +19,7 @@ module AVM-CONFIGURATION
   imports TEAL-INTERPRETER-STATE
   imports TEAL-SYNTAX
   imports ID-SYNTAX
+  imports AVM-PANIC
 
   configuration
     <kavm>
@@ -169,12 +171,7 @@ These are AVM-specific panic behaviors, caused by issues like depleted balances,
 
   syntax AlgorandCommand ::= #avmPanic(String, String)
   //-------------------------------------------
-  rule <k> #avmPanic(TXN_ID, S) ~> _ => .K </k>
-       <returncode> _ => 3 </returncode>
-       <returnstatus> _ => "Failure - when executing transaction " +String TXN_ID
-                           +String ": " +String S
-       </returnstatus>
-       <paniccode> _ => panicCode(S) </paniccode>
+  rule <k> #avmPanic(_, S) ~> panic(S) => .K </k>
 
 endmodule
 ```
