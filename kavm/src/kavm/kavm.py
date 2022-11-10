@@ -35,6 +35,7 @@ class KAVM(KRun):
             self._logger = _LOGGER
         else:
             self._logger = logger
+        self._catcat_parser = definition_dir / 'catcat'
         self._teal_parser = teal_parser if teal_parser else definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
         self._scenario_parser = (
             scenario_parser if scenario_parser else definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
@@ -146,14 +147,19 @@ class KAVM(KRun):
 
         sanitized_scenario = KAVMScenario.from_json(scenario).to_json()
 
-        with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_scenario_file:
+        with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_scenario_file, tempfile.NamedTemporaryFile(
+            'w+t', delete=False
+        ) as tmp_teals_file:
             tmp_scenario_file.write(sanitized_scenario)
             tmp_scenario_file.flush()
 
+            tmp_teals_file.write(teals)
+            tmp_teals_file.flush()
+
             krun_command = ['krun', '--definition', str(self.definition_dir)]
             krun_command += ['--output', 'none' if output == 'final-state-json' else output]
-            krun_command += [f'-cTEAL_PROGRAMS={teals}']
-            krun_command += ['-pTEAL_PROGRAMS=cat']
+            krun_command += [f'-cTEAL_PROGRAMS={tmp_teals_file.name}']
+            krun_command += [f'-pTEAL_PROGRAMS={str(self._catcat_parser)}']
             krun_command += ['--parser', str(self._scenario_parser)]
             krun_command += ['--depth', str(depth)] if depth else []
             krun_command += [tmp_scenario_file.name]

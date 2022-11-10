@@ -330,6 +330,8 @@ generate-parsers:
              --module TEAL-PARSER-SYNTAX                      \
              --sort TealInputPgm                              \
              $(KAVM_DEFINITION_DIR)/parser_TealInputPgm_TEAL-PARSER-SYNTAX
+	echo 'cat $$(cat $$1)' > $(KAVM_DEFINITION_DIR)/catcat
+	@chmod +x $(KAVM_DEFINITION_DIR)/catcat
 
 # Installation
 # ------------
