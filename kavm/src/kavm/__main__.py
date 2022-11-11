@@ -158,7 +158,7 @@ def exec_run(
                 print(proc_result.stderr)
             exit(proc_result.returncode)
         else:
-            print(f'Unrecornised input file extension: {input_file.suffix}')
+            print(f'Unrecognized input file extension: {input_file.suffix}')
             exit(1)
     except CalledProcessError as err:
         if not output == 'none':
