@@ -433,7 +433,6 @@ We define the syntax of TEAL's comments (using K's built-in sort `#Layout`), alo
   syntax Label           ::= r"({AlnumUbar}|{Special})+" [token]
   syntax HexToken        ::= r"0x{HexDigit}+"            [prec(2),token]
   syntax TAddressLiteral ::= r"[0-9A-Z]{58}"             [prec(1),token]
-//  syntax #UpperID ::= TAddressLiteral [token]
 ```
 
 NOTE: the following definitions are _disabled_.
