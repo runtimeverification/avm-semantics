@@ -43,6 +43,7 @@ module GLOBALS
       <latestTimestamp>           0 </latestTimestamp>
       <currentApplicationID>      0 </currentApplicationID>
       <currentApplicationAddress> .Bytes </currentApplicationAddress>
+      <creatorAddress>            .Bytes </creatorAddress>
     </globals>
 ```
 
@@ -76,6 +77,12 @@ module GLOBALS
   rule [[ getGlobalField(CurrentApplicationAddress) => V ]]
        <globals>
          <currentApplicationAddress> V </currentApplicationAddress>
+         ...
+       </globals>
+
+  rule [[ getGlobalField(CreatorAddress) => V ]]
+       <globals>
+         <creatorAddress> V </creatorAddress>
          ...
        </globals>
 ```

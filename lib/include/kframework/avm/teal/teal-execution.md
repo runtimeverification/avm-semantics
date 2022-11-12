@@ -57,9 +57,11 @@ there may be some remaining artefacts of the previous transaction's TEAL.
   rule <k> #initApp(APP_ID) => . ...</k>
        <currentApplicationID> _ => APP_ID </currentApplicationID>
        <currentApplicationAddress> _ => getAppAddressBytes(APP_ID) </currentApplicationAddress>
+       <creatorAddress> _ => {AC [ APP_ID ]}:>Bytes </creatorAddress>
        <activeApps> (.Set => SetItem(APP_ID)) REST </activeApps>
        <lastTxnGroupID> _ => "" </lastTxnGroupID>
        <mode> _ => stateful </mode>
+       <appCreator> AC </appCreator>
     requires notBool(APP_ID in REST)
 ```
 
