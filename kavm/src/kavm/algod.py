@@ -1,15 +1,15 @@
 import json
 import logging
 import os
-from base64 import b64decode, b64encode
+from base64 import b64encode
 from pathlib import Path
 from pprint import PrettyPrinter
 from subprocess import CalledProcessError
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, cast
 
 import msgpack
 from algosdk import encoding
-from algosdk.future.transaction import Transaction
+from algosdk.future.transaction import PaymentTxn, Transaction
 from algosdk.v2client import algod
 
 from kavm import constants
@@ -202,21 +202,12 @@ class KAVMClient(algod.AlgodClient):
             if not txn.sender in self._accounts.keys():
                 self._accounts[txn.sender] = KAVMAccount(address=txn.sender, amount=0)
             if hasattr(txn, 'receiver'):
+                txn = cast(PaymentTxn, txn)
                 if not txn.receiver in self._accounts.keys():
                     self._accounts[txn.receiver] = KAVMAccount(address=txn.receiver, amount=0)
 
-        scenario = KAVMClient._construct_scenario(
-            accounts=self._accounts.values(), transactions=[t.dictify() for t in txns]
-        )
+        scenario = self._construct_scenario(accounts=self._accounts.values(), transactions=txns)
 
-        # BEWARE OF HACKKY CODE!
-        # if a teal file name does not end with `.teal`, it must be a base64 encoded source code.
-        # we dum this source code into a temporary directory for parsing, with the filename being the
-        # base64 encoded code itself
-        for teal in scenario._teal_files:
-            if teal and not teal.endswith('.teal'):
-                with open(str(self._decompiled_teal_dir_path / teal), "w+t") as f:
-                    f.write(b64decode(teal).decode('utf-8'))
         try:
             self.algodLogger.debug(f'Executing scenario: {json.dumps(scenario.dictify(), indent=4)}')
             proc_result = self.kavm.run_avm_json(
@@ -250,10 +241,9 @@ class KAVMClient(algod.AlgodClient):
             self._committed_txns[txn['id']] = txn['params']
         return {'txId': final_state['transactions'][0]['id']}
 
-    @staticmethod
-    def _construct_scenario(accounts: Iterable[KAVMAccount], transactions: Iterable[Transaction]) -> KAVMScenario:
+    def _construct_scenario(self, accounts: Iterable[KAVMAccount], transactions: Iterable[Transaction]) -> KAVMScenario:
         """Construct a JSON simulation scenario to run on KAVM"""
-        return KAVMScenario.from_json(
+        scenario = KAVMScenario.from_json(
             json.dumps(
                 {
                     "stages": [
@@ -261,7 +251,9 @@ class KAVMClient(algod.AlgodClient):
                         {
                             "stage-type": "execute-transactions",
                             "data": {
-                                "transactions": [KAVMTransaction.sanitize_byte_fields(txn) for txn in transactions]
+                                "transactions": [
+                                    KAVMTransaction.sanitize_byte_fields(txn.dictify()) for txn in transactions
+                                ]
                             },
                             "expected-returncode": 0,
                             "expected-paniccode": 0,
@@ -270,3 +262,5 @@ class KAVMClient(algod.AlgodClient):
                 }
             )
         )
+        scenario.decompile_teal_programs(self._decompiled_teal_dir_path)
+        return scenario

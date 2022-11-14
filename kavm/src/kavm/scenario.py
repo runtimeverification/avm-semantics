@@ -1,5 +1,7 @@
 import json
+from base64 import b64decode
 from collections import OrderedDict
+from pathlib import Path
 from typing import Any, Dict, List, Set
 
 from kavm.adaptors.algod_account import KAVMAccount
@@ -17,6 +19,7 @@ class KAVMScenario:
 
     @staticmethod
     def sanitize_accounts(accounts_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Given a dictionary representing an Account, insert missing keys with default values"""
         result = []
         for acc_dict in accounts_data:
             acc_dict_translated = {KAVMAccount.inverted_attribute_map[k]: v for k, v in acc_dict.items()}
@@ -32,6 +35,7 @@ class KAVMScenario:
 
     @staticmethod
     def sanitize_apps(apps_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Given a dictionary representing an Applicaiton, insert missing keys with default values"""
         result = []
         for app_dict in apps_data:
             app_params_translated = {
@@ -44,6 +48,9 @@ class KAVMScenario:
 
     @staticmethod
     def sanitize_transactions(txn_data: List[Dict[str, Any]]) -> List[OrderedDict[str, Any]]:
+        """Given a dictionary representing a Transaction, insert missing keys with default values,
+        and sort the keys in lexicographic order"""
+
         def _sort_txn_dict(txn_dict: Dict[str, Any]) -> OrderedDict[str, Any]:
             od = OrderedDict()
             for k, v in sorted(txn_dict.items()):
@@ -104,6 +111,17 @@ class KAVMScenario:
 
     def to_json(self) -> str:
         return json.dumps(self.dictify())
+
+    def decompile_teal_programs(self, decompiled_teal_dir: Path) -> None:
+        """
+        If a teal file name does not end with `.teal`, it must be a base64 encoded source code.
+        We dump this source code into a file in the specified directory for parsing,
+        with the filename being the base64 encoded code itself.
+        """
+        for teal in self._teal_files:
+            if teal and not teal.endswith('.teal'):
+                with open(str(decompiled_teal_dir / teal), "w+t") as f:
+                    f.write(b64decode(teal).decode('utf-8'))
 
     @staticmethod
     def from_json(scenario_json_str: str) -> 'KAVMScenario':
