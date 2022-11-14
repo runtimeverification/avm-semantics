@@ -247,6 +247,31 @@ TODO: if an account contains an app, the state specification must also contain t
 ### Applications
 
 ```k
+
+    syntax KItem ::= #loadGlobalState(Int, JSONs)
+    //-------------------------------------------
+    rule <k> #loadGlobalState(APP_ID, {"key": K:String, "value": {"type": 1, "bytes": V:String, _} }, REST:JSONs ) => #loadGlobalState(APP_ID, REST) ... </k>
+         <app>
+           <appID> APP_ID </appID>
+           <globalState>
+             <globalBytes> .Map => (String2Bytes(K) |-> String2Bytes(V)) ... </globalBytes>
+             ...
+           </globalState>
+           ...
+         </app>
+
+    rule <k> #loadGlobalState(APP_ID, {"key": K:String, "value": {"type": 2, _, "uint": V:Int} }, REST:JSONs ) => #loadGlobalState(APP_ID, REST) ... </k>
+         <app>
+           <appID> APP_ID </appID>
+           <globalState>
+             <globalInts> .Map => (String2Bytes(K) |-> V) ... </globalInts>
+             ...
+           </globalState>
+           ...
+         </app>
+
+    rule <k> #loadGlobalState(_, .JSONs) => . ... </k>
+    
     syntax KItem ::= #setupApplications(JSON)
     //---------------------------------------
 
@@ -262,10 +287,10 @@ TODO: if an account contains an app, the state specification must also contain t
                                              , "clear-state-program": CLEAR_STATE_NAME:String
                                              , "local-state-schema" : { "nui": LOCAL_NUM_UINTS:Int, "nbs": LOCAL_NUM_BYTES:Int }
                                              , "global-state-schema": { "nui": GLOBAL_NUM_UINTS:Int, "nbs": GLOBAL_NUM_BYTES:Int }
-                                             , "global-state"       : _GLOBAL_STATE
+                                             , "global-state"       : [GLOBAL_STATE:JSONs]
                                              }
                                  }
-             ) => .K ... </k>
+             ) => #loadGlobalState(APP_ID, GLOBAL_STATE) ... </k>
            <account>
              <address> CREATOR_ADDR </address>
              <appsCreated>

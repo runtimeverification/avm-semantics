@@ -1,0 +1,70 @@
+{
+    "stages": [
+        {
+            "stage-type": "setup-network",
+            "data": {
+                "accounts": [
+                    {
+                        "address": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "amount": 200000,
+                        "created-apps": [
+                            {
+                                "id": 1,
+                                "params": { 
+                                    "creator": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                                    "approval-program": "global-storage-setup.teal",
+                                    "clear-state-program": "clear-basic.teal",
+                                    "local-state-schema": { 
+                                        "nui": 0,
+                                        "nbs": 0
+                                    }, 
+                                    "global-state-schema": { 
+                                        "nui": 3,
+                                        "nbs": 0
+                                    },
+                                    "global-state": [
+                                       { "key": "key1", "value": {"type": 2, "bytes": "", "uint": 1 }},
+                                       { "key": "key2", "value": {"type": 1, "bytes": "two", "uint": 0 }},
+                                       { "key": "key3", "value": {"type": 2, "bytes": "", "uint": 3 }}
+                                    ]
+                                }
+                            }
+                        ],
+                        "created-assets": []
+                    }
+                ]
+            }
+        },
+        {
+            "stage-type": "execute-transactions",
+            "data": {
+                "transactions": [
+                    {
+                        "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "type": "appl",
+                        "apid": 1,
+                        "apan": 0,
+                        "apat": [],
+                        "apaa": [],
+                        "apfa": [],
+                        "apas": [],
+                        "apbx": [],
+                        "apgs": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apls": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apep": 0,
+                        "apap": "global-storage-setup.teal",
+                        "apsu": "clear-basic.teal"
+                    }
+                ]
+            },
+            "expected-returncode": 0,
+            "expected-paniccode": 0
+        }
+    ]
+}
