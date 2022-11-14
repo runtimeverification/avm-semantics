@@ -578,8 +578,18 @@ module OPCODES-V2-SPEC
   claim <k> return ~> #incrementPC() ~> #fetchOpcode() => . </k>
         <stack> (1 : 2 : .TStack) => (1 : .TStack) </stack>
         <stacksize> 2 => 1 </stacksize>
+        <currentTx> TX_ID </currentTx>
+        <transactions>
+          <transaction>
+            <txID> TX_ID </txID>
+            <typeEnum> @ appl </typeEnum> 
+            <txType> "appl" </txType>
+            ...
+          </transaction>
+        </transactions>
         <currentApplicationID> APP_ID:Int </currentApplicationID>
         <activeApps> (SetItem(APP_ID) .Set) => .Set </activeApps>
+        <paniccode> 0 </paniccode>
         <returncode> 4 => 0 </returncode>
         <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
 

@@ -88,9 +88,21 @@ module OPCODES-V3-SPEC
 ```k
   claim <k> assert => . </k>
         <stack> 0 : _ </stack>
-        <returncode> _ => 3 </returncode>
+        <currentTx> TX_ID </currentTx>
+        <transactions>
+          <transaction>
+            <txID> TX_ID </txID>
+            <typeEnum> @ appl </typeEnum>
+            <txType> "appl" </txType>
+            ...
+          </transaction>
+        </transactions>
+        <returncode> 4 => 3 </returncode>
+        <currentApplicationID> APP_ID </currentApplicationID>
+        <activeApps> SetItem(APP_ID) => .Set </activeApps>
         <returnstatus> _ => "Failure - panic: assertion violation" </returnstatus>
         <paniccode> _ => 24 </paniccode>
+        <panicstatus> _ => "assertion violation" </panicstatus>
 
   claim <k> assert => . </k>
         <stack> N : XS => XS </stack>

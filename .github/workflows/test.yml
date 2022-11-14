@@ -76,10 +76,9 @@ jobs:
         run: |
           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'cd deps/plugin && make clean'
           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make build'
-      - name: 'Test kavm kast'
+      - name: 'Test Bison parsers '
         run: |
-          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-kast-teal'
-          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-kast-avm-scenario'
+          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-bison-parsers'
       - name: 'Test standalone AVM C++ hooks'
         run: |
           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 build-kavm-hooks-tests'
@@ -89,15 +88,15 @@ jobs:
       - name: 'Test AVM semantics --- algod integration'
         run: |
           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'THREADS=4 make test-kavm-algod'
-      - name: 'Test AVM semantics --- proofs --- internal'
-        run: |
-          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-internal-prove'
+      # - name: 'Test AVM semantics --- proofs --- internal'
+      #   run: |
+      #     docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-internal-prove'
       - name: 'Test AVM semantics --- proofs --- opcodes'
         run: |
-          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-opcode-prove'
-      - name: 'Test AVM semantics --- proofs --- simple'
-        run: |
-          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-simple-prove'
+           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-opcode-prove'
+      # - name: 'Test AVM semantics --- proofs --- simple'
+      #   run: |
+      #     docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-simple-prove'
       - name: 'Tear down Docker'
         if: always()
         run: |

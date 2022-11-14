@@ -6,8 +6,9 @@ requires "avm/itxn.md"
 requires "avm/teal/teal-syntax.md"
 requires "avm/teal/teal-driver.md"
 requires "avm/avm-configuration.md"
-requires "avm/avm-initialization.md"
+requires "avm/algod/algod-models.md"
 requires "avm/avm-txn-deque.md"
+requires "avm/avm-initialization.md"
 
 module AVM-EXECUTION-SYNTAX
   imports INT
@@ -17,10 +18,9 @@ module AVM-EXECUTION-SYNTAX
   imports ALGO-BLOCKCHAIN
   imports ALGO-TXN
   imports ALGO-ITXN
-  imports AVM-CONFIGURATION
-  imports AVM-INITIALIZATION
   imports TEAL-SYNTAX
   imports TEAL-DRIVER
+  imports AVM-INITIALIZATION
 ```
 
 Top-level model control rules
@@ -68,14 +68,14 @@ and the current configuration is frozen for examination.
   //-------------------------------------------
   rule <k> #setMode(MODE) => . ...</k>
        <mode> _ => MODE </mode>
-  
+
   // #evalTxGroup
   //---------------------------------------
-  rule <k> #evalTxGroup() => #initTxGroup() ~> #initTxnIndexMap() ~> #evalNextTx() ...</k>
+  rule <k> #evalTxGroup() => #initTxnIndexMap() ~> #evalNextTx() ...</k>
 
   syntax AlgorandCommand ::= #evalNextTx()
 
-  rule <k> (#evalNextTx() ~> _) => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalNextTx() </k>
+  rule <k> #evalNextTx() => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalNextTx() ... </k>
        <deque> TXN_DEQUE </deque>
     requires TXN_DEQUE =/=K .List
 
@@ -531,10 +531,10 @@ Modify asset
          <assetClawbackAddr>  _ => CLAWB_ADDR        </assetClawbackAddr>
          ...
        </asset>
-    requires isTValue(MANAGER_ADDR) 
-      orBool isTValue(RESERVE_ADDR) 
-      orBool isTValue(FREEZE_ADDR) 
-      orBool isTValue(CLAWB_ADDR)
+    requires MANAGER_ADDR =/=K getGlobalField(ZeroAddress)
+      orBool RESERVE_ADDR =/=K getGlobalField(ZeroAddress)
+      orBool FREEZE_ADDR  =/=K getGlobalField(ZeroAddress)
+      orBool CLAWB_ADDR   =/=K getGlobalField(ZeroAddress)
 ```
 
 Destroy asset
@@ -554,10 +554,10 @@ transaction by the lack of any asset parameters.""
          <txID>                TXN_ID          </txID>
          <sender>              SENDER          </sender>
          <configAsset>         ASSET_ID:TValue </configAsset>
-         <configManagerAddr>   NoTValue        </configManagerAddr>
-         <configReserveAddr>   NoTValue        </configReserveAddr>
-         <configFreezeAddr>    NoTValue        </configFreezeAddr>
-         <configClawbackAddr>  NoTValue        </configClawbackAddr>
+         <configManagerAddr>   MANAGER_ADDR    </configManagerAddr>
+         <configReserveAddr>   RESERVE_ADDR    </configReserveAddr>
+         <configFreezeAddr>    FREEZE_ADDR     </configFreezeAddr>
+         <configClawbackAddr>  CLAWB_ADDR      </configClawbackAddr>
          ...
        </transaction>
        <account>
@@ -583,6 +583,10 @@ transaction by the lack of any asset parameters.""
          ...
        </account>
        <assetCreator> (ASSET_ID |-> CREATOR) => .Map ...</assetCreator>
+    requires MANAGER_ADDR ==K getGlobalField(ZeroAddress)
+     andBool RESERVE_ADDR ==K getGlobalField(ZeroAddress)
+     andBool FREEZE_ADDR  ==K getGlobalField(ZeroAddress)
+     andBool CLAWB_ADDR   ==K getGlobalField(ZeroAddress)
 ```
 
 Modify/delete asset no permission case
@@ -619,10 +623,11 @@ Asset transfer goes through if:
          <xferAsset>     ASSET_ID </xferAsset>
          <assetReceiver> RECEIVER </assetReceiver>
          <assetAmount>   AMOUNT   </assetAmount>
-         <assetCloseTo>  NoTValue </assetCloseTo>
+         <assetCloseTo>  CLOSE_TO </assetCloseTo>
          ...
        </transaction>
     requires hasOptedInAsset(ASSET_ID, SENDER)
+     andBool CLOSE_TO ==K getGlobalField(ZeroAddress)
 ```
 
 Asset transfer with a non-zero amount fails if:
@@ -636,7 +641,7 @@ Asset transfer with a non-zero amount fails if:
          <txID>          TXN_ID   </txID>
          <sender>        SENDER   </sender>
          <xferAsset>     ASSET_ID </xferAsset>
-         <assetCloseTo>  NoTValue </assetCloseTo>
+         <assetCloseTo>  CLOSE_TO </assetCloseTo>
          ...
        </transaction>
        <account>
@@ -648,8 +653,9 @@ Asset transfer with a non-zero amount fails if:
          ...
        </account>
     requires SENDER =/=K RECEIVER
-      andBool (notBool hasOptedInAsset(ASSET_ID, SENDER)
-        orBool notBool hasOptedInAsset(ASSET_ID, RECEIVER))
+     andBool CLOSE_TO ==K getGlobalField(ZeroAddress)
+     andBool (notBool hasOptedInAsset(ASSET_ID, SENDER)
+      orBool notBool hasOptedInAsset(ASSET_ID, RECEIVER))
 
   rule <k> #executeTxn(@axfer) => #avmPanic(TXN_ID, ASSET_FROZEN_FOR_SENDER) ... </k>
        <currentTx> TXN_ID </currentTx>
@@ -688,7 +694,7 @@ Asset opt-in goes through if:
          <xferAsset>     ASSET_ID </xferAsset>
          <assetReceiver> SENDER   </assetReceiver>
          <assetAmount>   0        </assetAmount>
-         <assetCloseTo>  NoTValue </assetCloseTo>
+         <assetCloseTo>  CLOSE_TO </assetCloseTo>
          ...
        </transaction>
        <account>
@@ -708,6 +714,7 @@ Asset opt-in goes through if:
          ...
        </account>
     requires assetCreated(ASSET_ID)
+     andBool CLOSE_TO ==K getGlobalField(ZeroAddress)
      andBool notBool hasOptedInAsset(ASSET_ID, SENDER)
 ```
 
@@ -727,9 +734,10 @@ Asset opt-in goes through if:
          <xferAsset>     ASSET_ID        </xferAsset>
          <assetReceiver> RECEIVER        </assetReceiver>
          <assetAmount>   AMOUNT          </assetAmount>
-         <assetCloseTo>  CLOSE_TO:TValue </assetCloseTo>
+         <assetCloseTo>  CLOSE_TO        </assetCloseTo>
          ...
        </transaction>
+    requires CLOSE_TO =/=K getGlobalField(ZeroAddress)
 ```
 
 * **Asset Freeze**

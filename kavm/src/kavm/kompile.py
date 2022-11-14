@@ -19,6 +19,7 @@ def kompile(
     hook_cpp_files: Optional[List[Path]] = None,
     hook_clang_flags: Optional[List[str]] = None,
     coverage: bool = False,
+    gen_bison_parser: bool = False,
 ) -> KAVM:
     if backend == 'llvm':
         generate_interpreter(
@@ -32,6 +33,7 @@ def kompile(
             hook_cpp_files,
             hook_clang_flags,
             coverage=coverage,
+            gen_bison_parser=gen_bison_parser,
         )
     elif backend == 'haskell':
         kompile_haskell(
@@ -89,6 +91,7 @@ def generate_interpreter(
     hook_cpp_files: Optional[List[Path]] = None,
     hook_clang_flags: Optional[List[str]] = None,
     coverage: bool = False,
+    gen_bison_parser: bool = False,
 ) -> None:
     '''Kompile KAVM to produce an LLVM-based interpreter'''
 
@@ -102,6 +105,7 @@ def generate_interpreter(
 
         command += ['--verbose']
         command += ['--emit-json']
+        command += ['--gen-glr-bison-parser'] if gen_bison_parser else []
         command += ['--main-module', main_module_name] if main_module_name else []
         command += ['--syntax-module', syntax_module_name] if syntax_module_name else []
         command += [str(arg) for include in includes for arg in ['-I', include]] if includes else []

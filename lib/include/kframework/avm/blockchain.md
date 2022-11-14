@@ -4,6 +4,7 @@ Algorand Blockchain Model
 ```k
 requires "avm/teal/teal-constants.md"
 requires "avm/teal/teal-fields.md"
+requires "avm/teal/teal-syntax.md"
 requires "avm/additional-fields.md"
 requires "avm/txn.md"
 requires "constants.md"
@@ -100,22 +101,22 @@ module APPLICATIONS
   configuration
     <appsCreated>
       <app multiplicity="*" type="Map">
-        <appID>           NoTValue  </appID>
-        <approvalPgmSrc>     (int 0):TealInputPgm </approvalPgmSrc>
-        <clearStatePgmSrc>   (int 1):TealInputPgm </clearStatePgmSrc>
-        <approvalPgm>     NoTValue </approvalPgm>
-        <clearStatePgm>   NoTValue </clearStatePgm>
+        <appID>             NoTValue             </appID>
+        <approvalPgmSrc>    (int 0):TealInputPgm </approvalPgmSrc>
+        <clearStatePgmSrc>  (int 1):TealInputPgm </clearStatePgmSrc>
+        <approvalPgm>       NoTValue             </approvalPgm>
+        <clearStatePgm>     NoTValue             </clearStatePgm>
         <globalState>
-          <globalNumInts>     NoTValue </globalNumInts>
-          <globalNumBytes>    NoTValue </globalNumBytes>
-          <globalBytes>  .Map     </globalBytes>
-          <globalInts>  .Map     </globalInts>
+          <globalNumInts>   NoTValue             </globalNumInts>
+          <globalNumBytes>  NoTValue             </globalNumBytes>
+          <globalBytes>     .Map                 </globalBytes>
+          <globalInts>      .Map                 </globalInts>
         </globalState>
         <localState>
-          <localNumInts>      NoTValue </localNumInts>
-          <localNumBytes>     NoTValue </localNumBytes>
+          <localNumInts>    NoTValue             </localNumInts>
+          <localNumBytes>   NoTValue             </localNumBytes>
         </localState>
-        <extraPages>       NoTValue </extraPages>
+        <extraPages>        NoTValue             </extraPages>
       </app>
     </appsCreated>
 ```
@@ -195,7 +196,6 @@ module ALGO-BLOCKCHAIN
   imports APPLICATIONS
   imports ASSETS
   imports ADDITIONAL-FIELDS
-  imports TEAL-SYNTAX
   imports TEAL-TYPES-SYNTAX
   imports MAP
 

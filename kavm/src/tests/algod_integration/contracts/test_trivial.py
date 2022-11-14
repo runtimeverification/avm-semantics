@@ -7,14 +7,14 @@ from algosdk.future.transaction import ApplicationCallTxn, ApplicationCreateTxn,
 from algosdk.v2client.algod import AlgodClient
 
 approval_program_src = '''
-#pragma version 4
+#pragma version 2
 int 1
 return
 '''
 
 clear_program_src = '''
-#pragma version 4
-int 1
+#pragma version 2
+int 0
 return
 '''
 
@@ -32,7 +32,7 @@ def generate_and_fund_account(client: AlgodClient, faucet: Dict[str, str]) -> Di
 def create_app(client: AlgodClient, faucet: Dict[str, str]) -> int:
     sp = client.suggested_params()
 
-    calculator_creator = generate_and_fund_account(client, faucet)
+    app_creator = generate_and_fund_account(client, faucet)
 
     local_schema = transaction.StateSchema(num_uints=0, num_byte_slices=0)
     global_schema = transaction.StateSchema(num_uints=0, num_byte_slices=0)
@@ -40,7 +40,7 @@ def create_app(client: AlgodClient, faucet: Dict[str, str]) -> int:
     clear_program = b64decode(client.compile(clear_program_src)['result'])
 
     create_app_txn = ApplicationCreateTxn(
-        calculator_creator['address'],
+        app_creator['address'],
         sp,
         OnComplete.NoOpOC,
         approval_program,
@@ -50,7 +50,7 @@ def create_app(client: AlgodClient, faucet: Dict[str, str]) -> int:
     )
 
     # sign the transaction
-    signed_create_app_txn = create_app_txn.sign(calculator_creator['private_key'])
+    signed_create_app_txn = create_app_txn.sign(app_creator['private_key'])
 
     # send the transaction to the network and save its id
     create_app_txn_id = client.send_transactions([signed_create_app_txn])

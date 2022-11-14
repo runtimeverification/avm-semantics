@@ -1,7 +1,9 @@
 ```k
+requires "json.md"
 requires "avm/blockchain.md"
 requires "avm/teal/teal-syntax.md"
 requires "avm/teal/teal-stack.md"
+requires "avm/panics.md"
 ```
 
 Algorand Vitual Machine State
@@ -9,21 +11,25 @@ Algorand Vitual Machine State
 
 ```k
 module AVM-CONFIGURATION
+  imports JSON
   imports INT
   imports LIST
   imports SET
   imports ALGO-BLOCKCHAIN
   imports TEAL-INTERPRETER-STATE
   imports TEAL-SYNTAX
+  imports ID-SYNTAX
+  imports AVM-PANIC
 
   configuration
     <kavm>
-      <k> $PGM:AVMSimulation </k>
+      <k> $PGM:JSON </k>
       <returncode exit=""> 4 </returncode> // the simulator exit code
       <returnstatus>                       // the exit status message
         "Failure - AVM is stuck"
       </returnstatus>
       <paniccode> 0 </paniccode>
+      <panicstatus> "" </panicstatus>
 
       // The transaction group as submitted
       <transactions/>
@@ -90,13 +96,16 @@ module AVM-CONFIGURATION
       // A ;-separated concatenation of their source code of TEAL contracts
       // should be supplied as `-cTEAL_PROGRAMS` configuration variuable
       // argument ot `krun`
-      <tealPrograms> $TEAL_PROGRAMS:TealPrograms </tealPrograms>
+      <tealPrograms> $TEAL_PROGRAMS:Map </tealPrograms>
     </kavm>
 
   // Top-level control of the semantics.
   // Defined in `avm-execution.md`
   syntax AVMSimulation
   syntax AlgorandCommand
+
+  // Defined in `avm-testing.md`
+  syntax TestingCommand
 
   // Control of transaction evaluation
   // Defined in `avm-execution.md`
@@ -162,12 +171,7 @@ These are AVM-specific panic behaviors, caused by issues like depleted balances,
 
   syntax AlgorandCommand ::= #avmPanic(String, String)
   //-------------------------------------------
-  rule <k> #avmPanic(TXN_ID, S) ~> _ => .K </k>
-       <returncode> _ => 3 </returncode>
-       <returnstatus> _ => "Failure - when executing transaction " +String TXN_ID
-                           +String ": " +String S
-       </returnstatus>
-       <paniccode> _ => panicCode(S) </paniccode>
+  rule <k> #avmPanic(_, S) ~> panic(S) => .K </k>
 
 endmodule
 ```

@@ -248,6 +248,16 @@ We expose several functions for working with lists.
   rule append(V, V':TValue   ) => V' V
   rule append(V, .TValueList ) => V
 
+  syntax TValueNeList ::= prepend(TValue, TValueList) [function]
+  // -----------------------------------------------------------
+  rule prepend(V, V':TValueNeList) => V V'
+  rule prepend(V, .TValueList) => V
+
+  syntax TValuePairNeList ::= prepend(TValuePair, TValuePairList) [function]
+  // -----------------------------------------------------------
+  rule prepend(V, V':TValuePairNeList) => V V'
+  rule prepend(V, .TValuePairList) => V
+
   syntax TValuePairList ::= reverse(TValuePairList) [function]
   // ---------------------------------------------------------
   rule reverse(V:TValuePair VL) => append(V, reverse(VL))
@@ -267,9 +277,14 @@ We expose several functions for working with lists.
   rule convertToBytes(I:TUInt64 L:TValueNeList) => (Int2Bytes({I}:>Int, BE, Unsigned) {convertToBytes(L)}:>TValueNeList)
 
   syntax Int ::= sizeInBytes(TValue) [function, functional]
-  //--------------------------------
+  //-------------------------------------------------------
   rule sizeInBytes(_:TUInt64) => 64
   rule sizeInBytes(B:TBytes) => lengthBytes({B}:>Bytes)
+
+  syntax Int ::= maybeTUInt64(MaybeTValue, Int) [function, functional]
+  //------------------------------------------------------------------
+  rule maybeTUInt64(X, _)       => X       requires isTUInt64(X)
+  rule maybeTUInt64(_, DEFAULT) => DEFAULT [owise]
 ```
 
 TValue normaliziation converts higher-level type representations in TEAL into

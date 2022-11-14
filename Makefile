@@ -22,7 +22,7 @@ KAVM_INCLUDE     := $(KAVM_LIB)/include
 KAVM_SCRIPTS     := $(KAVM_LIB)/scripts
 KAVM_K_BIN       := $(KAVM_LIB)/kframework/bin
 KAVM             := kavm
-KAVM_DEFINITION_DIR=$(abspath $(KAVM_LIB)/avm-llvm/avm-execution-kompiled/)
+KAVM_DEFINITION_DIR=$(abspath $(KAVM_LIB)/avm-llvm/avm-testing-kompiled/)
 export KAVM_LIB
 export KAVM_DEFINITION_DIR
 
@@ -57,7 +57,7 @@ export K_OPTS
         deps k-deps libsecp256k1 libff plugin-deps hook-deps                          \
         build build-avm build-kavm                                                    \
         test test-avm-semantics test-avm-semantics-prove                              \
-        test-kavm test-kavm-kast test-kavm-kast-avm-scenario test-kavm-kast-teal      \
+        test-kavm test-kavm-bison-parsers                                             \
         test-kavm-hooks build-kavm-hooks-tests                                        \
         clean-avm clean-kavm                                                          \
         module-imports-graph module-imports-graph-dot                                 \
@@ -276,7 +276,10 @@ avm_files    :=                            \
                 avm/teal/teal-fields.md    \
                 avm/teal/teal-stack.md     \
                 avm/teal/teal-syntax.md    \
-                avm/teal/teal-types.md
+                avm/teal/teal-types.md     \
+                avm/algod/algod-models.md  \
+                avm/avm-testing.md         \
+                avm/panics.md
 
 avm_includes := $(patsubst %, $(KAVM_INCLUDE)/kframework/%, $(avm_files))
 
@@ -288,9 +291,9 @@ ifeq ($(K_BACKEND),)
 endif
 
 avm_dir           := avm-llvm
-avm_main_module   := AVM-EXECUTION
-avm_syntax_module := TEAL-PARSER-SYNTAX
-avm_main_file     := avm/avm-execution.md
+avm_main_module   := AVM-TESTING
+avm_syntax_module := AVM-TESTING-SYNTAX
+avm_main_file     := avm/avm-testing.md
 avm_main_filename := $(basename $(notdir $(avm_main_file)))
 avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled/
 
@@ -311,11 +314,24 @@ $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM
                             --hook-cpp-files $(HOOK_KAVM_FILES) $(PLUGIN_CPP_FILES)     \
                             --hook-clang-flags $(HOOK_CC_OPTS)                          \
                             --coverage
+	@make generate-parsers
 
 
 clean-avm:
 	rm -rf $(KAVM_LIB)/$(avm_kompiled)
 	rm -rf $(KAVM_INCLUDE)
+
+generate-parsers:
+	kast --definition $(KAVM_DEFINITION_DIR) --gen-parser \
+             --module AVM-TESTING-SYNTAX                      \
+             --sort JSON                                      \
+             $(KAVM_DEFINITION_DIR)/parser_JSON_AVM-TESTING-SYNTAX
+	kast --definition $(KAVM_DEFINITION_DIR) --gen-parser \
+             --module TEAL-PARSER-SYNTAX                      \
+             --sort TealInputPgm                              \
+             $(KAVM_DEFINITION_DIR)/parser_TealInputPgm_TEAL-PARSER-SYNTAX
+	echo 'cat $$(cat $$1)' > $(KAVM_DEFINITION_DIR)/catcat
+	@chmod +x $(KAVM_DEFINITION_DIR)/catcat
 
 # Installation
 # ------------
@@ -352,13 +368,13 @@ $(BUILD_DIR)/coverage.xml: test-kavm-avm-simulation
         -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
 	$(KAVM_SCRIPTS)/post-process-coverage $(BUILD_DIR)/coverage.xml
 
-$(BUILD_DIR)/coverage.html: $(BUILD_DIR)/coverage.xml
-	$(VENV_ACTIVATE) && pycobertura show --format html $(BUILD_DIR)/coverage.xml > $(BUILD_DIR)/coverage.html
-
 transient-coverage:
-	$(VENV_ACTIVATE) && $(KCOVR) $(KAVM_DEFINITION_DIR) \
+	$(VENV_ACTIVATE) && $(KCOVR) $(KAVM_DEFINITION_DIR)       \
         -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
 	$(KAVM_SCRIPTS)/post-process-coverage $(BUILD_DIR)/coverage.xml
+
+$(BUILD_DIR)/coverage.html: $(BUILD_DIR)/coverage.xml
+	$(VENV_ACTIVATE) && pycobertura show --format html $(BUILD_DIR)/coverage.xml > $(BUILD_DIR)/coverage.html
 
 coverage-html: $(BUILD_DIR)/coverage.html
 
@@ -391,25 +407,18 @@ build-kavm-hooks-tests: $(hook_includes) plugin-deps
 check-codestyle-kavm:
 	$(MAKE) check -C $(PY_KAVM_DIR)
 
-## * kavm CLI tests
-test-kavm: test-kavm-kast module-imports-graph
-
-test-kavm-kast: test-kavm-kast-avm-scenario test-kavm-kast-teal
-
-test-kavm-kast-avm-scenario: $(avm_simulation_sources:=.kavm-kast.unit)
-
-tests/scenarios/%.avm-simulation.kavm-kast.unit: tests/scenarios/%.avm-simulation
-	$(VENV_ACTIVATE) && $(KAVM) kast $< --output none
-
-test-kavm-kast-teal: $(teal_sources:=.kavm-kast.unit)
-
-tests/teal-sources/%.teal.kavm-kast.unit: tests/teal-sources/%.teal
-	$(VENV_ACTIVATE) && $(KAVM) kast $< --output none
-
 ## * kavm.algod Python library tests
 test-kavm-algod:
 	$(MAKE) test-unit -C $(PY_KAVM_DIR)
 	$(MAKE) test-integration-kalgod -C $(PY_KAVM_DIR)
+
+
+###########################
+## Generated Bison parsers tests
+###########################
+
+test-kavm-bison-parsers:
+	$(MAKE) test-bison-parsers -C $(PY_KAVM_DIR)
 
 ###########################
 ## AVM Simulation Scenarios

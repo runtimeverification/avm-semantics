@@ -1,0 +1,56 @@
+{
+  "stages": [
+    {
+      "stage-type": "setup-network",
+      "data": {
+        "accounts": [
+          {
+            "address": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+            "amount": 10000000000,
+            "created-apps": [
+              {
+                "id": 1,
+                "params": {
+                  "creator": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                  "approval-program": "approve.teal",
+                  "clear-state-program": "clear-basic.teal",
+                  "local-state-schema": {
+                      "nui": 0,
+                      "nbs": 0
+                  },
+                  "global-state-schema": {
+                      "nui": 0,
+                      "nbs": 0
+                  },
+                  "global-state": null
+                }
+              }
+            ],
+            "created-assets":[]
+          },
+          {
+            "address": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
+            "amount": 1,
+            "created-apps": [],
+            "created-assets":[]
+          }
+        ]
+      }
+    },
+    {
+      "stage-type": "execute-transactions",
+      "data": {
+        "transactions": [
+          {
+            "type": "pay",
+            "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+            "rcv": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
+            "amt": 100000
+          }
+        ]
+      },
+      "expected-returncode": 0,
+      "expected-paniccode": 0
+    }
+  ]
+}

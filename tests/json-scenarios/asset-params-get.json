@@ -1,0 +1,69 @@
+{
+    "stages": [
+        {
+            "stage-type": "setup-network",
+            "data": {
+                "accounts": [
+                    {
+                        "address": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "amount": 300000,
+                        "created-apps": [],
+                        "created-assets": []
+                    }
+                ]
+            }
+        },
+        {
+            "stage-type": "execute-transactions",
+            "data": {
+                "transactions": [
+                    {
+                        "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "type": "acfg",
+                        "caid": 0,
+                        "apar": {
+                            "t": 12345,
+                            "dc": 0,
+                            "df": false,
+                            "un": "testcoins",
+                            "an": "testcoin",
+                            "au": "",
+                            "am": "",
+                            "m": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                            "r": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+                            "f": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+                            "c": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
+                        }
+                    },
+                    {
+                        "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "type": "appl",
+                        "apid": 0,
+                        "apan": 0,
+                        "apat": [],
+                        "apaa": [],
+                        "apfa": [],
+                        "apas": [
+                            1,
+                            2
+                        ],
+                        "apbx": [],
+                        "apgs": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apls": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apep": 0,
+                        "apap": "asset-params-get.teal",
+                        "apsu": "clear-basic.teal"
+                    }
+                ]
+            },
+            "expected-returncode": 0,
+            "expected-paniccode": 0
+        }
+    ]
+}

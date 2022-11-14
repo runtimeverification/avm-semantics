@@ -375,6 +375,8 @@ TEAL Program Definition
 module TEAL-SYNTAX
   import TEAL-OPCODES
   import INT
+  import STRING
+  import BOOL
 
   syntax LabelCode ::= Label ":"
 
@@ -393,19 +395,6 @@ module TEAL-SYNTAX
                    | TealOpCodeOrLabel TealPgm
   syntax TealInputPgm ::= TealPragmas TealPgm | TealPgm
 
-  syntax TealPrograms ::= TealInputPgm ";" TealPrograms | ".TealPrograms" [klabel(.TealPrograms), symbol]
-```
-
-We provide a function to extract a teal program by index from the syntactic list of input programs.
-If the requested index is out of bounds, a trivial error program is returned.
-
-```k
-  syntax TealInputPgm ::= getTealByIndex(TealPrograms, Int) [function]
-  //------------------------------------------------------------------
-  rule getTealByIndex(PGM;_, 0) => PGM
-  rule getTealByIndex(_;REST, IDX) => getTealByIndex(REST, IDX -Int 1)
-    requires IDX >Int 0
-  rule getTealByIndex(.TealPrograms, _) => #pragma version 3 err
 endmodule
 ```
 

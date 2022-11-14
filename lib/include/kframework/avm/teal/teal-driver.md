@@ -9,6 +9,7 @@ requires "avm/itxn.md"
 requires "avm/teal/teal-syntax.md"
 requires "avm/teal/teal-stack.md"
 requires "avm/teal/teal-execution.md"
+requires "avm/panics.md"
 ```
 
 TEAL Interpreter
@@ -24,6 +25,7 @@ module TEAL-DRIVER
   imports TEAL-EXECUTION
   imports TEAL-STACK
   imports KRYPTO
+  imports AVM-PANIC
 ```
 
 This module describes the semantics of TEAL opcodes.
@@ -1036,7 +1038,7 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
         <stack> (I:Int) : _XS => I : .TStack </stack>
         <stacksize> _ => 1 </stacksize>
 
-  rule <k> _: => .K ... </k>
+  rule <k> (_ :):LabelCode => .K ... </k>
 
   rule <k> assert => .K ... </k>
        <stack> (X:Int) : XS => XS </stack>

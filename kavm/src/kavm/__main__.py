@@ -1,8 +1,11 @@
 """Command-line interface for KAVM"""
 
+import json
 import logging
 import os
+import shutil
 import sys
+import tempfile
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from subprocess import CalledProcessError
@@ -11,6 +14,7 @@ from typing import Any, Final, List, Optional
 from pyk.cli_utils import dir_path, file_path
 
 from kavm.kompile import kompile
+from kavm.scenario import KAVMScenario
 
 from .kavm import KAVM
 
@@ -30,6 +34,7 @@ def exec_kompile(
     hook_cpp_files: List[Path],
     hook_clang_flags: List[str],
     coverage: bool,
+    gen_bison_parser: bool = False,
     **kwargs: Any,
 ) -> None:
     kompile(
@@ -44,6 +49,7 @@ def exec_kompile(
         hook_cpp_files=hook_cpp_files,
         hook_clang_flags=hook_clang_flags,
         coverage=coverage,
+        gen_bison_parser=gen_bison_parser,
     )
 
 
@@ -98,8 +104,9 @@ def exec_run(
     definition_dir: Path,
     input_file: Path,
     teal_sources_dir: Path,
-    teal_programs_parser: Path,
+    teal_parser: Path,
     avm_simulation_parser: Path,
+    avm_json_parser: Path,
     output: str,
     profile: bool,
     depth: Optional[int],
@@ -111,23 +118,40 @@ def exec_run(
         raise RuntimeError('Cannot access KAVM_LIB environment variable. Is it set?')
     kavm_lib_dir = Path(str(os.environ.get('KAVM_LIB')))
 
-    if not teal_programs_parser:
-        teal_programs_parser = kavm_lib_dir / 'scripts/parse-teal-programs.sh'
+    if not teal_parser:
+        teal_parser = definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
     if not avm_simulation_parser:
         avm_simulation_parser = kavm_lib_dir / 'scripts/parse-avm-simulation.sh'
+    if not avm_json_parser:
+        avm_json_parser = definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
     try:
-        proc_result = kavm.run_avm_simulation(
-            input_file=input_file,
-            output=output,
-            profile=profile,
-            teal_sources_dir=teal_sources_dir,
-            teal_programs_parser=teal_programs_parser,
-            avm_simulation_parser=avm_simulation_parser,
-            depth=depth,
-        )
-        if not output == 'none':
-            print(proc_result.stdout)
-        exit(proc_result.returncode)
+        if input_file.suffix == '.json':
+            scenario = KAVMScenario.from_json(input_file.read_text())
+            with tempfile.TemporaryDirectory() as decompiled_teal_dir:
+                src_files = os.listdir(teal_sources_dir)
+                for file_name in src_files:
+                    full_file_name = os.path.join(teal_sources_dir, file_name)
+                    if os.path.isfile(full_file_name):
+                        shutil.copy(full_file_name, decompiled_teal_dir)
+                scenario.decompile_teal_programs(Path(decompiled_teal_dir))
+                proc_result = kavm.run_avm_json(
+                    scenario=scenario.to_json(),
+                    teals=kavm.parse_teals(scenario._teal_files, Path(decompiled_teal_dir)),
+                    output=output,
+                    profile=profile,
+                    depth=depth if depth else 0,
+                )
+            if not output in ['none', 'final-state-json']:
+                print(proc_result.stdout)
+            if output == 'final-state-json' and proc_result.returncode == 0:
+                print(json.dumps(json.loads(proc_result.stderr), indent=4))
+            if proc_result.returncode:
+                print(proc_result.stdout)
+                print(proc_result.stderr)
+            exit(proc_result.returncode)
+        else:
+            print(f'Unrecognized input file extension: {input_file.suffix}')
+            exit(1)
     except CalledProcessError as err:
         if not output == 'none':
             print(err.stdout)
@@ -180,6 +204,7 @@ def create_argument_parser() -> ArgumentParser:
     kompile_subparser.add_argument('--syntax-module', type=str)
     kompile_subparser.add_argument('--backend', type=str)
     kompile_subparser.add_argument('--coverage', default=False, action='store_true')
+    kompile_subparser.add_argument('--gen-bison-parser', default=False, action='store_true')
     kompile_subparser.add_argument(
         '-I',
         type=dir_path,
@@ -263,10 +288,10 @@ def create_argument_parser() -> ArgumentParser:
         required=True,
     )
     run_subparser.add_argument(
-        '--teal-programs-parser',
-        dest='teal_programs_parser',
+        '--teal-parser',
+        dest='teal_parser',
         type=file_path,
-        help='Path to the executable to parse .teals files containing TealPrograms terms',
+        help='Path to the executable to parse .teal files containing TealPrograms terms',
     )
     run_subparser.add_argument(
         '--avm-simulation-parser',
@@ -275,11 +300,17 @@ def create_argument_parser() -> ArgumentParser:
         help='Path to the executable to parse .avm-simulation files containing AVMSimulation terms',
     )
     run_subparser.add_argument(
+        '--avm-json-parser',
+        dest='avm_json_parser',
+        type=file_path,
+        help='Path to the executable to parse .json files containing JSON-encoded AVM state',
+    )
+    run_subparser.add_argument(
         '--output',
         dest='output',
         type=str,
         help='Output mode',
-        choices=['pretty', 'json', 'kore', 'kast', 'none'],
+        choices=['pretty', 'json', 'kore', 'kast', 'none', 'final-state-json'],
         required=True,
     )
     run_subparser.add_argument(

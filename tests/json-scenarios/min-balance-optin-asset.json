@@ -1,0 +1,103 @@
+{
+    "stages": [
+        {
+            "stage-type": "setup-network",
+            "data": {
+                "accounts": [
+                    {
+                        "address": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "amount": 200000,
+                        "created-apps": [],
+                        "created-assets": []
+                    },
+                    {
+                        "address": "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA",
+                        "amount": 400000,
+                        "created-apps": [],
+                        "created-assets": []
+                    }
+                ]
+            }
+        },
+        {
+            "stage-type": "execute-transactions",
+            "data": {
+                "transactions": [
+                    {
+                        "snd": "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA",
+                        "type": "acfg",
+                        "caid": 0,
+                        "apar": {
+                            "t": 12345,
+                            "dc": 0,
+                            "df": false,
+                            "un": "testcoins",
+                            "an": "testcoin",
+                            "au": "",
+                            "am": "",
+                            "m": "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA",
+                            "r": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+                            "f": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+                            "c": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
+                        }
+                    },
+                    {
+                        "snd": "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA",
+                        "type": "appl",
+                        "apid": 0,
+                        "apan": 1,
+                        "apat": [],
+                        "apaa": [],
+                        "apfa": [],
+                        "apas": [],
+                        "apbx": [],
+                        "apgs": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apls": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apep": 0,
+                        "apap": "min-balance-optin-asset.teal",
+                        "apsu": "clear-basic.teal"
+                    },
+                    {
+                        "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "type": "axfer",
+                        "xaid": 1,
+                        "aamt": 0,
+                        "asnd": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+                        "arcv": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "aclose": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
+                    },
+                    {
+                        "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "type": "appl",
+                        "apid": 1,
+                        "apan": 0,
+                        "apat": [],
+                        "apaa": [],
+                        "apfa": [],
+                        "apas": [],
+                        "apbx": [],
+                        "apgs": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apls": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apep": 0,
+                        "apap": "min-balance-optin-asset.teal",
+                        "apsu": "clear-basic.teal"
+                    }
+                ]
+            },
+            "expected-returncode": 0,
+            "expected-paniccode": 0
+        }
+    ]
+}

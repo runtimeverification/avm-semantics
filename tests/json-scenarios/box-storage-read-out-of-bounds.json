@@ -1,0 +1,53 @@
+{
+    "stages": [
+        {
+            "stage-type": "setup-network",
+            "data": {
+                "accounts": [
+                    {
+                        "address": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "amount": 200000,
+                        "created-apps": [],
+                        "created-assets": []
+                    }
+                ]
+            }
+        },
+        {
+            "stage-type": "execute-transactions",
+            "data": {
+                "transactions": [
+                    {
+                        "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "type": "appl",
+                        "apid": 0,
+                        "apan": 0,
+                        "apat": [],
+                        "apaa": [],
+                        "apfa": [],
+                        "apas": [],
+                        "apbx": [
+                            {
+                                "n": "box1",
+                                "i": 0
+                            }
+                        ],
+                        "apgs": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apls": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apep": 0,
+                        "apap": "box-storage-read-out-of-bounds.teal",
+                        "apsu": "clear-basic.teal"
+                    }
+                ]
+            },
+            "expected-returncode": 3,
+            "expected-paniccode": 41
+        }
+    ]
+}
