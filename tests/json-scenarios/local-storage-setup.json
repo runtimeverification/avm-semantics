@@ -12,25 +12,35 @@
                                 "id": 1,
                                 "params": { 
                                     "creator": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
-                                    "approval-program": "global-storage-setup.teal",
+                                    "approval-program": "local-storage-setup.teal",
                                     "clear-state-program": "clear-basic.teal",
                                     "local-state-schema": { 
-                                        "nui": 0,
-                                        "nbs": 0
-                                    }, 
-                                    "global-state-schema": { 
                                         "nui": 2,
                                         "nbs": 1
+                                    }, 
+                                    "global-state-schema": { 
+                                        "nui": 0,
+                                        "nbs": 0
                                     },
-                                    "global-state": [
-                                       { "key": "key1", "value": {"type": 2, "bytes": "", "uint": 1 }},
-                                       { "key": "key2", "value": {"type": 1, "bytes": "two", "uint": 0 }},
-                                       { "key": "key3", "value": {"type": 2, "bytes": "", "uint": 3 }}
-                                    ]
+                                    "global-state": []
                                 }
                             }
                         ],
-                        "created-assets": []
+                        "created-assets": [],
+                        "apps-local-state": [
+                            {
+                                "id": 1,
+                                "schema": {
+                                    "num-uint": 2,
+                                    "num-byte-slice": 1
+                                },
+                                "key-value": [
+                                     { "key": "key1", "value": {"type": 2, "bytes": "", "uint": 1 }},
+                                     { "key": "key2", "value": {"type": 1, "bytes": "two", "uint": 0 }},
+                                     { "key": "key3", "value": {"type": 2, "bytes": "", "uint": 3 }}
+                                ]
+                            }
+                        ]
                     }
                 ]
             }
@@ -58,7 +68,7 @@
                             "nbs": 0
                         },
                         "apep": 0,
-                        "apap": "global-storage-setup.teal",
+                        "apap": "local-storage-setup.teal",
                         "apsu": "clear-basic.teal"
                     }
                 ]
