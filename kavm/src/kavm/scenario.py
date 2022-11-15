@@ -47,6 +47,8 @@ class KAVMScenario:
             }
             app_params_dict = KAVMApplicationParams(**app_params_translated)
             app = KAVMApplication(id=app_dict['id'], params=app_params_dict).dictify()
+            if not app['params']['global-state']:
+                app['params']['global-state'] = []
             result.append(app)
         return result
 
