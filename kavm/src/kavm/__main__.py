@@ -134,14 +134,7 @@ def exec_run(
                     full_file_name = os.path.join(teal_sources_dir, file_name)
                     if os.path.isfile(full_file_name):
                         shutil.copy(full_file_name, decompiled_teal_dir)
-                # BEWARE OF HACKKY CODE!
-                # if a teal file name does not end with `.teal`, it must be a base64 encoded source code.
-                # we dum this source code into a temporary directory for parsing, with the filename being the
-                # base64 encoded code itself
-                for teal in scenario._teal_files:
-                    if not teal.endswith('.teal'):
-                        with open(str(Path(decompiled_teal_dir) / teal), "w+t") as f:
-                            f.write(b64decode(teal).decode('utf-8'))
+                scenario.decompile_teal_programs(Path(decompiled_teal_dir))
                 proc_result = kavm.run_avm_json(
                     scenario=scenario.to_json(),
                     teals=kavm.parse_teals(scenario._teal_files, Path(decompiled_teal_dir)),
