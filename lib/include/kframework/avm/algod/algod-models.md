@@ -37,6 +37,34 @@ TODO: if an account contains an app, the state specification must also contain t
 ```
 
 ```k
+    syntax KItem ::= #setupOptInAssets(Bytes, JSONs)
+    //----------------------------------------------
+    rule <k> #setupOptInAssets(ADDR:Bytes, (
+                          {
+                            "amount": AMOUNT:Int,
+                            "asset-id": ASSET_ID:Int,
+                            "is-frozen": FROZEN:Bool
+                          }, REST:JSONs):JSONs)
+            => #setupOptInAssets(ADDR, REST)
+            ...
+          </k>
+          <account>
+            <address> ADDR </address>
+            <assetsOptedIn>
+              (.Bag =>
+              <optInAsset>
+                <optInAssetID> ASSET_ID </optInAssetID>
+                <optInAssetBalance> AMOUNT </optInAssetBalance>
+                <optInAssetFrozen> bool2Int(FROZEN) </optInAssetFrozen>
+              </optInAsset>)
+              ...
+            </assetsOptedIn>
+            ...
+          </account>
+
+    rule <k> #setupOptInAssets(_:Bytes, .JSONs) => . ... </k>
+
+
     syntax KItem ::= #addAccountJSON(JSON)
     //------------------------------------
     rule <k> #addAccountJSON({"address": ADDR:String,
@@ -44,7 +72,7 @@ TODO: if an account contains an app, the state specification must also contain t
                               "amount-without-pending-rewards": null,
                               "apps-local-state": [LOCAL_STATE:JSONs],
                               "apps-total-schema": null,
-                              "assets": null,
+                              "assets": [OPTIN_ASSETS:JSONs],
                               "created-apps": [APPS:JSONs],
                               "created-assets": [ASSETS:JSONs],
                               "participation": null,
@@ -56,7 +84,12 @@ TODO: if an account contains an app, the state specification must also contain t
                               "sig-type": null,
                               "auth-addr": null
                              })
-          => #setupApplications([APPS]) ~> #loadLocalState(DecodeAddressString(ADDR), LOCAL_STATE) ~> #setupAssets([ASSETS]) ... </k>
+            => #setupApplications([APPS]) 
+            ~> #loadLocalState(DecodeAddressString(ADDR), LOCAL_STATE) 
+            ~> #setupAssets([ASSETS]) 
+            ~> #setupOptInAssets(DecodeAddressString(ADDR), OPTIN_ASSETS)
+            ... 
+         </k>
          <accountsMap>
            (.Bag =>
            <account>
@@ -248,8 +281,6 @@ TODO: if an account contains an app, the state specification must also contain t
 
 ```k
     syntax KItem ::= #loadLocalState(Bytes, JSONs)
-//    rule <k> #loadLocalState(ADDR, (_:JSON) ) => "abcd" ... </k>
-//    rule <k> #loadLocalState(_:Bytes, ({"id": APP_ID:Int, "schema": _, "key-value": _}, REST):JSONs) => "abcd" ... </k>
 
     rule <k> #loadLocalState(ADDR:Bytes, 
                   {

@@ -1,0 +1,80 @@
+{
+    "stages": [
+        {
+            "stage-type": "setup-network",
+            "data": {
+                "accounts": [
+                    {
+                        "address": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "amount": 200000,
+                        "created-apps": [],
+                        "created-assets": [
+                            {
+                                "index": 1,
+                                "params": {
+                                    "clawback": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+                                    "creator": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                                    "decimals": 0,
+                                    "default-frozen": false,
+                                    "freeze": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+                                    "manager": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                                    "metadata-hash": "",
+                                    "name": "testcoin",
+                                    "reserve": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" ,
+                                    "total": 123456,
+                                    "unit-name": "testcoins",
+                                    "url": ""
+                                }
+                            }
+                        ],
+                        "assets": []
+                    },
+                    {
+                        "address": "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA",
+                        "amount": 200000,
+                        "created-apps": [],
+                        "created-assets": [],
+                        "assets": [
+                            {
+                                "amount": 12345,
+                                "asset-id": 1,
+                                "is-frozen": false
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "stage-type": "execute-transactions",
+            "data": {
+                "transactions": [
+                    {
+                        "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "type": "appl",
+                        "apid": 0,
+                        "apan": 0,
+                        "apat": ["VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"],
+                        "apaa": [],
+                        "apfa": [],
+                        "apas": [1],
+                        "apbx": [],
+                        "apgs": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apls": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apep": 0,
+                        "apap": "asset-holding-setup.teal",
+                        "apsu": "clear-basic.teal"
+                    }
+                ]
+            },
+            "expected-returncode": 0,
+            "expected-paniccode": 0
+        }
+    ]
+}

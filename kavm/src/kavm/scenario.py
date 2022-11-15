@@ -30,6 +30,8 @@ class KAVMScenario:
                 acc['created-apps'] = KAVMScenario.sanitize_apps(acc['created-apps'])
             if not acc['created-assets']:
                 acc['created-assets'] = []
+            if not acc['apps-local-state']:
+                acc['apps-local-state'] = []
             result.append(acc)
         return result
 
