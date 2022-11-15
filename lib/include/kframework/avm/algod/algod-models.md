@@ -201,15 +201,6 @@ TODO: if an account contains an app, the state specification must also contain t
              </asset>
              ...
            </assetsCreated>
-           <assetsOptedIn>
-             ASSETS_OPTED_IN =>
-             <optInAsset>
-               <optInAssetID>      INDEX       </optInAssetID>
-               <optInAssetBalance> TOTAL          </optInAssetBalance>
-               <optInAssetFrozen>  bool2Int(DEFAULT_FROZEN) </optInAssetFrozen>
-             </optInAsset>
-             ASSETS_OPTED_IN
-           </assetsOptedIn>
            ...
          </account>
        requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR

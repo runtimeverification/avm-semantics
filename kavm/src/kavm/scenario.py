@@ -32,6 +32,8 @@ class KAVMScenario:
                 acc['created-assets'] = []
             if not acc['apps-local-state']:
                 acc['apps-local-state'] = []
+            if not acc['assets']:
+                acc['assets'] = []
             result.append(acc)
         return result
 
