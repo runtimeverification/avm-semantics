@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from base64 import b64decode, b64encode
+from base64 import b64encode
 from pathlib import Path
 from pprint import PrettyPrinter
 from subprocess import CalledProcessError

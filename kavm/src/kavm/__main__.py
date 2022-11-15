@@ -7,7 +7,6 @@ import shutil
 import sys
 import tempfile
 from argparse import ArgumentParser, Namespace
-from base64 import b64decode
 from pathlib import Path
 from subprocess import CalledProcessError
 from typing import Any, Final, List, Optional
