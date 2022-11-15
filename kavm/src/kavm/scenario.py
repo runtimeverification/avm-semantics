@@ -30,6 +30,10 @@ class KAVMScenario:
                 acc['created-apps'] = KAVMScenario.sanitize_apps(acc['created-apps'])
             if not acc['created-assets']:
                 acc['created-assets'] = []
+            if not acc['apps-local-state']:
+                acc['apps-local-state'] = []
+            if not acc['assets']:
+                acc['assets'] = []
             result.append(acc)
         return result
 
@@ -43,6 +47,8 @@ class KAVMScenario:
             }
             app_params_dict = KAVMApplicationParams(**app_params_translated)
             app = KAVMApplication(id=app_dict['id'], params=app_params_dict).dictify()
+            if not app['params']['global-state']:
+                app['params']['global-state'] = []
             result.append(app)
         return result
 

@@ -37,14 +37,42 @@ TODO: if an account contains an app, the state specification must also contain t
 ```
 
 ```k
+    syntax KItem ::= #setupOptInAssets(Bytes, JSONs)
+    //----------------------------------------------
+    rule <k> #setupOptInAssets(ADDR:Bytes, (
+                          {
+                            "amount": AMOUNT:Int,
+                            "asset-id": ASSET_ID:Int,
+                            "is-frozen": FROZEN:Bool
+                          }, REST:JSONs):JSONs)
+            => #setupOptInAssets(ADDR, REST)
+            ...
+          </k>
+          <account>
+            <address> ADDR </address>
+            <assetsOptedIn>
+              (.Bag =>
+              <optInAsset>
+                <optInAssetID> ASSET_ID </optInAssetID>
+                <optInAssetBalance> AMOUNT </optInAssetBalance>
+                <optInAssetFrozen> bool2Int(FROZEN) </optInAssetFrozen>
+              </optInAsset>)
+              ...
+            </assetsOptedIn>
+            ...
+          </account>
+
+    rule <k> #setupOptInAssets(_:Bytes, .JSONs) => . ... </k>
+
+
     syntax KItem ::= #addAccountJSON(JSON)
     //------------------------------------
     rule <k> #addAccountJSON({"address": ADDR:String,
                               "amount": BALANCE:Int,
                               "amount-without-pending-rewards": null,
-                              "apps-local-state": null,
+                              "apps-local-state": [LOCAL_STATE:JSONs],
                               "apps-total-schema": null,
-                              "assets": null,
+                              "assets": [OPTIN_ASSETS:JSONs],
                               "created-apps": [APPS:JSONs],
                               "created-assets": [ASSETS:JSONs],
                               "participation": null,
@@ -56,7 +84,12 @@ TODO: if an account contains an app, the state specification must also contain t
                               "sig-type": null,
                               "auth-addr": null
                              })
-          => #setupApplications([APPS]) ~> #setupAssets([ASSETS]) ... </k>
+            => #setupApplications([APPS])
+            ~> #loadLocalState(DecodeAddressString(ADDR), LOCAL_STATE)
+            ~> #setupAssets([ASSETS])
+            ~> #setupOptInAssets(DecodeAddressString(ADDR), OPTIN_ASSETS)
+            ...
+         </k>
          <accountsMap>
            (.Bag =>
            <account>
@@ -168,15 +201,6 @@ TODO: if an account contains an app, the state specification must also contain t
              </asset>
              ...
            </assetsCreated>
-           <assetsOptedIn>
-             ASSETS_OPTED_IN =>
-             <optInAsset>
-               <optInAssetID>      INDEX       </optInAssetID>
-               <optInAssetBalance> TOTAL          </optInAssetBalance>
-               <optInAssetFrozen>  bool2Int(DEFAULT_FROZEN) </optInAssetFrozen>
-             </optInAsset>
-             ASSETS_OPTED_IN
-           </assetsOptedIn>
            ...
          </account>
        requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR
@@ -247,6 +271,91 @@ TODO: if an account contains an app, the state specification must also contain t
 ### Applications
 
 ```k
+    syntax KItem ::= #loadLocalState(Bytes, JSONs)
+                   | #loadLocalState(Int, Bytes, JSONs)
+    //-------------------------------------------------
+    rule <k> #loadLocalState(ADDR:Bytes,
+                  {
+                    "id": APP_ID:Int,
+                    "schema": _:JSON,
+                    "key-value": [LOCAL_STATE]
+                  }, REST ) => #loadLocalState(APP_ID, ADDR, LOCAL_STATE) ~> #loadLocalState(ADDR, REST) ... </k>
+         <account>
+           <address> ADDR </address>
+           <appsOptedIn>
+             (.Bag =>
+             <optInApp>
+               <optInAppID> APP_ID </optInAppID>
+               <localInts> .Map </localInts>
+               <localBytes> .Map </localBytes>
+             </optInApp>)
+             ...
+           </appsOptedIn>
+           ...
+         </account>
+
+    rule <k> #loadLocalState(_:Bytes, .JSONs) => . ... </k>
+
+    rule <k> #loadLocalState(APP_ID:Int, ADDR:Bytes,
+                             ({"key": K:String, "value": {"type": 1, "bytes": V:String, "uint": _:Int} }, REST:JSONs))
+          => #loadLocalState(APP_ID, ADDR, REST) ... </k>
+         <account>
+           <address> ADDR </address>
+           <appsOptedIn>
+             <optInApp>
+               <optInAppID> APP_ID </optInAppID>
+               <localInts> _ </localInts>
+               <localBytes> .Map => (String2Bytes(K) |-> String2Bytes(V)) ... </localBytes>
+             </optInApp>
+             ...
+           </appsOptedIn>
+           ...
+         </account>
+
+    rule <k> #loadLocalState(APP_ID:Int, ADDR:Bytes,
+                             ({"key": K:String, "value": {"type": 2, "bytes": _:String, "uint": V:Int} }, REST:JSONs))
+          => #loadLocalState(APP_ID, ADDR, REST) ... </k>
+         <account>
+           <address> ADDR </address>
+           <appsOptedIn>
+             <optInApp>
+               <optInAppID> APP_ID </optInAppID>
+               <localInts> .Map => (String2Bytes(K) |-> V) ... </localInts>
+               <localBytes> _ </localBytes>
+             </optInApp>
+             ...
+           </appsOptedIn>
+           ...
+         </account>
+
+    rule <k> #loadLocalState(_:Int, _:Bytes, .JSONs) => . ... </k>
+
+    syntax KItem ::= #loadGlobalState(Int, JSONs)
+    //-------------------------------------------
+    rule <k> #loadGlobalState(APP_ID, {"key": K:String, "value": {"type": 1, "bytes": V:String, _} }, REST:JSONs )
+          => #loadGlobalState(APP_ID, REST) ... </k>
+         <app>
+           <appID> APP_ID </appID>
+           <globalState>
+             <globalBytes> .Map => (String2Bytes(K) |-> String2Bytes(V)) ... </globalBytes>
+             ...
+           </globalState>
+           ...
+         </app>
+
+    rule <k> #loadGlobalState(APP_ID, {"key": K:String, "value": {"type": 2, _, "uint": V:Int} }, REST:JSONs )
+          => #loadGlobalState(APP_ID, REST) ... </k>
+         <app>
+           <appID> APP_ID </appID>
+           <globalState>
+             <globalInts> .Map => (String2Bytes(K) |-> V) ... </globalInts>
+             ...
+           </globalState>
+           ...
+         </app>
+
+    rule <k> #loadGlobalState(_, .JSONs) => . ... </k>
+
     syntax KItem ::= #setupApplications(JSON)
     //---------------------------------------
 
@@ -262,10 +371,10 @@ TODO: if an account contains an app, the state specification must also contain t
                                              , "clear-state-program": CLEAR_STATE_NAME:String
                                              , "local-state-schema" : { "nui": LOCAL_NUM_UINTS:Int, "nbs": LOCAL_NUM_BYTES:Int }
                                              , "global-state-schema": { "nui": GLOBAL_NUM_UINTS:Int, "nbs": GLOBAL_NUM_BYTES:Int }
-                                             , "global-state"       : _GLOBAL_STATE
+                                             , "global-state"       : [GLOBAL_STATE:JSONs]
                                              }
                                  }
-             ) => .K ... </k>
+             ) => #loadGlobalState(APP_ID, GLOBAL_STATE) ... </k>
            <account>
              <address> CREATOR_ADDR </address>
              <appsCreated>
@@ -395,7 +504,7 @@ TODO: if an account contains an app, the state specification must also contain t
 
   rule JSONBoxRefsList2PairList([{ "n": NAME:String, "i": I:Int }:JSON, REST:JSONs]) =>
     prepend((String2Bytes(NAME), I):TValuePair, JSONBoxRefsList2PairList([REST]))
-  rule JSONBoxRefsList2PairList([{ "n": NAME:String, "i": I:Int }]) => 
+  rule JSONBoxRefsList2PairList([{ "n": NAME:String, "i": I:Int }]) =>
     (String2Bytes(NAME), I):TValuePair
   rule JSONBoxRefsList2PairList([.JSONs]) => .TValuePairList
 ```

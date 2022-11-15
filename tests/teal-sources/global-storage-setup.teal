@@ -1,0 +1,22 @@
+#pragma version 8
+
+byte "key1"
+app_global_get
+int 1
+==
+assert
+
+byte "key2"
+app_global_get
+byte "two"
+==
+assert
+
+byte "key3"
+app_global_get
+int 3
+==
+assert
+
+int 1
+return
