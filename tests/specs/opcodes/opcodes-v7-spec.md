@@ -13,25 +13,16 @@ module OPCODES-V7-SPEC
 
 <!----------------------------------------------------------------------------->
 
-<tr><td> replace2 s </td><td> 7 </td><td>  </td><td> 1  </td>
+<tr><td> replace2 s </td><td> 7 </td><td> not implemented </td><td> 1  </td>
 <td><details>
 <summary>K claims</summary>
 
 </details>
-<td></td>
+<td></tr>
 
 <!----------------------------------------------------------------------------->
 
-<tr><td> replace3 </td><td> 7 </td><td> </td><td> 1 </td>
-<td><details>
-<summary>K claims</summary>
-
-</details>
-</td></tr>
-
-<!----------------------------------------------------------------------------->
-
-<tr><td> base64_decode e </td><td> 7 </td><td> </td><td> 1 + 1 per 16 bytes of A </td>
+<tr><td> replace3 </td><td> 7 </td><td> not implemented </td><td> 1 </td>
 <td><details>
 <summary>K claims</summary>
 
@@ -40,7 +31,7 @@ module OPCODES-V7-SPEC
 
 <!----------------------------------------------------------------------------->
 
-<tr><td> json_ref r </td><td> 7 </td><td> </td><td> 25 + 2 per 7 bytes of A </td>
+<tr><td> base64_decode e </td><td> 7 </td><td> not implemented </td><td> 1 + 1 per 16 bytes of A </td>
 <td><details>
 <summary>K claims</summary>
 
@@ -49,7 +40,7 @@ module OPCODES-V7-SPEC
 
 <!----------------------------------------------------------------------------->
 
-<tr><td> ed25519verify_bare </td><td> 7 </td><td>  </td><td> 1900 </td>
+<tr><td> json_ref r </td><td> 7 </td><td> not implemented </td><td> 25 + 2 per 7 bytes of A </td>
 <td><details>
 <summary>K claims</summary>
 
@@ -58,7 +49,7 @@ module OPCODES-V7-SPEC
 
 <!----------------------------------------------------------------------------->
 
-<tr><td> sha3_256 </td><td> 7 </td><td>  </td><td> 130 </td>
+<tr><td> ed25519verify_bare </td><td> 7 </td><td> not implemented </td><td> 1900 </td>
 <td><details>
 <summary>K claims</summary>
 
@@ -67,7 +58,7 @@ module OPCODES-V7-SPEC
 
 <!----------------------------------------------------------------------------->
 
-<tr><td> vrf_verify s </td><td> 7 </td><td> </td><td> 5700 </td>
+<tr><td> sha3_256 </td><td> 7 </td><td> not implemented </td><td> 130 </td>
 <td><details>
 <summary>K claims</summary>
 
@@ -76,7 +67,16 @@ module OPCODES-V7-SPEC
 
 <!----------------------------------------------------------------------------->
 
-<tr><td> block f </td><td> 7 </td><td> </td><td> 1 </td>
+<tr><td> vrf_verify s </td><td> 7 </td><td> not implemented </td><td> 5700 </td>
+<td><details>
+<summary>K claims</summary>
+
+</details>
+</td></tr>
+
+<!----------------------------------------------------------------------------->
+
+<tr><td> block f </td><td> 7 </td><td> not implemented </td><td> 1 </td>
 <td><details>
 <summary>K claims</summary>
 

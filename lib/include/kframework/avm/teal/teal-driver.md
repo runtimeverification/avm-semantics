@@ -2456,7 +2456,7 @@ Stateful TEAL Operations
     requires S <Int 1
 ```
 
-*box_len*
+*box_del*
 
 ```k
   syntax KItem ::= "#boxDel" "(" Bytes "," Bytes ")"
