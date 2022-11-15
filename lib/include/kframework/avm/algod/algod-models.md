@@ -399,6 +399,7 @@ TODO: if an account contains an app, the state specification must also contain t
              ...
            </account>
            <tealPrograms> TEAL_PROGRAMS </tealPrograms>
+           <appCreator> (.Map => (APP_ID |-> DecodeAddressString(CREATOR_ADDR_STR))) ... </appCreator>
        requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR
     rule <k> #addApplicationJSON(INPUT:JSON) => panic("Invalid app JSON:" +String JSON2String(INPUT)) ... </k> [owise]
 
