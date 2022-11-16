@@ -18,7 +18,7 @@ module OPCODES-V8-SPEC
 <summary>K claims</summary>
 
 </details>
-<td></tr>
+</td></tr>
 
 <!----------------------------------------------------------------------------->
 
