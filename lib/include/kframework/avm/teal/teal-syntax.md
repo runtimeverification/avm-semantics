@@ -138,9 +138,11 @@ module TEAL-OPCODES
                              | "extract_uint16"
                              | "extract_uint32"
                              | "extract_uint64"
+                             | "replace2" Int
 
   syntax TernaryByteOpCode ::= "substring3"
                              | "extract3"
+                             | "replace3"
 
   syntax MathByteOpCode ::= ArithmMathByteOpCode
                           | RelationalMathByteOpCode
@@ -526,6 +528,8 @@ module TEAL-UNPARSER
   rule unparseTEAL(extract_uint16)                => "extract_uint16"
   rule unparseTEAL(extract_uint32)                => "extract_uint32"
   rule unparseTEAL(extract_uint64)                => "extract_uint64"
+  rule unparseTEAL(replace2 I:Int)                => "replace2" +&+ Int2String(I)
+  rule unparseTEAL(replace3)                      => "replace3"
   rule unparseTEAL(intcblock Size IntConsts)      => "intcblock" +&+ Int2String(Size:Int) +&+ TValueList2String(IntConsts:TValueNeList)
   rule unparseTEAL(intc Idx)                      => "intc" +&+ Int2String(Idx:Int)
   rule unparseTEAL(intc_0)                        => "intc_0"

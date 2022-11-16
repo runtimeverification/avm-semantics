@@ -588,6 +588,19 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
         orBool B +Int 8 >Int lengthBytes(ARRAY)
 ```
 
+*bytes replacement*
+
+```k
+  rule <k> replace2 START:Int => . ... </k>
+       <stack> B:Bytes : A:Bytes : XS => replaceAtBytes(A, START, B) : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
+  rule <k> replace3 => . ... </k>
+       <stack> B:Bytes : START:Int : A:Bytes : XS => replaceAtBytes(A, START, B) : XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+```
+
+
 #### Byte-arrays as big-endian unsigned integers
 
 

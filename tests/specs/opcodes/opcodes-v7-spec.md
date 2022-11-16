@@ -13,18 +13,30 @@ module OPCODES-V7-SPEC
 
 <!----------------------------------------------------------------------------->
 
-<tr><td> replace2 s </td><td> 7 </td><td> not implemented </td><td> 1  </td>
+<tr><td> replace2 s </td><td> 7 </td><td> tested </td><td> 1  </td>
 <td><details>
 <summary>K claims</summary>
+
+```k
+  claim <k> replace2 2 => . </k>
+        <stack> b"123" : b"abcdefgh" : XS => b"ab123fgh" : XS </stack>
+        <stacksize> 2 => 1 </stacksize>
+```
 
 </details>
 <td></tr>
 
 <!----------------------------------------------------------------------------->
 
-<tr><td> replace3 </td><td> 7 </td><td> not implemented </td><td> 1 </td>
+<tr><td> replace3 </td><td> 7 </td><td> tested </td><td> 1 </td>
 <td><details>
 <summary>K claims</summary>
+
+```k
+  claim <k> replace3 => . </k>
+        <stack> b"123" : 3 : b"abcdefgh" : XS => b"abc123gh" : XS </stack>
+        <stacksize> 3 => 1 </stacksize>
+```
 
 </details>
 </td></tr>
