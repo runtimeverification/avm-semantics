@@ -93,6 +93,9 @@ class KAVMTransaction(Transaction):
                     txn_dict[k] = encode_address(v)
                 else:
                     txn_dict[k] = b64encode(v).decode('utf8')
+            # base64 encode application arguments
+            if k == 'apaa':
+                txn_dict[k] = [b64encode(v).decode('utf8') for v in txn_dict[k]]
         return txn_dict
 
     @staticmethod

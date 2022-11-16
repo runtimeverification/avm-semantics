@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from base64 import b64encode
+from base64 import b64encode, b64decode
 from pathlib import Path
 from pprint import PrettyPrinter
 from subprocess import CalledProcessError
@@ -17,6 +17,8 @@ from kavm.adaptors.algod_account import KAVMAccount
 from kavm.adaptors.algod_transaction import KAVMTransaction
 from kavm.kavm import KAVM
 from kavm.scenario import KAVMScenario, _sort_dict
+
+from algosdk.atomic_transaction_composer import *
 
 
 def msgpack_decode_txn_list(enc: bytes) -> List[Transaction]:
@@ -121,7 +123,13 @@ class KAVMClient(algod.AlgodClient):
                 }
             elif params[0] == 'pending':
                 if len(params) >= 2:
+                    # try:
                     return self._committed_txns[params[1]]
+                    # hack to temporarily make py-algorand-sdk happy:
+                    # if the txn id is not found, return the last committed txn
+                    # except KeyError:
+                    #     (_, txn) = list(sorted(self._committed_txns.items()))[-1]
+                    #     return txn
                 else:
                     raise NotImplementedError(f'Endpoint not implemented: {requrl}')
             else:
@@ -146,7 +154,24 @@ class KAVMClient(algod.AlgodClient):
                 raise ValueError(
                     f'Cannot find app with id {app_id} in account {self._accounts[creator_address]}'
                 ) from e
-
+        elif endpoint == 'status':
+            return {
+                'catchup-time': 0,
+                'last-round': 1000000000000000,
+                'last-version': 'kavm',
+                'next-version': 'kavm',
+                'next-version-round': 0,
+                'next-version-supported': True,
+                'stopped-at-unsupported-round': True,
+                'time-since-last-round': 0,
+                'last-catchpoint': 'kavm',
+                'catchpoint': 'kavm',
+                'catchpoint-total-accounts': 0,
+                'catchpoint-processed-accounts': 0,
+                'catchpoint-verified-accounts': 0,
+                'catchpoint-total-blocks': 0,
+                'catchpoint-acquired-blocks': 0,
+            }
         else:
             self.algodLogger.debug(requrl.split('/'))
             raise NotImplementedError(f'Endpoint not implemented: {requrl}')
@@ -274,3 +299,103 @@ class KAVMClient(algod.AlgodClient):
             teal_sources_dir=self._decompiled_teal_dir_path,
         )
         return scenario
+
+
+class KAVMAtomicTransactionComposer(AtomicTransactionComposer):
+    def execute(
+        self, client: algod.AlgodClient, wait_rounds: int, override_tx_ids: Optional[List[str]] = None
+    ) -> "AtomicTransactionResponse":
+        """
+        Send the transaction group to the network and wait until it's committed
+        to a block. An error will be thrown if submission or execution fails.
+        The composer's status must be SUBMITTED or lower before calling this method,
+        since execution is only allowed once. If submission is successful,
+        this composer's status will update to SUBMITTED.
+        If the execution is also successful, this composer's status will update to COMMITTED.
+        Note: a group can only be submitted again if it fails.
+        Args:
+            client (AlgodClient): Algod V2 client
+            wait_rounds (int): maximum number of rounds to wait for transaction confirmation
+        Returns:
+            AtomicTransactionResponse: Object with confirmed round for this transaction,
+                a list of txIDs of the submitted transactions, and an array of
+                results for each method call transaction in this group. If a
+                method has no return value (void), then the method results array
+                will contain None for that method's return value.
+        """
+        if self.status > AtomicTransactionComposerStatus.SUBMITTED:
+            raise error.AtomicTransactionComposerError(
+                "AtomicTransactionComposerStatus must be submitted or lower to execute a group"
+            )
+
+        self.submit(client)
+        self.status = AtomicTransactionComposerStatus.SUBMITTED
+
+        # HACK: override the real transaction ids with the ones KAVM gave us
+        if override_tx_ids:
+            self.tx_ids = override_tx_ids
+
+        resp = transaction.wait_for_confirmation(client, self.tx_ids[0], wait_rounds)
+
+        self.status = AtomicTransactionComposerStatus.COMMITTED
+
+        confirmed_round = resp["confirmed-round"]
+        method_results = []
+
+        for i, tx_id in enumerate(self.tx_ids):
+            raw_value = None
+            return_value = None
+            decode_error = None
+            tx_info = None
+
+            if i not in self.method_dict:
+                continue
+
+            # Parse log for ABI method return value
+            try:
+                tx_info = client.pending_transaction_info(tx_id)
+                if self.method_dict[i].returns.type == abi.Returns.VOID:
+                    method_results.append(
+                        ABIResult(
+                            tx_id=tx_id,
+                            raw_value=raw_value,
+                            return_value=return_value,
+                            decode_error=decode_error,
+                            tx_info=tx_info,
+                            method=self.method_dict[i],
+                        )
+                    )
+                    continue
+
+                logs = tx_info["logs"] if "logs" in tx_info else []
+
+                # Look for the last returned value in the log
+                if not logs:
+                    raise error.AtomicTransactionComposerError("app call transaction did not log a return value")
+                result = logs[-1]
+                # Check that the first four bytes is the hash of "return"
+                result_bytes = base64.b64decode(result)
+                if len(result_bytes) < 4 or result_bytes[:4] != ABI_RETURN_HASH:
+                    raise error.AtomicTransactionComposerError("app call transaction did not log a return value")
+                raw_value = result_bytes[4:]
+                print(raw_value)
+                return_value = self.method_dict[i].returns.type.decode(raw_value)
+            except Exception as e:
+                decode_error = e
+                raise
+
+            abi_result = ABIResult(
+                tx_id=tx_id,
+                raw_value=raw_value,
+                return_value=return_value,
+                decode_error=decode_error,
+                tx_info=tx_info,
+                method=self.method_dict[i],
+            )
+            method_results.append(abi_result)
+
+        return AtomicTransactionResponse(
+            confirmed_round=confirmed_round,
+            tx_ids=self.tx_ids,
+            results=method_results,
+        )

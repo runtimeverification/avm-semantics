@@ -102,6 +102,11 @@ class KAVMScenario:
                         'nbs': 0,
                         'nui': 0,
                     }
+                else:
+                    if not 'nbs' in txn_dict['apgs']:
+                        txn_dict['apgs']['nbs'] = 0
+                    if not 'nui' in txn_dict['apgs']:
+                        txn_dict['apgs']['nui'] = 0
                 if not 'apls' in txn_dict:
                     txn_dict['apls'] = {
                         'nbs': 0,

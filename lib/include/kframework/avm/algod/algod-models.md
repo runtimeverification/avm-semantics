@@ -495,7 +495,7 @@ TODO: if an account contains an app, the state specification must also contain t
 
   rule JSONList2BytesList([.JSONs]) => .TValueList
   rule JSONList2BytesList([ I:Int , REST ]) => prepend(Int2Bytes(I, BE, Unsigned), JSONList2BytesList( [ REST ] ))
-  rule JSONList2BytesList([ S:String , REST ]) => prepend(String2Bytes(S), JSONList2BytesList( [ REST ] ))
+  rule JSONList2BytesList([ S:String , REST ]) => prepend(Base64Decode(S), JSONList2BytesList( [ REST ] ))
 
   syntax TValueList ::= JSONIntList2TUint64List(JSON) [function]
 
@@ -783,7 +783,7 @@ TODO: if an account contains an app, the state specification must also contain t
               <txConfigAsset>   CREATED_ASSET_ID </txConfigAsset>
               <txApplicationID> CREATED_APP_ID   </txApplicationID>
               <log>
-                <logData> _LOG_DATA  </logData>
+                <logData> LOG_DATA  </logData>
                 <logSize> _LOG_SIZE </logSize>
               </log>
               ...
@@ -801,11 +801,17 @@ TODO: if an account contains an app, the state specification must also contain t
                        , "sender-rewards": null
                        , "local-state-delta": null
                        , "global-state-delta": null
-                       , "logs": null
+                       , "logs": BytesList2JSONList(LOG_DATA)
                        , "inner-txns": null
                        , "txn": null
                        }
             }
+
+  syntax JSON ::= BytesList2JSONList(TValueList) [function]
+
+  rule BytesList2JSONList(.TValueList)  => [.JSONs]
+  rule BytesList2JSONList(B:Bytes)      => [Base64Encode(B)]
+  rule BytesList2JSONList(B:Bytes REST) => [Base64Encode(B), BytesList2JSONList(REST)]
 ```
 
 ```k
