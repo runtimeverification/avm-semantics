@@ -274,6 +274,8 @@ module TEAL-OPCODES
   syntax NAryStackOpCode    ::= "dig" Int
                               | "cover" Int
                               | "uncover" Int
+                              | "bury" Int
+                              | "popn" Int
 ```
 
 ### Stateless TEAL Operations
@@ -581,6 +583,8 @@ module TEAL-UNPARSER
   rule unparseTEAL(dig N)                         => "dig" +&+ Int2String(N)
   rule unparseTEAL(cover N)                       => "cover" +&+ Int2String(N)
   rule unparseTEAL(uncover N)                     => "uncover" +&+ Int2String(N)
+  rule unparseTEAL(bury N)                        => "bury" +&+ Int2String(N)
+  rule unparseTEAL(popn N)                        => "popn" +&+ Int2String(N)
   rule unparseTEAL(select)                        => "select"
   rule unparseTEAL(swap)                          => "swap"
   rule unparseTEAL(ed25519verify)                 => "ed25519verify"

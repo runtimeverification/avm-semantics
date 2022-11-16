@@ -20,7 +20,10 @@ module OPCODES-V7-SPEC
 ```k
   claim <k> replace2 2 => . </k>
         <stack> b"123" : b"abcdefgh" : XS => b"ab123fgh" : XS </stack>
-        <stacksize> 2 => 1 </stacksize>
+        <stacksize> S => S -Int 1 </stacksize>
+
+  claim <k> replace2 3 => panic(BYTES_OVERFLOW) </k>
+        <stack> b"123" : b"12345" : _ </stack>
 ```
 
 </details>
@@ -36,6 +39,9 @@ module OPCODES-V7-SPEC
   claim <k> replace3 => . </k>
         <stack> b"123" : 3 : b"abcdefgh" : XS => b"abc123gh" : XS </stack>
         <stacksize> 3 => 1 </stacksize>
+
+  claim <k> replace3 => panic(BYTES_OVERFLOW) </k>
+        <stack> b"123" : 3 :  b"12345" : _ </stack>
 ```
 
 </details>
