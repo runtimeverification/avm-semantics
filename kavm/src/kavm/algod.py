@@ -244,15 +244,16 @@ class KAVMClient(algod.AlgodClient):
     def _construct_scenario(self, accounts: Iterable[KAVMAccount], transactions: Iterable[Transaction]) -> KAVMScenario:
         """Construct a JSON simulation scenario to run on KAVM"""
         scenario = KAVMScenario.from_json(
-            json.dumps(
+            scenario_json_str=json.dumps(
                 {
                     "stages": [
                         {"stage-type": "setup-network", "data": {"accounts": [acc.dictify() for acc in accounts]}},
                         {
-                            "stage-type": "execute-transactions",
+                            "stage-type": "submit-transactions",
                             "data": {
                                 "transactions": [
-                                    KAVMTransaction.sanitize_byte_fields(txn.dictify()) for txn in transactions
+                                    KAVMTransaction.sanitize_byte_fields(_sort_dict(txn.dictify()))
+                                    for txn in transactions
                                 ]
                             },
                             "expected-returncode": 0,
@@ -260,7 +261,7 @@ class KAVMClient(algod.AlgodClient):
                         },
                     ]
                 }
-            )
+            ),
+            teal_sources_dir=self._decompiled_teal_dir_path,
         )
-        scenario.decompile_teal_programs(self._decompiled_teal_dir_path)
         return scenario
