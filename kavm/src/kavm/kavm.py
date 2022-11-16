@@ -5,6 +5,7 @@ import tempfile
 from pathlib import Path
 from subprocess import CompletedProcess
 from typing import Any, Callable, Dict, Final, Iterable, Optional, Union
+import json
 
 from pyk.cli_utils import run_process
 from pyk.kast import KSort
@@ -136,25 +137,26 @@ class KAVM(KRun):
 
     def run_avm_json(
         self,
-        scenario: str,
-        teals: str,
+        scenario: KAVMScenario,
         depth: Optional[int],
         output: str = 'none',
         profile: bool = False,
         check: bool = True,
+        existing_decompiled_teal_dir: Optional[Path] = None,
     ) -> CompletedProcess:
         """Run an AVM simulaion scenario with krun"""
 
-        sanitized_scenario = KAVMScenario.from_json(scenario).to_json()
-
-        with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_scenario_file, tempfile.NamedTemporaryFile(
-            'w+t', delete=False
-        ) as tmp_teals_file:
-            tmp_scenario_file.write(sanitized_scenario)
-            tmp_scenario_file.flush()
-
-            tmp_teals_file.write(teals)
+        with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_scenario_file, (
+            existing_decompiled_teal_dir if existing_decompiled_teal_dir else tempfile.TemporaryDirectory()
+        ) as decompiled_teal_dir, tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_teals_file:
+            for teal_file, teal_src in scenario._teal_programs.items():
+                (Path(decompiled_teal_dir) / teal_file).write_text(teal_src)
+            tmp_teals_file.write(self.parse_teals(scenario._teal_programs.keys(), Path(decompiled_teal_dir)))
             tmp_teals_file.flush()
+
+            tmp_scenario_file.write(scenario.to_json())
+            print(f'Executing scenario: {json.dumps(scenario.dictify(), indent=4, sort_keys=True)}')
+            tmp_scenario_file.flush()
 
             krun_command = ['krun', '--definition', str(self.definition_dir)]
             krun_command += [f'-cTEAL_PROGRAMS={tmp_teals_file.name}']

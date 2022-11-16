@@ -16,7 +16,7 @@ from kavm import constants
 from kavm.adaptors.algod_account import KAVMAccount
 from kavm.adaptors.algod_transaction import KAVMTransaction
 from kavm.kavm import KAVM
-from kavm.scenario import KAVMScenario
+from kavm.scenario import KAVMScenario, _sort_dict
 
 
 def msgpack_decode_txn_list(enc: bytes) -> List[Transaction]:
@@ -137,9 +137,15 @@ class KAVMClient(algod.AlgodClient):
             app_id = int(params[0])
             try:
                 creator_address = self._app_creators[app_id]
-                return self._accounts[creator_address].created_apps[app_id]
             except KeyError as e:
-                raise ValueError(f'Cannot find app with id {app_id}') from e
+                raise ValueError(f'Cannot find creator of app {app_id}') from e
+            try:
+                result = list(filter(lambda app: app['id'] == app_id, self._accounts[creator_address].created_apps))
+                return result[0]
+            except (KeyError, IndexError) as e:
+                raise ValueError(
+                    f'Cannot find app with id {app_id} in account {self._accounts[creator_address]}'
+                ) from e
 
         else:
             self.algodLogger.debug(requrl.split('/'))
@@ -209,12 +215,11 @@ class KAVMClient(algod.AlgodClient):
         scenario = self._construct_scenario(accounts=self._accounts.values(), transactions=txns)
 
         try:
-            self.algodLogger.debug(f'Executing scenario: {json.dumps(scenario.dictify(), indent=4)}')
             proc_result = self.kavm.run_avm_json(
-                scenario=scenario.to_json(),
-                teals=self.kavm.parse_teals(scenario._teal_files, self._decompiled_teal_dir_path),
+                scenario=scenario,
                 depth=0,
                 output='final-state-json',
+                existing_decompiled_teal_dir=self._decompiled_teal_dir_path,
             )
         except CalledProcessError as e:
             self.algodLogger.critical(
@@ -236,6 +241,10 @@ class KAVMClient(algod.AlgodClient):
         for acc_dict in KAVMScenario.sanitize_accounts(final_state['accounts']):
             acc_dict_translated = {KAVMAccount.inverted_attribute_map[k]: v for k, v in acc_dict.items()}
             self._accounts[acc_dict_translated['address']] = KAVMAccount(**acc_dict_translated)
+            # update app creators
+            for addr, acc in self._accounts.items():
+                for app in acc.created_apps:
+                    self._app_creators[app['id']] = addr
         # merge confirmed transactions with the ones received from KAVM
         for txn in final_state['transactions']:
             self._committed_txns[txn['id']] = txn['params']

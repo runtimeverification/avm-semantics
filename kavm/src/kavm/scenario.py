@@ -1,11 +1,21 @@
 import json
 from base64 import b64decode
+from hashlib import sha512
 from collections import OrderedDict
 from pathlib import Path
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Set, Tuple, Callable, Optional
 
 from kavm.adaptors.algod_account import KAVMAccount
 from kavm.adaptors.algod_application import KAVMApplication, KAVMApplicationParams
+
+
+def _sort_dict(input_dict: Dict[str, Any]) -> Dict[str, Any]:
+    od = {}
+    for k, v in sorted(input_dict.items()):
+        if isinstance(v, Dict):
+            od[k] = _sort_dict(v)
+        od[k] = v
+    return od
 
 
 class KAVMScenario:
@@ -13,9 +23,9 @@ class KAVMScenario:
     Rerpesentation of a JSON testing scenario for KAVM
     """
 
-    def __init__(self, stages: List[Any], teal_files: Set[str]) -> None:
+    def __init__(self, stages: List[Any], teal_programs: Dict[str, str]) -> None:
         self._stages = stages
-        self._teal_files = teal_files
+        self._teal_programs = teal_programs
 
     @staticmethod
     def sanitize_accounts(accounts_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -53,17 +63,13 @@ class KAVMScenario:
         return result
 
     @staticmethod
+    def sanitize_state_dict(state_dict: List[Dict[str, str | int]]) -> None:
+        pass
+
+    @staticmethod
     def sanitize_transactions(txn_data: List[Dict[str, Any]]) -> List[OrderedDict[str, Any]]:
         """Given a dictionary representing a Transaction, insert missing keys with default values,
         and sort the keys in lexicographic order"""
-
-        def _sort_txn_dict(txn_dict: Dict[str, Any]) -> OrderedDict[str, Any]:
-            od = OrderedDict()
-            for k, v in sorted(txn_dict.items()):
-                if isinstance(v, dict):
-                    od[k] = _sort_txn_dict(v)
-                od[k] = v
-            return od
 
         def _insert_defaults(txn_dict: Dict[str, Any]) -> Dict[str, Any]:
             if not 'fv' in txn_dict:
@@ -92,9 +98,15 @@ class KAVMScenario:
                 if not 'apas' in txn_dict:
                     txn_dict['apas'] = []
                 if not 'apgs' in txn_dict:
-                    txn_dict['apgs'] = {'nui': 0, 'nbs': 0}
+                    txn_dict['apgs'] = {
+                        'nbs': 0,
+                        'nui': 0,
+                    }
                 if not 'apls' in txn_dict:
-                    txn_dict['apls'] = {'nui': 0, 'nbs': 0}
+                    txn_dict['apls'] = {
+                        'nbs': 0,
+                        'nui': 0,
+                    }
                 if not 'apep' in txn_dict:
                     txn_dict['apep'] = 0
                 if not 'apap' in txn_dict:
@@ -107,7 +119,7 @@ class KAVMScenario:
 
         result = []
         for txn_dict in txn_data:
-            txn_dict_translated = _sort_txn_dict(_insert_defaults(txn_dict))
+            txn_dict_translated = _sort_dict(_insert_defaults(txn_dict))
             result.append(txn_dict_translated)
 
         return result
@@ -116,23 +128,44 @@ class KAVMScenario:
         return {"stages": self._stages}
 
     def to_json(self) -> str:
-        return json.dumps(self.dictify())
-
-    def decompile_teal_programs(self, decompiled_teal_dir: Path) -> None:
         """
-        If a teal file name does not end with `.teal`, it must be a base64 encoded source code.
-        We dump this source code into a file in the specified directory for parsing,
-        with the filename being the base64 encoded code itself.
+        Serialize the scenario to JSON with sorted keys
         """
-        for teal in self._teal_files:
-            if teal and not teal.endswith('.teal'):
-                with open(str(decompiled_teal_dir / teal), "w+t") as f:
-                    f.write(b64decode(teal).decode('utf-8'))
+        return json.dumps(self.dictify(), sort_keys=True)
 
     @staticmethod
-    def from_json(scenario_json_str: str) -> 'KAVMScenario':
+    def from_json(
+        scenario_json_str: str,
+        teal_sources_dir: Optional[Path] = None,
+        teal_decompiler: Optional[Callable[[str], str]] = None,
+    ) -> 'KAVMScenario':
+        """
+        Parameters
+        ----------
+        scenario_json_str
+            JSON-encoded string of a KAVM simulation scenario
+        teal_sources_dir
+            The directory to lookup TEAL progams in.
+            Defults to the current directory if None is supplied.
+
+        teal_decompiler
+            The function to decompile a TEAL program.
+            Defults to b64decode if None is supplied.
+        """
+
         parsed_scenario = json.loads(scenario_json_str)
-        teal_files = set()
+        teal_programs: Dict[str, str] = {}
+        teal_sources_dir = teal_sources_dir if teal_sources_dir else Path('.')
+        teal_decompiler = teal_decompiler if teal_decompiler else lambda src: b64decode(src).decode('ascii')
+
+        def _extract_teal_program(teal_filename_or_src: str) -> Tuple[str, str]:
+            if teal_filename_or_src.endswith('.teal'):
+                teal_src = (teal_sources_dir / teal_filename_or_src).read_text()
+                pgm_name = teal_filename_or_src
+            else:
+                teal_src = teal_decompiler(teal_filename_or_src)
+                pgm_name = sha512(teal_src.encode()).hexdigest() + '.teal'
+            return (pgm_name, teal_src)
 
         stages = parsed_scenario['stages']
 
@@ -160,25 +193,32 @@ class KAVMScenario:
             if acc and 'created-apps' in acc and acc['created-apps']:
                 for app in acc['created-apps']:
                     if app['params']['approval-program']:
-                        teal_files.add(app['params']['approval-program'])
+                        (pgm_name, pgm_src) = _extract_teal_program(app['params']['approval-program'])
+                        teal_programs[pgm_name] = pgm_src
+                        app['params']['approval-program'] = pgm_name
                     if app['params']['clear-state-program']:
-                        teal_files.add(app['params']['clear-state-program'])
-
+                        (pgm_name, pgm_src) = _extract_teal_program(app['params']['clear-state-program'])
+                        teal_programs[pgm_name] = pgm_src
+                        app['params']['clear-state-program'] = pgm_name
         try:
-            assert stages[1]['stage-type'] == 'execute-transactions' and stages[1]['data']['transactions']
+            assert stages[1]['stage-type'] == 'submit-transactions' and stages[1]['data']['transactions']
         except (KeyError, AssertionError) as e:
             raise ValueError(
-                f'Test scenario {scenario_json_str} does not contain an "execute-transactions" stage as the second stage'
+                f'Test scenario {scenario_json_str} does not contain an "submit-transactions" stage as the second stage'
             ) from e
         stages[1]['data']['transactions'] = KAVMScenario.sanitize_transactions(stages[1]['data']['transactions'])
         execute_transactions_stage = stages[1]
         for txn in execute_transactions_stage['data']['transactions']:
             if 'apap' in txn and txn['apap']:
-                teal_files.add(txn['apap'])
+                (pgm_name, pgm_src) = _extract_teal_program(txn['apap'])
+                teal_programs[pgm_name] = pgm_src
+                txn['apap'] = pgm_name
             if 'apsu' in txn and txn['apsu']:
-                teal_files.add(txn['apsu'])
+                (pgm_name, pgm_src) = _extract_teal_program(txn['apsu'])
+                teal_programs[pgm_name] = pgm_src
+                txn['apsu'] = pgm_name
 
         if len(stages) > 2:
             raise ValueError(f'Test scenario {scenario_json_str} contains more than two stages')
 
-        return KAVMScenario(stages=stages, teal_files=teal_files)
+        return KAVMScenario(stages=stages, teal_programs=teal_programs)
