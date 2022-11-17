@@ -53,14 +53,15 @@ claim
       </txnDeque>
       <currentTxnExecution>
          <globals>
-           <groupSize>                 1 </groupSize>
-           <currentApplicationID>      APP_ID </currentApplicationID>
-           <currentApplicationAddress> APP_ADDRESS </currentApplicationAddress>
+           <groupSize>                 _ => ?_ </groupSize>
+           <currentApplicationID>      _ => ?_ </currentApplicationID>
+           <currentApplicationAddress> _ => ?_ </currentApplicationAddress>
+           <creatorAddress>            _ => ?_ </creatorAddress>
            ...
          </globals>
-          <teal>    _ => ?_ </teal>
-          <effects> .List </effects>
-          <lastTxnGroupID> _ => ?_ </lastTxnGroupID>
+         <teal>    _ => ?_ </teal>
+         <effects> .List </effects>
+         <lastTxnGroupID> _ => ?_ </lastTxnGroupID>
       </currentTxnExecution>
       <innerTransactions> .List </innerTransactions>
       <activeApps> .Set => ?_ </activeApps>
@@ -120,7 +121,7 @@ claim
           ...
         </account>
       </accountsMap>
-      <appCreator> APP_ID |-> CREATOR_ADDRESS </appCreator>
+      <appCreator> .Map [APP_ID <- CREATOR_ADDRESS] </appCreator>
       <txnIndexMap> .Bag => ?_ </txnIndexMap>
       ...
     </blockchain>
