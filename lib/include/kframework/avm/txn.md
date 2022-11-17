@@ -148,9 +148,9 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
 ```k
  configuration
    <assetFreezeTxFields multiplicity="?">
-     <freezeAccount> NoTValue </freezeAccount>
-     <freezeAsset>   NoTValue </freezeAsset>
-     <assetFrozen>   NoTValue </assetFrozen>
+     <freezeAccount> PARAM_ZERO_ADDR </freezeAccount>
+     <freezeAsset>   0 </freezeAsset>
+     <assetFrozen>   0 </assetFrozen>
    </assetFreezeTxFields>
 
 endmodule
