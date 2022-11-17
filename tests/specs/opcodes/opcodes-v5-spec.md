@@ -480,7 +480,7 @@ claim <k> log => . </k>
         </transaction>
         <txnIndexMapGroup>
           <txnIndexMapGroupKey> "0" </txnIndexMapGroupKey>
-          <txnIndexMapGroupValues> (0 |-> TX_ID) ... </txnIndexMapGroupValues>
+          <txnIndexMapGroupValues> (0 |-> TX_ID) </txnIndexMapGroupValues>
         </txnIndexMapGroup>
     requires S <Int 1000
 ```

@@ -438,7 +438,7 @@ avm_prove_call_specs :=  $(filter-out $(avm_prove_specs_failing), $(wildcard tes
 test-avm-semantics-internal-prove: $(avm_prove_internal_specs:=.prove)
 test-avm-semantics-opcode-prove: $(avm_prove_opcode_specs:=.prove)
 test-avm-semantics-simple-prove: $(avm_prove_simple_specs:=.prove)
-test-avm-semantics-call-prove: $(avm_prove_call_specs:=.prove)
+test-avm-semantics-calls-prove: $(avm_prove_call_specs:=.prove)
 
 tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
 	$(VENV_ACTIVATE) && \
