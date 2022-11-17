@@ -1,45 +1,30 @@
+import base64
+import contextlib
+import json
 import os
-from base64 import b64decode
-from subprocess import CalledProcessError
-from typing import Dict
-from algosdk.error import AlgodHTTPError
+from typing import Any, Dict, List, Optional
 
 import pytest
-import contextlib
-
-from algosdk import account
-from algosdk.abi import *
-from algosdk.account import *
-from algosdk.atomic_transaction_composer import *
-from algosdk.future import *
+from algosdk import abi, account
+from algosdk.atomic_transaction_composer import AccountTransactionSigner
 from algosdk.future import transaction
-from algosdk.future.transaction import (
-    ApplicationCallTxn,
-    ApplicationCreateTxn,
-    OnComplete,
-    PaymentTxn,
-    calculate_group_id,
-)
-from algosdk.mnemonic import *
-from algosdk.v2client.algod import *
 from algosdk.v2client.algod import AlgodClient
 
 from kavm.algod import KAVMAtomicTransactionComposer, KAVMClient
 
 
-# Need to define helper methods
 def create_app(
-    client,
-    sender,
-    private_key,
-    approval_program,
-    clear_program,
-    global_schema,
-    local_schema,
-):
+    client: AlgodClient,
+    sender: str,
+    private_key: str,
+    approval_program: bytes,
+    clear_program: bytes,
+    global_schema: transaction.StateSchema,
+    local_schema: transaction.StateSchema,
+) -> int:
 
     # declare on_complete as NoOp
-    on_complete = future.transaction.OnComplete.NoOpOC.real
+    on_complete = transaction.OnComplete.NoOpOC.real
 
     # get node suggested parameters
     params = client.suggested_params()
@@ -48,7 +33,7 @@ def create_app(
     params.fee = 1000
 
     # create unsigned transaction
-    txn = future.transaction.ApplicationCreateTxn(
+    txn = transaction.ApplicationCreateTxn(
         sender,
         params,
         on_complete,
@@ -66,7 +51,7 @@ def create_app(
     tx_id = client.send_transactions([signed_txn])
 
     # await confirmation
-    confirmed_txn = future.transaction.wait_for_confirmation(client, tx_id, 4)
+    confirmed_txn = transaction.wait_for_confirmation(client, tx_id, 4)
 
     print("TXID: ", tx_id)
     print("Result confirmed in round: {}".format(confirmed_txn["confirmed-round"]))
@@ -79,7 +64,7 @@ def create_app(
     return app_id
 
 
-def compile_program(client, source_code):
+def compile_program(client: AlgodClient, source_code: str) -> bytes:
     compile_response = client.compile(source_code)
     return base64.b64decode(compile_response["result"])
 
@@ -89,12 +74,14 @@ def generate_and_fund_account(client: AlgodClient, faucet: Dict[str, str]) -> Di
 
     # fund the account from the faucet
     sp = client.suggested_params()
-    client.send_transaction(PaymentTxn(faucet['address'], sp, address, 10_000_000).sign(faucet['private_key']))
+    client.send_transaction(
+        transaction.PaymentTxn(faucet['address'], sp, address, 10_000_000).sign(faucet['private_key'])
+    )
 
     return {'address': address, 'private_key': private_key}
 
 
-def create_contract(client: AlgodClient, app_creator: Dict[str, str]) -> Contract:
+def create_contract(client: AlgodClient, app_creator: Dict[str, str]) -> abi.Contract:
 
     path = os.path.dirname(os.path.abspath(__file__))
 
@@ -110,8 +97,8 @@ def create_contract(client: AlgodClient, app_creator: Dict[str, str]) -> Contrac
     clear_program = compile_program(client, clear_source)
 
     # define empty schema
-    global_schema = future.transaction.StateSchema(0, 0)
-    local_schema = future.transaction.StateSchema(0, 0)
+    global_schema = transaction.StateSchema(0, 0)
+    local_schema = transaction.StateSchema(0, 0)
 
     # create new application
     app_id = create_app(
@@ -129,8 +116,8 @@ def create_contract(client: AlgodClient, app_creator: Dict[str, str]) -> Contrac
         js = f.read()
 
     app_abi_spec = json.loads(js)
-    app_abi_spec['networks']['sandbox'] = NetworkInfo(app_id=app_id).dictify()
-    return Contract.undictify(app_abi_spec)
+    app_abi_spec['networks']['sandbox'] = abi.NetworkInfo(app_id=app_id).dictify()
+    return abi.Contract.undictify(app_abi_spec)
 
 
 @pytest.fixture
@@ -146,7 +133,7 @@ def app_creator(client: AlgodClient, faucet: Dict[str, str]) -> Dict[str, str]:
 
 
 @pytest.fixture
-def calculator_contract(client: AlgodClient, app_creator: Dict[str, str]) -> Contract:
+def calculator_contract(client: AlgodClient, app_creator: Dict[str, str]) -> abi.Contract:
     """Calculator contract spec"""
     return create_contract(client, app_creator)
 
@@ -164,7 +151,7 @@ def calculator_contract(client: AlgodClient, app_creator: Dict[str, str]) -> Con
 def test_calculator(
     client: AlgodClient,
     user: Dict[str, str],
-    calculator_contract: Contract,
+    calculator_contract: abi.Contract,
     abi_method: str,
     method_args: List[int],
     expected_result: Optional[int],

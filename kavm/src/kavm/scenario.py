@@ -1,9 +1,8 @@
 import json
 from base64 import b64decode
 from hashlib import sha512
-from collections import OrderedDict
 from pathlib import Path
-from typing import Any, Dict, List, Set, Tuple, Callable, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from kavm.adaptors.algod_account import KAVMAccount
 from kavm.adaptors.algod_application import KAVMApplication, KAVMApplicationParams
@@ -67,7 +66,7 @@ class KAVMScenario:
         pass
 
     @staticmethod
-    def sanitize_transactions(txn_data: List[Dict[str, Any]]) -> List[OrderedDict[str, Any]]:
+    def sanitize_transactions(txn_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Given a dictionary representing a Transaction, insert missing keys with default values,
         and sort the keys in lexicographic order"""
 
@@ -165,9 +164,11 @@ class KAVMScenario:
 
         def _extract_teal_program(teal_filename_or_src: str) -> Tuple[str, str]:
             if teal_filename_or_src.endswith('.teal'):
+                assert teal_sources_dir
                 teal_src = (teal_sources_dir / teal_filename_or_src).read_text()
                 pgm_name = teal_filename_or_src
             else:
+                assert teal_decompiler
                 teal_src = teal_decompiler(teal_filename_or_src)
                 pgm_name = sha512(teal_src.encode()).hexdigest() + '.teal'
             return (pgm_name, teal_src)

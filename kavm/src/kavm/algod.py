@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from base64 import b64encode, b64decode
+from base64 import b64encode
 from pathlib import Path
 from pprint import PrettyPrinter
 from subprocess import CalledProcessError
@@ -9,6 +9,17 @@ from typing import Any, Dict, Iterable, List, Optional, cast
 
 import msgpack
 from algosdk import encoding
+from algosdk.atomic_transaction_composer import (
+    ABI_RETURN_HASH,
+    ABIResult,
+    AtomicTransactionComposer,
+    AtomicTransactionComposerStatus,
+    AtomicTransactionResponse,
+    abi,
+    base64,
+    error,
+    transaction,
+)
 from algosdk.future.transaction import PaymentTxn, Transaction
 from algosdk.v2client import algod
 
@@ -17,8 +28,6 @@ from kavm.adaptors.algod_account import KAVMAccount
 from kavm.adaptors.algod_transaction import KAVMTransaction
 from kavm.kavm import KAVM
 from kavm.scenario import KAVMScenario, _sort_dict
-
-from algosdk.atomic_transaction_composer import *
 
 
 def msgpack_decode_txn_list(enc: bytes) -> List[Transaction]:
@@ -323,7 +332,7 @@ class KAVMAtomicTransactionComposer(AtomicTransactionComposer):
                 method has no return value (void), then the method results array
                 will contain None for that method's return value.
         """
-        if self.status > AtomicTransactionComposerStatus.SUBMITTED:
+        if self.status > AtomicTransactionComposerStatus.SUBMITTED:  # type: ignore
             raise error.AtomicTransactionComposerError(
                 "AtomicTransactionComposerStatus must be submitted or lower to execute a group"
             )

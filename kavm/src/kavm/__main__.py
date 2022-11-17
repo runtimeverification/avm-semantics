@@ -3,10 +3,7 @@
 import json
 import logging
 import os
-import shutil
 import sys
-import tempfile
-from hashlib import sha512
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from subprocess import CalledProcessError

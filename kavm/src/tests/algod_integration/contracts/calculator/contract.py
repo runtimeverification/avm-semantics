@@ -1,4 +1,4 @@
-from pyteal import *
+from pyteal import Approve, BareCallActions, Expr, OnCompleteAction, OptimizeOptions, Router, abi
 
 # Main router class
 router = Router(

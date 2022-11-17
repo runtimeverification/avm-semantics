@@ -1,4 +1,3 @@
-from base64 import b64encode
 from typing import Dict
 
 from algosdk.encoding import encode_address
@@ -6,15 +5,7 @@ from algosdk.future import transaction
 from algosdk.v2client import algod
 from pyteal import And, App, Bytes, Cond, Expr, Int, Mode, OnComplete, Return, Seq, Txn, compileTeal
 
-from ..algosdk_utils import (
-    compile_program,
-    generate_and_fund_account,
-    get_created_app_id,
-    get_global_bytes,
-    get_global_int,
-    get_local_bytes,
-    get_local_int,
-)
+from ..algosdk_utils import compile_program, generate_and_fund_account, get_created_app_id, get_global_bytes
 
 
 # A trivial stateful application that does two things:
