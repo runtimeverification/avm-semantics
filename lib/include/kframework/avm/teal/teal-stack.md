@@ -25,7 +25,7 @@ The elements of the stack are values of sort `TValue`, i.e. either `TUInt64` or 
 - `#drop(N , WS)` removes the first $N$ elements of a `TStack`.
 
 ```k
-  syntax TStack ::= #take ( Int , TStack ) [klabel(takeTStack), function, functional]
+  syntax TStack ::= #take ( Int , TStack ) [klabel(takeTStack), function, total]
   // --------------------------------------------------------------------------------------------
   rule [#take.zero]:      #take(N, _Stack)          => .TStack
     requires N <=Int 0
@@ -34,7 +34,7 @@ The elements of the stack are values of sort `TValue`, i.e. either `TUInt64` or 
   rule [#take.recursive]: #take(N, (X : XS):TStack) => X : #take(N -Int 1, XS)
     requires N >Int 0
 
-  syntax TStack ::= #drop ( Int , TStack ) [klabel(dropTStack), function, functional]
+  syntax TStack ::= #drop ( Int , TStack ) [klabel(dropTStack), function, total]
   // --------------------------------------------------------------------------------------------
   rule #drop(N, XS:TStack)       => XS
     requires N <=Int 0
@@ -73,8 +73,8 @@ The elements of the stack are values of sort `TValue`, i.e. either `TUInt64` or 
 ```
 
 ```k
-  syntax Int ::= #sizeTStack ( TStack )       [function, functional, smtlib(sizeTStack)]
-               | #sizeTStack ( TStack , Int ) [function, functional, klabel(sizeTStackAux),
+  syntax Int ::= #sizeTStack ( TStack )       [function, total, smtlib(sizeTStack)]
+               | #sizeTStack ( TStack , Int ) [function, total, klabel(sizeTStackAux),
                                                smtlib(sizeTStackAux)]
   // --------------------------------------------------------------------------------------------
   rule #sizeTStack ( XS ) => #sizeTStack(XS, 0)
@@ -85,8 +85,8 @@ The elements of the stack are values of sort `TValue`, i.e. either `TUInt64` or 
 ## Stack reverse
 
 ```k
-  syntax TStack ::= #reverse(TStack)         [function, functional]
-                  | #reverse(TStack, TStack) [function, functional]
+  syntax TStack ::= #reverse(TStack)         [function, total]
+                  | #reverse(TStack, TStack) [function, total]
   // --------------------------------------------------------------
   rule #reverse(XS)          => #reverse(XS, .TStack)
   rule #reverse(.TStack, YS) => YS
@@ -96,8 +96,8 @@ The elements of the stack are values of sort `TValue`, i.e. either `TUInt64` or 
 ## Stack concatenation
 
 ```k
-  syntax TStack ::= TStack TStack                    [function, functional]
-                 | #concatTStackImpl(TStack, TStack) [function, functional]
+  syntax TStack ::= TStack TStack                    [function, total]
+                 | #concatTStackImpl(TStack, TStack) [function, total]
   // ------------------------------------------------------------------------------
   rule XS YS => #concatTStackImpl(#reverse(XS), YS)
 

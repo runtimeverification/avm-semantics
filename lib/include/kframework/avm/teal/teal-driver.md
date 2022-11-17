@@ -191,7 +191,7 @@ Opcode Semantics
     requires isBytes(I1) orBool isBytes(I2) orBool isBytes(I3)
 
   // Auxilary funtion that interprets two `UInt64` as one Int, big-endian
-  syntax Int ::= asUInt128(TUInt64, TUInt64) [function, functional]
+  syntax Int ::= asUInt128(TUInt64, TUInt64) [function, total]
   // --------------------------------------------------------------
   rule asUInt128(I1, I2) => (I1 <<Int 64) +Int I2
 
