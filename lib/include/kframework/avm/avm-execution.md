@@ -943,8 +943,6 @@ OptIn
        </account>
      requires notBool hasOptedInApp(APP_ID, SENDER)
 
-// Case 3: needed because of bug?
-
 
 ```
 
