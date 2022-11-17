@@ -23,9 +23,9 @@
                                         "nbs": 1
                                     },
                                     "global-state": [
-                                       { "key": "key1", "value": {"type": 2, "bytes": "", "uint": 1 }},
-                                       { "key": "key2", "value": {"type": 1, "bytes": "two", "uint": 0 }},
-                                       { "key": "key3", "value": {"type": 2, "bytes": "", "uint": 3 }}
+                                       { "key": "a2V5MQ==", "value": {"type": 2, "bytes": "", "uint": 1 }},
+                                       { "key": "a2V5Mg==", "value": {"type": 1, "bytes": "dHdv", "uint": 0 }},
+                                       { "key": "a2V5Mw==", "value": {"type": 2, "bytes": "", "uint": 3 }}
                                     ]
                                 }
                             }
