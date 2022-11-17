@@ -5,7 +5,7 @@ module ADD-APP-ARGS-SPEC
 
 ```k
 
-claim 
+claim
   <kavm>
 
     <k> #evalTxGroup() => . </k>
@@ -19,52 +19,26 @@ claim
       <transaction>
         <txID> TX_ID:String </txID>
         <txHeader>
-          <fee> _ </fee>
-          <firstValid> _ </firstValid>
-          <lastValid> _ </lastValid>
-          <genesisHash> _ </genesisHash>
-          <sender> SENDER:Bytes </sender>
+          <sender> SENDER_ADDRESS:Bytes </sender>
           <txType> "appl" </txType>
           <typeEnum> @ appl </typeEnum>
-          <groupID> GROUP_ID:String </groupID>
-          <groupIdx> GROUP_IDX:Int </groupIdx>
-          <genesisID> _ </genesisID>
-          <lease> _ </lease>
-          <note> _ </note>
-          <rekeyTo> _ </rekeyTo>
+          <groupID> _GROUP_ID:String </groupID>
+          <groupIdx> _GROUP_IDX:Int </groupIdx>
+          ...
         </txHeader>
         <txnTypeSpecificFields>
           <appCallTxFields>
             <applicationID> APP_ID </applicationID>
             <onCompletion> @ NoOp </onCompletion>
-            <accounts> _ </accounts>
-            <approvalProgramSrc> _ </approvalProgramSrc>
-            <clearStateProgramSrc> _ </clearStateProgramSrc>
-            <approvalProgram> _ </approvalProgram>
-            <clearStateProgram> _ </clearStateProgram>
             <applicationArgs> ARG1:Int ARG2:Int </applicationArgs>
-            <foreignApps> _ </foreignApps>
-            <foreignAssets> _ </foreignAssets>
-            <boxReferences> _ </boxReferences>
-            <globalStateSchema>
-              <globalNui> _ </globalNui>
-              <globalNbs> _ </globalNbs>
-            </globalStateSchema>
-            <localStateSchema>
-              <localNui> _ </localNui>
-              <localNbs> _ </localNbs>
-            </localStateSchema>
-            <extraProgramPages> _ </extraProgramPages>
+            ...
           </appCallTxFields>
         </txnTypeSpecificFields>
         <applyData>
           <txScratch> _ => ?_ </txScratch>
-          <txConfigAsset> _ => ?_ </txConfigAsset>
-          <txApplicationID> _ => ?_ </txApplicationID>
-          <log>
-            <logData> .TValueList => Int2Bytes(ARG1 +Int ARG2, BE, Unsigned) </logData>
-            <logSize> 0 => ?_ </logSize>
-          </log>
+          <logData> .TValueList => ?APP_RESULT </logData>
+          <logSize> 0 => ?_ </logSize>
+          ...
         </applyData>
         <txnExecutionContext> _ => ?_ </txnExecutionContext>
         <resume> false => true </resume>
@@ -78,9 +52,17 @@ claim
         <dequeIndexSet> SetItem(TX_ID) => ?_ </dequeIndexSet>
       </txnDeque>
       <currentTxnExecution>
-        _ => ?_
+         <globals>
+           <groupSize>                 1 </groupSize>
+           <currentApplicationID>      APP_ID </currentApplicationID>
+           <currentApplicationAddress> APP_ADDRESS </currentApplicationAddress>
+           ...
+         </globals>
+          <teal>    _ => ?_ </teal>
+          <effects> .List </effects>
+          <lastTxnGroupID> _ => ?_ </lastTxnGroupID>
       </currentTxnExecution>
-      <innerTransactions> _ => ?_ </innerTransactions>
+      <innerTransactions> .List </innerTransactions>
       <activeApps> .Set => ?_ </activeApps>
       <touchedAccounts> .Set => ?_ </touchedAccounts>
     </avmExecution>
@@ -88,32 +70,23 @@ claim
     <blockchain>
       <accountsMap>
         <account>
-          <address> SENDER:Bytes => ?_ </address>
-          <balance> BALANCE:Int => ?_ </balance>
-          <minBalance> MIN_BALANCE:Int => ?_ </minBalance>
-          <round> _ => ?_ </round>
-          <preRewards> _ => ?_ </preRewards>
-          <rewards> _ => ?_ </rewards>
-          <status> _ => ?_ </status>
-          <key> _ => ?_ </key>
+          <address> SENDER_ADDRESS:Bytes => ?_ </address>
+          <balance> SENDER_BALANCE:Int => ?_ </balance>
+          <minBalance> SENDER_MIN_BALANCE:Int </minBalance>
           <appsCreated> .Bag </appsCreated>
           <appsOptedIn> .Bag </appsOptedIn>
           <assetsCreated> .Bag </assetsCreated>
           <assetsOptedIn> .Bag </assetsOptedIn>
           <boxes> .Bag </boxes>
+          ...
         </account>
         <account>
           <address> CREATOR_ADDRESS:Bytes => ?_ </address>
           <balance> _ => ?_ </balance>
           <minBalance> _ => ?_ </minBalance>
-          <round> _ => ?_ </round>
-          <preRewards> _ => ?_ </preRewards>
-          <rewards> _ => ?_ </rewards>
-          <status> _ => ?_ </status>
-          <key> _ => ?_ </key>
           <appsCreated>
             <app>
-              <appID> APP_ID => ?_ </appID>
+              <appID> APP_ID </appID>
               <approvalPgmSrc> (
                   txn ApplicationArgs 0
                   txn ApplicationArgs 1
@@ -123,39 +96,33 @@ claim
 
                   int 1
                   return
-                ):TealInputPgm => ?_ 
+                ):TealInputPgm => ?_
               </approvalPgmSrc>
               <clearStatePgmSrc> (int 1 return):TealInputPgm => ?_ </clearStatePgmSrc>
-              <approvalPgm> _ => ?_ </approvalPgm>
-              <clearStatePgm> _ => ?_ </clearStatePgm>
-              <globalState>
-                <globalNumInts> _ => ?_ </globalNumInts>
-                <globalNumBytes> _ => ?_ </globalNumBytes>
-                <globalBytes> _ => ?_ </globalBytes>
-                <globalInts> _ => ?_ </globalInts>
-              </globalState>
-              <localState>
-                <localNumInts> _ => ?_ </localNumInts>
-                <localNumBytes> _ => ?_ </localNumBytes>
-              </localState>
-              <extraPages> _ => ?_ </extraPages>
+              ...
             </app>
           </appsCreated>
           <appsOptedIn> .Bag </appsOptedIn>
           <assetsCreated> .Bag </assetsCreated>
           <assetsOptedIn> .Bag </assetsOptedIn>
           <boxes> .Bag </boxes>
+          ...
+        </account>
+        <account>
+          <address> APP_ADDRESS:Bytes </address>
+          <balance> APP_BALANCE:Int => ?_ </balance>
+          <minBalance> APP_MIN_BALANCE:Int </minBalance>
+          <appsCreated> .Bag </appsCreated>
+          <appsOptedIn> .Bag </appsOptedIn>
+          <assetsCreated> .Bag </assetsCreated>
+          <assetsOptedIn> .Bag </assetsOptedIn>
+          <boxes> .Bag </boxes>
+          ...
         </account>
       </accountsMap>
-      <appCreator> _ => ?_ </appCreator>
-      <assetCreator> _ => ?_ </assetCreator>
-      <blocks> _ => ?_ </blocks>
-      <blockheight> _ => ?_ </blockheight>
-      <nextAssetID> _ => ?_ </nextAssetID>
-      <nextAppID> _ => ?_ </nextAppID>
-      <nextTxnID> _ => ?_ </nextTxnID>
-      <nextGroupID> _ => ?_ </nextGroupID>
+      <appCreator> APP_ID |-> CREATOR_ADDRESS </appCreator>
       <txnIndexMap> .Bag => ?_ </txnIndexMap>
+      ...
     </blockchain>
 
     <tealPrograms> _ </tealPrograms>
@@ -163,10 +130,15 @@ claim
   </kavm>
 
   requires APP_ID >Int 0
-   andBool BALANCE >=Int MIN_BALANCE
-   andBool SENDER =/=K CREATOR_ADDRESS
-
+   andBool APP_ADDRESS ==K getAppAddressBytes(APP_ID)
+   andBool APP_BALANCE >=Int APP_MIN_BALANCE
+   andBool CREATOR_ADDRESS =/=K APP_ADDRESS
+   andBool SENDER_ADDRESS  =/=K APP_ADDRESS
+   andBool SENDER_ADDRESS  =/=K CREATOR_ADDRESS
+   andBool SENDER_BALANCE >=Int SENDER_MIN_BALANCE
    andBool ARG1 +Int ARG2 <=Int MAX_UINT64
+
+  ensures ?APP_RESULT ==K Int2Bytes(ARG1 +Int ARG2, BE, Unsigned)
 
 ```
 
