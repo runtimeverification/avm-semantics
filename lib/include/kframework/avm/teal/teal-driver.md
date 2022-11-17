@@ -588,6 +588,31 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
         orBool B +Int 8 >Int lengthBytes(ARRAY)
 ```
 
+*bytes replacement*
+
+```k
+  rule <k> replace2 START:Int => . ... </k>
+       <stack> B:Bytes : A:Bytes : XS => replaceAtBytes(A, START, B) : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires START +Int lengthBytes(B) <=Int lengthBytes(A)
+
+  rule <k> replace2 START:Int => panic(BYTES_OVERFLOW) ... </k>
+       <stack> B:Bytes : A:Bytes : _ </stack>
+       <stacksize> _ </stacksize>
+    requires START +Int lengthBytes(B) >Int lengthBytes(A)
+
+  rule <k> replace3 => . ... </k>
+       <stack> B:Bytes : START:Int : A:Bytes : XS => replaceAtBytes(A, START, B) : XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+    requires START +Int lengthBytes(B) <=Int lengthBytes(A)
+
+  rule <k> replace3 => panic(BYTES_OVERFLOW) ... </k>
+       <stack> B:Bytes : START:Int : A:Bytes : _ </stack>
+       <stacksize> _ </stacksize>
+    requires START +Int lengthBytes(B) >Int lengthBytes(A)
+```
+
+
 #### Byte-arrays as big-endian unsigned integers
 
 
@@ -1143,14 +1168,6 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <callStack> ListItem(frame(RETURN_PC, STACK_PTR) => frame(RETURN_PC, STACK_PTR, ARGS, RETS)) ... </callStack>
     requires (ARGS >=Int 0) andBool (RETS >=Int 0)
 
-  rule <k> dupn N => dupn (N -Int 1) ... </k>
-       <stack> X : XS => X : X : XS </stack>
-       <stacksize> S => S +Int 1 </stacksize>
-    requires N >Int 0
-     andBool S <Int MAX_STACK_DEPTH
-
-  rule <k> dupn 0 => . ... </k>
-
   rule <k> frame_dig N => . ... </k>
        <stack> XS => XS{getStackPtr() +Int N} : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
@@ -1241,6 +1258,36 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        </stack>
        <stacksize> S => S -Int 2 </stacksize>
     requires notBool (int2Bool(A))
+
+  rule <k> bury N:Int => . ... </k>
+       <stack> A:TValue : STACK => (#take(N -Int 1, STACK) A : #drop(N, STACK)) </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires 0 <Int N andBool N <Int S
+
+  rule <k> bury N:Int => panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires notBool(0 <Int N andBool N <Int S)
+
+  rule <k> popn N:Int => . ... </k>
+       <stack> STACK => #drop(N, STACK) </stack>
+       <stacksize> S => S -Int N </stacksize>
+    requires N <=Int S
+
+  rule <k> popn N:Int => panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires N >Int S
+
+  rule <k> dupn N => dupn (N -Int 1) ... </k>
+       <stack> X : XS => X : X : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires N >Int 0
+     andBool S <Int MAX_STACK_DEPTH
+
+  rule <k> dupn 0 => . ... </k>
+
+  rule <k> dupn N => panic(STACK_OVERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S +Int N >Int MAX_STACK_DEPTH
 ```
 
 ### Blockchain State Accessors
@@ -2456,7 +2503,7 @@ Stateful TEAL Operations
     requires S <Int 1
 ```
 
-*box_len*
+*box_del*
 
 ```k
   syntax KItem ::= "#boxDel" "(" Bytes "," Bytes ")"
