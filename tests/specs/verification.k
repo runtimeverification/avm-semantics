@@ -151,10 +151,11 @@ module VERIFICATION
   rule notBool (N >=Int M) => M  >Int N  [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
-// LengthBytes
+// Bytes and String reasoning
 ////////////////////////////////////////////////////////////////////////////////
 
   rule lengthBytes(B1) +Int lengthBytes(B2) => lengthBytes(B1 +Bytes B2)  [simplification]
+  rule String2Bytes(Bytes2String(B)) => B  [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Address hooks
@@ -162,6 +163,13 @@ module VERIFICATION
 
   // for symbolic reasoning, we relax address validity to just the checking the length
   rule IsAddressValid(A) => lengthString(A) ==Int 58 [simplification]
+
+  // for symbolic reasoning, we eliminate the hashing from app address calculation
+  // rule getAppAddressBytes(APP_ID:Int) => padLeftBytes(b"appID" +Bytes Int2Bytes(8, APP_ID, BE), 58, 0) [simplification]
+  // The following lemma does the jon of the commented-out lemma for getAppAddressBytes, which
+  // does not apply because the rule for getAppAddressBytes applies first
+  rule String2Bytes(Sha512_256raw(S:String)) => padLeftBytes(String2Bytes(S), 58, 0)  [simplification, concrete]
+  rule Sha512_256raw(S:String) => S  [simplification, symbolic]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Cryptographic function hooks 
