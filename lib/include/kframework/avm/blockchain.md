@@ -972,11 +972,17 @@ The transaction index connects a transaction groups ID to the transaction IDs co
           <txnIndexMapGroupValues> GROUP_INDEX |-> TXN_ID ... </txnIndexMapGroupValues>
         </txnIndexMapGroup>
 
-  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD, FIELD_INDEX) => getTxnField(TXN_ID, FIELD, FIELD_INDEX) ]]
+  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD, FIELD_INDEX) => getTxnField( {MV[GROUP_INDEX]}:>String, FIELD, FIELD_INDEX) ]]
         <txnIndexMapGroup>
           <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
-          <txnIndexMapGroupValues> GROUP_INDEX |-> TXN_ID ... </txnIndexMapGroupValues>
+          <txnIndexMapGroupValues> MV </txnIndexMapGroupValues>
         </txnIndexMapGroup>
+
+//  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD, FIELD_INDEX) => getTxnField(TXN_ID, FIELD, FIELD_INDEX) ]]
+//        <txnIndexMapGroup>
+//          <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
+//          <txnIndexMapGroupValues> GROUP_INDEX |-> TXN_ID ... </txnIndexMapGroupValues>
+//        </txnIndexMapGroup>
 
   rule getGroupFieldByIdx(_, _, _) => NoTValue [owise]
 
