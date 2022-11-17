@@ -745,7 +745,7 @@ module OPCODES-V1-SPEC
         <txnIndexMap>
           <txnIndexMapGroup>
             <txnIndexMapGroupKey> GROUP_ID:String </txnIndexMapGroupKey>
-            <txnIndexMapGroupValues> GROUP_INDEX:Int |-> TX_ID:String </txnIndexMapGroupValues>
+            <txnIndexMapGroupValues> .Map [GROUP_INDEX:Int <- TX_ID:String] </txnIndexMapGroupValues>
           </txnIndexMapGroup>
           ...
         </txnIndexMap>
@@ -801,15 +801,17 @@ module OPCODES-V1-SPEC
          <txnIndexMap>
            <txnIndexMapGroup>
              <txnIndexMapGroupKey> GROUP_ID:String </txnIndexMapGroupKey>
-             <txnIndexMapGroupValues> GROUP_INDEX:Int |-> TARGET_TX_ID:String
-                                      CURRENT_GROUP_INDEX |-> CURRENT_TX_ID:String
-                                      ...
+             <txnIndexMapGroupValues> .Map 
+                                      [GROUP_INDEX:Int <- TARGET_TX_ID:String]
+                                      [CURRENT_GROUP_INDEX <- CURRENT_TX_ID:String]
              </txnIndexMapGroupValues>
            </txnIndexMapGroup>
            ...
          </txnIndexMap>
      requires S <Int MAX_STACK_DEPTH
       andBool #isValidForTxnType(Sender, TYPE)
+      andBool GROUP_INDEX =/=K CURRENT_GROUP_INDEX
+      andBool CURRENT_TX_ID =/=K TARGET_TX_ID
 ```
 </details>
 </td></tr>

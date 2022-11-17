@@ -194,10 +194,6 @@ See also [this section](https://developer.algorand.org/docs/get-details/dapps/sm
   syntax Bytes ::= getAppAddressBytes(Int) [function, functional]
   //-------------------------------------------------------------
   rule getAppAddressBytes(APP_ID) => String2Bytes(Sha512_256raw(Bytes2String(b"appID" +Bytes Int2Bytes(8, APP_ID, BE))))
-
-  syntax TAddressLiteral ::= getAppAddress(Int) [function, functional]
-  //------------------------------------------------------------------
-  rule getAppAddress(APP_ID) => String2TealAddress(EncodeAddressBytes(getAppAddressBytes(APP_ID)))
 ```
 
 Base64-encoded `String`s can decoded into `Bytes` (and the reverse) with the following hooked functions:
