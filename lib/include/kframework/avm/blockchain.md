@@ -966,10 +966,10 @@ The transaction index connects a transaction groups ID to the transaction IDs co
   syntax MaybeTValue ::= getGroupFieldByIdx(String, Int, TxnField) [function]
   syntax MaybeTValue ::= getGroupFieldByIdx(String, Int, TxnaField, Int) [function]
 
-  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD) => getTxnField(TXN_ID, FIELD) ]]
+  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD) => getTxnField({MV[GROUP_INDEX]}:>String, FIELD) ]]
         <txnIndexMapGroup>
           <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
-          <txnIndexMapGroupValues> GROUP_INDEX |-> TXN_ID ... </txnIndexMapGroupValues>
+          <txnIndexMapGroupValues> MV </txnIndexMapGroupValues>
         </txnIndexMapGroup>
 
   rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD, FIELD_INDEX) => getTxnField( {MV[GROUP_INDEX]}:>String, FIELD, FIELD_INDEX) ]]
