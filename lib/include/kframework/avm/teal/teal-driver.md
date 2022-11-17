@@ -2016,7 +2016,7 @@ Stateful TEAL Operations
            #asset_params_get getAssetParamsField(FIELD, {asaReference(A)}:>TValue)
        ...
        </k>
-       <stack> (A:TUInt64) : _ </stack>
+       <stack> (A:TUInt64) : XS => XS </stack>
        <stacksize> S </stacksize>
     requires S <Int MAX_STACK_DEPTH
      andBool isTValue(asaReference(A))
@@ -2037,13 +2037,13 @@ Stateful TEAL Operations
   syntax KItem ::= "#asset_params_get" TValue
   // ----------------------------------------
   rule <k> #asset_params_get RET => .K ... </k>
-       <stack> (_:Int) : XS => 1 : RET : XS </stack>
+       <stack> XS => 1 : RET : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
      andBool (notBool (isInt(RET)) orElseBool {RET}:>Int >=Int 0 )
 
   rule <k> #asset_params_get RET => .K ... </k>
-       <stack> (_:Int) : XS => 0 : 0 : XS </stack>
+       <stack> XS => 0 : 0 : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
      andBool (isInt(RET) andThenBool {RET}:>Int <Int 0)

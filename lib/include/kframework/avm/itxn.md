@@ -303,7 +303,7 @@ module ALGO-ITXN
          <transaction>
            .AssetFreezeTxFieldsCell =>
            <assetFreezeTxFields>
-             <freezeAccount> getGlobalField(ZeroAddress) </freezeAccount>
+             <freezeAccount> {getGlobalField(ZeroAddress)}:>Bytes </freezeAccount>
              <freezeAsset>   0                           </freezeAsset>
              <assetFrozen>   0                           </assetFrozen>
            </assetFreezeTxFields>

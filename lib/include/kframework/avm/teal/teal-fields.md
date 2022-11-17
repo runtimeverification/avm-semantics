@@ -22,6 +22,7 @@ module TEAL-FIELDS
                        | "Round"
                        | "LatestTimestamp"
                        | "CurrentApplicationID"
+                       | "CreatorAddress"
                        | "CurrentApplicationAddress"
                        | "OpcodeBudget"
                        | "CreatorAddress"
