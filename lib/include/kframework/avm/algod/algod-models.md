@@ -64,7 +64,6 @@ TODO: if an account contains an app, the state specification must also contain t
 
     rule <k> #setupOptInAssets(_:Bytes, .JSONs) => . ... </k>
 
-
     syntax KItem ::= #addAccountJSON(JSON)
     //------------------------------------
     rule <k> #addAccountJSON({"address": ADDR:String,
@@ -400,6 +399,7 @@ TODO: if an account contains an app, the state specification must also contain t
              ...
            </account>
            <tealPrograms> TEAL_PROGRAMS </tealPrograms>
+           <appCreator> (.Map => (APP_ID |-> DecodeAddressString(CREATOR_ADDR_STR))) ... </appCreator>
        requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR
     rule <k> #addApplicationJSON(INPUT:JSON) => panic("Invalid app JSON:" +String JSON2String(INPUT)) ... </k> [owise]
 
@@ -588,6 +588,48 @@ TODO: if an account contains an app, the state specification must also contain t
              <assetASender> DecodeAddressString(ASSET_SENDER) </assetASender>
              <assetCloseTo> DecodeAddressString(CLOSE_TO) </assetCloseTo>
            </assetTransferTxFields>
+           ...
+         </transaction>
+         TXNS
+       </transactions>
+       <nextTxnID> ID => ID +Int 1 </nextTxnID>
+```
+
+### Asset freeze
+
+```k
+    rule <k> #addTxnJSON({
+                           "afrz": FROZEN:Bool,
+                           "fadd": FREEZE_ADDR:String,
+                           "faid": ASSET_ID:Int,
+                           "fee": _FEE:Int,
+                           "fv": _FIRST_VALID:Int,
+                           "gen": _GEN:String,
+                           "gh": _,
+                           "grp": GROUP_ID:String,
+                           "lv": _LAST_VALID:Int,
+                           "snd": SENDER:String,
+                           "type": "afrz"
+                         })
+          => #pushTxnBack(<txID> Int2String(ID) </txID>) ...
+        </k>
+       <transactions>
+         TXNS =>
+         <transaction>
+           <txID> Int2String(ID) </txID>
+           <txHeader>
+             <sender>      DecodeAddressString(SENDER)   </sender>
+             <txType>      "afrz"    </txType>
+             <typeEnum>    @ afrz    </typeEnum>
+             <groupID>     GROUP_ID </groupID>
+             <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>
+             ...           // other fields will receive default values
+           </txHeader>
+           <assetFreezeTxFields>
+             <freezeAccount> DecodeAddressString(FREEZE_ADDR) </freezeAccount>
+             <freezeAsset> ASSET_ID </freezeAsset>
+             <assetFrozen> bool2Int(FROZEN) </assetFrozen>
+           </assetFreezeTxFields>
            ...
          </transaction>
          TXNS

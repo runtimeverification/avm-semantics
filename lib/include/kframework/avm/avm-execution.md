@@ -30,15 +30,6 @@ The model has a number of top-level rules that will control the configuration in
 A sequence of `AlgorandCommand`s will be supplied as `$PGM` to `krun`.
 
 ```k
-  syntax AVMSimulation ::= ".AS"
-                         | AlgorandCommand ";" AVMSimulation
-  // -------------------------------------------------------
-
-  rule <k> .AS                  => .        ... </k>
-  rule <k> AC; .AS              => AC       ... </k>
-  rule <k> AC; AS:AVMSimulation => AC ~> AS ... </k>
-    requires AS =/=K .AS
-
   syntax AlgorandCommand
 
 endmodule
@@ -64,11 +55,6 @@ If one of the transactions is denied (including the inner ones), the group evalu
 and the current configuration is frozen for examination.
 
 ```k
-  syntax AlgorandCommand ::= #setMode(TealMode)
-  //-------------------------------------------
-  rule <k> #setMode(MODE) => . ...</k>
-       <mode> _ => MODE </mode>
-
   // #evalTxGroup
   //---------------------------------------
   rule <k> #evalTxGroup() => #initTxnIndexMap() ~> #evalNextTx() ...</k>
@@ -262,6 +248,7 @@ Delete application
          </minBalance>
          ...
        </account>
+       <appCreator> (APP_ID |-> _) => .Map ... </appCreator>
 ```
 
 Close asset account to
@@ -627,7 +614,10 @@ Asset transfer goes through if:
          ...
        </transaction>
     requires hasOptedInAsset(ASSET_ID, SENDER)
+     andBool hasOptedInAsset(ASSET_ID, RECEIVER)
      andBool CLOSE_TO ==K getGlobalField(ZeroAddress)
+     andBool (getOptInAssetField(AssetFrozen, RECEIVER, ASSET_ID) ==K 0)
+     andBool (getOptInAssetField(AssetFrozen, SENDER,   ASSET_ID) ==K 0)
 ```
 
 Asset transfer with a non-zero amount fails if:
@@ -657,24 +647,20 @@ Asset transfer with a non-zero amount fails if:
      andBool (notBool hasOptedInAsset(ASSET_ID, SENDER)
       orBool notBool hasOptedInAsset(ASSET_ID, RECEIVER))
 
-  rule <k> #executeTxn(@axfer) => #avmPanic(TXN_ID, ASSET_FROZEN_FOR_SENDER) ... </k>
+  rule <k> #executeTxn(@axfer) => #avmPanic(TXN_ID, ASSET_FROZEN) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID   </txID>
          <sender>        SENDER   </sender>
+         <assetReceiver> RECEIVER </assetReceiver>
          <xferAsset>     ASSET_ID </xferAsset>
          ...
        </transaction>
-       <account>
-         <address> SENDER </address>
-         <optInAsset>
-           <optInAssetID>      ASSET_ID       </optInAssetID>
-           ...
-         </optInAsset>
-         ...
-       </account>
-    requires hasOptedInAsset(ASSET_ID, SENDER)
-     andBool (getOptInAssetField(AssetFrozen, SENDER, ASSET_ID) ==K 1)
+    requires (hasOptedInAsset(ASSET_ID, SENDER)
+     andBool hasOptedInAsset(ASSET_ID, RECEIVER))
+     andThenBool
+            ((getOptInAssetField(AssetFrozen, SENDER, ASSET_ID) ==K 1)
+     orBool  (getOptInAssetField(AssetFrozen, RECEIVER, ASSET_ID) ==K 1))
 ```
 
 **Asset opt-in** is a special case of asset transfer: a transfer of zero to self.
@@ -745,8 +731,26 @@ Asset opt-in goes through if:
 Not supported.
 
 ```k
-  rule <k> #executeTxn(@afrz) => #avmPanic(TXN_ID, UNSUPPORTED_TXN_TYPE) ... </k>
+  rule <k> #executeTxn(@afrz) => . ... </k>
        <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>                 TXN_ID              </txID>
+         <sender>               SENDER              </sender>
+         <freezeAccount>        FREEZE_ACCOUNT       </freezeAccount>
+         <freezeAsset>          ASSET               </freezeAsset>
+         <assetFrozen>          FREEZE              </assetFrozen>
+         ...
+       </transaction>
+       <account>
+         <address> FREEZE_ACCOUNT </address>
+         <optInAsset>
+           <optInAssetID>      ASSET_ID       </optInAssetID>
+           <optInAssetFrozen>  _ => FREEZE    </optInAssetFrozen>
+           ...
+         </optInAsset>
+         ...
+       </account>
+    requires getAssetParamsField(AssetFreeze, ASSET_ID) ==K SENDER
 ```
 
 * **Application Call**
@@ -1047,7 +1051,6 @@ DeleteApplication
          <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
          ...
        </app>
-       <appCreator> (APP_ID |-> _) => .Map ... </appCreator>
 ```
 
 * **Layer-2 transactions**
@@ -1064,14 +1067,6 @@ TODO: determine if we need to support them an all.
 
   rule <k> #executeTxn(@cfx) => #avmPanic(TXN_ID, UNSUPPORTED_TXN_TYPE) ... </k>
        <currentTx> TXN_ID </currentTx>
-```
-
-* **Testing**
-
-```k
-    syntax AlgorandCommand ::= #buildTValue(MaybeTValue)
-    //--------------------------------------------
-    rule <k> #buildTValue(V) => V </k>
 ```
 
 ```k

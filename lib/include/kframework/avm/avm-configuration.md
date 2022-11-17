@@ -147,7 +147,7 @@ These are AVM-specific panic behaviors, caused by issues like depleted balances,
 ```k
   syntax String ::= "MIN_BALANCE_VIOLATION"   [macro]
   syntax String ::= "UNSUPPORTED_TXN_TYPE"    [macro]
-  syntax String ::= "ASSET_FROZEN_FOR_SENDER" [macro]
+  syntax String ::= "ASSET_FROZEN"            [macro]
   syntax String ::= "ASSET_NOT_OPT_IN"        [macro]
   syntax String ::= "UNKNOWN_ADDRESS"         [macro]
   syntax String ::= "ASSET_NO_PERMISSION"     [macro]
@@ -155,7 +155,7 @@ These are AVM-specific panic behaviors, caused by issues like depleted balances,
   //------------------------------------------------
   rule MIN_BALANCE_VIOLATION   => "account's balance falls below its allowed minimum balance"
   rule UNSUPPORTED_TXN_TYPE    => "attempt to execute an unsupported transaction type"
-  rule ASSET_FROZEN_FOR_SENDER => "attempt to send frozen asset holdings"
+  rule ASSET_FROZEN            => "attempt to send frozen asset holdings"
   rule ASSET_NOT_OPT_IN        => "either sender or receiver have not opted into asset"
   rule UNKNOWN_ADDRESS         => "address is not in the <accountsMap>"
   rule ASSET_NO_PERMISSION     => "sender does not have permission to modify asset"
@@ -164,14 +164,14 @@ These are AVM-specific panic behaviors, caused by issues like depleted balances,
   //------------------------------------------
   rule panicCode(MIN_BALANCE_VIOLATION) => 36
   rule panicCode(UNSUPPORTED_TXN_TYPE) => 37
-  rule panicCode(ASSET_FROZEN_FOR_SENDER) => 38
+  rule panicCode(ASSET_FROZEN) => 38
   rule panicCode(ASSET_NOT_OPT_IN) => 39
   rule panicCode(UNKNOWN_ADDRESS) => 40
   rule panicCode(ASSET_NO_PERMISSION) => 41
 
   syntax AlgorandCommand ::= #avmPanic(String, String)
   //-------------------------------------------
-  rule <k> #avmPanic(_, S) ~> panic(S) => .K </k>
+  rule <k> #avmPanic(_, S) => panic(S) ... </k>
 
 endmodule
 ```

@@ -187,13 +187,20 @@ We also have a hook just for checking whether an address is valid.
   syntax Bool ::= IsAddressValid(String) [function, hook(KAVM.check_address)]
 ```
 
-Finally, application addresses are constructed by hashing the application ID in a specail way.
+Application addresses are constructed by hashing the application ID in a specail way.
 See also [this section](https://developer.algorand.org/docs/get-details/dapps/smart-contracts/apps/#issuing-transactions-from-an-application) of the Algorand documentation.
 
 ```k
   syntax Bytes ::= getAppAddressBytes(Int) [function, functional]
   //-------------------------------------------------------------
   rule getAppAddressBytes(APP_ID) => String2Bytes(Sha512_256raw(Bytes2String(b"appID" +Bytes Int2Bytes(8, APP_ID, BE))))
+```
+
+Base64-encoded `String`s can decoded into `Bytes` (and the reverse) with the following hooked functions:
+
+```k
+  syntax Bytes  ::= Base64Decode(String) [function, hook(KAVM.b64_decode)]
+  syntax String ::= Base64Encode(Bytes)  [function, hook(KAVM.b64_encode)]
 ```
 
 ### TEAL Value Processing

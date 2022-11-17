@@ -62,6 +62,7 @@ and ` <latestTimestamp>` are initialized with somewhat arbitrary values.
          <latestTimestamp>      _ => 50  </latestTimestamp>
          <currentApplicationID> _ => 0 </currentApplicationID>
          <currentApplicationAddress> _ => .Bytes </currentApplicationAddress>
+         <creatorAddress> _ => .Bytes </creatorAddress>
        </globals>
        <transactions> TXNS </transactions>
 ```
