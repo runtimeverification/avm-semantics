@@ -244,7 +244,7 @@ TODO: if an account contains an app, the state specification must also contain t
              <optInApp>
                <optInAppID> APP_ID </optInAppID>
                <localInts> _ </localInts>
-               <localBytes> .Map => (String2Bytes(K) |-> String2Bytes(V)) ... </localBytes>
+               <localBytes> .Map => (Base64Decode(K) |-> Base64Decode(V)) ... </localBytes>
              </optInApp>
              ...
            </appsOptedIn>
@@ -259,7 +259,7 @@ TODO: if an account contains an app, the state specification must also contain t
            <appsOptedIn>
              <optInApp>
                <optInAppID> APP_ID </optInAppID>
-               <localInts> .Map => (String2Bytes(K) |-> V) ... </localInts>
+               <localInts> .Map => (Base64Decode(K) |-> V) ... </localInts>
                <localBytes> _ </localBytes>
              </optInApp>
              ...
@@ -276,7 +276,7 @@ TODO: if an account contains an app, the state specification must also contain t
          <app>
            <appID> APP_ID </appID>
            <globalState>
-             <globalBytes> .Map => (String2Bytes(K) |-> String2Bytes(V)) ... </globalBytes>
+             <globalBytes> .Map => (Base64Decode(K) |-> Base64Decode(V)) ... </globalBytes>
              ...
            </globalState>
            ...
@@ -287,7 +287,7 @@ TODO: if an account contains an app, the state specification must also contain t
          <app>
            <appID> APP_ID </appID>
            <globalState>
-             <globalInts> .Map => (String2Bytes(K) |-> V) ... </globalInts>
+             <globalInts> .Map => (Base64Decode(K) |-> V) ... </globalInts>
              ...
            </globalState>
            ...
@@ -392,17 +392,17 @@ TODO: if an account contains an app, the state specification must also contain t
                                                   , "nui": maybeTUInt64(LOCAL_NUM_UINTS, 0) }
                          , "global-state-schema": { "nbs": maybeTUInt64(GLOBAL_NUM_BYTES, 0)
                                                   , "nui": maybeTUInt64(GLOBAL_NUM_UINTS, 0) }
-                         , "global-state"       : #dumpStateMap(GLOBAL_UINTS GLOBAL_BYTES)
+                         , "global-state"       : [ #dumpStateMap(GLOBAL_UINTS GLOBAL_BYTES) ]
                          }
              }
 
-    syntax JSON ::= #dumpStateMap(Map) [function]
-    //----------------------------------------------
+    syntax JSONs ::= #dumpStateMap(Map) [function]
+    //--------------------------------------------
     rule #dumpStateMap((KEY:Bytes |-> VALUE:Bytes) REST)
-      => [{"key": Bytes2String(KEY):String, "value": {"bytes": Bytes2String(VALUE), "type": 1, "uint": 0 } }, #dumpStateMap(REST)]
+      => {"key": Base64Encode(KEY):String, "value": {"bytes": Base64Encode(VALUE), "type": 1, "uint": 0 } }, #dumpStateMap(REST)
     rule #dumpStateMap((KEY:Bytes |-> VALUE:Int  ) REST)
-      => [{"key": Bytes2String(KEY):String, "value": {"bytes": "", "type": 2, "uint": VALUE} }, #dumpStateMap(REST)]
-    rule #dumpStateMap(.Map) => [ .JSONs ]
+      => {"key": Base64Encode(KEY):String, "value": {"bytes": "", "type": 2, "uint": VALUE} }, #dumpStateMap(REST)
+    rule #dumpStateMap(.Map) => .JSONs
 ```
 
 ### Assets
