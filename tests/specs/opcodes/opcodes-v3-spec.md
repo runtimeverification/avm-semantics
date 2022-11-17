@@ -38,7 +38,7 @@ module OPCODES-V3-SPEC
         </transaction>
         <txnIndexMapGroup>
           <txnIndexMapGroupKey> "0" </txnIndexMapGroupKey>
-          <txnIndexMapGroupValues> (0 |-> "1") (1 |-> "2") ... </txnIndexMapGroupValues>
+          <txnIndexMapGroupValues> .Map [0 <- "1"] [1 <- "2"] </txnIndexMapGroupValues>
         </txnIndexMapGroup>
     requires S <Int 1000
 ```
