@@ -1,0 +1,39 @@
+#pragma version 8
+
+txn OnCompletion
+int 0
+!=
+bnz end
+
+txn ApplicationArgs 0
+btoi
+int 1
+==
+bnz stage1
+
+txn ApplicationArgs 0
+btoi
+int 2
+==
+bnz stage2
+
+stage1:
+
+txn Sender
+global CurrentApplicationID
+app_opted_in
+assert
+
+b end
+stage2:
+
+txn Sender
+global CurrentApplicationID
+app_opted_in
+!
+assert
+
+end:
+
+int 1
+return

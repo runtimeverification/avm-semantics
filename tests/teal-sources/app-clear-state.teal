@@ -1,0 +1,46 @@
+#pragma version 8
+
+// Skip if someone besides the creator is accessing
+txn Sender
+global CreatorAddress
+==
+bz end
+
+// Skip if we are creating
+txn ApplicationID
+int 0
+==
+bnz end
+
+txn ApplicationArgs 0
+btoi
+int 1
+==
+bnz stage1
+
+txn ApplicationArgs 0
+btoi
+int 2
+==
+bnz stage2
+
+stage1:
+
+txn Accounts 1
+global CurrentApplicationID
+app_opted_in
+assert
+
+b end
+stage2:
+
+txn Accounts 1
+global CurrentApplicationID
+app_opted_in
+!
+assert
+
+end:
+
+int 1
+return
