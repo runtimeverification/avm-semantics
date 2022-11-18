@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 import pytest
 from hypothesis import given, strategies as st
 
-from algosdk import abi, account, error
+from algosdk import abi, account
 from algosdk.atomic_transaction_composer import AccountTransactionSigner
 from algosdk.future import transaction
 from algosdk.v2client.algod import AlgodClient
@@ -140,14 +140,25 @@ def calculator_contract(client: AlgodClient, app_creator: Dict[str, str]) -> abi
     return create_contract(client, app_creator)
 
 
+@given(method_args=[st.integers(), st.integers()])
+# @pytest.mark.parametrize(
+#     'abi_method,method_args,expected_result,expectation',
+#     [
+#         ('sub', [a, b], 1, contextlib.nullcontext()),
+#         ('div', [4, 2], 2, contextlib.nullcontext()),
+#         ('add', [1, 2], 3, contextlib.nullcontext()),
+#         ('mul', [2, 2], 4, contextlib.nullcontext()),
+#         # ('div', [42, 0], None, pytest.raises(AlgodHTTPError, CalledProcessError)),
+#     ],
+# )
 @pytest.mark.parametrize(
-    'abi_method,method_args,expected_result,expectation',
+    'abi_method,expected_result,expectation',
     [
-        ('sub', [2, 1], 1, contextlib.nullcontext()),
-        ('div', [4, 2], 2, contextlib.nullcontext()),
-        ('add', [1, 2], 3, contextlib.nullcontext()),
-        ('mul', [2, 2], 4, contextlib.nullcontext()),
-        ('div', [42, 0], None, pytest.raises(error.AlgodHTTPError)),
+        ('sub', 1, contextlib.nullcontext()),
+        # ('div', 2, contextlib.nullcontext()),
+        # ('add', 3, contextlib.nullcontext()),
+        # ('mul', 4, contextlib.nullcontext()),
+        # ('div', [42, 0], None, pytest.raises(AlgodHTTPError, CalledProcessError)),
     ],
 )
 def test_calculator(

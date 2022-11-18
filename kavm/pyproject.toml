@@ -32,6 +32,7 @@ pep8-naming = "*"
 pytest = "*"
 pytest-xdist = "*"
 pytest-profiling = "*"
+hypothesis= "*"
 
 [tool.poetry.scripts]
 kavm = "kavm.__main__:main"

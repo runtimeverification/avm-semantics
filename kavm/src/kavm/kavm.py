@@ -155,7 +155,7 @@ class KAVM(KRun):
             tmp_teals_file.flush()
 
             tmp_scenario_file.write(scenario.to_json())
-            print(f'Executing scenario: {json.dumps(scenario.dictify(), indent=4, sort_keys=True)}')
+            self.logger.debug(f'Executing scenario: {json.dumps(scenario.dictify(), indent=4, sort_keys=True)}')
             tmp_scenario_file.flush()
 
             krun_command = ['krun', '--definition', str(self.definition_dir)]

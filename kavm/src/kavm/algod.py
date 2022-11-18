@@ -8,7 +8,7 @@ from subprocess import CalledProcessError
 from typing import Any, Dict, Iterable, List, Optional, cast
 
 import msgpack
-from algosdk import encoding
+from algosdk import encoding, error
 from algosdk.atomic_transaction_composer import (
     ABI_RETURN_HASH,
     ABIResult,
@@ -59,11 +59,13 @@ class KAVMClient(algod.AlgodClient):
     * pretend it is algod.
     """
 
-    def __init__(self, algod_token: str, algod_address: str, faucet_address: str) -> None:
+    def __init__(
+        self, algod_token: str, algod_address: str, faucet_address: str, log_level: Optional[int] = None
+    ) -> None:
         super().__init__(algod_token, algod_address)
         self.algodLogger = logging.getLogger(f'${__name__}.algodLogger')
+        self.set_log_level(log_level if log_level else logging.CRITICAL)
         self.pretty_printer = PrettyPrinter(width=41, compact=True)
-        self.set_log_level(logging.DEBUG)
 
         # self._apps = AppCellMap()
         self._committed_txns: Dict[str, Dict[str, Any]] = {}
@@ -83,7 +85,7 @@ class KAVMClient(algod.AlgodClient):
                 logger=self.algodLogger,
             )
         else:
-            self.algodLogger.critical('Cannot initialize KAVM: KAVM_DEFINITION_DIR env variable is not set')
+            self.algodLogger.error('Cannot initialize KAVM: KAVM_DEFINITION_DIR env variable is not set')
             exit(1)
 
     def set_log_level(self, log_level: Any) -> None:
@@ -132,13 +134,13 @@ class KAVMClient(algod.AlgodClient):
                 }
             elif params[0] == 'pending':
                 if len(params) >= 2:
-                    # try:
-                    return self._committed_txns[params[1]]
+                    try:
+                        return self._committed_txns[params[1]]
                     # hack to temporarily make py-algorand-sdk happy:
                     # if the txn id is not found, return the last committed txn
-                    # except KeyError:
-                    #     (_, txn) = list(sorted(self._committed_txns.items()))[-1]
-                    #     return txn
+                    except KeyError:
+                        (_, txn) = list(sorted(self._committed_txns.items()))[-1]
+                        return txn
                 else:
                     raise NotImplementedError(f'Endpoint not implemented: {requrl}')
             else:
@@ -247,6 +249,7 @@ class KAVMClient(algod.AlgodClient):
                     self._accounts[txn.receiver] = KAVMAccount(address=txn.receiver, amount=0)
 
         scenario = self._construct_scenario(accounts=self._accounts.values(), transactions=txns)
+        self._last_scenario = scenario
 
         try:
             proc_result = self.kavm.run_avm_json(
@@ -256,18 +259,20 @@ class KAVMClient(algod.AlgodClient):
                 existing_decompiled_teal_dir=self._decompiled_teal_dir_path,
             )
         except CalledProcessError as e:
-            self.algodLogger.critical(
+            self.algodLogger.error(
                 f'Transaction group evaluation failed, last generated scenario was: {json.dumps(scenario.dictify(), indent=4)}'
             )
-            raise e
+            raise error.AlgodHTTPError(
+                msg='KAVM has failed, rerun witn --log-level=ERROR to see the executed JSON scenario'
+            ) from e
 
         final_state = {}
         try:
             # on succeful execution, the final state will be serialized and prineted to stderr
             final_state = json.loads(proc_result.stderr)
         except json.decoder.JSONDecodeError as e:
-            self.algodLogger.critical(f'Failed to parse the final state JSON: {e}')
-            raise
+            self.algodLogger.error(f'Failed to parse the final state JSON: {e}')
+            raise error.AlgodHTTPError(msg='KAVM has failed, see logs for reasons')
 
         self.algodLogger.debug(f'Successfully parsed final state JSON: {json.dumps(final_state, indent=4)}')
         # substitute the tracked accounts by KAVM's state
@@ -387,7 +392,6 @@ class KAVMAtomicTransactionComposer(AtomicTransactionComposer):
                 if len(result_bytes) < 4 or result_bytes[:4] != ABI_RETURN_HASH:
                     raise error.AtomicTransactionComposerError("app call transaction did not log a return value")
                 raw_value = result_bytes[4:]
-                print(raw_value)
                 return_value = self.method_dict[i].returns.type.decode(raw_value)
             except Exception as e:
                 decode_error = e
