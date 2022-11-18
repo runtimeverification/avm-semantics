@@ -32,7 +32,7 @@ jobs:
       - uses: cachix/cachix-action@v10
         with:
           name: k-framework
-          signingKey: '${{ secrets.RV_DEVOPS_CACHIX_TOKEN }}'
+          signingKey: '${{ secrets.CACHIX_PUBLIC_TOKEN }}'
           skipPush: true
       - name: 'Build via Nix'
         run: nix build .#kavm
