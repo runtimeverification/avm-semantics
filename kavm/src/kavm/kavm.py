@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Any, Callable, Dict, Final, Iterable, Optional, Union
+from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Union
 
 from pyk.cli_utils import run_process
 from pyk.kast import KSort
@@ -209,6 +209,12 @@ class KAVM(KRun):
     @staticmethod
     def _patch_symbol_table(symbol_table: Dict[str, Callable[..., str]]) -> None:
         symbol_table['_+Int_'] = paren(symbol_table['_+Int_'])
+
+    @staticmethod
+    def concrete_rules() -> List[str]:
+        return [
+            'TEAL-TYPES.getAppAddressBytes',
+        ]
 
     # @property
     # def _empty_config(self) -> KInner:
