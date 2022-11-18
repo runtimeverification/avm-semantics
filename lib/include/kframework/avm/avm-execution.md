@@ -736,8 +736,8 @@ Not supported.
        <transaction>
          <txID>                 TXN_ID              </txID>
          <sender>               SENDER              </sender>
-         <freezeAccount>        FREEZE_ACCOUNT       </freezeAccount>
-         <freezeAsset>          ASSET               </freezeAsset>
+         <freezeAccount>        FREEZE_ACCOUNT      </freezeAccount>
+         <freezeAsset>          ASSET_ID            </freezeAsset>
          <assetFrozen>          FREEZE              </assetFrozen>
          ...
        </transaction>
@@ -947,54 +947,6 @@ OptIn
        </account>
      requires notBool hasOptedInApp(APP_ID, SENDER)
 
-// Case 3: needed because of bug?
-
-  rule <k> #executeAppl(APP_ID) => 
-               #initApp(APP_ID) 
-            ~> #loadInputPgm(APPROVAL_PGM) 
-            ~> #evalTeal()
-            ...
-       </k>
-       <currentTx> TXN_ID </currentTx>
-       <transaction>
-         <txID>          TXN_ID  </txID>
-         <sender>        SENDER  </sender>
-         <onCompletion>  @ OptIn </onCompletion>
-         ...
-       </transaction>
-         <accountsMap>
-         <account>
-           <address> SENDER </address>
-           <appsCreated>
-             <app>
-               <appID>          APP_ID       </appID>
-               <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
-               <localNumInts>      LOCAL_INTS   </localNumInts>
-               <localNumBytes>     LOCAL_BYTES  </localNumBytes>
-               ...
-             </app>
-             ...
-           </appsCreated>
-           <appsOptedIn>
-             OPTED_IN_APPS =>
-             <optInApp>
-               <optInAppID>   APP_ID </optInAppID>
-               <localInts> .Map   </localInts>
-               <localBytes> .Map   </localBytes>
-             </optInApp>
-             OPTED_IN_APPS
-           </appsOptedIn>
-           <minBalance> MIN_BALANCE => MIN_BALANCE 
-                                  +Int PARAM_APP_OPTIN_FLAT 
-                                  +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
-                                    *Int LOCAL_INTS)
-                                  +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE) 
-                                    *Int LOCAL_BYTES)
-           </minBalance>
-           ...
-         </account>
-       </accountsMap>
-     requires notBool hasOptedInApp(APP_ID, SENDER)
 
 ```
 

@@ -355,7 +355,7 @@ TODO: if an account contains an app, the state specification must also contain t
          </appsCreated>)
       => #dumpAppsImpl((CREATOR:String), (#dumpAppJSON((CREATOR:String), <app> APP </app>) , SERIALIZED) , <appsCreated> REST </appsCreated>)
     rule #dumpAppsImpl(
-         (CREATOR:String),
+         (_CREATOR:String),
          (SERIALIZED:JSONs),
          <appsCreated>
            .Bag
@@ -381,7 +381,7 @@ TODO: if an account contains an app, the state specification must also contain t
                  <localNumInts>    LOCAL_NUM_UINTS       </localNumInts>
                  <localNumBytes>   LOCAL_NUM_BYTES       </localNumBytes>
                </localState>
-               <extraPages>        EXTRA_PAGES           </extraPages>
+               <extraPages>        _EXTRA_PAGES           </extraPages>
                ...
              </app>)
           => { "id": APP_ID
@@ -655,7 +655,7 @@ TODO: if an account contains an app, the state specification must also contain t
        <tealPrograms> TEAL_PROGRAMS </tealPrograms>
        <nextTxnID> ID => ID +Int 1 </nextTxnID>
 
-    syntax MaybeTValue ::= progamFromJSON(JSON) [function, functional]
+    syntax MaybeTValue ::= progamFromJSON(JSON) [function, total]
     //----------------------------------------------------------------
     rule progamFromJSON(PGM:String) => PGM
     rule progamFromJSON(_)          => NoTValue [owise]
@@ -723,7 +723,7 @@ TODO: if an account contains an app, the state specification must also contain t
          </transaction>)
          TXNS
        </transactions>
-       <tealPrograms> TEAL_PROGRAMS </tealPrograms>
+       <tealPrograms> _TEAL_PROGRAMS </tealPrograms>
        <nextTxnID> ID => ID +Int 1 </nextTxnID>
 ```
 

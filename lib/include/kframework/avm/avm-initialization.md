@@ -29,7 +29,7 @@ AVM Initialization
 To know the group size, we need to count the transactions in the group:
 
 ```k
-  syntax Int ::= countTxns(TransactionsCell) [function, functional]
+  syntax Int ::= countTxns(TransactionsCell) [function, total]
   // --------------------------------------------------------------
 
   rule countTxns(<transactions> <transaction> _ </transaction> REST </transactions>)
@@ -37,7 +37,7 @@ To know the group size, we need to count the transactions in the group:
   rule countTxns(<transactions> .Bag </transactions>)
        => 0
 
-  syntax Int ::= countTxnsInGroup(TransactionsCell, String) [function, functional]
+  syntax Int ::= countTxnsInGroup(TransactionsCell, String) [function, total]
   // -----------------------------------------------------------------------------
 
   rule countTxnsInGroup(<transactions> <transaction> <groupID> GROUP </groupID> ... </transaction> REST </transactions>, GROUP)
@@ -112,13 +112,13 @@ Traverse the `<transactions>` cell and index the relation of group ids with tran
 
   rule <k> #initTxnIndexMap(.List) => .K ... </k>
 
-  syntax List ::= collectTxnIds(TransactionsCell) [function, functional]
+  syntax List ::= collectTxnIds(TransactionsCell) [function, total]
   //--------------------------------------------------------------------
   rule collectTxnIds(<transactions> .Bag </transactions>) => .List
   rule collectTxnIds(<transactions> <transaction> <txID> TXN_ID </txID> ... </transaction> TXNS </transactions>)
     => ListItem(TXN_ID) collectTxnIds(<transactions> TXNS </transactions>)
 
-  syntax Bool ::= "group_id_in_index_map" "(" String ")" [function, functional]
+  syntax Bool ::= "group_id_in_index_map" "(" String ")" [function, total]
   //---------------------------------------------------------------------------
   rule [[ group_id_in_index_map(GROUP_ID) => true ]]
        <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>

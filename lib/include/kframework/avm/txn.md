@@ -210,7 +210,7 @@ module ALGO-TXN
 *Transaction ID Getter*
 
 ```k
-  syntax String ::= getTxID(TransactionCell) [function, functional]
+  syntax String ::= getTxID(TransactionCell) [function, total]
   //---------------------------------------------------------------
   rule getTxID(<transaction> <txID> ID </txID> ... </transaction>) => ID
 ```
@@ -890,8 +890,8 @@ module ALGO-TXN
   rule _ in_txns( <transactions> .Bag </transactions> ) => false
 
 
-  syntax Bool ::= #isValidForTxnType(TxnField,     Int) [function, functional]
-  syntax Bool ::= #isValidForTxnType(TxnaField,    Int) [function, functional]
+  syntax Bool ::= #isValidForTxnType(TxnField,     Int) [function, total]
+  syntax Bool ::= #isValidForTxnType(TxnaField,    Int) [function, total]
   // -------------------------------------------------------------
   // all transaction types
   rule #isValidForTxnType(_:TxnHeaderField  , I)    => 1 <=Int I andBool I <=Int 6

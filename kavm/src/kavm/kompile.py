@@ -75,6 +75,7 @@ def kompile_haskell(
     command += ['--syntax-module', syntax_module_name] if syntax_module_name else []
     command += ['--md-selector', md_selector] if md_selector else []
     command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
+    command += ['--concrete-rules', ','.join(KAVM.concrete_rules())]
     command += [str(arg) for include in includes for arg in ['-I', include]] if includes else []
 
     return subprocess.run(command, check=True, text=True)

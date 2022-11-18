@@ -264,7 +264,7 @@ Accessor functions
 ### Account State Accessors
 
 ```k
-  syntax MaybeTValue ::= getAccountParamsField(AccountParamsField, TValue)  [function, functional]
+  syntax MaybeTValue ::= getAccountParamsField(AccountParamsField, TValue)  [function, total]
   //----------------------------------------------------------------------------------------------
   rule [[ getAccountParamsField(AcctBalance, ADDR) => BAL ]]
        <account>
@@ -289,7 +289,7 @@ Accessor functions
 
   rule getAccountParamsField(_, _) => NoTValue  [owise]
 
-  syntax MaybeTValue ::= getAppParamsField(AppParamsField, Int) [function, functional]
+  syntax MaybeTValue ::= getAppParamsField(AppParamsField, Int) [function, total]
   //----------------------------------------------------------------------------------
   rule [[ getAppParamsField(AppApprovalProgram, APP) => X ]]
        <app>
@@ -403,7 +403,7 @@ Accessor functions
 ### Asset State Accessors
 
 ```k
-  syntax Bool ::= hasOptedInAsset(TValue, TValue) [function, functional]
+  syntax Bool ::= hasOptedInAsset(TValue, TValue) [function, total]
   // -----------------------------------------------------
   rule [[ hasOptedInAsset(ASSET, ADDR) => true ]]
        <account>
@@ -591,7 +591,7 @@ Accessor functions
     requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
 
 
-  syntax MaybeTValue ::= getAppLocal(TValue, TValue, TValue) [function, functional]
+  syntax MaybeTValue ::= getAppLocal(TValue, TValue, TValue) [function, total]
   // ---------------------------------------------------------
   rule [[ getAppLocal(ADDR, APP, KEY) => V ]]
        <account>
@@ -811,7 +811,7 @@ Accessor functions
 
   rule _ in_assets(<assetsCreated> .Bag </assetsCreated>) => false
 
-  syntax Bool ::= TValue "in_apps" "(" AccountsMapCell ")" [function, functional]
+  syntax Bool ::= TValue "in_apps" "(" AccountsMapCell ")" [function, total]
   // ----------------------------------------------------------------------------
   rule APP in_apps(<accountsMap>
                      <account>
@@ -823,7 +823,7 @@ Accessor functions
 
   rule _ in_apps( <accountsMap> .Bag </accountsMap> ) => false
 
-  syntax Bool ::= TValue "in_apps" "(" AppsCreatedCell ")" [function, functional]
+  syntax Bool ::= TValue "in_apps" "(" AppsCreatedCell ")" [function, total]
   // ----------------------------------------------------------------------------
   rule APP in_apps(<appsCreated>
                      <app>
@@ -850,18 +850,18 @@ The purpose of `accountReference()`, `appReference()`, and `asaReference()` is t
 references and also to check that a resource is available.
 
 ```k
-  syntax MaybeTValue ::= accountReference(TValue) [function, functional]
+  syntax MaybeTValue ::= accountReference(TValue) [function, total]
   //--------------------------------------------------------------------
   rule accountReference(A:TBytes ) => A requires accountAvailable(A)
   rule accountReference(I:Int    ) => getTxnField(getCurrentTxn(), Accounts, I)
   rule accountReference(_        ) => NoTValue  [owise]
 
-  syntax MaybeTValue ::= appReference(TUInt64)  [function, functional]
+  syntax MaybeTValue ::= appReference(TUInt64)  [function, total]
   //-----------------------------------------------------------------
   rule appReference(I) => I requires applicationAvailable(I)
   rule appReference(I) => getTxnField(getCurrentTxn(), Applications, I)  [owise]
 
-  syntax MaybeTValue ::= asaReference(TUInt64)  [function, functional]
+  syntax MaybeTValue ::= asaReference(TUInt64)  [function, total]
   //------------------------------------------------------------------
   rule asaReference(I) => I requires assetAvailable(I)
   rule asaReference(I) => getTxnField(getCurrentTxn(), Assets, I)  [owise]
@@ -873,7 +873,7 @@ references and also to check that a resource is available.
 // TODO the associated account of a contract that was created earlier in the group should be available (v 6)
 // TODO the associated account of a contract present in the txn.ForeignApplications field should be available (v7)
 
-  syntax Bool ::= accountAvailable(TBytes) [function, functional]
+  syntax Bool ::= accountAvailable(TBytes) [function, total]
   //---------------------------------------------------------------
 
   rule accountAvailable(A) => true
@@ -890,7 +890,7 @@ references and also to check that a resource is available.
   
 // TODO any contract that was created earlier in the same transaction group should be available (v6)
 
-  syntax Bool ::= applicationAvailable(TUInt64) [function, functional]
+  syntax Bool ::= applicationAvailable(TUInt64) [function, total]
   //------------------------------------------------------------------
 
   rule applicationAvailable(A) => true
@@ -904,7 +904,7 @@ references and also to check that a resource is available.
 
 // TODO any asset that was created earlier in the same transaction group should be available (v6)
 
-  syntax Bool ::= assetAvailable(TUInt64) [function, functional]
+  syntax Bool ::= assetAvailable(TUInt64) [function, total]
   //------------------------------------------------------------
 
   rule assetAvailable(A) => true
@@ -912,7 +912,7 @@ references and also to check that a resource is available.
 
   rule assetAvailable(_) => false [owise]
 
-  syntax Map ::= TValuePairList2Map(TValuePairList, TValueList, Bytes) [function, functional]
+  syntax Map ::= TValuePairList2Map(TValuePairList, TValueList, Bytes) [function, total]
   //----------------------------------------------------------------------
   rule TValuePairList2Map((A, B):TValuePair REST, APPS, DEFAULT) => ((A |-> getAppAddressBytes({getTValueAt(B -Int 1, APPS)}:>Int)) TValuePairList2Map(REST, APPS, DEFAULT))
     requires B >=Int 1
@@ -922,9 +922,9 @@ references and also to check that a resource is available.
   rule TValuePairList2Map((A, 0):TValuePair, _, DEFAULT) => (A |-> DEFAULT)
   rule TValuePairList2Map(.TValuePairList, _, _) => .Map
 
-  syntax Map ::= getBoxRefs(String) [function, functional]
-  syntax Map ::= getGroupBoxRefs(String) [function, functional]
-  syntax Map ::= getGroupBoxRefs(Map) [function, functional]
+  syntax Map ::= getBoxRefs(String) [function, total]
+  syntax Map ::= getGroupBoxRefs(String) [function, total]
+  syntax Map ::= getGroupBoxRefs(Map) [function, total]
   //--------------------------------------------------------
 
   rule [[ getGroupBoxRefs(GROUP_ID) => getGroupBoxRefs(VALS) ]]
@@ -954,7 +954,7 @@ references and also to check that a resource is available.
          ...
        </transaction>
 
-  syntax MaybeTValue ::= boxAcct(Bytes) [function, functional]
+  syntax MaybeTValue ::= boxAcct(Bytes) [function, total]
   //--------------------------------------------------------------------
   rule boxAcct(NAME) => {getGroupBoxRefs(getTxnGroupID(getCurrentTxn()))[NAME]}:>Bytes
     requires NAME in_keys(getGroupBoxRefs(getTxnGroupID(getCurrentTxn())))
@@ -973,16 +973,16 @@ The transaction index connects a transaction groups ID to the transaction IDs co
   syntax MaybeTValue ::= getGroupFieldByIdx(String, Int, TxnField) [function]
   syntax MaybeTValue ::= getGroupFieldByIdx(String, Int, TxnaField, Int) [function]
 
-  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD) => getTxnField(TXN_ID, FIELD) ]]
+  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD) => getTxnField({MV[GROUP_INDEX]}:>String, FIELD) ]]
         <txnIndexMapGroup>
           <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
-          <txnIndexMapGroupValues> GROUP_INDEX |-> TXN_ID ... </txnIndexMapGroupValues>
+          <txnIndexMapGroupValues> MV </txnIndexMapGroupValues>
         </txnIndexMapGroup>
 
-  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD, FIELD_INDEX) => getTxnField(TXN_ID, FIELD, FIELD_INDEX) ]]
+  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD, FIELD_INDEX) => getTxnField( {MV[GROUP_INDEX]}:>String, FIELD, FIELD_INDEX) ]]
         <txnIndexMapGroup>
           <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
-          <txnIndexMapGroupValues> GROUP_INDEX |-> TXN_ID ... </txnIndexMapGroupValues>
+          <txnIndexMapGroupValues> MV </txnIndexMapGroupValues>
         </txnIndexMapGroup>
 
   rule getGroupFieldByIdx(_, _, _) => NoTValue [owise]
