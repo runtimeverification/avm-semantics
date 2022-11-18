@@ -162,8 +162,8 @@ It is sometimes useful to go from the byte representation back to the token.
 We use several hooks which convert between token and string representations.
 
 ```k
-  syntax String          ::= TealAddress2String(TAddressLiteral) [function, functional, hook(STRING.token2string)]
-  syntax String          ::= Hex2String(HexToken)                [function, functional, hook(STRING.token2string)]
+  syntax String          ::= TealAddress2String(TAddressLiteral) [function, total, hook(STRING.token2string)]
+  syntax String          ::= Hex2String(HexToken)                [function, total, hook(STRING.token2string)]
   syntax TAddressLiteral ::= String2TealAddress(String)          [function, hook(STRING.string2token)]
   syntax HexToken        ::= String2Hex(String)                  [function, hook(STRING.string2token)]
 ```
@@ -191,7 +191,7 @@ Application addresses are constructed by hashing the application ID in a specail
 See also [this section](https://developer.algorand.org/docs/get-details/dapps/smart-contracts/apps/#issuing-transactions-from-an-application) of the Algorand documentation.
 
 ```k
-  syntax Bytes ::= getAppAddressBytes(Int) [function, functional]
+  syntax Bytes ::= getAppAddressBytes(Int) [function, total]
   //-------------------------------------------------------------
   rule getAppAddressBytes(APP_ID) => String2Bytes(Sha512_256raw(Bytes2String(b"appID" +Bytes Int2Bytes(8, APP_ID, BE))))
 ```
@@ -221,14 +221,14 @@ We expose several functions for working with lists.
   rule size(_:TValue       ) => 1
   rule size(.TValueList    ) => 0
 
-  syntax Bool ::= contains(TValueList, TValue) [function, functional]
+  syntax Bool ::= contains(TValueList, TValue) [function, total]
   // ----------------------------------------------------------------
   rule contains(V1:TValue  _:TValueNeList, V1:TValue) => true
   rule contains(V1:TValue VL:TValueNeList, V2:TValue) => contains(VL, V2) requires V1 =/=K V2
   rule contains(V1:TValue                , V2:TValue) => V1 ==K V2
   rule contains(              .TValueList,  _:TValue) => false 
 
-  syntax Bool ::= contains(TValuePairList, TValuePair) [function, functional]
+  syntax Bool ::= contains(TValuePairList, TValuePair) [function, total]
   // ----------------------------------------------------------------
   rule contains(V1:TValuePair  _:TValuePairNeList, V1:TValuePair) => true
   rule contains(V1:TValuePair VL:TValuePairNeList, V2:TValuePair) => contains(VL, V2) requires V1 =/=K V2
@@ -271,7 +271,7 @@ We expose several functions for working with lists.
   rule append(V, V':TValuePair VL) => V' append(V, VL)
   rule append(V, V':TValuePair   ) => V' V
 
-  syntax TValueList ::= convertToBytes(TValueList) [function, functional]
+  syntax TValueList ::= convertToBytes(TValueList) [function, total]
   //---------------------------------------------------------------------
   rule convertToBytes(.TValueList) => .TValueList
   rule convertToBytes(B:TBytes) => B
@@ -279,12 +279,12 @@ We expose several functions for working with lists.
   rule convertToBytes(B:TBytes L:TValueNeList) => (B {convertToBytes(L)}:>TValueNeList)
   rule convertToBytes(I:TUInt64 L:TValueNeList) => (Int2Bytes({I}:>Int, BE, Unsigned) {convertToBytes(L)}:>TValueNeList)
 
-  syntax Int ::= sizeInBytes(TValue) [function, functional]
+  syntax Int ::= sizeInBytes(TValue) [function, total]
   //-------------------------------------------------------
   rule sizeInBytes(_:TUInt64) => 64
   rule sizeInBytes(B:TBytes) => lengthBytes({B}:>Bytes)
 
-  syntax Int ::= maybeTUInt64(MaybeTValue, Int) [function, functional]
+  syntax Int ::= maybeTUInt64(MaybeTValue, Int) [function, total]
   //------------------------------------------------------------------
   rule maybeTUInt64(X, _)       => X       requires isTUInt64(X)
   rule maybeTUInt64(_, DEFAULT) => DEFAULT [owise]
@@ -303,11 +303,11 @@ our internal K representation:
 ### Boolean conversions
 
 ```k
-  syntax Bool ::= int2Bool(Int) [function, functional]
+  syntax Bool ::= int2Bool(Int) [function, total]
   rule int2Bool(0) => false
   rule int2Bool(A) => true requires A =/=Int 0
 
-  syntax Int ::= bool2Int(Bool)  [function, functional, smtlib(bool2Int)]
+  syntax Int ::= bool2Int(Bool)  [function, total, smtlib(bool2Int)]
   rule bool2Int(true ) => 1
   rule bool2Int(false) => 0
 ```

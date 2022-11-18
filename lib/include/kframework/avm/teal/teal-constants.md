@@ -65,7 +65,7 @@ actions occur when the transaction completes.
 ```
 
 ```k
-  syntax TValue ::= normalizeI(PseudoTUInt64) [function, functional]
+  syntax TValue ::= normalizeI(PseudoTUInt64) [function, total]
   // ---------------------------------------------------------------
   rule normalizeI(V:TUInt64) => V
 

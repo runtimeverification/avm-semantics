@@ -736,8 +736,8 @@ Not supported.
        <transaction>
          <txID>                 TXN_ID              </txID>
          <sender>               SENDER              </sender>
-         <freezeAccount>        FREEZE_ACCOUNT       </freezeAccount>
-         <freezeAsset>          ASSET               </freezeAsset>
+         <freezeAccount>        FREEZE_ACCOUNT      </freezeAccount>
+         <freezeAsset>          ASSET_ID            </freezeAsset>
          <assetFrozen>          FREEZE              </assetFrozen>
          ...
        </transaction>
