@@ -60,7 +60,11 @@ class KAVMClient(algod.AlgodClient):
     """
 
     def __init__(
-        self, algod_token: str, algod_address: str, faucet_address: str, log_level: Optional[int] = None
+        self,
+        faucet_address: str,
+        algod_token: Optional[str] = None,
+        algod_address: Optional[str] = None,
+        log_level: Optional[int] = None,
     ) -> None:
         super().__init__(algod_token, algod_address)
         self.algodLogger = logging.getLogger(f'${__name__}.algodLogger')
