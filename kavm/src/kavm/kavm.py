@@ -139,19 +139,20 @@ class KAVM(KRun):
 
         with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_scenario_file, (
             existing_decompiled_teal_dir if existing_decompiled_teal_dir else tempfile.TemporaryDirectory()  # type: ignore
-        ) as decompiled_teal_dir, tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_teals_file:
+        ) as decompiled_teal_dir:
             for teal_file, teal_src in scenario._teal_programs.items():
                 (Path(decompiled_teal_dir) / teal_file).write_text(teal_src)
-            tmp_teals_file.write(self.parse_teals(scenario._teal_programs.keys(), Path(decompiled_teal_dir)))
-            tmp_teals_file.flush()
+            parsed_teal = self.parse_teals(scenario._teal_programs.keys(), Path(decompiled_teal_dir))
+            # tmp_teals_file.write(parsed_teals)
+            # tmp_teals_file.flush()
 
             tmp_scenario_file.write(scenario.to_json())
             _LOGGER.debug(f'Executing scenario: {json.dumps(scenario.dictify(), indent=4, sort_keys=True)}')
             tmp_scenario_file.flush()
 
             krun_command = ['krun', '--definition', str(self.definition_dir)]
-            krun_command += [f'-cTEAL_PROGRAMS={tmp_teals_file.name}']
-            krun_command += [f'-pTEAL_PROGRAMS={str(self._catcat_parser)}']
+            krun_command += [f'-cTEAL_PROGRAMS={parsed_teal}']
+            krun_command += [f'-pTEAL_PROGRAMS=cat']
             krun_command += ['--parser', str(self._scenario_parser)]
             krun_command += ['--depth', str(depth)] if depth else []
             krun_command += ['--output', 'none' if output == 'final-state-json' else output]
