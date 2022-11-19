@@ -103,7 +103,7 @@ the attached stateless TEAL if the transaction is logicsig-signed.
          <sender> SENDER_ADDR </sender>
          ...
        </transaction>
-       <touchedAccounts> .Set => SetItem(SENDER_ADDR) ...</touchedAccounts>
+//       <touchedAccounts> .Set => SetItem(SENDER_ADDR) ...</touchedAccounts>
 
   rule <k> #evalTx() => #restoreContext() ~> #evalTeal() ... </k>
        <currentTx> TXN_ID </currentTx>

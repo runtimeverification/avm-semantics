@@ -1,5 +1,5 @@
 ```k
-module ADD-APP-ARGS-SPEC
+module BUY-ASSET-SPEC
   imports VERIFICATION
 ```
 
@@ -8,7 +8,7 @@ module ADD-APP-ARGS-SPEC
 claim
   <kavm>
 
-    <k> #evalTxGroup() => . </k>
+    <k> #initGlobals() ~> #evalTxGroup() => . </k>
 
     <returncode>   4                        => 0                                      </returncode>
     <returnstatus> "Failure - AVM is stuck" => "Success - transaction group accepted" </returnstatus>
@@ -43,7 +43,7 @@ claim
         <resume> false => true </resume>
       </transaction>
       <transaction>
-        <txID> TX_ID:String </txID>
+        <txID> APPL_TX_ID:String </txID>
         <txHeader>
           <sender> SENDER_ADDRESS:Bytes </sender>
           <txType> "appl" </txType>
@@ -56,7 +56,7 @@ claim
           <appCallTxFields>
             <applicationID> APP_ID </applicationID>
             <onCompletion> @ NoOp </onCompletion>
-            <applicationArgs> ARG1:Bytes ARG2:Int </applicationArgs>
+            <applicationArgs> FUNCTION_NAME:Bytes Int2Bytes(AMOUNT:Int, BE, Unsigned) </applicationArgs>
             ...
           </appCallTxFields>
         </txnTypeSpecificFields>
@@ -72,10 +72,10 @@ claim
     </transactions>
 
     <avmExecution>
-      <currentTx> TX_ID => ?_ </currentTx>
+      <currentTx> _ => ?_ </currentTx>
       <txnDeque>
-        <deque> ListItem(TX_ID) => .List </deque>
-        <dequeIndexSet> SetItem(TX_ID) => ?_ </dequeIndexSet>
+        <deque> ListItem(PAY_TX_ID) ListItem(APPL_TX_ID) => .List </deque>
+        <dequeIndexSet> SetItem(PAY_TX_ID) SetItem(APPL_TX_ID) => ?_ </dequeIndexSet>
       </txnDeque>
       <currentTxnExecution>
          <globals>
@@ -115,14 +115,74 @@ claim
             <app>
               <appID> APP_ID </appID>
               <approvalPgmSrc> (
-                  txn ApplicationArgs 0
-                  txn ApplicationArgs 1
-                  +
-                  itob
-                  log
+txn NumAppArgs
+int 1
+>=
+assert
 
-                  int 1
-                  return
+txna ApplicationArgs 0
+byte "buy"
+==
+bnz BUY
+
+BUY:
+
+  global GroupSize
+  int 2
+  ==
+  assert
+
+  gtxn 0 TypeEnum 
+  int pay
+  ==
+  assert
+
+  gtxn 0 Amount 
+  txna ApplicationArgs 1
+  btoi
+  ==
+  assert
+
+  gtxn 0 Receiver
+  global CurrentApplicationAddress
+  ==
+  assert
+
+  txn NumAssets
+  int 1
+  ==
+  assert
+
+  txn Assets 0
+  btoi
+  app_global_get
+  txna ApplicationArgs 1
+  btoi
+  *
+  store 0
+
+  itxn_begin
+
+    int axfer
+    itxn_field TypeEnum
+
+    txn Sender
+    itxn_field AssetReceiver
+
+    load 0
+    itxn_field AssetAmount
+
+    txn Assets 0
+    itxn_field XferAsset
+
+  itxn_submit
+
+  b END
+
+END:
+
+  int 1
+  return
                 ):TealInputPgm => ?_
               </approvalPgmSrc>
               <clearStatePgmSrc> (int 1 return):TealInputPgm => ?_ </clearStatePgmSrc>
@@ -163,10 +223,13 @@ claim
    andBool SENDER_ADDRESS  =/=K APP_ADDRESS
    andBool SENDER_ADDRESS  =/=K CREATOR_ADDRESS
    andBool SENDER_BALANCE >=Int SENDER_MIN_BALANCE
-   andBool PAY_TX_ID =/=K TX_ID
- //  andBool ARG1 +Int ARG2 <=Int MAX_UINT64
+   andBool ARG1 +Int ARG2 <=Int MAX_UINT64
+   andBool END =/=K BUY
+   andBool SENDER_BALANCE -Int AMOUNT >=Int SENDER_MIN_BALANCE
+   andBool SENDER_MIN_BALANCE >=Int 0
+   andBool FUNCTION_NAME ==K b"buy"
 
-//  ensures ?APP_RESULT ==K Int2Bytes(ARG1 +Int ARG2, BE, Unsigned)
+  ensures ?APP_RESULT ==K Int2Bytes(ARG1 +Int ARG2, BE, Unsigned)
 
 ```
 

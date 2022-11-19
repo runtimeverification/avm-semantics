@@ -1369,10 +1369,14 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        </transaction>
     requires notBool(isTValue(getGroupFieldByIdx(GROUP_ID, GROUP_IDX, FIELD)))
 
+  syntax TValue ::= fromMaybeTVal(MaybeTValue) [function]
+
+  rule fromMaybeTVal(V:TValue) => V
+
   syntax KItem ::= loadFromGroup(Int, TxnaField, Int)
   //-------------------------------------------------
   rule <k> loadFromGroup(GROUP_IDX, FIELD, IDX) => . ...</k>
-       <stack> XS => {getGroupFieldByIdx(GROUP_ID, GROUP_IDX, FIELD, IDX)}:>TValue : XS </stack>
+       <stack> XS => fromMaybeTVal(getGroupFieldByIdx(GROUP_ID, GROUP_IDX, FIELD, IDX)) : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
        <currentTx> CURRENT_TX_ID </currentTx>
        <transaction>
