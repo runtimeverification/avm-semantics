@@ -84,10 +84,7 @@ class KAVMClient(algod.AlgodClient):
         # Initialize KAVM, fetching the K definition dir from the environment
         definition_dir = os.environ.get('KAVM_DEFINITION_DIR')
         if definition_dir is not None:
-            self.kavm = KAVM(
-                definition_dir=Path(definition_dir),
-                logger=self.algodLogger,
-            )
+            self.kavm = KAVM(definition_dir=Path(definition_dir))
         else:
             self.algodLogger.error('Cannot initialize KAVM: KAVM_DEFINITION_DIR env variable is not set')
             exit(1)
@@ -240,6 +237,7 @@ class KAVMClient(algod.AlgodClient):
         Construct a simulation scenario, serialize it into JSON and submit to KAVM.
         Parse KAVM's resulting configuration and update the account state in KAVMClient.
         """
+
 
         # we'll need too keep track of all addresses the transactions mention to
         # make KAVM aware of the new ones, so we preprocess the transactions

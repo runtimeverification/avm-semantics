@@ -27,24 +27,15 @@ class KAVM(KRun):
         self,
         definition_dir: Path,
         use_directory: Any = None,
-        logger: Optional[logging.Logger] = None,
         teal_parser: Optional[Path] = None,
         scenario_parser: Optional[Path] = None,
     ) -> None:
         super().__init__(definition_dir, use_directory=use_directory)
-        if not logger:
-            self._logger = _LOGGER
-        else:
-            self._logger = logger
         self._catcat_parser = definition_dir / 'catcat'
         self._teal_parser = teal_parser if teal_parser else definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
         self._scenario_parser = (
             scenario_parser if scenario_parser else definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
         )
-
-    @property
-    def logger(self) -> logging.Logger:
-        return self._logger
 
     @staticmethod
     def prove(
@@ -155,7 +146,7 @@ class KAVM(KRun):
             tmp_teals_file.flush()
 
             tmp_scenario_file.write(scenario.to_json())
-            self.logger.debug(f'Executing scenario: {json.dumps(scenario.dictify(), indent=4, sort_keys=True)}')
+            _LOGGER.debug(f'Executing scenario: {json.dumps(scenario.dictify(), indent=4, sort_keys=True)}')
             tmp_scenario_file.flush()
 
             krun_command = ['krun', '--definition', str(self.definition_dir)]
@@ -169,7 +160,7 @@ class KAVM(KRun):
             command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
 
             return run_process(
-                krun_command, env=command_env, logger=self._logger, profile=profile, check=check, pipe_stderr=True
+                krun_command, env=command_env, logger=_LOGGER, profile=profile, check=check, pipe_stderr=True
             )
 
     def kast(
@@ -188,7 +179,7 @@ class KAVM(KRun):
         kast_command += [str(input_file)]
         command_env = os.environ.copy()
         command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
-        return run_process(kast_command, env=command_env, logger=self._logger, profile=True)
+        return run_process(kast_command, env=command_env, logger=_LOGGER, profile=True)
 
     def kast_expr(
         self,
@@ -206,7 +197,7 @@ class KAVM(KRun):
         kast_command += ['--expression', expr]
         command_env = os.environ.copy()
         command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
-        return run_process(kast_command, env=command_env, logger=self._logger, profile=True)
+        return run_process(kast_command, env=command_env, logger=_LOGGER, profile=True)
 
     @staticmethod
     def _patch_symbol_table(symbol_table: Dict[str, Callable[..., str]]) -> None:
