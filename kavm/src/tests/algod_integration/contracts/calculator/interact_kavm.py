@@ -12,7 +12,6 @@ from hypothesis import strategies as st
 
 from kavm.algod import KAVMAtomicTransactionComposer, KAVMClient
 
-
 # def create_app(
 #     client,
 #     sender,
