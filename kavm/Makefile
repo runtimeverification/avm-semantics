@@ -26,7 +26,7 @@ venv-config:
 build:
 	poetry build
 
-poetry-install: venv-config
+poetry-install:
 	poetry install
 
 
