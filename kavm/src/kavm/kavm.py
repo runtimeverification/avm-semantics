@@ -9,6 +9,8 @@ from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Union
 
 from pyk.cli_utils import run_process
 from pyk.kast.inner import KSort
+from pyk.kore.parser import KoreParser
+from pyk.kore.syntax import Pattern
 from pyk.ktool.kprint import paren
 from pyk.ktool.krun import KRun
 from pyk.prelude.k import K
@@ -103,7 +105,7 @@ class KAVM(KRun):
 
     #     return current_teal_pgms_map
 
-    def parse_teals(self, teal_paths: Iterable[str], teal_sources_dir: Path) -> str:
+    def parse_teals(self, teal_paths: Iterable[str], teal_sources_dir: Path) -> Pattern:
         """Extract TEAL programs filenames and source code from a test scenario"""
 
         def run_process_on_bison_parser(path: Path) -> str:
@@ -124,7 +126,7 @@ class KAVM(KRun):
             teal_kore_map_item = map_item_op + '(' + teal_path_parsed + ',' + teal_parsed + ')'
             current_teal_pgms_map = map_union_op + "(" + current_teal_pgms_map + "," + teal_kore_map_item + ")"
 
-        return current_teal_pgms_map
+        return KoreParser(current_teal_pgms_map).pattern()
 
     def run_avm_json(
         self,
@@ -142,7 +144,8 @@ class KAVM(KRun):
         ) as decompiled_teal_dir, tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_teals_file:
             for teal_file, teal_src in scenario._teal_programs.items():
                 (Path(decompiled_teal_dir) / teal_file).write_text(teal_src)
-            tmp_teals_file.write(self.parse_teals(scenario._teal_programs.keys(), Path(decompiled_teal_dir)))
+            parsed_teals = self.parse_teals(scenario._teal_programs.keys(), Path(decompiled_teal_dir)).text
+            tmp_teals_file.write(parsed_teals)
             tmp_teals_file.flush()
 
             tmp_scenario_file.write(scenario.to_json())
