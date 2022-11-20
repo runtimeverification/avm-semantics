@@ -2,8 +2,8 @@ from base64 import b64decode
 from typing import List, Optional, cast
 
 from algosdk.v2client import models
-from pyk.kast import KApply, KInner, KLabel, KSort, KToken
-from pyk.kastManip import split_config_from
+from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken
+from pyk.kast.manip import split_config_from
 
 from kavm.adaptors.teal_key_value import (
     list_state_to_dict_bytes_bytes,
