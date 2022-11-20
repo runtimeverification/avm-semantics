@@ -2,7 +2,7 @@ import typing
 from typing import Dict, List, cast
 
 from algosdk.v2client import models
-from pyk.kast import KApply, KInner, KToken
+from pyk.kast.inner import KApply, KInner, KToken
 
 # @typing.no_type_check
 # def list_to_dict_state(l: List[models.TealKeyValue]) -> Dict[str, str | int]:
