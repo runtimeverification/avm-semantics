@@ -162,15 +162,20 @@ Note that the applications and ASAs are part of the accounts' state as well, and
        <paniccode>  PANIC_CODE       </paniccode>
    requires notBool (PANIC_CODE ==Int EXPECTED_PANIC_CODE)
 
-  syntax KItem ::= #stateDump(AccountsMapCell, TransactionsCell)
-  //------------------------------------------------------------
-
   syntax TestingCommand ::= #dumpFinalState()
   //-----------------------------------------
   rule <k> #dumpFinalState() => . ... </k>
        <accountsMap>  ACCS </accountsMap>
        <transactions> TXNS </transactions>
-       <state-dumps> ... (.List => ListItem(#stateDump(<accountsMap> ACCS </accountsMap>, <transactions> TXNS </transactions>))) </state-dumps>
+       <state-dumps>
+         ...
+         ( .List
+        => ListItem({ "accounts"     : [ #dumpAccounts(<accountsMap> ACCS </accountsMap>)                ]
+                    , "transactions" : [ #dumpConfirmedTransactions(<transactions> TXNS </transactions>) ]
+                    , .JSONs
+                   })
+         )
+       </state-dumps>
 ```
 
 ```k
