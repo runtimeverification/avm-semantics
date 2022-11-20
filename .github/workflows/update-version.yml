@@ -69,8 +69,7 @@ jobs:
         uses: cachix/cachix-action@v10
         with:
           name: runtimeverification
-          extraPullNames: kore
-          signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+          authToken: '${{ secrets.CACHIX_PUBLIC_TOKEN }}'
       - name: 'Update nix flake inputs'
         run: |
           nix run .#update-from-submodules
