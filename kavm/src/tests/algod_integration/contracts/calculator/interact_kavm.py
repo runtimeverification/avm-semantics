@@ -3,7 +3,7 @@ import json
 import os
 import sys
 from datetime import timedelta
-from typing import Any, Optional
+from typing import Any
 
 from algosdk import abi, account, error, future
 from algosdk.atomic_transaction_composer import AccountTransactionSigner
@@ -61,7 +61,7 @@ from kavm.algod import KAVMAtomicTransactionComposer, KAVMClient
 #     return app_id
 
 
-def compile_program(client, source_code):
+def compile_program(client: Any, source_code: Any) -> Any:
     compile_response = client.compile(source_code)
     return base64.b64decode(compile_response["result"])
 
@@ -124,8 +124,8 @@ client, contact, app_id, caller_addr, caller_private_key = setup()
 sp = client.suggested_params()
 signer = AccountTransactionSigner(caller_private_key)
 
-MAX_ARG_VALUE = 2**64 - 1
-MIN_ARG_VALUE = MAX_ARG_VALUE / 4
+MAX_ARG_VALUE = int(2**64 - 1)
+MIN_ARG_VALUE = int(MAX_ARG_VALUE / 4)
 
 
 @settings(deadline=(timedelta(seconds=2)), max_examples=25, phases=[Phase.generate])
@@ -133,7 +133,7 @@ MIN_ARG_VALUE = MAX_ARG_VALUE / 4
     x=st.integers(min_value=MIN_ARG_VALUE, max_value=MAX_ARG_VALUE),
     y=st.integers(min_value=MIN_ARG_VALUE, max_value=MAX_ARG_VALUE),
 )
-def test_method_add(x: int, y: int) -> Optional[int]:
+def test_method_add(x: int, y: int) -> None:
     method_name = 'add'
     comp = KAVMAtomicTransactionComposer()
     comp.add_method_call(app_id, contact.get_method_by_name(method_name), caller_addr, sp, signer, method_args=[x, y])

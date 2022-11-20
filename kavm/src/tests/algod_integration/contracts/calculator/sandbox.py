@@ -1,3 +1,5 @@
+from typing import Any, List, Tuple
+
 from algosdk.kmd import KMDClient
 
 KMD_ADDRESS = "http://localhost:4002"
@@ -7,7 +9,7 @@ KMD_WALLET_NAME = "unencrypted-default-wallet"
 KMD_WALLET_PASSWORD = ""
 
 
-def get_accounts():
+def get_accounts() -> List[Tuple[Any, Any]]:
     kmd = KMDClient(KMD_TOKEN, KMD_ADDRESS)
     wallets = kmd.list_wallets()
 
