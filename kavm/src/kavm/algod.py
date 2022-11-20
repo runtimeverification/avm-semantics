@@ -17,7 +17,6 @@ from algosdk.atomic_transaction_composer import (
     AtomicTransactionResponse,
     abi,
     base64,
-    error,
     transaction,
 )
 from algosdk.future.transaction import PaymentTxn, Transaction
@@ -140,7 +139,7 @@ class KAVMClient(algod.AlgodClient):
                     # hack to temporarily make py-algorand-sdk happy:
                     # if the txn id is not found, return the last committed txn
                     except KeyError:
-                        (_, txn) = list(sorted(self._committed_txns.items()))[-1]
+                        (_, txn) = sorted(self._committed_txns.items())[-1]
                         return txn
                 else:
                     raise NotImplementedError(f'Endpoint not implemented: {requrl}')
@@ -274,7 +273,7 @@ class KAVMClient(algod.AlgodClient):
             final_state = json.loads(proc_result.stderr)
         except json.decoder.JSONDecodeError as e:
             self.algodLogger.error(f'Failed to parse the final state JSON: {e}')
-            raise error.AlgodHTTPError(msg='KAVM has failed, see logs for reasons')
+            raise error.AlgodHTTPError(msg='KAVM has failed, see logs for reasons') from e
 
         self.algodLogger.debug(f'Successfully parsed final state JSON: {json.dumps(final_state, indent=4)}')
         # substitute the tracked accounts by KAVM's state

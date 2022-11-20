@@ -152,7 +152,7 @@ class KAVM(KRun):
 
             krun_command = ['krun', '--definition', str(self.definition_dir)]
             krun_command += [f'-cTEAL_PROGRAMS={parsed_teal}']
-            krun_command += [f'-pTEAL_PROGRAMS=cat']
+            krun_command += ['-pTEAL_PROGRAMS=cat']
             krun_command += ['--parser', str(self._scenario_parser)]
             krun_command += ['--depth', str(depth)] if depth else []
             krun_command += ['--output', 'none' if output == 'final-state-json' else output]

@@ -152,7 +152,7 @@ if __name__ == '__main__':
         resp = comp.execute(client, 2)
         for result in resp.abi_results:
             print(f"{result.method.name} => {result.return_value}")
-    except error.AlgodHTTPError as e:
+    except error.AlgodHTTPError:
         print(json.dumps(client._last_scenario.dictify(), indent=2))
-        print(f'^^^^^^^^^^^^^^^^^^ Last attempted scenario ^^^^^^^^^^^^^^^^^^')
+        print('^^^^^^^^^^^^^^^^^^ Last attempted scenario ^^^^^^^^^^^^^^^^^^')
         print(f'Contract has regected the call to method {method_name} with arguments {x} and {y}')

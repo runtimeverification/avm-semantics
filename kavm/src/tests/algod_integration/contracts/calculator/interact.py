@@ -1,11 +1,10 @@
 import os
 
-from algosdk.abi import *
-from algosdk.account import *
-from algosdk.atomic_transaction_composer import *
-from algosdk.future import *
-from algosdk.mnemonic import *
-from algosdk.v2client.algod import *
+from algosdk.abi import Contract
+from algosdk.atomic_transaction_composer import AccountTransactionSigner
+from algosdk.future import transaction
+from algosdk.v2client.algod import AlgodClient, AtomicTransactionComposer
+from base64 import b64decode
 from sandbox import get_accounts
 
 
@@ -21,7 +20,7 @@ def create_app(
 ):
 
     # declare on_complete as NoOp
-    on_complete = future.transaction.OnComplete.NoOpOC.real
+    on_complete = transaction.OnComplete.NoOpOC.real
 
     # get node suggested parameters
     params = client.suggested_params()
@@ -30,7 +29,7 @@ def create_app(
     # params.fee = 1000
 
     # create unsigned transaction
-    txn = future.transaction.ApplicationCreateTxn(
+    txn = transaction.ApplicationCreateTxn(
         sender,
         params,
         on_complete,
@@ -48,7 +47,7 @@ def create_app(
     client.send_transactions([signed_txn])
 
     # await confirmation
-    confirmed_txn = future.transaction.wait_for_confirmation(client, tx_id, 4)
+    confirmed_txn = transaction.wait_for_confirmation(client, tx_id, 4)
     print("TXID: ", tx_id)
     print("Result confirmed in round: {}".format(confirmed_txn["confirmed-round"]))
 
@@ -62,7 +61,7 @@ def create_app(
 
 def compile_program(client, source_code):
     compile_response = client.compile(source_code)
-    return base64.b64decode(compile_response["result"])
+    return b64decode(compile_response["result"])
 
 
 # Manually setup Algod Client
@@ -90,8 +89,8 @@ global_ints = 1
 global_bytes = 0
 
 # define schema
-global_schema = future.transaction.StateSchema(global_ints, global_bytes)
-local_schema = future.transaction.StateSchema(local_ints, local_bytes)
+global_schema = transaction.StateSchema(global_ints, global_bytes)
+local_schema = transaction.StateSchema(local_ints, local_bytes)
 
 # create new application
 app_id = create_app(

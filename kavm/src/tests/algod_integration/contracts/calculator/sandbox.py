@@ -11,22 +11,22 @@ def get_accounts():
     kmd = KMDClient(KMD_TOKEN, KMD_ADDRESS)
     wallets = kmd.list_wallets()
 
-    walletID = None
+    wallet_id = None
     for wallet in wallets:
         if wallet["name"] == KMD_WALLET_NAME:
-            walletID = wallet["id"]
+            wallet_id = wallet["id"]
             break
 
-    if walletID is None:
+    if wallet_id is None:
         raise Exception("Wallet not found: {}".format(KMD_WALLET_NAME))
 
-    walletHandle = kmd.init_wallet_handle(walletID, KMD_WALLET_PASSWORD)
+    wallet_handle = kmd.init_wallet_handle(wallet_id, KMD_WALLET_PASSWORD)
 
     try:
-        addresses = kmd.list_keys(walletHandle)
-        privateKeys = [kmd.export_key(walletHandle, KMD_WALLET_PASSWORD, addr) for addr in addresses]
-        kmdAccounts = [(addresses[i], privateKeys[i]) for i in range(len(privateKeys))]
+        addresses = kmd.list_keys(wallet_handle)
+        private_keys = [kmd.export_key(wallet_handle, KMD_WALLET_PASSWORD, addr) for addr in addresses]
+        kmd_accounts = [(addresses[i], private_keys[i]) for i in range(len(private_keys))]
     finally:
-        kmd.release_wallet_handle(walletHandle)
+        kmd.release_wallet_handle(wallet_handle)
 
-    return kmdAccounts
+    return kmd_accounts
