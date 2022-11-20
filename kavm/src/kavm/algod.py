@@ -237,7 +237,6 @@ class KAVMClient(algod.AlgodClient):
         Parse KAVM's resulting configuration and update the account state in KAVMClient.
         """
 
-
         # we'll need too keep track of all addresses the transactions mention to
         # make KAVM aware of the new ones, so we preprocess the transactions
         # to dicover new addresses and initialize them with 0 balance
