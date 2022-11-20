@@ -162,8 +162,8 @@ Note that the applications and ASAs are part of the accounts' state as well, and
        <paniccode>  PANIC_CODE       </paniccode>
    requires notBool (PANIC_CODE ==Int EXPECTED_PANIC_CODE)
 
-  syntax KItem ::= #stateDump(AccountsCell, TransactionsCell)
-  //---------------------------------------------------------
+  syntax KItem ::= #stateDump(AccountsMapCell, TransactionsCell)
+  //------------------------------------------------------------
 
   syntax TestingCommand ::= #dumpFinalState()
   //-----------------------------------------
