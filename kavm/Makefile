@@ -65,11 +65,11 @@ transient-profiling-report:
 format: autoflake isort black
 check: check-flake8 check-mypy check-autoflake check-isort check-black
 
-check-flake8: poetry-install
-	$(POETRY_RUN) flake8 src
+isort: poetry-install
+	$(POETRY_RUN) isort src
 
-check-mypy: poetry-install
-	$(POETRY_RUN) mypy src
+check-isort: poetry-install
+	$(POETRY_RUN) isort --check src
 
 autoflake: poetry-install
 	$(POETRY_RUN) autoflake --quiet --in-place src
@@ -88,4 +88,3 @@ check-black: poetry-install
 
 check-mypy: poetry-install
 	$(POETRY_RUN) mypy src
-
