@@ -5,7 +5,7 @@ from base64 import b64encode
 from pathlib import Path
 from pprint import PrettyPrinter
 from subprocess import CalledProcessError
-from typing import Any, Dict, Iterable, List, Optional, cast
+from typing import Any, Dict, Final, Iterable, List, Optional, cast
 
 import msgpack
 from algosdk import encoding
