@@ -96,7 +96,7 @@ def kalgod(kalgod_faucet: Dict[str, Any]) -> KAVMClient:
     algod_token = 'ktealktealktealkteal'
     algod_address = 'http://kteal:8080'
 
-    return KAVMClient(algod_token, algod_address, kalgod_faucet['address'])
+    return KAVMClient(faucet_address=kalgod_faucet['address'], algod_token=algod_token, algod_address=algod_address)
 
 
 @pytest.fixture
