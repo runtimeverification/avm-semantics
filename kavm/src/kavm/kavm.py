@@ -250,7 +250,7 @@ class KAVM(KRun):
     #     try:
     #         (krun_return_code, output) = self._run_with_current_config()
     #     except Exception:
-    #         self.logger.critical(
+    #         _LOGGER.critical(
     #             f'Transaction group evaluation failed, last configuration was: {self.pretty_print(self._current_config)}'
     #         )
     #         raise
@@ -272,5 +272,5 @@ class KAVM(KRun):
     #             self._committed_txns[txn.txid] = self._commit_transaction(txn)
     #         return {'txId': f'{txns[0].txid}'}
     #     else:
-    #         self.logger.critical(output)
+    #         _LOGGER.critical(output)
     #         exit(krun_return_code)
