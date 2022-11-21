@@ -149,7 +149,9 @@ class KAVM(KRun):
             _LOGGER.info('Parsing PGM')
             tmp_scenario_file.write(scenario.to_json())
             tmp_scenario_file.flush()
-            _pgm_parsed = run_process([str(self._scenario_parser), str(tmp_scenario_file.name)], logger=_LOGGER, profile=profile)
+            _pgm_parsed = run_process(
+                [str(self._scenario_parser), str(tmp_scenario_file.name)], logger=_LOGGER, profile=profile
+            )
             pgm_parsed = KoreParser(_pgm_parsed.stdout).pattern()
 
             # _LOGGER.warning(f'Executing scenario: {json.dumps(scenario.dictify(), indent=4, sort_keys=True)}')
