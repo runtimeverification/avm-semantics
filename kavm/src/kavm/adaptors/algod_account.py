@@ -1,8 +1,8 @@
 from typing import Iterable, cast
 
 from algosdk.v2client import models
-from pyk.kast import KApply, KInner, KLabel, KSort, KToken, build_cons
-from pyk.kastManip import flatten_label, split_config_from
+from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, build_cons
+from pyk.kast.manip import flatten_label, split_config_from
 from pyk.prelude.kint import intToken
 
 from kavm.adaptors.algod_application import KAVMApplication
