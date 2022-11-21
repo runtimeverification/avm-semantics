@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import subprocess
@@ -8,7 +7,7 @@ from subprocess import CompletedProcess
 from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Union
 
 from pyk.cli_utils import run_process
-from pyk.kast.inner import KSort
+from pyk.kast.inner import KInner, KSort
 from pyk.kore.parser import KoreParser
 from pyk.kore.syntax import Pattern
 from pyk.ktool.kprint import paren
@@ -131,40 +130,38 @@ class KAVM(KRun):
     def run_avm_json(
         self,
         scenario: KAVMScenario,
-        depth: Optional[int],
-        output: str = 'none',
+        depth: Optional[int] = None,
         profile: bool = False,
         check: bool = True,
         existing_decompiled_teal_dir: Optional[Path] = None,
-    ) -> CompletedProcess:
+    ) -> KInner:
         """Run an AVM simulaion scenario with krun"""
 
         with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_scenario_file, (
             existing_decompiled_teal_dir if existing_decompiled_teal_dir else tempfile.TemporaryDirectory()  # type: ignore
         ) as decompiled_teal_dir:
+
+            _LOGGER.info('Parsing TEAL_PROGRAMS')
             for teal_file, teal_src in scenario._teal_programs.items():
                 (Path(decompiled_teal_dir) / teal_file).write_text(teal_src)
-            parsed_teal = self.parse_teals(scenario._teal_programs.keys(), Path(decompiled_teal_dir)).text
-            # tmp_teals_file.write(parsed_teals)
-            # tmp_teals_file.flush()
+            parsed_teal = self.parse_teals(scenario._teal_programs.keys(), Path(decompiled_teal_dir))
 
+            _LOGGER.info('Parsing PGM')
             tmp_scenario_file.write(scenario.to_json())
-            _LOGGER.debug(f'Executing scenario: {json.dumps(scenario.dictify(), indent=4, sort_keys=True)}')
             tmp_scenario_file.flush()
+            _pgm_parsed = run_process([str(self._scenario_parser), str(tmp_scenario_file.name)], logger=_LOGGER, profile=profile)
+            pgm_parsed = KoreParser(_pgm_parsed.stdout).pattern()
 
-            krun_command = ['krun', '--definition', str(self.definition_dir)]
-            krun_command += [f'-cTEAL_PROGRAMS={parsed_teal}']
-            krun_command += ['-pTEAL_PROGRAMS=cat']
-            krun_command += ['--parser', str(self._scenario_parser)]
-            krun_command += ['--depth', str(depth)] if depth else []
-            krun_command += ['--output', 'none' if output == 'final-state-json' else output]
-            krun_command += [tmp_scenario_file.name]
-            command_env = os.environ.copy()
-            command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
-
-            return run_process(
-                krun_command, env=command_env, logger=_LOGGER, profile=profile, check=check, pipe_stderr=True
-            )
+            # _LOGGER.warning(f'Executing scenario: {json.dumps(scenario.dictify(), indent=4, sort_keys=True)}')
+            _LOGGER.info('Running KAVM')
+            kore_config = {
+                'TEAL_PROGRAMS': parsed_teal,
+                'PGM': pgm_parsed,
+            }
+            os.environ['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
+            final_pattern = self.run_kore_config(kore_config, depth=depth, expand_macros=False)
+            _LOGGER.info('Converting Kore => Kast')
+            return self.kore_to_kast(final_pattern)
 
     def kast(
         self,
