@@ -21,7 +21,6 @@ from algosdk.atomic_transaction_composer import (
 )
 from algosdk.future.transaction import PaymentTxn, Transaction
 from algosdk.v2client import algod
-
 from pyk.kast.inner import KApply
 from pyk.kast.manip import get_cell
 from pyk.prelude.kjson import kjson_to_dict
