@@ -1,3 +1,7 @@
+# type: ignore
+
+# flake8: noqa
+
 from algosdk.kmd import KMDClient
 
 KMD_ADDRESS = "http://localhost:4002"

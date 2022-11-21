@@ -3,66 +3,18 @@ import json
 import os
 import sys
 from datetime import timedelta
-from typing import Any, Optional
+from typing import Any
 
 from algosdk import abi, account, error, future
 from algosdk.atomic_transaction_composer import AccountTransactionSigner
+from algosdk.v2client.algod import AlgodClient
 from hypothesis import Phase, given, settings
 from hypothesis import strategies as st
 
 from kavm.algod import KAVMAtomicTransactionComposer, KAVMClient
 
 
-# def create_app(
-#     client,
-#     sender,
-#     private_key,
-#     approval_program,
-#     clear_program,
-#     global_schema,
-#     local_schema,
-# ):
-
-#     # declare on_complete as NoOp
-#     on_complete = future.transaction.OnComplete.NoOpOC.real
-
-#     # get node suggested parameters
-#     params = client.suggested_params()
-#     params.flat_fee = True
-#     params.fee = 1000
-
-#     # create unsigned transaction
-#     txn = future.transaction.ApplicationCreateTxn(
-#         sender,
-#         params,
-#         on_complete,
-#         approval_program,
-#         clear_program,
-#         global_schema,
-#         local_schema,
-#     )
-
-#     # sign transaction
-#     signed_txn = txn.sign(private_key)
-#     tx_id = signed_txn.transaction.get_txid()
-
-#     # send transaction
-#     client.send_transactions([signed_txn])
-
-#     # await confirmation
-#     confirmed_txn = future.transaction.wait_for_confirmation(client, tx_id, 4)
-#     print("TXID: ", tx_id)
-#     print("Result confirmed in round: {}".format(confirmed_txn["confirmed-round"]))
-
-#     # display results
-#     transaction_response = client.pending_transaction_info(tx_id)
-#     app_id = transaction_response["application-index"]
-#     print("Created new app-id: ", app_id)
-
-#     return app_id
-
-
-def compile_program(client, source_code):
+def compile_program(client: AlgodClient, source_code: str) -> bytes:
     compile_response = client.compile(source_code)
     return base64.b64decode(compile_response["result"])
 
@@ -125,8 +77,8 @@ client, contact, app_id, caller_addr, caller_private_key = setup()
 sp = client.suggested_params()
 signer = AccountTransactionSigner(caller_private_key)
 
-MAX_ARG_VALUE = 2**64 - 1
-MIN_ARG_VALUE = MAX_ARG_VALUE / 4
+MAX_ARG_VALUE = int(2**64 - 1)
+MIN_ARG_VALUE = int(MAX_ARG_VALUE / 4)
 
 
 @settings(deadline=(timedelta(seconds=2)), max_examples=25, phases=[Phase.generate])
@@ -134,7 +86,7 @@ MIN_ARG_VALUE = MAX_ARG_VALUE / 4
     x=st.integers(min_value=MIN_ARG_VALUE, max_value=MAX_ARG_VALUE),
     y=st.integers(min_value=MIN_ARG_VALUE, max_value=MAX_ARG_VALUE),
 )
-def test_method_add(x: int, y: int) -> Optional[int]:
+def test_method_add(x: int, y: int) -> None:
     method_name = 'add'
     comp = KAVMAtomicTransactionComposer()
     comp.add_method_call(app_id, contact.get_method_by_name(method_name), caller_addr, sp, signer, method_args=[x, y])
@@ -153,7 +105,7 @@ if __name__ == '__main__':
         resp = comp.execute(client, 2)
         for result in resp.abi_results:
             print(f"{result.method.name} => {result.return_value}")
-    except error.AlgodHTTPError as e:
+    except error.AlgodHTTPError:
         print(json.dumps(client._last_scenario.dictify(), indent=2))
-        print(f'^^^^^^^^^^^^^^^^^^ Last attempted scenario ^^^^^^^^^^^^^^^^^^')
+        print('^^^^^^^^^^^^^^^^^^ Last attempted scenario ^^^^^^^^^^^^^^^^^^')
         print(f'Contract has regected the call to method {method_name} with arguments {x} and {y}')

@@ -1,3 +1,7 @@
+# type: ignore
+
+# flake8: noqa
+
 import os
 
 from algosdk.abi import *

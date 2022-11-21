@@ -8,7 +8,7 @@ from subprocess import CalledProcessError
 from typing import Any, Dict, Iterable, List, Optional, cast
 
 import msgpack
-from algosdk import encoding, error
+from algosdk import encoding
 from algosdk.atomic_transaction_composer import (
     ABI_RETURN_HASH,
     ABIResult,
@@ -20,6 +20,7 @@ from algosdk.atomic_transaction_composer import (
     error,
     transaction,
 )
+from algosdk.error import AlgodHTTPError
 from algosdk.future.transaction import PaymentTxn, Transaction
 from algosdk.v2client import algod
 
@@ -143,7 +144,7 @@ class KAVMClient(algod.AlgodClient):
                     # hack to temporarily make py-algorand-sdk happy:
                     # if the txn id is not found, return the last committed txn
                     except KeyError:
-                        (_, txn) = list(sorted(self._committed_txns.items()))[-1]
+                        (_, txn) = sorted(self._committed_txns.items())[-1]
                         return txn
                 else:
                     raise NotImplementedError(f'Endpoint not implemented: {requrl}')
@@ -266,7 +267,7 @@ class KAVMClient(algod.AlgodClient):
             self.algodLogger.error(
                 f'Transaction group evaluation failed, last generated scenario was: {json.dumps(scenario.dictify(), indent=4)}'
             )
-            raise error.AlgodHTTPError(
+            raise AlgodHTTPError(
                 msg='KAVM has failed, rerun witn --log-level=ERROR to see the executed JSON scenario'
             ) from e
 
@@ -276,7 +277,7 @@ class KAVMClient(algod.AlgodClient):
             final_state = json.loads(proc_result.stderr)
         except json.decoder.JSONDecodeError as e:
             self.algodLogger.error(f'Failed to parse the final state JSON: {e}')
-            raise error.AlgodHTTPError(msg='KAVM has failed, see logs for reasons')
+            raise AlgodHTTPError(msg='KAVM has failed, see logs for reasons') from e
 
         self.algodLogger.debug(f'Successfully parsed final state JSON: {json.dumps(final_state, indent=4)}')
         # substitute the tracked accounts by KAVM's state
