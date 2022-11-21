@@ -210,7 +210,7 @@ VENV_DIR       := $(BUILD_DIR)/venv
 VENV_ACTIVATE  := . $(VENV_DIR)/bin/activate
 
 $(VENV_DIR)/pyvenv.cfg:
-	   python -m venv $(VENV_DIR) \
+	   python3 -m venv $(VENV_DIR) \
            && $(VENV_ACTIVATE)        \
            && pip install --editable $(PY_KAVM_DIR)
 

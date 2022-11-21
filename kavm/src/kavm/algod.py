@@ -5,7 +5,7 @@ from base64 import b64encode
 from pathlib import Path
 from pprint import PrettyPrinter
 from subprocess import CalledProcessError
-from typing import Any, Dict, Iterable, List, Optional, cast
+from typing import Any, Dict, Final, Iterable, List, Optional, cast
 
 import msgpack
 from algosdk import encoding
@@ -29,6 +29,8 @@ from kavm.adaptors.algod_account import KAVMAccount
 from kavm.adaptors.algod_transaction import KAVMTransaction
 from kavm.kavm import KAVM
 from kavm.scenario import KAVMScenario, _sort_dict
+
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 def msgpack_decode_txn_list(enc: bytes) -> List[Transaction]:
@@ -68,8 +70,6 @@ class KAVMClient(algod.AlgodClient):
         log_level: Optional[int] = None,
     ) -> None:
         super().__init__(algod_token, algod_address)
-        self.algodLogger = logging.getLogger(f'${__name__}.algodLogger')
-        self.set_log_level(log_level if log_level else logging.CRITICAL)
         self.pretty_printer = PrettyPrinter(width=41, compact=True)
 
         # self._apps = AppCellMap()
@@ -85,19 +85,16 @@ class KAVMClient(algod.AlgodClient):
         # Initialize KAVM, fetching the K definition dir from the environment
         definition_dir = os.environ.get('KAVM_DEFINITION_DIR')
         if definition_dir is not None:
-            self.kavm = KAVM(
-                definition_dir=Path(definition_dir),
-                logger=self.algodLogger,
-            )
+            self.kavm = KAVM(definition_dir=Path(definition_dir))
         else:
-            self.algodLogger.error('Cannot initialize KAVM: KAVM_DEFINITION_DIR env variable is not set')
+            _LOGGER.critical('Cannot initialize KAVM: KAVM_DEFINITION_DIR env variable is not set')
             exit(1)
 
     def set_log_level(self, log_level: Any) -> None:
         """
         Set log level for algod requests
         """
-        self.algodLogger.setLevel(log_level)
+        _LOGGER.setLevel(log_level)
 
     def algod_request(
         self,
@@ -189,7 +186,7 @@ class KAVMClient(algod.AlgodClient):
                 'catchpoint-acquired-blocks': 0,
             }
         else:
-            self.algodLogger.debug(requrl.split('/'))
+            _LOGGER.debug(requrl.split('/'))
             raise NotImplementedError(f'Endpoint not implemented: {requrl}')
 
     def _pending_transaction_info(self, txid: int) -> Dict[str, Any]:
@@ -219,7 +216,7 @@ class KAVMClient(algod.AlgodClient):
 
             return self._eval_transactions(txns)
 
-            # self.algodLogger.debug(proc_result.stdout)
+            # _LOGGER.debug(proc_result.stdout)
             # assert False
 
             # return self.kavm.eval_transactions(kavm_txns, known_addresses)
@@ -257,6 +254,7 @@ class KAVMClient(algod.AlgodClient):
         self._last_scenario = scenario
 
         try:
+            _LOGGER.debug(f'Executing scenario: {json.dumps(scenario.dictify(), indent=4)}')
             proc_result = self.kavm.run_avm_json(
                 scenario=scenario,
                 depth=0,
@@ -264,7 +262,7 @@ class KAVMClient(algod.AlgodClient):
                 existing_decompiled_teal_dir=self._decompiled_teal_dir_path,
             )
         except CalledProcessError as e:
-            self.algodLogger.error(
+            _LOGGER.critical(
                 f'Transaction group evaluation failed, last generated scenario was: {json.dumps(scenario.dictify(), indent=4)}'
             )
             raise AlgodHTTPError(
@@ -276,10 +274,10 @@ class KAVMClient(algod.AlgodClient):
             # on succeful execution, the final state will be serialized and prineted to stderr
             final_state = json.loads(proc_result.stderr)
         except json.decoder.JSONDecodeError as e:
-            self.algodLogger.error(f'Failed to parse the final state JSON: {e}')
+            _LOGGER.critical(f'Failed to parse the final state JSON: {e}')
             raise AlgodHTTPError(msg='KAVM has failed, see logs for reasons') from e
 
-        self.algodLogger.debug(f'Successfully parsed final state JSON: {json.dumps(final_state, indent=4)}')
+        _LOGGER.debug(f'Successfully parsed final state JSON: {json.dumps(final_state, indent=4)}')
         # substitute the tracked accounts by KAVM's state
         self._accounts = {}
         for acc_dict in KAVMScenario.sanitize_accounts(final_state['accounts']):
