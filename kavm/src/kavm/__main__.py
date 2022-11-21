@@ -10,6 +10,9 @@ from subprocess import CalledProcessError
 from typing import Any, Final, List, Optional
 
 from pyk.cli_utils import dir_path, file_path
+from pyk.kast.inner import KApply
+from pyk.kast.manip import get_cell
+from pyk.prelude.kjson import kjson_to_dict
 
 from kavm.kompile import kompile
 from kavm.scenario import KAVMScenario
@@ -132,21 +135,17 @@ def exec_run(
             #         if os.path.isfile(full_file_name):
             #             shutil.copy(full_file_name, decompiled_teal_dir)
             # scenario.decompile_teal_programs(Path(decompiled_teal_dir))
-            proc_result = kavm.run_avm_json(
-                scenario=scenario,
-                # teals=kavm.parse_teals(scenario._teal_files, Path(decompiled_teal_dir)),
-                output=output,
-                profile=profile,
-                depth=depth if depth else 0,
-            )
+            final_state = kavm.run_avm_json(scenario=scenario, profile=profile, depth=depth)
             if not output in ['none', 'final-state-json']:
-                print(proc_result.stdout)
-            if output == 'final-state-json' and proc_result.returncode == 0:
-                print(json.dumps(json.loads(proc_result.stderr), indent=4))
-            if proc_result.returncode:
-                print(proc_result.stdout)
-                print(proc_result.stderr)
-            exit(proc_result.returncode)
+                print(kavm.pretty_print(final_state))
+            if output == 'final-state-json':
+                state_dumps = get_cell(final_state, 'STATE_DUMPS_CELL')
+                assert type(state_dumps) is KApply
+                assert state_dumps.label.name == 'ListItem'
+                state_dump = kjson_to_dict(state_dumps.args[0])
+                assert type(state_dump) is dict
+                print(json.dumps(state_dump, indent=4))
+            exit(0)
         else:
             print(f'Unrecognized input file extension: {input_file.suffix}')
             exit(1)
