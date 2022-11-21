@@ -89,6 +89,7 @@ class KAVMClient(algod.AlgodClient):
         definition_dir = os.environ.get('KAVM_DEFINITION_DIR')
         if definition_dir is not None:
             self.kavm = KAVM(definition_dir=Path(definition_dir))
+            self.kavm.definition
         else:
             self.algodLogger.error('Cannot initialize KAVM: KAVM_DEFINITION_DIR env variable is not set')
             exit(1)
