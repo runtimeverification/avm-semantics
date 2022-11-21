@@ -37,14 +37,8 @@ def test_run_simulation(filename: str) -> None:
         teal_sources_dir=Path(os.path.join(project_path, 'tests/teal-sources/')),
     )
 
-    # teals = kavm.parse_teals(
-    #     teal_paths=scenario._teal_files, teal_sources_dir=Path(os.path.join(project_path, 'tests/teal-sources/'))
-    # )
-    proc_result = kavm.run_avm_json(
+    kavm.run_avm_json(
         scenario=scenario,
-        output='none',
         profile=True,
         depth=0,
     )
-
-    assert proc_result.returncode == 0
