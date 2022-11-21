@@ -12,8 +12,8 @@ from algosdk.future.transaction import (
     SuggestedParams,
     Transaction,
 )
-from pyk.kast import KApply, KInner, KSort, KToken, Subst
-from pyk.kastManip import free_vars, split_config_from
+from pyk.kast.inner import KApply, KInner, KSort, KToken, Subst
+from pyk.kast.manip import free_vars, split_config_from
 
 from kavm.pyk_utils import maybe_tvalue, tvalue, tvalue_list
 

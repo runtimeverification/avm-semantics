@@ -3,7 +3,7 @@ from base64 import b64encode
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from algosdk.future.transaction import OnComplete
-from pyk.kast import KApply, KInner, KLabel, KSort, KToken, KVariable, build_assoc, top_down
+from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, build_assoc, top_down
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
 

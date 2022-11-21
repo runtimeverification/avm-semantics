@@ -1,7 +1,7 @@
 from typing import Any
 
 import pytest
-from pyk.kast import KApply, KInner, KSort, KToken
+from pyk.kast.inner import KApply, KInner, KSort, KToken
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
 
