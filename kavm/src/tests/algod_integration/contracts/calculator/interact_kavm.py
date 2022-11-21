@@ -1,9 +1,10 @@
 import base64
 import json
+import logging
 import os
 import sys
 from datetime import timedelta
-from typing import Any
+from typing import Any, Final
 
 from algosdk import abi, account, error, future
 from algosdk.atomic_transaction_composer import AccountTransactionSigner
@@ -11,6 +12,11 @@ from hypothesis import Phase, given, settings
 from hypothesis import strategies as st
 
 from kavm.algod import KAVMAtomicTransactionComposer, KAVMClient
+
+_LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
+logging.basicConfig(level=logging.INFO, format=_LOG_FORMAT)
+logging.basicConfig(level=logging.DEBUG, format=_LOG_FORMAT)
+
 
 # def create_app(
 #     client,
