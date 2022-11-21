@@ -7,7 +7,7 @@ from subprocess import CompletedProcess
 from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Union
 
 from pyk.cli_utils import run_process
-from pyk.kast import KSort
+from pyk.kast.inner import KSort
 from pyk.ktool.kprint import paren
 from pyk.ktool.krun import KRun
 from pyk.prelude.k import K
