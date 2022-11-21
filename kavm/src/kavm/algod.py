@@ -5,7 +5,7 @@ from base64 import b64encode
 from pathlib import Path
 from pprint import PrettyPrinter
 from subprocess import CalledProcessError
-from typing import Any, Dict, Iterable, List, Optional, cast
+from typing import Any, Dict, Final, Iterable, List, Optional, cast
 
 import msgpack
 from algosdk import encoding, error
@@ -22,11 +22,17 @@ from algosdk.atomic_transaction_composer import (
 from algosdk.future.transaction import PaymentTxn, Transaction
 from algosdk.v2client import algod
 
+from pyk.kast.inner import KApply
+from pyk.kast.manip import get_cell
+from pyk.prelude.kjson import kjson_to_dict
+
 from kavm import constants
 from kavm.adaptors.algod_account import KAVMAccount
 from kavm.adaptors.algod_transaction import KAVMTransaction
 from kavm.kavm import KAVM
 from kavm.scenario import KAVMScenario, _sort_dict
+
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 def msgpack_decode_txn_list(enc: bytes) -> List[Transaction]:
@@ -252,10 +258,8 @@ class KAVMClient(algod.AlgodClient):
         self._last_scenario = scenario
 
         try:
-            proc_result = self.kavm.run_avm_json(
+            final_state = self.kavm.run_avm_json(
                 scenario=scenario,
-                depth=0,
-                output='final-state-json',
                 existing_decompiled_teal_dir=self._decompiled_teal_dir_path,
             )
         except CalledProcessError as e:
@@ -266,18 +270,22 @@ class KAVMClient(algod.AlgodClient):
                 msg='KAVM has failed, rerun witn --log-level=ERROR to see the executed JSON scenario'
             ) from e
 
-        final_state = {}
         try:
             # on succeful execution, the final state will be serialized and prineted to stderr
-            final_state = json.loads(proc_result.stderr)
+            state_dumps = get_cell(final_state, 'STATE_DUMPS_CELL')
+            assert type(state_dumps) is KApply
+            assert state_dumps.label.name == 'ListItem'
+            _LOGGER.info(f'Converting KJSON to Dict {state_dumps.args[0]}')
+            state_dump = kjson_to_dict(state_dumps.args[0])
+            assert type(state_dump) is dict
         except json.decoder.JSONDecodeError as e:
             self.algodLogger.error(f'Failed to parse the final state JSON: {e}')
             raise error.AlgodHTTPError(msg='KAVM has failed, see logs for reasons') from e
 
-        self.algodLogger.debug(f'Successfully parsed final state JSON: {json.dumps(final_state, indent=4)}')
+        self.algodLogger.debug(f'Successfully parsed final state JSON: {json.dumps(state_dump, indent=4)}')
         # substitute the tracked accounts by KAVM's state
         self._accounts = {}
-        for acc_dict in KAVMScenario.sanitize_accounts(final_state['accounts']):
+        for acc_dict in KAVMScenario.sanitize_accounts(state_dump['accounts']):
             acc_dict_translated = {KAVMAccount.inverted_attribute_map[k]: v for k, v in acc_dict.items()}
             self._accounts[acc_dict_translated['address']] = KAVMAccount(**acc_dict_translated)
             # update app creators
@@ -285,9 +293,9 @@ class KAVMClient(algod.AlgodClient):
                 for app in acc.created_apps:
                     self._app_creators[app['id']] = addr
         # merge confirmed transactions with the ones received from KAVM
-        for txn in final_state['transactions']:
+        for txn in state_dump['transactions']:
             self._committed_txns[txn['id']] = txn['params']
-        return {'txId': final_state['transactions'][0]['id']}
+        return {'txId': state_dump['transactions'][0]['id']}
 
     def _construct_scenario(self, accounts: Iterable[KAVMAccount], transactions: Iterable[Transaction]) -> KAVMScenario:
         """Construct a JSON simulation scenario to run on KAVM"""
