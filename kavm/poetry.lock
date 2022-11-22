@@ -594,7 +594,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "pyk"
-version = "0.1.60"
+version = "0.1.63"
 description = ""
 category = "main"
 optional = false
@@ -613,8 +613,8 @@ tomli = "^2.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/runtimeverification/pyk.git"
-reference = "v0.1.60"
-resolved_reference = "244541e793ec51b251a84491e285d79fade83f30"
+reference = "v0.1.63"
+resolved_reference = "17ec24e0e9af5596cf0b418b3412e809758890c9"
 
 [[package]]
 name = "PyNaCl"
