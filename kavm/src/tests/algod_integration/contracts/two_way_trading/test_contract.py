@@ -12,9 +12,10 @@ from algosdk.future import *
 from algosdk.mnemonic import *
 from algosdk.v2client.algod import *
 from algosdk.v2client.algod import AlgodClient
-from client import call_burn, call_mint, initial_state
 from hypothesis import Phase, given, settings
 from hypothesis import strategies as st
+
+from .client import call_burn, call_mint, initial_state
 
 
 @pytest.fixture(scope='session')

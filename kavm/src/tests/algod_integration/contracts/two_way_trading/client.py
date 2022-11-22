@@ -7,7 +7,6 @@ import logging
 import sys
 
 import algosdk
-import contract as pyteal_contract
 from algosdk import future
 from algosdk.abi import *
 from algosdk.account import *
@@ -19,6 +18,8 @@ from algosdk.v2client.algod import *
 from algosdk.v2client.algod import AlgodClient
 
 from kavm.algod import KAVMAtomicTransactionComposer, KAVMClient
+
+from .contract import compile_to_teal
 
 
 def compile_teal(client, source_code):
@@ -34,7 +35,7 @@ def setup_app(
 ) -> Tuple[Contract, int]:
     """Compile the PyTeal contract and deploy it"""
 
-    approval_source, clear_source, contract = pyteal_contract.compile_to_teal()
+    approval_source, clear_source, contract = compile_to_teal()
 
     # Compile approval and clear TEAL programs
     approval_program = compile_teal(client, approval_source)
