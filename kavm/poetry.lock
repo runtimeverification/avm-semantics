@@ -557,7 +557,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "pyk"
-version = "0.1.62"
+version = "0.1.63"
 description = ""
 category = "main"
 optional = false
@@ -576,8 +576,8 @@ tomli = "^2.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/runtimeverification/pyk.git"
-reference = "v0.1.62"
-resolved_reference = "63ba106d203e8753534ab7452ef76cb5a44c4c74"
+reference = "v0.1.63"
+resolved_reference = "17ec24e0e9af5596cf0b418b3412e809758890c9"
 
 [[package]]
 name = "pynacl"
@@ -819,7 +819,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "1905bf2521e2eb6e30d21baf95daee71e41f74407a99ed8ad91977fbee551905"
+content-hash = "2ce1b0e2e0197db3eedbf54e8d7a2c466fa62895362932abafb934f0c0002ebb"
 
 [metadata.files]
 aniso8601 = [
