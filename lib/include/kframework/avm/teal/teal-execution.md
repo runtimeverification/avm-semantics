@@ -47,7 +47,7 @@ there may be some remaining artefacts of the previous transaction's TEAL.
        <currentTx> TX_ID </currentTx>
        <transaction>
          <txID> TX_ID </txID>
-         <txnExecutionContext> <currentTxnExecution> C </currentTxnExecution> </txnExecutionContext>
+         <txnExecutionContext> (<currentTxnExecution> C </currentTxnExecution> => .K) ... </txnExecutionContext>
          ...
        </transaction>
        <currentTxnExecution> _ => C </currentTxnExecution>
