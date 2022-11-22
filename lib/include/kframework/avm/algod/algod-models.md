@@ -202,6 +202,7 @@ TODO: if an account contains an app, the state specification must also contain t
            </assetsCreated>
            ...
          </account>
+         <assetCreator> (.Map => (INDEX |-> CREATOR_ADDR)) ... </assetCreator>
        requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR
 ```
 
