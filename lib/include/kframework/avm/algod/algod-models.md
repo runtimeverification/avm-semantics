@@ -406,8 +406,6 @@ TODO: if an account contains an app, the state specification must also contain t
     rule #dumpStateMap(.Map) => .JSONs
 ```
 
-### Assets
-
 ## Transactions
 
 ```k
@@ -486,7 +484,7 @@ TODO: if an account contains an app, the state specification must also contain t
            <payTxFields>
              <receiver>         DecodeAddressString(RECEIVER) </receiver>
              <amount>           AMOUNT </amount>
-             <closeRemainderTo> .Bytes </closeRemainderTo>
+             <closeRemainderTo> PARAM_ZERO_ADDR </closeRemainderTo>
            </payTxFields>
            ...
          </transaction>
@@ -500,9 +498,9 @@ TODO: if an account contains an app, the state specification must also contain t
 ```k
     rule <k> #addTxnJSON({
                            "aamt": AMOUNT:Int,
-                           "aclose": CLOSE_TO:String,
+                           "aclose": CLOSE_TO:JSON,
                            "arcv": RECEIVER:String,
-                           "asnd": ASSET_SENDER:String,
+                           "asnd": _ASSET_ASENDER,
                            "fee": _FEE:Int,
                            "fv": _FIRST_VALID:Int,
                            "gen": _GEN:String,
@@ -531,8 +529,8 @@ TODO: if an account contains an app, the state specification must also contain t
              <xferAsset> ASSET_ID </xferAsset>
              <assetAmount> AMOUNT </assetAmount>
              <assetReceiver> DecodeAddressString(RECEIVER) </assetReceiver>
-             <assetASender> DecodeAddressString(ASSET_SENDER) </assetASender>
-             <assetCloseTo> DecodeAddressString(CLOSE_TO) </assetCloseTo>
+             <assetASender> PARAM_ZERO_ADDR </assetASender>
+             <assetCloseTo> #if isString(CLOSE_TO) #then DecodeAddressString({CLOSE_TO}:>String) #else PARAM_ZERO_ADDR #fi </assetCloseTo>
            </assetTransferTxFields>
            ...
          </transaction>
