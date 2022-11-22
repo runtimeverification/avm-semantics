@@ -89,7 +89,7 @@ class KAVMTransaction(Transaction):
         """Convert bytes fields of Transaction into base64-encoded strigns"""
         for k, v in txn_dict.items():
             if type(v) is bytes:
-                if k in ['snd', 'rcv', 'close']:
+                if k in ['snd', 'rcv', 'close', 'asnd', 'arcv', 'aclose']:
                     txn_dict[k] = encode_address(v)
                 else:
                     txn_dict[k] = b64encode(v).decode('utf8')

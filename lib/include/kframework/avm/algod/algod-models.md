@@ -131,6 +131,8 @@ TODO: if an account contains an app, the state specification must also contain t
                <address> ADDR:Bytes </address>
                <balance> BALANCE:Int </balance>
                <appsCreated> APPS </appsCreated>
+               <assetsCreated> ASSETS </assetsCreated>
+               <assetsOptedIn> OPT_IN_ASSETS </assetsOptedIn>
                ...
              </account>)
           => {"address": EncodeAddressBytes(ADDR),
@@ -138,9 +140,9 @@ TODO: if an account contains an app, the state specification must also contain t
               "amount-without-pending-rewards": null,
               "apps-local-state": null,
               "apps-total-schema": null,
-              "assets": null,
+              "assets": [#dumpAssetsOptedIn(<assetsOptedIn> OPT_IN_ASSETS </assetsOptedIn>)],
               "created-apps": [#dumpApps(EncodeAddressBytes(ADDR),<appsCreated> APPS </appsCreated>)],
-              "created-assets": [.JSONs],
+              "created-assets": [#dumpAssets(EncodeAddressBytes(ADDR),<assetsCreated> ASSETS </assetsCreated>)],
               "participation": null,
               "pending-rewards": null,
               "reward-base": null,
@@ -204,6 +206,87 @@ TODO: if an account contains an app, the state specification must also contain t
          </account>
          <assetCreator> (.Map => (INDEX |-> CREATOR_ADDR)) ... </assetCreator>
        requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR
+
+    syntax JSONs ::= #dumpAssets(String, AssetsCreatedCell)            [function]
+                   | #dumpAssetsImpl(String, JSONs, AssetsCreatedCell) [function]
+    //-----------------------------------------------------------------------
+    rule #dumpAssets((CREATOR:String), <assetsCreated> ASSETS </assetsCreated>)
+      => #dumpAssetsImpl((CREATOR:String), (.JSONs), <assetsCreated> ASSETS </assetsCreated>)
+    rule #dumpAssetsImpl(
+         (CREATOR:String),
+         (SERIALIZED:JSONs),
+         <assetsCreated>
+           <asset> ASSET </asset>
+           REST
+         </assetsCreated>)
+      => #dumpAssetsImpl((CREATOR:String), (#dumpAssetJSON((CREATOR:String), <asset> ASSET </asset>) , SERIALIZED) , <assetsCreated> REST </assetsCreated>)
+    rule #dumpAssetsImpl(
+         (_CREATOR:String),
+         (SERIALIZED:JSONs),
+         <assetsCreated>
+           .Bag
+         </assetsCreated>)
+      => SERIALIZED
+
+
+    syntax JSON ::= #dumpAssetJSON(String, AssetCell) [function]
+    //----------------------------------------------------------
+    rule #dumpAssetJSON(
+             (CREATOR:String),
+             <asset>
+               <assetID>            ASSET_ID:Int        </assetID>
+               <assetName>          ASSET_NAME:Bytes    </assetName>
+               <assetUnitName>      UNIT_NAME:Bytes     </assetUnitName>
+               <assetTotal>         TOTAL:Int           </assetTotal>
+               <assetDecimals>      DECIMALS:Int        </assetDecimals>
+               <assetDefaultFrozen> DEFAULT_FROZEN:Int  </assetDefaultFrozen>
+               <assetURL>           URL:Bytes           </assetURL>
+               <assetMetaDataHash>  METADATA_HASH:Bytes </assetMetaDataHash>
+               <assetManagerAddr>   MANAGER_ADDR:Bytes  </assetManagerAddr>
+               <assetReserveAddr>   RESERVE_ADDR:Bytes  </assetReserveAddr>
+               <assetFreezeAddr>    FREEZE_ADDR:Bytes   </assetFreezeAddr>
+               <assetClawbackAddr>  CLAWBACK_ADDR:Bytes </assetClawbackAddr>
+             </asset>)
+          => { "index": ASSET_ID
+             , "params": { "clawback"      : EncodeAddressBytes(CLAWBACK_ADDR)
+                         , "creator"       : CREATOR
+                         , "decimals"      : DECIMALS
+                         , "default-frozen": int2Bool(DEFAULT_FROZEN)
+                         , "freeze"        : EncodeAddressBytes(FREEZE_ADDR)
+                         , "manager"       : EncodeAddressBytes(MANAGER_ADDR)
+                         , "metadata-hash" : Bytes2String(METADATA_HASH)
+                         , "name"          : Bytes2String(ASSET_NAME)
+                         , "reserve"       : EncodeAddressBytes(RESERVE_ADDR)
+                         , "total"         : TOTAL
+                         , "unit-name"     : Bytes2String(UNIT_NAME)
+                         , "url"           : Bytes2String(URL)
+                         }
+             }
+
+    syntax JSONs ::= #dumpAssetsOptedIn(AssetsOptedInCell)            [function]
+                   | #dumpAssetsOptedInImpl(JSONs, AssetsOptedInCell) [function]
+    //----------------------------------------------------------------------------------
+    rule #dumpAssetsOptedIn(<assetsOptedIn> ASSETS </assetsOptedIn>)
+      => #dumpAssetsOptedInImpl((.JSONs), <assetsOptedIn> ASSETS </assetsOptedIn>)
+    rule #dumpAssetsOptedInImpl(
+         (SERIALIZED:JSONs),
+         <assetsOptedIn>
+           <optInAsset>
+             <optInAssetID>      ASSET_ID:Int      </optInAssetID>
+             <optInAssetBalance> ASSET_BALANCE:Int </optInAssetBalance>
+             <optInAssetFrozen>  FROZEN:Int        </optInAssetFrozen>
+           </optInAsset>
+           REST
+         </assetsOptedIn>)
+      => #dumpAssetsOptedInImpl( ({"amount": ASSET_BALANCE, "asset-id": ASSET_ID, "is-frozen": int2Bool(FROZEN)} , SERIALIZED)
+                               , <assetsOptedIn> REST </assetsOptedIn>)
+    rule #dumpAssetsOptedInImpl(
+         (SERIALIZED:JSONs),
+         <assetsOptedIn>
+           .Bag
+         </assetsOptedIn>)
+      => SERIALIZED
+
 ```
 
 ### Applications
