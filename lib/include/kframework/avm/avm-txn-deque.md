@@ -109,7 +109,7 @@ we will know immediately, since `#pushTxnFront()`/`#pushTxnBack()` would panic.
   rule <k> #popTxnFront() => .K ... </k>
        <deque> ListItem(_TXN_ID) TXNS => TXNS </deque>
 
-  rule <k> #popTxnFront() => #internalPanic(TXN_DEQUE_ERROR) ... </k>
+  rule <k> #popTxnFront() => .K ... </k>
        <deque> .List </deque>
 
 endmodule
