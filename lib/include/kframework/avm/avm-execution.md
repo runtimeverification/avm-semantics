@@ -261,10 +261,10 @@ Close asset account to
          <address> FROM </address>
          <assetsOptedIn>
            (<optInAsset>
-             <optInAssetID> ASSET_ID </optInAssetID>
-             <optInAssetBalance> BALANCE </optInAssetBalance>
-             ...
-           </optInAsset>) => .Bag
+             <optInAssetID>      ASSET_ID </optInAssetID>
+             <optInAssetBalance> BALANCE  </optInAssetBalance>
+             <optInAssetFrozen>  _        </optInAssetFrozen>
+           </optInAsset> => .Bag)
            ...
          </assetsOptedIn>
          <minBalance> MIN_BALANCE => MIN_BALANCE -Int PARAM_MIN_BALANCE </minBalance>
