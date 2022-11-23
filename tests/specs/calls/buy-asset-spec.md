@@ -94,7 +94,7 @@ claim
       </currentTxnExecution>
       <innerTransactions> .List </innerTransactions>
       <activeApps> .Set => ?_ </activeApps>
-      <touchedAccounts> .Set => ?_ </touchedAccounts>
+      <touchedAccounts> .List => ?_ </touchedAccounts>
     </avmExecution>
 
     <blockchain>
@@ -248,6 +248,9 @@ END:
   </kavm>
 
   requires APP_ID >Int 0
+   andBool APP_ID ==Int 321
+   andBool SENDER_ADDRESS ==K b"abc"
+   andBool CREATOR_ADDRESS ==K b"def"
    andBool APP_ADDRESS ==K getAppAddressBytes(APP_ID)
    andBool APP_BALANCE >=Int APP_MIN_BALANCE
    andBool CREATOR_ADDRESS =/=K APP_ADDRESS
@@ -257,12 +260,16 @@ END:
    andBool END =/=K BUY
    andBool SENDER_BALANCE -Int AMOUNT >=Int SENDER_MIN_BALANCE
    andBool SENDER_MIN_BALANCE >=Int 0
+   andBool SENDER_MIN_BALANCE >=Int 0
    andBool FUNCTION_NAME ==K b"buy"
    andBool PAY_TX_ID =/=K APPL_TX_ID
    andBool SCALING_FACTOR *Int AMOUNT <=Int MAX_UINT64
    andBool SCALING_FACTOR >Int 0
    andBool Int2String(NEXT_TXN_ID) =/=String APPL_TX_ID
    andBool Int2String(NEXT_TXN_ID) =/=String PAY_TX_ID
+   andBool ASSET_BAL -Int (SCALING_FACTOR *Int AMOUNT) >=Int 0
+   andBool ASSET_BAL >=Int 0
+   andBool AMOUNT >=Int 0
 
    andBool Int2String(NEXT_GROUP_ID +Int 1) =/=String GROUP_ID
 //   andBool Int2String(NEXT_GROUP_ID) =/=String GROUP_ID

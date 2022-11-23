@@ -1850,8 +1850,11 @@ Stateful TEAL Operations
 
 ```k
   rule <k> app_global_get =>
-           #app_global_get getAppGlobal(getAppCell({getGlobalField(CurrentApplicationID)}:>Int), KEY) ... </k>
+           #app_global_get getAppGlobal(getAppCell({AC[{getGlobalField(CurrentApplicationID)}:>Int]}:>Bytes, {getGlobalField(CurrentApplicationID)}:>Int), KEY) ... </k>
        <stack> (KEY:Bytes) : _ </stack>
+       <appCreator>
+         AC
+       </appCreator>
 
   syntax KItem ::= "#app_global_get" TValue
   //---------------------------------------
@@ -1867,19 +1870,31 @@ Stateful TEAL Operations
 *app_global_get_ex*
 
 ```k
-  syntax AppCell ::= getAppCell(Int) [function, total]
-  rule [[ getAppCell(APP_ID) => <app> <appID> APP_ID </appID> APP_DATA </app> ]]
-       <app>
-         <appID> APP_ID </appID>
-         APP_DATA
-       </app>
 
-  rule getAppCell(APP_ID) => <app> <appID> APP_ID </appID> ... </app> [owise]
+  syntax KItem ::= testAbc(Bytes, Int)
+  rule <k> testAbc(CREATOR_ADDR, APP_ID) => getAppCell(CREATOR_ADDR, APP_ID) ... </k>
+
+  syntax AppCell ::= getAppCell(Bytes, Int) [function]
+  rule [[ getAppCell(CREATOR_ADDR, APP_ID) => <app> <appID> APP_ID </appID> APP_DATA </app> ]]
+       <account>
+         <address> CREATOR_ADDR </address>
+         <app>
+           <appID> APP_ID </appID>
+           APP_DATA
+         </app>
+         ...
+       </account>
+
+  rule getAppCell(_, APP_ID) => <app> <appID> APP_ID </appID> ... </app> [owise]
 
 
   rule <k> app_global_get_ex =>
-           #app_global_get_ex getAppGlobal(getAppCell({appReference(APP)}:>Int), KEY) ... </k>
+           #app_global_get_ex getAppGlobal(getAppCell({AC[{appReference(APP)}:>Int]}:>Bytes, {appReference(APP)}:>Int), KEY) ... </k>
        <stack> (KEY:Bytes) : (APP:TUInt64) : _ </stack>
+       <appCreator>
+         AC
+       </appCreator>
+
     requires isTValue(appReference(APP))
 
   rule <k> app_global_get_ex => panic(TXN_ACCESS_FAILED) ... </k>

@@ -103,7 +103,7 @@ the attached stateless TEAL if the transaction is logicsig-signed.
          <sender> SENDER_ADDR </sender>
          ...
        </transaction>
-       <touchedAccounts> TA => addToSet(SENDER_ADDR, TA) </touchedAccounts>
+       <touchedAccounts> TA => addToListNoDup(SENDER_ADDR, TA) </touchedAccounts>
 
   rule <k> #evalTx() => #restoreContext() ~> #evalTeal() ... </k>
        <currentTx> TXN_ID </currentTx>
@@ -114,7 +114,7 @@ the attached stateless TEAL if the transaction is logicsig-signed.
          <sender> SENDER_ADDR </sender>
          ...
        </transaction>
-       <touchedAccounts> TA => addToSet(SENDER_ADDR, TA) </touchedAccounts>
+       <touchedAccounts> TA => addToListNoDup(SENDER_ADDR, TA) </touchedAccounts>
 
 ```
 
@@ -303,10 +303,10 @@ Add asset to account
   syntax AlgorandCommand ::= #checkSufficientBalance()
   //--------------------------------------------------
   rule <k> #checkSufficientBalance() => (#checkSufficientBalance(ADDR) ~> #checkSufficientBalance()) ...</k>
-       <touchedAccounts> (SetItem(ADDR) => .Set) ...</touchedAccounts>
+       <touchedAccounts> (ListItem(ADDR) => .List) ...</touchedAccounts>
 
   rule <k> #checkSufficientBalance() => . ...</k>
-       <touchedAccounts> .Set </touchedAccounts>
+       <touchedAccounts> .List </touchedAccounts>
   
   syntax AlgorandCommand ::= #checkSufficientBalance(Bytes)
   //-------------------------------------------------------
@@ -391,11 +391,11 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
          <balance> RECEIVER_BALANCE => RECEIVER_BALANCE +Int AMOUNT </balance>
          ...
        </account>
-       <touchedAccounts> TA => addToSet(RECEIVER, TA) </touchedAccounts>
+       <touchedAccounts> TA => addToListNoDup(RECEIVER, TA) </touchedAccounts>
 
-  syntax Set ::= addToSet(Bytes, Set) [function, total]
-  rule addToSet(X, S) => SetItem(X) S requires notBool(X in S)
-  rule addToSet(X, S) => S requires X in S
+  syntax List ::= addToListNoDup(Bytes, List) [function, total]
+  rule addToListNoDup(X, L) => ListItem(X) L requires notBool(X in L)
+  rule addToListNoDup(X, L) => L requires X in L
 
   rule <k> #executeTxn(@pay) => panic(INSUFFICIENT_FUNDS) ... </k>
        <currentTx> TXN_ID </currentTx>
@@ -629,27 +629,28 @@ Asset transfer with a non-zero amount fails if:
 - sender's holdings are frozen
 
 ```k
-//  rule <k> #executeTxn(@axfer) => #avmPanic(TXN_ID, ASSET_NOT_OPT_IN) ... </k>
-//       <currentTx> TXN_ID </currentTx>
-//       <transaction>
-//         <txID>          TXN_ID   </txID>
-//         <sender>        SENDER   </sender>
-//         <xferAsset>     ASSET_ID </xferAsset>
-//         <assetCloseTo>  CLOSE_TO </assetCloseTo>
-//         ...
-//       </transaction>
-//       <account>
-//         <address> SENDER </address>
-//         ...
-//       </account>
-//       <account>
-//         <address> RECEIVER </address>
-//         ...
-//       </account>
-//    requires SENDER =/=K RECEIVER
-//     andBool CLOSE_TO ==K getGlobalField(ZeroAddress)
-//     andBool (notBool hasOptedInAsset(ASSET_ID, SENDER)
-//      orBool notBool hasOptedInAsset(ASSET_ID, RECEIVER))
+  rule <k> #executeTxn(@axfer) => #avmPanic(TXN_ID, ASSET_NOT_OPT_IN) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID   </txID>
+         <sender>        SENDER   </sender>
+         <xferAsset>     ASSET_ID </xferAsset>
+         <assetReceiver> RECEIVER </assetReceiver>
+         <assetCloseTo>  CLOSE_TO </assetCloseTo>
+         ...
+       </transaction>
+       <account>
+         <address> SENDER </address>
+         ...
+       </account>
+       <account>
+         <address> RECEIVER </address>
+         ...
+       </account>
+    requires SENDER =/=K RECEIVER
+     andBool CLOSE_TO ==K getGlobalField(ZeroAddress)
+     andBool (notBool hasOptedInAsset(ASSET_ID, SENDER)
+      orBool notBool hasOptedInAsset(ASSET_ID, RECEIVER))
 
   rule <k> #executeTxn(@axfer) => #avmPanic(TXN_ID, ASSET_FROZEN) ... </k>
        <currentTx> TXN_ID </currentTx>
