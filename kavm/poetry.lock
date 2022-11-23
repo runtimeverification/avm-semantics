@@ -594,7 +594,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "pyk"
-version = "0.1.63"
+version = "0.1.66"
 description = ""
 category = "main"
 optional = false
@@ -613,8 +613,8 @@ tomli = "^2.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/runtimeverification/pyk.git"
-reference = "v0.1.63"
-resolved_reference = "17ec24e0e9af5596cf0b418b3412e809758890c9"
+reference = "v0.1.66"
+resolved_reference = "3f2437d5601a09d5d38dafc10a355c74e60c2d6b"
 
 [[package]]
 name = "PyNaCl"
@@ -889,7 +889,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "82442f3b7ca88edb7aac7e81f14cc518f001e105c67eacde17059ccd7808d789"
+content-hash = "b704d63f01616cd78a63292f9ec4229c09903d55be5ff57990b86e85ef846447"
 
 [metadata.files]
 aniso8601 = [
