@@ -145,6 +145,7 @@ module TEAL-FIELDS
                           | "OnCompletion"
                           | "NumAppArgs"
                           | "NumAccounts"
+                          | "NumAssets"
                           | "ApprovalProgram"
                           | "ClearStateProgram"
 ```

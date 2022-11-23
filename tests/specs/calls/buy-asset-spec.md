@@ -50,6 +50,8 @@ claim
           <typeEnum> @ appl </typeEnum>
           <groupID> GROUP_ID:String </groupID>
           <groupIdx> 1 </groupIdx>
+          <firstValid> FV:Int </firstValid>
+          <lastValid> LV:Int </lastValid>
           ...
         </txHeader>
         <txnTypeSpecificFields>
@@ -57,6 +59,7 @@ claim
             <applicationID> APP_ID </applicationID>
             <onCompletion> @ NoOp </onCompletion>
             <applicationArgs> FUNCTION_NAME:Bytes Int2Bytes(AMOUNT:Int, BE, Unsigned) </applicationArgs>
+            <foreignAssets> ASSET_ID </foreignAssets>
             ...
           </appCallTxFields>
         </txnTypeSpecificFields>
@@ -103,7 +106,13 @@ claim
           <appsCreated> .Bag </appsCreated>
           <appsOptedIn> .Bag </appsOptedIn>
           <assetsCreated> .Bag </assetsCreated>
-          <assetsOptedIn> .Bag </assetsOptedIn>
+          <assetsOptedIn>
+            <optInAsset>
+              <optInAssetID>      ASSET_ID </optInAssetID>
+              <optInAssetBalance> ASSET_BAL </optInAssetBalance>
+              <optInAssetFrozen>  0 </optInAssetFrozen>
+            </optInAsset>
+          </assetsOptedIn>
           <boxes> .Bag </boxes>
           ...
         </account>
@@ -154,7 +163,7 @@ BUY:
   assert
 
   txn Assets 0
-  btoi
+  itob
   app_global_get
   txna ApplicationArgs 1
   btoi
@@ -185,12 +194,26 @@ END:
   return
                 ):TealInputPgm => ?_
               </approvalPgmSrc>
+              <globalState>
+                <globalNumInts>   1             </globalNumInts>
+                <globalNumBytes>  0             </globalNumBytes>
+                <globalBytes>     .Map             </globalBytes>
+                <globalInts>      .Map  [Int2Bytes(ASSET_ID, BE, Unsigned) <- SCALING_FACTOR:Int]                </globalInts>
+              </globalState>
               <clearStatePgmSrc> (int 1 return):TealInputPgm => ?_ </clearStatePgmSrc>
               ...
             </app>
           </appsCreated>
           <appsOptedIn> .Bag </appsOptedIn>
-          <assetsCreated> .Bag </assetsCreated>
+          <assetsCreated>
+            <asset>
+              <assetID>            ASSET_ID:Int </assetID>
+              <assetTotal>         ASSET_TOTAL:Int </assetTotal>
+              <assetDefaultFrozen> 0 </assetDefaultFrozen>
+              <assetManagerAddr>   CREATOR_ADDRESS </assetManagerAddr>
+              ...
+            </asset>
+          </assetsCreated>
           <assetsOptedIn> .Bag </assetsOptedIn>
           <boxes> .Bag </boxes>
           ...
@@ -202,13 +225,21 @@ END:
           <appsCreated> .Bag </appsCreated>
           <appsOptedIn> .Bag </appsOptedIn>
           <assetsCreated> .Bag </assetsCreated>
-          <assetsOptedIn> .Bag </assetsOptedIn>
+          <assetsOptedIn>
+            <optInAsset>
+              <optInAssetID>      ASSET_ID </optInAssetID>
+              <optInAssetBalance> ASSET_BAL </optInAssetBalance>
+              <optInAssetFrozen>  0 </optInAssetFrozen>
+            </optInAsset>
+          </assetsOptedIn>
           <boxes> .Bag </boxes>
           ...
         </account>
       </accountsMap>
       <appCreator> .Map [APP_ID <- CREATOR_ADDRESS] </appCreator>
       <txnIndexMap> .Bag => ?_ </txnIndexMap>
+      <nextTxnID> NEXT_TXN_ID </nextTxnID>
+      <nextGroupID> NEXT_GROUP_ID </nextGroupID>
       ...
     </blockchain>
 
@@ -223,13 +254,18 @@ END:
    andBool SENDER_ADDRESS  =/=K APP_ADDRESS
    andBool SENDER_ADDRESS  =/=K CREATOR_ADDRESS
    andBool SENDER_BALANCE >=Int SENDER_MIN_BALANCE
-   andBool ARG1 +Int ARG2 <=Int MAX_UINT64
    andBool END =/=K BUY
    andBool SENDER_BALANCE -Int AMOUNT >=Int SENDER_MIN_BALANCE
    andBool SENDER_MIN_BALANCE >=Int 0
    andBool FUNCTION_NAME ==K b"buy"
+   andBool PAY_TX_ID =/=K APPL_TX_ID
+   andBool SCALING_FACTOR *Int AMOUNT <=Int MAX_UINT64
+   andBool SCALING_FACTOR >Int 0
+   andBool Int2String(NEXT_TXN_ID) =/=String APPL_TX_ID
+   andBool Int2String(NEXT_TXN_ID) =/=String PAY_TX_ID
 
-  ensures ?APP_RESULT ==K Int2Bytes(ARG1 +Int ARG2, BE, Unsigned)
+   andBool Int2String(NEXT_GROUP_ID +Int 1) =/=String GROUP_ID
+//   andBool Int2String(NEXT_GROUP_ID) =/=String GROUP_ID
 
 ```
 

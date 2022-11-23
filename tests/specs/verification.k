@@ -4,6 +4,7 @@ requires "avm/avm-execution.md"
 module VERIFICATION
   imports AVM-EXECUTION
   imports TEAL-TYPES
+//  imports SET-SYMBOLIC
 
 
   syntax StepSort ::= MaybeTValue
@@ -68,6 +69,8 @@ module VERIFICATION
 ////////////////////////////////////////////////////////////////////////////////
   
   rule _ in .Set => false [simplification]
+
+  rule X in (SetItem(Y) S:Set) => X in S requires X =/=K Y [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // TStack

@@ -1334,7 +1334,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
   //-------------------------------------------
   rule <k> loadFromGroup(GROUP_IDX, FIELD) => . ... </k>
        <stacksize> S => S +Int 1 </stacksize>
-       <stack> XS => {getGroupFieldByIdx(GROUP_ID, GROUP_IDX, FIELD)}:>TValue : XS </stack>
+       <stack> XS => fromMaybeTVal(getGroupFieldByIdx(GROUP_ID, GROUP_IDX, FIELD)) : XS </stack>
        <currentTx> CURRENT_TX_ID </currentTx>
        <transaction>
          <txID> CURRENT_TX_ID </txID>
@@ -1850,7 +1850,7 @@ Stateful TEAL Operations
 
 ```k
   rule <k> app_global_get =>
-           #app_global_get getAppGlobal(getGlobalField(CurrentApplicationID), KEY) ... </k>
+           #app_global_get getAppGlobal(getAppCell({getGlobalField(CurrentApplicationID)}:>Int), KEY) ... </k>
        <stack> (KEY:Bytes) : _ </stack>
 
   syntax KItem ::= "#app_global_get" TValue
@@ -1867,8 +1867,18 @@ Stateful TEAL Operations
 *app_global_get_ex*
 
 ```k
+  syntax AppCell ::= getAppCell(Int) [function, total]
+  rule [[ getAppCell(APP_ID) => <app> <appID> APP_ID </appID> APP_DATA </app> ]]
+       <app>
+         <appID> APP_ID </appID>
+         APP_DATA
+       </app>
+
+  rule getAppCell(APP_ID) => <app> <appID> APP_ID </appID> ... </app> [owise]
+
+
   rule <k> app_global_get_ex =>
-           #app_global_get_ex getAppGlobal({appReference(APP)}:>TValue, KEY) ... </k>
+           #app_global_get_ex getAppGlobal(getAppCell({appReference(APP)}:>Int), KEY) ... </k>
        <stack> (KEY:Bytes) : (APP:TUInt64) : _ </stack>
     requires isTValue(appReference(APP))
 

@@ -728,6 +728,7 @@ module TEAL-UNPARSER
   rule TealField2String(OnCompletion)             => "OnCompletion"
   rule TealField2String(NumAppArgs)               => "NumAppArgs"
   rule TealField2String(NumAccounts)              => "NumAccounts"
+  rule TealField2String(NumAssets)                => "NumAssets"
   rule TealField2String(ApprovalProgram)          => "ApprovalProgram"
   rule TealField2String(ClearStateProgram)        => "ClearStateProgram"
   rule TealField2String(ApplicationArgs)          => "ApplicationArgs"

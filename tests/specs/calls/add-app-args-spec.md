@@ -17,32 +17,6 @@ claim
 
     <transactions>
       <transaction>
-        <txID> PAY_TX_ID:String </txID>
-        <txHeader>
-          <sender> SENDER_ADDRESS:Bytes </sender>
-          <txType> "pay" </txType>
-          <typeEnum> @ pay </typeEnum>
-          <groupID> GROUP_ID:String </groupID>
-          <groupIdx> 0 </groupIdx>
-          ...
-        </txHeader>
-        <txnTypeSpecificFields>
-          <payTxFields>
-            <receiver>  APP_ADDRESS </receiver>
-            <amount> AMOUNT </amount>
-            <closeRemainderTo> NoTValue </closeRemainderTo>
-          </payTxFields>
-        </txnTypeSpecificFields>
-        <applyData>
-          <txScratch> _ => ?_ </txScratch>
-          <logData> .TValueList => ?_ </logData>
-          <logSize> 0 => ?_ </logSize>
-          ...
-        </applyData>
-        <txnExecutionContext> _ => ?_ </txnExecutionContext>
-        <resume> false => true </resume>
-      </transaction>
-      <transaction>
         <txID> TX_ID:String </txID>
         <txHeader>
           <sender> SENDER_ADDRESS:Bytes </sender>
@@ -56,7 +30,7 @@ claim
           <appCallTxFields>
             <applicationID> APP_ID </applicationID>
             <onCompletion> @ NoOp </onCompletion>
-            <applicationArgs> ARG1:Bytes ARG2:Int </applicationArgs>
+            <applicationArgs> ARG1:Int ARG2:Int </applicationArgs>
             ...
           </appCallTxFields>
         </txnTypeSpecificFields>
@@ -164,9 +138,9 @@ claim
    andBool SENDER_ADDRESS  =/=K CREATOR_ADDRESS
    andBool SENDER_BALANCE >=Int SENDER_MIN_BALANCE
    andBool PAY_TX_ID =/=K TX_ID
- //  andBool ARG1 +Int ARG2 <=Int MAX_UINT64
+   andBool ARG1 +Int ARG2 <=Int MAX_UINT64
 
-//  ensures ?APP_RESULT ==K Int2Bytes(ARG1 +Int ARG2, BE, Unsigned)
+  ensures ?APP_RESULT ==K Int2Bytes(ARG1 +Int ARG2, BE, Unsigned)
 
 ```
 

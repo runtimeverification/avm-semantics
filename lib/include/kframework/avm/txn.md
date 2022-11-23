@@ -737,6 +737,15 @@ module ALGO-TXN
        </transaction>
     requires #isValidForTxnType(Assets, TYPE)
 
+  rule [[ getTxnField(I, NumAssets) => size(X) ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <foreignAssets> X </foreignAssets>
+         ...
+       </transaction>
+    requires #isValidForTxnType(NumAssets, TYPE)
+
   rule [[ getTxnField(I, LastLog) => MSG ]]
        <transaction>
          <txID> I </txID>
