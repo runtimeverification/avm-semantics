@@ -2,7 +2,7 @@ from typing import Any
 
 import pytest
 from algosdk.v2client import models
-from pyk.kast import KApply, KToken
+from pyk.kast.inner import KApply, KToken
 
 from kavm.adaptors.teal_key_value import teal_key_value_store_from_k_cell
 
