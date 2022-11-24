@@ -32,10 +32,9 @@ INITIAL_EXCHANGE_RATE = 2
 WRONG_SCALING_FACTOR = Int(10)
 SCALING_FACTOR = Int(100)
 
-# Main router class
+# The PyTeal router
 router = Router(
-    # Name of the contract
-    name="two-way-trading",
+    name="K Coin Vault",
     bare_calls=BareCallActions(
         no_op=OnCompleteAction.create_only(Approve()),
         update_application=OnCompleteAction.never(),
@@ -48,7 +47,9 @@ router = Router(
 @router.method
 def init_asset(*, output: abi.Uint64) -> Expr:
     """
-    Create contract's asset
+    Create the K Coin asset
+
+    Can only be executed by the contract's creator
 
     Returns: created asset id
 
@@ -65,6 +66,8 @@ def init_asset(*, output: abi.Uint64) -> Expr:
                 TxnField.config_asset_reserve: Global.current_application_address(),
                 TxnField.config_asset_freeze: Global.current_application_address(),
                 TxnField.config_asset_clawback: Global.current_application_address(),
+                TxnField.config_asset_name: Bytes("K Coin"),
+                TxnField.config_asset_unit_name: Bytes("microK"),
             }
         ),
         InnerTxnBuilder.Submit(),
@@ -75,27 +78,29 @@ def init_asset(*, output: abi.Uint64) -> Expr:
 
 
 @Subroutine(TealType.uint64)
-def algos_to_asset(algo_amount: Expr) -> Expr:
+def algos_to_kcoin(algo_amount: Expr) -> Expr:
+    """Convert microalgos to microKs"""
     return Div(algo_amount, App.globalGet(Bytes("exchange_rate")))
 
 
 @Subroutine(TealType.uint64)
-def asset_to_algos(asset_amount: Expr) -> Expr:
+def kcoin_to_algos(asset_amount: Expr) -> Expr:
+    """Convert microKs to microalgos"""
     return Mul(asset_amount, App.globalGet(Bytes("exchange_rate")))
 
 
 @router.method
 def mint(payment: abi.PaymentTransaction, *, output: abi.Uint64) -> Expr:
     """
-    Mint asset, issuing an inner asset transfer transaction to sender if successful
+    Mint K Coins, issuing an inner asset transfer transaction to sender if successful
 
     Args:
         payment: A payment transaction containing the amount of Algos the user wishes to mint with.
             The receiver of this transaction must be this app's escrow account.
 
-    Returns: minted amount of the asset that the user gets
+    Returns: minted amount of K Coins that the user gets
     """
-    amount_to_mint = algos_to_asset(payment.get().amount())
+    amount_to_mint = algos_to_kcoin(payment.get().amount())
     asset_id = App.globalGet(Bytes("asset_id"))
     return Seq(
         Assert(payment.get().receiver() == Global.current_application_address()),
@@ -117,15 +122,15 @@ def mint(payment: abi.PaymentTransaction, *, output: abi.Uint64) -> Expr:
 @router.method
 def burn(asset_transfer: abi.AssetTransferTransaction, *, output: abi.Uint64) -> Expr:
     """
-    Burn asset, issuing an inner payment transaction to sender if successful
+    Burn K Coins, issuing an inner payment transaction to sender if successful
 
     Args:
-        asset_transfer: An asset transfer transaction containing the amount of the asset the user wishes to burn.
+        asset_transfer: An asset transfer transaction containing the amount of K Coins (in microKs) the user wishes to burn.
             The receiver of this transaction must be this app's escrow account.
 
     Returns: amount of microalgos the users gets
     """
-    microalgos_output = asset_to_algos(asset_transfer.get().asset_amount())
+    microalgos_output = kcoin_to_algos(asset_transfer.get().asset_amount())
     return Seq(
         Assert(asset_transfer.get().asset_receiver() == Global.current_application_address()),
         InnerTxnBuilder.Begin(),
@@ -148,22 +153,3 @@ def compile_to_teal() -> Tuple[str, str, Contract]:
         version=6, optimize=optimizer.OptimizeOptions(scratch_slots=True)
     )
     return approval, clear, contract
-
-
-if __name__ == "__main__":
-    import json
-    import os
-
-    path = os.path.dirname(os.path.abspath(__file__))
-    approval, clear, contract = compile_to_teal()
-
-    # Dump out the contract as json that can be read in by any of the SDKs
-    with open(os.path.join(path, "contract.json"), "w") as f:
-        f.write(json.dumps(contract.dictify(), indent=2))
-
-    # Write out the approval and clear programs
-    with open(os.path.join(path, "approval.teal"), "w") as f:
-        f.write(approval)
-
-    with open(os.path.join(path, "clear.teal"), "w") as f:
-        f.write(clear)
