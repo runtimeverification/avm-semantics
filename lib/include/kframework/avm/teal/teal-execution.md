@@ -174,8 +174,10 @@ put it into the `<k>` cell for execution.
    requires isValidProgamAddress(PC) andBool STATUS_CODE ==Int 4
 
   rule <k> #fetchOpcode() => .K ... </k>
+       <pc> PC </pc>
        <returncode> STATUS_CODE </returncode>
    requires STATUS_CODE =/=Int 4
+   andBool isValidProgamAddress(PC)
 
   syntax Bool ::= isValidProgamAddress(Int) [function]
   // -------------------------------------------------
