@@ -1,21 +1,16 @@
 import base64
-import logging
-import sys
-from typing import Tuple
 
 import algosdk
+from algosdk.atomic_transaction_composer import AccountTransactionSigner, TransactionWithSigner
 from algosdk.future import transaction
-from algosdk.abi import Contract
-from algosdk.account import generate_account
-from algosdk.atomic_transaction_composer import TransactionWithSigner
-from algosdk.atomic_transaction_composer import AccountTransactionSigner
 from algosdk.v2client.algod import AlgodClient
-from kavm.algod import KAVMAtomicTransactionComposer, KAVMClient
+
+from kavm.algod import KAVMAtomicTransactionComposer
 
 from ..kcoin_vault.kcoin_vault_pyteal import compile_to_teal
 
 
-def compile_teal(client, source_code):
+def compile_teal(client: AlgodClient, source_code: str) -> bytes:
     """Compile TEAL source code to binary for a transaction"""
     compile_response = client.compile(source_code)
     return base64.b64decode(compile_response["result"])
@@ -31,9 +26,9 @@ class ContractClient:
 
     def __init__(
         self,
-        algod,
-        creator_addr,
-        creator_private_key,
+        algod: AlgodClient,
+        creator_addr: str,
+        creator_private_key: str,
     ) -> None:
         self.algod = algod
 

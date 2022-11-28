@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Any
 
 from hypothesis import Phase, given, settings
 from hypothesis import strategies as st
@@ -13,7 +14,7 @@ N_TESTS = 25
 @given(
     microalgos=st.integers(min_value=MIN_ARG_VALUE, max_value=MAX_ARG_VALUE),
 )
-def test_mint_burn(initial_state_fixture, microalgos: int) -> None:
+def test_mint_burn(initial_state_fixture: Any, microalgos: int) -> None:
     client, user_addr, user_private_key = initial_state_fixture
     minted = client.call_mint(user_addr, user_private_key, microalgos)
     got_back = client.call_burn(user_addr, user_private_key, minted)

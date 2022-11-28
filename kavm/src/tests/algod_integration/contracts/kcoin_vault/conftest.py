@@ -1,10 +1,11 @@
 import logging
-import pytest
 from typing import Tuple
+
+import pytest
 from algosdk.account import generate_account
 
-from algosdk.account import generate_account
 from kavm.algod import KAVMClient
+
 from ..kcoin_vault.client import ContractClient
 
 
