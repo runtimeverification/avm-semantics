@@ -161,7 +161,7 @@ $(plugin_include)/kframework/%: $(PLUGIN_SUBMODULE)/plugin/%
 plugin-deps: libsecp256k1 libff libcryptopp $(plugin_includes) $(plugin_c_includes)
 # --------
 
-build: build-kavm build-avm
+build: build-kavm build-avm-semantics
 
 $(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
 	@mkdir -p $(dir $@)
@@ -206,41 +206,33 @@ HOOK_KOMPILE_OPTS := --hook-namespaces "$(HOOK_NAMESPACES)"  \
 
 ## * kavm --- Python library and CLI app
 
-PY_KAVM_DIR := ./kavm
-VENV_DIR       := $(BUILD_DIR)/venv
+PY_KAVM_DIR    := ./kavm
+VENV_DIR       := $(PY_KAVM_DIR)/.venv
 VENV_ACTIVATE  := . $(VENV_DIR)/bin/activate
 
-$(VENV_DIR)/pyvenv.cfg:
-	   python3 -m venv $(VENV_DIR) \
-           && $(VENV_ACTIVATE)        \
-           && pip install --editable $(PY_KAVM_DIR)
+build-kavm:
+	make -C $(PY_KAVM_DIR) build
+	make -C $(PY_KAVM_DIR) poetry-install
 
-venv: $(VENV_DIR)/pyvenv.cfg
+kavm-venv: build-kavm
 	@echo $(VENV_ACTIVATE)
 
-venv-clean:
-	rm -rf $(VENV_DIR)
-	$(MAKE) clean -C $(PY_KAVM_DIR)
-
-check-kavm-codestyle:
-	$(MAKE) check -C $(PY_KAVM_DIR)
-
-includes := $(avm_includes) $(plugin_includes) $(plugin_c_includes) $(hook_includes)
-
-kavm_scripts := $(patsubst %, $(KAVM_SCRIPTS)/%, parse-avm-simulation.sh  parse-teal-programs.sh)
-
-kavm_lib_files := version
-kavm_libs      := $(patsubst %, $(KAVM_LIB)/%, $(kavm_lib_files))
-
-build-kavm: venv $(KAVM_LIB)/version $(KAVM_DEFINITION_DIR)
-
-# this target packages the Python-based kavm CLI
-$(KAVM_LIB)/version: $(includes) $(kavm_scripts) $(VENV_DIR)/pyvenv.cfg
+$(KAVM_LIB)/version: $(includes) build-kavm
 	@mkdir -p $(dir $@)
 	echo '== KAVM Version'    > $@
 	echo $(KAVM_RELEASE_TAG) >> $@
 	echo '== Build Date'     >> $@
 	date
+
+check-kavm-codestyle:
+	$(MAKE) check -C $(PY_KAVM_DIR)
+
+# * avm-semantics --- the K semantics of AVM
+
+includes := $(avm_includes) $(plugin_includes) $(plugin_c_includes) $(hook_includes)
+
+kavm_lib_files := version
+kavm_libs      := $(patsubst %, $(KAVM_LIB)/%, $(kavm_lib_files))
 
 $(KAVM_DEFINITION_DIR):
 	@mkdir -p $(dir $@)
@@ -253,11 +245,6 @@ $(KAVM_INCLUDE)/kframework/modules/%:
 	echo $@
 	@mkdir -p $(dir $@)
 	install $< $@
-
-clean-kavm: venv-clean
-	rm -f $(KAVM_LIB)/version
-
-# * avm-semantics --- the K semantics of AVM
 
 avm_files    :=                            \
                 avm/additional-fields.md   \
@@ -298,7 +285,8 @@ avm_main_file     := avm/avm-testing.md
 avm_main_filename := $(basename $(notdir $(avm_main_file)))
 avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled/
 
-build-avm: $(KAVM_LIB)/$(avm_kompiled)
+# build-avm-semantics: $(KAVM_LIB)/$(avm_kompiled)
+build-avm-semantics: $(KAVM_LIB)/$(avm_kompiled)
 
 $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM_LIB)/version
 	@mkdir -p $(KAVM_DEFINITION_DIR)
