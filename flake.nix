@@ -132,6 +132,8 @@
                 --set KAVM_LIB $out/lib/kavm
             '';
           };
+          kavm-deps = kavm-deps;
+          kavm = kavm;
 
         };
     in flake-utils.lib.eachSystem [
@@ -155,7 +157,7 @@
       in {
         packages.default = pkgs.avm-semantics;
         packages = {
-          inherit (pkgs) avm-semantics kavm-deps;
+          inherit (pkgs) kavm-deps avm-semantics kavm;
 
           check-submodules = rv-utils.lib.check-submodules pkgs {
             inherit k-framework blockchain-k-plugin;
