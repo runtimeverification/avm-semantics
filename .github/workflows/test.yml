@@ -8,6 +8,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
   build-nix:
     name: 'Nix / Build'
     strategy:
@@ -35,6 +36,7 @@ jobs:
           authToken: '${{ secrets.CACHIX_PUBLIC_TOKEN }}'
       - name: 'Build via Nix'
         run: nix build .#kavm
+
   test-pr:
     name: 'Test PR'
     runs-on: [self-hosted, linux, normal]
