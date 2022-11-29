@@ -128,7 +128,7 @@
               ln -s ${k} $out/lib/kavm/kframework
               mkdir $out/bin
               makeWrapper ${kavm-bin}/bin/kavm $out/bin/kavm \
-                --set KAVM_DEFINITION_DIR $out/lib/kavm/avm-llvm/avm-execution-kompiled \
+                --set KAVM_DEFINITION_DIR $out/lib/kavm/avm-llvm/avm-testing-kompiled \
                 --set KAVM_LIB $out/lib/kavm
             '';
           };
