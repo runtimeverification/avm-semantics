@@ -1,8 +1,8 @@
 name: 'Master Push'
 on:
   push:
-    branches:
-      - master
+    # branches:
+    #   - master
 
 jobs:
   nix-flake-release:
@@ -41,13 +41,12 @@ jobs:
           skipPush: true
 
       - name: 'Build and cache kavm'
-        uses: workflow/nix-shell-action@v3
+        # uses: workflow/nix-shell-action@v3
         env:
           GC_DONT_GC: 1
           CACHIX_AUTH_TOKEN: '${{  secrets.CACHIX_PUBLIC_TOKEN }}'
-        with:
-          packages: jq
-          script: |
-            kavm=$(nix build .#kavm --json | jq -r '.[].outputs | to_entries[].value')
-            drv=$(nix-store --query --deriver ${kavm})
-            nix-store --query --requisites --include-outputs ${drv} | cachix push k-framework
+        run: |
+          nix shell nixpkgs#jq
+          kavm=$(nix build .#kavm --json | jq -r '.[].outputs | to_entries[].value')
+          drv=$(nix-store --query --deriver ${kavm})
+          nix-store --query --requisites --include-outputs ${drv} | cachix push k-framework
