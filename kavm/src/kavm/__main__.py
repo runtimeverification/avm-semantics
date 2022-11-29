@@ -112,26 +112,13 @@ def exec_run(
 ) -> None:
     kavm = KAVM(definition_dir=definition_dir)
 
-    if not os.environ.get('KAVM_LIB'):
-        raise RuntimeError('Cannot access KAVM_LIB environment variable. Is it set?')
-    kavm_lib_dir = Path(str(os.environ.get('KAVM_LIB')))
-
     if not teal_parser:
         teal_parser = definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
-    if not avm_simulation_parser:
-        avm_simulation_parser = kavm_lib_dir / 'scripts/parse-avm-simulation.sh'
     if not avm_json_parser:
         avm_json_parser = definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
     try:
         if input_file.suffix == '.json':
             scenario = KAVMScenario.from_json(input_file.read_text(), teal_sources_dir)
-            # with tempfile.TemporaryDirectory() as decompiled_teal_dir:
-            #     src_files = os.listdir(teal_sources_dir)
-            #     for file_name in src_files:
-            #         full_file_name = os.path.join(teal_sources_dir, file_name)
-            #         if os.path.isfile(full_file_name):
-            #             shutil.copy(full_file_name, decompiled_teal_dir)
-            # scenario.decompile_teal_programs(Path(decompiled_teal_dir))
             proc_result = kavm.run_avm_json(
                 scenario=scenario,
                 # teals=kavm.parse_teals(scenario._teal_files, Path(decompiled_teal_dir)),
