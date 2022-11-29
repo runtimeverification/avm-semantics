@@ -47,7 +47,7 @@ there may be some remaining artefacts of the previous transaction's TEAL.
        <currentTx> TX_ID </currentTx>
        <transaction>
          <txID> TX_ID </txID>
-         <txnExecutionContext> <currentTxnExecution> C </currentTxnExecution> </txnExecutionContext>
+         <txnExecutionContext> (<currentTxnExecution> C </currentTxnExecution> => .K) ... </txnExecutionContext>
          ...
        </transaction>
        <currentTxnExecution> _ => C </currentTxnExecution>
@@ -170,7 +170,12 @@ put it into the `<k>` cell for execution.
   rule <k> #fetchOpcode() => PGM[PC] ~> #incrementPC() ~> #fetchOpcode() ... </k>
        <pc> PC </pc>
        <program> PGM </program>
-   requires isValidProgamAddress(PC)
+       <returncode> STATUS_CODE </returncode>
+   requires isValidProgamAddress(PC) andBool STATUS_CODE ==Int 4
+
+  rule <k> #fetchOpcode() => .K ... </k>
+       <returncode> STATUS_CODE </returncode>
+   requires STATUS_CODE =/=Int 4
 
   syntax Bool ::= isValidProgamAddress(Int) [function]
   // -------------------------------------------------
