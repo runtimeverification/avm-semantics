@@ -1,8 +1,8 @@
 name: 'Master Push'
 on:
   push:
-    # branches:
-    #   - master
+    branches:
+      - master
 
 jobs:
   nix-flake-release:
@@ -41,7 +41,6 @@ jobs:
           skipPush: true
 
       - name: 'Build and cache kavm'
-        # uses: workflow/nix-shell-action@v3
         env:
           GC_DONT_GC: 1
           CACHIX_AUTH_TOKEN: '${{  secrets.CACHIX_PUBLIC_TOKEN }}'
