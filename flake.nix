@@ -78,8 +78,8 @@
             propagatedBuildInputs = [ k prev.llvm-backend ];
           };
         in {
-          kavm = prev.stdenv.mkDerivation {
-            pname = "kavm";
+          avm-semantics = prev.stdenv.mkDerivation {
+            pname = "avm-semantics";
             version = self.rev or "dirty";
             buildInputs = with prev; [
               kavm-bin
@@ -153,9 +153,9 @@
           ];
         };
       in {
-        packages.default = pkgs.kavm;
+        packages.default = pkgs.avm-semantics;
         packages = {
-          inherit (pkgs) kavm kavm-deps;
+          inherit (pkgs) avm-semantics kavm-deps;
 
           check-submodules = rv-utils.lib.check-submodules pkgs {
             inherit k-framework blockchain-k-plugin;
