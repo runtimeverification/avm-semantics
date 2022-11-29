@@ -230,7 +230,7 @@ teal, failure means undoing changes made to the state (for more details, see
   syntax KItem ::= #deactivateApp()
   syntax KItem ::= #stopIfError()
 
-  rule <k> #finalizeExecution() => #deactivateApp() ~> #calcReturn() ~> #stopIfError() ... </k>
+  rule <k> #finalizeExecution() => #saveScratch() ~> #deactivateApp() ~> #calcReturn() ~> #stopIfError() ... </k>
     requires getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)
 
   rule <k> #finalizeExecution() => #calcReturn() ~> #stopIfError() ... </k>
@@ -247,6 +247,13 @@ teal, failure means undoing changes made to the state (for more details, see
        <returncode> 4 => 0 </returncode>
        <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
     requires I >Int 0 andBool SIZE ==Int 1
+     andBool getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)
+
+  rule <k> #calcReturn() => .K ... </k>
+       <paniccode> 0 </paniccode>
+       <returncode> 4 => 0 </returncode>
+       <returnstatus> _ => "Success - no errors on non-application transaction" </returnstatus>
+     requires getTxnField(getCurrentTxn(), TypeEnum) =/=K (@ appl)
 
   rule <k> #calcReturn() => .K ... </k>
        <stack> I : .TStack </stack>
@@ -255,6 +262,7 @@ teal, failure means undoing changes made to the state (for more details, see
        <returncode> 4 => 1 </returncode>
        <returnstatus> _ => "Failure - zero-valued singleton stack" </returnstatus>
     requires 0 >=Int I
+     andBool getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)
 
   rule <k> #calcReturn() => .K ... </k>
        <stack> _ </stack>
@@ -263,12 +271,14 @@ teal, failure means undoing changes made to the state (for more details, see
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - stack size greater than 1" </returnstatus>
     requires SIZE >Int 1
+     andBool getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)
 
   rule <k> #calcReturn() => .K ... </k>
        <stack> .TStack </stack>
        <paniccode> 0 </paniccode>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - empty stack" </returnstatus>
+     requires getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)
 
   rule <k> #calcReturn() => .K ... </k>
        <stack> (_:Bytes) : .TStack </stack>
@@ -276,6 +286,7 @@ teal, failure means undoing changes made to the state (for more details, see
        <paniccode> 0 </paniccode>
        <returncode> 4 => 2 </returncode>
        <returnstatus> _ => "Failure - singleton stack with byte array type" </returnstatus>
+     requires getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)
 
   rule <k> #calcReturn() => .K ... </k>
        <paniccode> PANIC_CODE </paniccode>

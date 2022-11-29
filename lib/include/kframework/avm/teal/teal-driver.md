@@ -2748,7 +2748,7 @@ Stateful TEAL Operations
        </innerTransactions>
        <nextGroupID> GROUP_ID => GROUP_ID +Int 1 </nextGroupID>
 
-  rule <k> itxn_submit => #incrementPC() ~> #checkItxns(T) ~> #executeItxnGroup()...</k>
+  rule <k> (itxn_submit ~> #incrementPC() ~> #fetchOpcode()) => (#incrementPC() ~> #checkItxns(T) ~> #executeItxnGroup()) ...</k>
        <innerTransactions> T </innerTransactions>
        <lastTxnGroupID> _ => Int2String(GROUP_ID) </lastTxnGroupID>
        <nextGroupID> GROUP_ID </nextGroupID>

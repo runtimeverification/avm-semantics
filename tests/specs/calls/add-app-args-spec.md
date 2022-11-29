@@ -65,7 +65,7 @@ claim
       </currentTxnExecution>
       <innerTransactions> .List </innerTransactions>
       <activeApps> .Set => ?_ </activeApps>
-      <touchedAccounts> .Set => ?_ </touchedAccounts>
+      <touchedAccounts> .List => ?_ </touchedAccounts>
     </avmExecution>
 
     <blockchain>

@@ -659,8 +659,10 @@ Accessor functions
                       ...
                     </app>, KEY) =>
           {GB[KEY]}:>Bytes
-    requires ((KEY in_keys(GB)) andThenBool (isBytes(GI[KEY])))
+    requires ((KEY in_keys(GB)) andThenBool (isBytes(GB[KEY])))
      andBool notBool (KEY in_keys(GI)) 
+
+  rule getAppGlobal(_, _) => -1 [owise]
 
 //  rule [[ getAppGlobal(APP, KEY) => {GI[KEY]}:>Int ]]
 //       <appsCreated>

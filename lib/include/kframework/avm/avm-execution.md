@@ -57,13 +57,23 @@ and the current configuration is frozen for examination.
 ```k
   // #evalTxGroup
   //---------------------------------------
-  rule <k> #evalTxGroup() => #initTxnIndexMap() ~> #evalNextTx() ...</k>
+  rule <k> #evalTxGroup() => #initTxnIndexMap() ~> #evalFirstTx() ...</k>
 
-  syntax AlgorandCommand ::= #evalNextTx()
+  syntax AlgorandCommand ::= #evalFirstTx()
+                           | #evalNextTx()
+
+  rule <k> #evalFirstTx() => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalNextTx() ... </k>
+       <deque> TXN_DEQUE </deque>
+    requires TXN_DEQUE =/=K .List
 
   rule <k> #evalNextTx() => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalNextTx() ... </k>
        <deque> TXN_DEQUE </deque>
-    requires TXN_DEQUE =/=K .List
+    requires TXN_DEQUE =/=K .List andBool (getTxnGroupID(getNextTxnID()) ==K getTxnGroupID(getCurrentTxn()))
+
+  // Finish executing inner transaction group and resume next outer layer
+  rule <k> #evalNextTx() => #getNextTxn() ~> #evalTx() ... </k>
+       <deque> TXN_DEQUE </deque>
+    requires TXN_DEQUE =/=K .List andBool (getTxnGroupID(getNextTxnID()) =/=K getTxnGroupID(getCurrentTxn()))
 
   // Minimum balances are only checked at the conclusion of the outer-level group.
   rule <k> #evalNextTx() => #checkSufficientBalance() ... </k>
@@ -93,6 +103,7 @@ the attached stateless TEAL if the transaction is logicsig-signed.
              #initContext()
           ~> #checkTxnSignature() 
           ~> #executeTxn(TXN_TYPE) 
+          ~> #if (getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)) #then .K #else #finalizeExecution() #fi
        ... 
        </k>
        <currentTx> TXN_ID </currentTx>
@@ -346,7 +357,7 @@ TODO: address contact creation.
 ```k
   syntax AlgorandCommand ::= #evalTeal()
 
-  rule <k> #evalTeal() => #startExecution() ~> #saveScratch() ... </k>
+  rule <k> #evalTeal() => #startExecution() ... </k>
        <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
        <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
 

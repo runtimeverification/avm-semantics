@@ -109,7 +109,7 @@ claim
           <assetsOptedIn>
             <optInAsset>
               <optInAssetID>      ASSET_ID </optInAssetID>
-              <optInAssetBalance> ASSET_BAL </optInAssetBalance>
+              <optInAssetBalance> ASSET_BAL => ASSET_BAL +Int (SCALING_FACTOR *Int AMOUNT) </optInAssetBalance>
               <optInAssetFrozen>  0 </optInAssetFrozen>
             </optInAsset>
           </assetsOptedIn>
@@ -228,7 +228,7 @@ END:
           <assetsOptedIn>
             <optInAsset>
               <optInAssetID>      ASSET_ID </optInAssetID>
-              <optInAssetBalance> ASSET_BAL </optInAssetBalance>
+              <optInAssetBalance> ASSET_BAL => ASSET_BAL -Int (SCALING_FACTOR *Int AMOUNT) </optInAssetBalance>
               <optInAssetFrozen>  0 </optInAssetFrozen>
             </optInAsset>
           </assetsOptedIn>
@@ -238,8 +238,8 @@ END:
       </accountsMap>
       <appCreator> .Map [APP_ID <- CREATOR_ADDRESS] </appCreator>
       <txnIndexMap> .Bag => ?_ </txnIndexMap>
-      <nextTxnID> NEXT_TXN_ID </nextTxnID>
-      <nextGroupID> NEXT_GROUP_ID </nextGroupID>
+      <nextTxnID> NEXT_TXN_ID => ?_ </nextTxnID>
+      <nextGroupID> NEXT_GROUP_ID => ?_ </nextGroupID>
       ...
     </blockchain>
 
