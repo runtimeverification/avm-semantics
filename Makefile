@@ -180,10 +180,11 @@ $(hook_include)/%: $(CURDIR)/hooks/%
 	@mkdir -p $(dir $@)
 	install $< $@
 
-HOOK_CC_OPTS      := " -g" " -std=c++14"                                     \
-                     " -L$(CURDIR)/$(KAVM_LIB)/libff/lib"                 \
-                     " -I$(CURDIR)/$(KAVM_LIB)/libff/include"             \
-                     " -I$(plugin_include)/c"                             \
+HOOK_CC_OPTS      := " -g" " -std=c++14"                      \
+                     " -L$(CURDIR)/$(KAVM_LIB)/libff/lib"     \
+                     " -I$(CURDIR)/$(KAVM_LIB)/libff/include" \
+                     " -I$(plugin_include)/c"                 \
+                     " -I/usr/include"                        \
                      " -lcryptopp" " -lsecp256k1" " -lff" " -lcurl" " -lssl" " -lcrypto"
 
 ifeq ($(UNAME_S),Darwin)
