@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <iostream>
 #include <random>
+#include <cstring>
 
 #include "runtime/alloc.h"
 #include "runtime/header.h"
@@ -30,7 +31,7 @@ struct string *hook_KAVM_address_decode(struct string *input) {
   size_t output_len = addr.public_key.size();
   struct string *output = (struct string *)koreAllocToken(output_len + sizeof(struct string));
   set_len(output, output_len);
-  memcpy(output->data, addr.public_key.data(), output_len);
+  std::memcpy(output->data, addr.public_key.data(), output_len);
 
   return output;
 }
@@ -44,7 +45,7 @@ struct string *hook_KAVM_address_encode(struct string *input) {
   size_t output_len = addr.as_string.size();
   struct string *output = (struct string *)koreAllocToken(output_len + sizeof(struct string));
   set_len(output, output_len);
-  memcpy(output->data, addr.as_string.c_str(), output_len);
+  std::memcpy(output->data, addr.as_string.c_str(), output_len);
 
   return output;
 }
@@ -58,7 +59,7 @@ struct string *hook_KAVM_b64_decode(struct string *input) {
   size_t output_len = decoded_str.size();
   struct string *output = (struct string *)koreAllocToken(output_len + sizeof(struct string));
   set_len(output, output_len);
-  memcpy(output->data, decoded_str.c_str(), output_len);
+  std::memcpy(output->data, decoded_str.c_str(), output_len);
 
   return output;
 }
@@ -73,7 +74,7 @@ struct string *hook_KAVM_b64_encode(struct string *input) {
   size_t output_len = encoded.size();
   struct string *output = (struct string *)koreAllocToken(output_len + sizeof(struct string));
   set_len(output, output_len);
-  memcpy(output->data, encoded.c_str(), output_len);
+  std::memcpy(output->data, encoded.c_str(), output_len);
 
   return output;
 }
