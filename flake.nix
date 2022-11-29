@@ -56,7 +56,7 @@
               make \
                 APPLE_SILICON=${if prev.stdenv.isAarch64 && prev.stdenv.isDarwin then "true" else "false"} \
                 SHELL=$SHELL \
-                plugin-deps
+                plugin-deps -j$(nproc)
             '';
 
             enableParallelBuilding = true;
