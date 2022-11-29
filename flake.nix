@@ -67,7 +67,7 @@
             '';
           };
 
-          kavm-bin = prev.poetry2nix.mkPoetryApplication {
+          kavm = prev.poetry2nix.mkPoetryApplication {
             python = prev.python310;
             projectDir = ./kavm;
             overrides = prev.poetry2nix.overrides.withDefaults
@@ -82,7 +82,7 @@
             pname = "avm-semantics";
             version = self.rev or "dirty";
             buildInputs = with prev; [
-              kavm-bin
+              kavm
               cryptopp.dev
               curl.dev
               secp256k1
@@ -127,7 +127,7 @@
               mv .build/usr/* $out/
               ln -s ${k} $out/lib/kavm/kframework
               mkdir $out/bin
-              makeWrapper ${kavm-bin}/bin/kavm $out/bin/kavm \
+              makeWrapper ${kavm}/bin/kavm $out/bin/kavm \
                 --set KAVM_DEFINITION_DIR $out/lib/kavm/avm-llvm/avm-testing-kompiled \
                 --set KAVM_LIB $out/lib/kavm
             '';
