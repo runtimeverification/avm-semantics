@@ -45,6 +45,7 @@ jobs:
         env:
           GC_DONT_GC: 1
           CACHIX_AUTH_TOKEN: '${{  secrets.CACHIX_PUBLIC_TOKEN }}'
+          NIX_PATH: 'nixpkgs=http://nixos.org/channels/nixos-22.05/nixexprs.tar.xz'
         run: |
           export JQ=$(nix-build '<nixpkgs>' -A jq --no-link)/bin/jq
           kavm=$(nix build .#kavm --json | $JQ -r '.[].outputs | to_entries[].value')
