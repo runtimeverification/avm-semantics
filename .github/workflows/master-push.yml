@@ -38,7 +38,6 @@ jobs:
         with:
           name: k-framework
           authToken: '${{ secrets.CACHIX_PUBLIC_TOKEN }}'
-          skipPush: true
 
       - name: 'Build and cache kavm'
         env:
