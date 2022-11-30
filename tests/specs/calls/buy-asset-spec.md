@@ -50,8 +50,8 @@ claim
           <typeEnum> @ appl </typeEnum>
           <groupID> GROUP_ID:String </groupID>
           <groupIdx> 1 </groupIdx>
-          <firstValid> FV:Int </firstValid>
-          <lastValid> LV:Int </lastValid>
+          <firstValid> _:Int </firstValid>
+          <lastValid> _:Int </lastValid>
           ...
         </txHeader>
         <txnTypeSpecificFields>
@@ -65,36 +65,38 @@ claim
         </txnTypeSpecificFields>
         <applyData>
           <txScratch> _ => ?_ </txScratch>
-          <logData> .TValueList => ?APP_RESULT </logData>
+          <logData> .TValueList => ?_ </logData>
           <logSize> 0 => ?_ </logSize>
           ...
         </applyData>
         <txnExecutionContext> _ => ?_ </txnExecutionContext>
         <resume> false => true </resume>
       </transaction>
+      (.Bag => ?_)
     </transactions>
 
     <avmExecution>
       <currentTx> _ => ?_ </currentTx>
       <txnDeque>
-        <deque> ListItem(PAY_TX_ID) ListItem(APPL_TX_ID) => .List </deque>
+        <deque> ListItem(PAY_TX_ID) ListItem(APPL_TX_ID) => ?_ </deque>
         <dequeIndexSet> SetItem(PAY_TX_ID) SetItem(APPL_TX_ID) => ?_ </dequeIndexSet>
       </txnDeque>
       <currentTxnExecution>
          <globals>
            <groupSize>                 _ => ?_ </groupSize>
+           <globalRound>               _ => ?_ </globalRound>
+           <latestTimestamp>           _ => ?_ </latestTimestamp>
            <currentApplicationID>      _ => ?_ </currentApplicationID>
            <currentApplicationAddress> _ => ?_ </currentApplicationAddress>
            <creatorAddress>            _ => ?_ </creatorAddress>
-           ...
          </globals>
-         <teal>    _ => ?_ </teal>
-         <effects> .List </effects>
+         <teal>    _ => ?_  </teal>
+         <effects> .List => ?_ </effects>
          <lastTxnGroupID> _ => ?_ </lastTxnGroupID>
       </currentTxnExecution>
-      <innerTransactions> .List </innerTransactions>
-      <activeApps> .Set => ?_ </activeApps>
-      <touchedAccounts> .List => ?_ </touchedAccounts>
+      <innerTransactions> .List => ?_ </innerTransactions>
+      <activeApps> .Set </activeApps>
+      <touchedAccounts> .List </touchedAccounts>
     </avmExecution>
 
     <blockchain>
@@ -208,7 +210,7 @@ END:
           <assetsCreated>
             <asset>
               <assetID>            ASSET_ID:Int </assetID>
-              <assetTotal>         ASSET_TOTAL:Int </assetTotal>
+              <assetTotal>         _:Int </assetTotal>
               <assetDefaultFrozen> 0 </assetDefaultFrozen>
               <assetManagerAddr>   CREATOR_ADDRESS </assetManagerAddr>
               ...
@@ -248,9 +250,6 @@ END:
   </kavm>
 
   requires APP_ID >Int 0
-   andBool APP_ID ==Int 321
-   andBool SENDER_ADDRESS ==K b"abc"
-   andBool CREATOR_ADDRESS ==K b"def"
    andBool APP_ADDRESS ==K getAppAddressBytes(APP_ID)
    andBool APP_BALANCE >=Int APP_MIN_BALANCE
    andBool CREATOR_ADDRESS =/=K APP_ADDRESS
@@ -270,9 +269,7 @@ END:
    andBool ASSET_BAL -Int (SCALING_FACTOR *Int AMOUNT) >=Int 0
    andBool ASSET_BAL >=Int 0
    andBool AMOUNT >=Int 0
-
    andBool Int2String(NEXT_GROUP_ID +Int 1) =/=String GROUP_ID
-//   andBool Int2String(NEXT_GROUP_ID) =/=String GROUP_ID
 
 ```
 

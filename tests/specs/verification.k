@@ -78,6 +78,10 @@ module VERIFICATION
   
   rule _ in .List => false [simplification]
 
+  rule X in (ListItem(Y) L:List) => X in L requires X =/=K Y [simplification]
+
+  rule X in (ListItem(X) _:List) => true [simplification]
+
 ////////////////////////////////////////////////////////////////////////////////
 // TStack
 ////////////////////////////////////////////////////////////////////////////////
