@@ -662,61 +662,8 @@ Accessor functions
     requires ((KEY in_keys(GB)) andThenBool (isBytes(GB[KEY])))
      andBool notBool (KEY in_keys(GI)) 
 
+  // if the app or key doesn't exist, return -1
   rule getAppGlobal(_, _) => -1 [owise]
-
-//  rule [[ getAppGlobal(APP, KEY) => {GI[KEY]}:>Int ]]
-//       <appsCreated>
-//         <app>
-//           <appID> APP </appID>
-//           <globalState>
-//             <globalInts> GI:Map </globalInts>
-//             <globalBytes> GB:Map </globalBytes>
-//             ...
-//           </globalState>
-//           ...
-//         </app>
-//         ...
-//       </appsCreated>
-//    requires ((KEY in_keys(GI)) andThenBool (isInt(GI[KEY])))
-//     andBool notBool (KEY in_keys(GB)) 
-
-//  rule [[ getAppGlobal(APP, KEY) => {GB[KEY]}:>Bytes ]]
-//       <appsCreated>
-//         <app>
-//           <appID> APP </appID>
-//           <globalState>
-//             <globalInts> GI:Map </globalInts>
-//             <globalBytes> GB:Map </globalBytes>
-//             ...
-//           </globalState>
-//           ...
-//         </app>
-//         ...
-//       </appsCreated>
-//    requires ((KEY in_keys(GB)) andThenBool (isBytes(GB[KEY])))
-//     andBool notBool (KEY in_keys(GI)) 
-
-  // if the key doesn't exist, return -1
-//  rule [[ getAppGlobal(APP, KEY) => -1 ]]
-//       <appsCreated>
-//         <app>
-//           <appID> APP </appID>
-//           <globalState>
-//             <globalInts> MI </globalInts>
-//             <globalBytes> MB </globalBytes>
-//             ...
-//           </globalState>
-//           ...
-//         </app>
-//         ...
-//       </appsCreated>
-//    requires notBool ((KEY in_keys (MI)) orBool (KEY in_keys(MB)))
-
-  // if the app doesn't exist, return -1
-//  rule [[ getAppGlobal(APP, _) => -1 ]]
-//       <accountsMap> AMAP  </accountsMap>
-//    requires notBool (APP in_apps(<accountsMap> AMAP </accountsMap>))
-
 
   syntax Bool ::= appCreated(TValue) [function]
   // -----------------------------------------
