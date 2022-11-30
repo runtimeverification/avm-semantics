@@ -79,9 +79,6 @@ jobs:
       - name: 'Test Bison parsers '
         run: |
           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-bison-parsers'
-      - name: 'Test standalone AVM C++ hooks'
-        run: |
-          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 build-kavm-hooks-tests'
       - name: 'Test AVM semantics --- scenarious'
         run: |
           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'THREADS=4 make test-kavm-avm-simulation'

@@ -2,8 +2,8 @@
 #define ALGORAND_H
 
 #include <memory>
-
-#include <msgpack.hpp>
+#include <vector>
+#include <string>
 
 typedef std::vector<unsigned char> bytes;
 

@@ -1,6 +1,7 @@
 #include "algorand.h"
 #include "base.h"
 #include "mnemonic.h"
+#include <cassert>
 
 Address::Address() :
   Address("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ") {
