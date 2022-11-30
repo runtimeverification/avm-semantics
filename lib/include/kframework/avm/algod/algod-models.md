@@ -72,6 +72,7 @@ TODO: if an account contains an app, the state specification must also contain t
                               "apps-local-state": [LOCAL_STATE:JSONs],
                               "apps-total-schema": null,
                               "assets": [OPTIN_ASSETS:JSONs],
+                              "auth-addr": null,
                               "created-apps": [APPS:JSONs],
                               "created-assets": [ASSETS:JSONs],
                               "participation": null,
@@ -79,12 +80,11 @@ TODO: if an account contains an app, the state specification must also contain t
                               "reward-base": null,
                               "rewards": null,
                               "round": null,
-                              "status": null,
                               "sig-type": null,
-                              "auth-addr": null
+                              "status": null
                              })
             => #setupApplications([APPS])
-            ~> #loadLocalState(DecodeAddressString(ADDR), LOCAL_STATE)
+            ~> #loadLocalState(DecodeAddressString(ADDR), [LOCAL_STATE])
             ~> #setupAssets([ASSETS])
             ~> #setupOptInAssets(DecodeAddressString(ADDR), OPTIN_ASSETS)
             ...
@@ -131,6 +131,8 @@ TODO: if an account contains an app, the state specification must also contain t
                <address> ADDR:Bytes </address>
                <balance> BALANCE:Int </balance>
                <appsCreated> APPS </appsCreated>
+               <assetsCreated> ASSETS </assetsCreated>
+               <assetsOptedIn> OPT_IN_ASSETS </assetsOptedIn>
                ...
              </account>)
           => {"address": EncodeAddressBytes(ADDR),
@@ -138,9 +140,9 @@ TODO: if an account contains an app, the state specification must also contain t
               "amount-without-pending-rewards": null,
               "apps-local-state": null,
               "apps-total-schema": null,
-              "assets": null,
+              "assets": [#dumpAssetsOptedIn(<assetsOptedIn> OPT_IN_ASSETS </assetsOptedIn>)],
               "created-apps": [#dumpApps(EncodeAddressBytes(ADDR),<appsCreated> APPS </appsCreated>)],
-              "created-assets": [.JSONs],
+              "created-assets": [#dumpAssets(EncodeAddressBytes(ADDR),<assetsCreated> ASSETS </assetsCreated>)],
               "participation": null,
               "pending-rewards": null,
               "reward-base": null,
@@ -202,69 +204,89 @@ TODO: if an account contains an app, the state specification must also contain t
            </assetsCreated>
            ...
          </account>
+         <assetCreator> (.Map => (INDEX |-> CREATOR_ADDR)) ... </assetCreator>
        requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR
-```
 
-### Assets
+    syntax JSONs ::= #dumpAssets(String, AssetsCreatedCell)            [function]
+                   | #dumpAssetsImpl(String, JSONs, AssetsCreatedCell) [function]
+    //-----------------------------------------------------------------------
+    rule #dumpAssets((CREATOR:String), <assetsCreated> ASSETS </assetsCreated>)
+      => #dumpAssetsImpl((CREATOR:String), (.JSONs), <assetsCreated> ASSETS </assetsCreated>)
+    rule #dumpAssetsImpl(
+         (CREATOR:String),
+         (SERIALIZED:JSONs),
+         <assetsCreated>
+           <asset> ASSET </asset>
+           REST
+         </assetsCreated>)
+      => #dumpAssetsImpl((CREATOR:String), (#dumpAssetJSON((CREATOR:String), <asset> ASSET </asset>) , SERIALIZED) , <assetsCreated> REST </assetsCreated>)
+    rule #dumpAssetsImpl(
+         (_CREATOR:String),
+         (SERIALIZED:JSONs),
+         <assetsCreated>
+           .Bag
+         </assetsCreated>)
+      => SERIALIZED
 
-```k
-    syntax KItem ::= #setupAssets(JSON)
-    //---------------------------------
 
-    rule <k> #setupAssets([ASSET_JSON, REST]) => #addAssetJSON(ASSET_JSON) ~> #setupAssets([REST]) ... </k>
-    rule <k> #setupAssets([.JSONs]) => .K ... </k>
-
-    syntax KItem ::= #addAssetJSON(JSON)
-
-    rule <k> #addAssetJSON({
-                             "index": INDEX:Int,
-                             "params": {
-                               "clawback": CLAWBACK_ADDR:String,
-                               "creator": CREATOR_ADDR_STR:String,
-                               "decimals": DECIMALS:Int,
-                               "default-frozen": DEFAULT_FROZEN:Bool,
-                               "freeze": FREEZE_ADDR:String,
-                               "manager": MANAGER_ADDR:String,
-                               "metadata-hash": METADATA_HASH:String,
-                               "name": ASSET_NAME:String,
-                               "reserve": RESERVE_ADDR:String,
-                               "total": TOTAL:Int,
-                               "unit-name": UNIT_NAME:String,
-                               "url": URL:String
-                             }
-                           }) => .K ... </k>
-         <account>
-           <address> CREATOR_ADDR </address>
-           <assetsCreated>
-             .Bag =>
+    syntax JSON ::= #dumpAssetJSON(String, AssetCell) [function]
+    //----------------------------------------------------------
+    rule #dumpAssetJSON(
+             (CREATOR:String),
              <asset>
-               <assetID> INDEX </assetID>
-               <assetName> String2Bytes(ASSET_NAME) </assetName>
-               <assetUnitName> String2Bytes(UNIT_NAME) </assetUnitName>
-               <assetTotal> TOTAL </assetTotal>
-               <assetDecimals> DECIMALS </assetDecimals>
-               <assetDefaultFrozen> bool2Int(DEFAULT_FROZEN) </assetDefaultFrozen>
-               <assetURL> String2Bytes(URL) </assetURL>
-               <assetMetaDataHash> String2Bytes(METADATA_HASH) </assetMetaDataHash>
-               <assetManagerAddr> DecodeAddressString(MANAGER_ADDR) </assetManagerAddr>
-               <assetReserveAddr> DecodeAddressString(RESERVE_ADDR) </assetReserveAddr>
-               <assetFreezeAddr> DecodeAddressString(FREEZE_ADDR) </assetFreezeAddr>
-               <assetClawbackAddr> DecodeAddressString(CLAWBACK_ADDR) </assetClawbackAddr>
-             </asset>
-             ...
-           </assetsCreated>
-           <assetsOptedIn>
-             ASSETS_OPTED_IN =>
-             <optInAsset>
-               <optInAssetID>      INDEX       </optInAssetID>
-               <optInAssetBalance> TOTAL          </optInAssetBalance>
-               <optInAssetFrozen>  bool2Int(DEFAULT_FROZEN) </optInAssetFrozen>
-             </optInAsset>
-             ASSETS_OPTED_IN
-           </assetsOptedIn>
-           ...
-         </account>
-       requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR
+               <assetID>            ASSET_ID:Int        </assetID>
+               <assetName>          ASSET_NAME:Bytes    </assetName>
+               <assetUnitName>      UNIT_NAME:Bytes     </assetUnitName>
+               <assetTotal>         TOTAL:Int           </assetTotal>
+               <assetDecimals>      DECIMALS:Int        </assetDecimals>
+               <assetDefaultFrozen> DEFAULT_FROZEN:Int  </assetDefaultFrozen>
+               <assetURL>           URL:Bytes           </assetURL>
+               <assetMetaDataHash>  METADATA_HASH:Bytes </assetMetaDataHash>
+               <assetManagerAddr>   MANAGER_ADDR:Bytes  </assetManagerAddr>
+               <assetReserveAddr>   RESERVE_ADDR:Bytes  </assetReserveAddr>
+               <assetFreezeAddr>    FREEZE_ADDR:Bytes   </assetFreezeAddr>
+               <assetClawbackAddr>  CLAWBACK_ADDR:Bytes </assetClawbackAddr>
+             </asset>)
+          => { "index": ASSET_ID
+             , "params": { "clawback"      : EncodeAddressBytes(CLAWBACK_ADDR)
+                         , "creator"       : CREATOR
+                         , "decimals"      : DECIMALS
+                         , "default-frozen": int2Bool(DEFAULT_FROZEN)
+                         , "freeze"        : EncodeAddressBytes(FREEZE_ADDR)
+                         , "manager"       : EncodeAddressBytes(MANAGER_ADDR)
+                         , "metadata-hash" : Bytes2String(METADATA_HASH)
+                         , "name"          : Bytes2String(ASSET_NAME)
+                         , "reserve"       : EncodeAddressBytes(RESERVE_ADDR)
+                         , "total"         : TOTAL
+                         , "unit-name"     : Bytes2String(UNIT_NAME)
+                         , "url"           : Bytes2String(URL)
+                         }
+             }
+
+    syntax JSONs ::= #dumpAssetsOptedIn(AssetsOptedInCell)            [function]
+                   | #dumpAssetsOptedInImpl(JSONs, AssetsOptedInCell) [function]
+    //----------------------------------------------------------------------------------
+    rule #dumpAssetsOptedIn(<assetsOptedIn> ASSETS </assetsOptedIn>)
+      => #dumpAssetsOptedInImpl((.JSONs), <assetsOptedIn> ASSETS </assetsOptedIn>)
+    rule #dumpAssetsOptedInImpl(
+         (SERIALIZED:JSONs),
+         <assetsOptedIn>
+           <optInAsset>
+             <optInAssetID>      ASSET_ID:Int      </optInAssetID>
+             <optInAssetBalance> ASSET_BALANCE:Int </optInAssetBalance>
+             <optInAssetFrozen>  FROZEN:Int        </optInAssetFrozen>
+           </optInAsset>
+           REST
+         </assetsOptedIn>)
+      => #dumpAssetsOptedInImpl( ({"amount": ASSET_BALANCE, "asset-id": ASSET_ID, "is-frozen": int2Bool(FROZEN)} , SERIALIZED)
+                               , <assetsOptedIn> REST </assetsOptedIn>)
+    rule #dumpAssetsOptedInImpl(
+         (SERIALIZED:JSONs),
+         <assetsOptedIn>
+           .Bag
+         </assetsOptedIn>)
+      => SERIALIZED
+
 ```
 
 ### Applications
@@ -274,11 +296,12 @@ TODO: if an account contains an app, the state specification must also contain t
                    | #loadLocalState(Int, Bytes, JSONs)
     //-------------------------------------------------
     rule <k> #loadLocalState(ADDR:Bytes,
-                  {
-                    "id": APP_ID:Int,
-                    "schema": _:JSON,
-                    "key-value": [LOCAL_STATE]
-                  }, REST ) => #loadLocalState(APP_ID, ADDR, LOCAL_STATE) ~> #loadLocalState(ADDR, REST) ... </k>
+                  [{
+                     "id": APP_ID:Int,
+                     "key-value": [LOCAL_STATE],
+                     "schema": _:JSON
+                   }, REST:JSONs] )
+          => #loadLocalState(APP_ID, ADDR, [LOCAL_STATE]) ~> #loadLocalState(ADDR, [REST]) ... </k>
          <account>
            <address> ADDR </address>
            <appsOptedIn>
@@ -293,18 +316,18 @@ TODO: if an account contains an app, the state specification must also contain t
            ...
          </account>
 
-    rule <k> #loadLocalState(_:Bytes, .JSONs) => . ... </k>
+    rule <k> #loadLocalState(_:Bytes, [ .JSONs ]) => . ... </k>
 
     rule <k> #loadLocalState(APP_ID:Int, ADDR:Bytes,
-                             ({"key": K:String, "value": {"type": 1, "bytes": V:String, "uint": _:Int} }, REST:JSONs))
-          => #loadLocalState(APP_ID, ADDR, REST) ... </k>
+                             [{"key": K:String, "value": {"bytes": V:String, "type": 1, "uint": _} }, REST:JSONs])
+          => #loadLocalState(APP_ID, ADDR, [REST]) ... </k>
          <account>
            <address> ADDR </address>
            <appsOptedIn>
              <optInApp>
                <optInAppID> APP_ID </optInAppID>
                <localInts> _ </localInts>
-               <localBytes> .Map => (String2Bytes(K) |-> String2Bytes(V)) ... </localBytes>
+               <localBytes> .Map => (Base64Decode(K) |-> Base64Decode(V)) ... </localBytes>
              </optInApp>
              ...
            </appsOptedIn>
@@ -312,14 +335,14 @@ TODO: if an account contains an app, the state specification must also contain t
          </account>
 
     rule <k> #loadLocalState(APP_ID:Int, ADDR:Bytes,
-                             ({"key": K:String, "value": {"type": 2, "bytes": _:String, "uint": V:Int} }, REST:JSONs))
-          => #loadLocalState(APP_ID, ADDR, REST) ... </k>
+                             [{"key": K:String, "value": {"bytes": _, "type": 2, "uint": V:Int} }, REST:JSONs])
+          => #loadLocalState(APP_ID, ADDR, [REST]) ... </k>
          <account>
            <address> ADDR </address>
            <appsOptedIn>
              <optInApp>
                <optInAppID> APP_ID </optInAppID>
-               <localInts> .Map => (String2Bytes(K) |-> V) ... </localInts>
+               <localInts> .Map => (Base64Decode(K) |-> V) ... </localInts>
                <localBytes> _ </localBytes>
              </optInApp>
              ...
@@ -327,33 +350,32 @@ TODO: if an account contains an app, the state specification must also contain t
            ...
          </account>
 
-    rule <k> #loadLocalState(_:Int, _:Bytes, .JSONs) => . ... </k>
+    rule <k> #loadLocalState(_:Int, _:Bytes, [.JSONs]) => . ... </k>
 
     syntax KItem ::= #loadGlobalState(Int, JSONs)
     //-------------------------------------------
-    rule <k> #loadGlobalState(APP_ID, {"key": K:String, "value": {"type": 1, "bytes": V:String, _} }, REST:JSONs )
-          => #loadGlobalState(APP_ID, REST) ... </k>
+    rule <k> #loadGlobalState(APP_ID, [{"key": K:String, "value": {"bytes": V:String, "type": 1, "uint": _} }, REST:JSONs] )
+          => #loadGlobalState(APP_ID, [REST]) ... </k>
          <app>
            <appID> APP_ID </appID>
            <globalState>
-             <globalBytes> .Map => (String2Bytes(K) |-> String2Bytes(V)) ... </globalBytes>
+             <globalBytes> .Map => (Base64Decode(K) |-> Base64Decode(V)) ... </globalBytes>
              ...
            </globalState>
            ...
          </app>
 
-    rule <k> #loadGlobalState(APP_ID, {"key": K:String, "value": {"type": 2, _, "uint": V:Int} }, REST:JSONs )
-          => #loadGlobalState(APP_ID, REST) ... </k>
+    rule <k> #loadGlobalState(APP_ID, [{"key": K:String, "value": {"bytes": _, "type": 2, "uint": V:Int} }, REST:JSONs] )
+          => #loadGlobalState(APP_ID, [REST]) ... </k>
          <app>
            <appID> APP_ID </appID>
            <globalState>
-             <globalInts> .Map => (String2Bytes(K) |-> V) ... </globalInts>
+             <globalInts> .Map => (Base64Decode(K) |-> V) ... </globalInts>
              ...
            </globalState>
            ...
          </app>
-
-    rule <k> #loadGlobalState(_, .JSONs) => . ... </k>
+    rule <k> #loadGlobalState(_, [.JSONs]) => . ... </k>
 
     syntax KItem ::= #setupApplications(JSON)
     //---------------------------------------
@@ -365,15 +387,15 @@ TODO: if an account contains an app, the state specification must also contain t
     syntax KItem ::= #addApplicationJSON(JSON)
     //----------------------------------------
     rule <k> #addApplicationJSON({ "id": APP_ID:Int
-                                 , "params": { "creator"            : CREATOR_ADDR_STR:String
-                                             , "approval-program"   : APPROVAL_NAME:String
+                                 , "params": { "approval-program"   : APPROVAL_NAME:String
                                              , "clear-state-program": CLEAR_STATE_NAME:String
-                                             , "local-state-schema" : { "nui": LOCAL_NUM_UINTS:Int, "nbs": LOCAL_NUM_BYTES:Int }
-                                             , "global-state-schema": { "nui": GLOBAL_NUM_UINTS:Int, "nbs": GLOBAL_NUM_BYTES:Int }
+                                             , "creator"            : CREATOR_ADDR_STR:String
                                              , "global-state"       : [GLOBAL_STATE:JSONs]
+                                             , "global-state-schema": { "nbs": GLOBAL_NUM_BYTES:Int, "nui": GLOBAL_NUM_UINTS:Int }
+                                             , "local-state-schema" : { "nbs": LOCAL_NUM_BYTES:Int, "nui": LOCAL_NUM_UINTS:Int }
                                              }
                                  }
-             ) => #loadGlobalState(APP_ID, GLOBAL_STATE) ... </k>
+             ) => #loadGlobalState(APP_ID, [GLOBAL_STATE]) ... </k>
            <account>
              <address> CREATOR_ADDR </address>
              <appsCreated>
@@ -436,9 +458,8 @@ TODO: if an account contains an app, the state specification must also contain t
                <globalState>
                  <globalNumInts>   GLOBAL_NUM_UINTS      </globalNumInts>
                  <globalNumBytes>  GLOBAL_NUM_BYTES      </globalNumBytes>
-//                 <globalBytes>     _GLOBAL_UINTS       </globalBytes>
-//                 <globalInts>      _GLOBAL_BYTES       </globalInts>
-                 ...
+                 <globalBytes>     GLOBAL_UINTS:Map      </globalBytes>
+                 <globalInts>      GLOBAL_BYTES:Map      </globalInts>
                </globalState>
                <localState>
                  <localNumInts>    LOCAL_NUM_UINTS       </localNumInts>
@@ -451,16 +472,22 @@ TODO: if an account contains an app, the state specification must also contain t
              , "params": { "creator"            : CREATOR
                          , "approval-program"   : APPROVAL_NAME
                          , "clear-state-program": CLEAR_STATE_NAME
-                         , "local-state-schema" : { "nui": maybeTUInt64(LOCAL_NUM_UINTS, 0)
-                                                  , "nbs": maybeTUInt64(LOCAL_NUM_BYTES, 0) }
-                         , "global-state-schema": { "nui": maybeTUInt64(GLOBAL_NUM_UINTS, 0)
-                                                  , "nbs": maybeTUInt64(GLOBAL_NUM_BYTES, 0) }
-                         , "global-state"       : null
+                         , "local-state-schema" : { "nbs": maybeTUInt64(LOCAL_NUM_BYTES, 0)
+                                                  , "nui": maybeTUInt64(LOCAL_NUM_UINTS, 0) }
+                         , "global-state-schema": { "nbs": maybeTUInt64(GLOBAL_NUM_BYTES, 0)
+                                                  , "nui": maybeTUInt64(GLOBAL_NUM_UINTS, 0) }
+                         , "global-state"       : [ #dumpStateMap(GLOBAL_UINTS GLOBAL_BYTES) ]
                          }
              }
-```
 
-### Assets
+    syntax JSONs ::= #dumpStateMap(Map) [function]
+    //--------------------------------------------
+    rule #dumpStateMap((KEY:Bytes |-> VALUE:Bytes) REST)
+      => {"key": Base64Encode(KEY):String, "value": {"bytes": Base64Encode(VALUE), "type": 1, "uint": 0 } }, #dumpStateMap(REST)
+    rule #dumpStateMap((KEY:Bytes |-> VALUE:Int  ) REST)
+      => {"key": Base64Encode(KEY):String, "value": {"bytes": "", "type": 2, "uint": VALUE} }, #dumpStateMap(REST)
+    rule #dumpStateMap(.Map) => .JSONs
+```
 
 ## Transactions
 
@@ -488,7 +515,7 @@ TODO: if an account contains an app, the state specification must also contain t
 
   rule JSONList2BytesList([.JSONs]) => .TValueList
   rule JSONList2BytesList([ I:Int , REST ]) => prepend(Int2Bytes(I, BE, Unsigned), JSONList2BytesList( [ REST ] ))
-  rule JSONList2BytesList([ S:String , REST ]) => prepend(String2Bytes(S), JSONList2BytesList( [ REST ] ))
+  rule JSONList2BytesList([ S:String , REST ]) => prepend(Base64Decode(S), JSONList2BytesList( [ REST ] ))
 
   syntax TValueList ::= JSONIntList2TUint64List(JSON) [function]
 
@@ -502,9 +529,9 @@ TODO: if an account contains an app, the state specification must also contain t
 
   syntax TValuePairList ::= JSONBoxRefsList2PairList(JSONs) [function]
 
-  rule JSONBoxRefsList2PairList([{ "n": NAME:String, "i": I:Int }:JSON, REST:JSONs]) =>
+  rule JSONBoxRefsList2PairList([{ "i": I:Int, "n": NAME:String  }:JSON, REST:JSONs]) =>
     prepend((String2Bytes(NAME), I):TValuePair, JSONBoxRefsList2PairList([REST]))
-  rule JSONBoxRefsList2PairList([{ "n": NAME:String, "i": I:Int }]) =>
+  rule JSONBoxRefsList2PairList([{ "i": I:Int , "n": NAME:String }]) =>
     (String2Bytes(NAME), I):TValuePair
   rule JSONBoxRefsList2PairList([.JSONs]) => .TValuePairList
 ```
@@ -540,7 +567,7 @@ TODO: if an account contains an app, the state specification must also contain t
            <payTxFields>
              <receiver>         DecodeAddressString(RECEIVER) </receiver>
              <amount>           AMOUNT </amount>
-             <closeRemainderTo> .Bytes </closeRemainderTo>
+             <closeRemainderTo> PARAM_ZERO_ADDR </closeRemainderTo>
            </payTxFields>
            ...
          </transaction>
@@ -554,9 +581,9 @@ TODO: if an account contains an app, the state specification must also contain t
 ```k
     rule <k> #addTxnJSON({
                            "aamt": AMOUNT:Int,
-                           "aclose": CLOSE_TO:String,
+                           "aclose": CLOSE_TO:JSON,
                            "arcv": RECEIVER:String,
-                           "asnd": ASSET_SENDER:String,
+                           "asnd": _ASSET_ASENDER,
                            "fee": _FEE:Int,
                            "fv": _FIRST_VALID:Int,
                            "gen": _GEN:String,
@@ -585,8 +612,8 @@ TODO: if an account contains an app, the state specification must also contain t
              <xferAsset> ASSET_ID </xferAsset>
              <assetAmount> AMOUNT </assetAmount>
              <assetReceiver> DecodeAddressString(RECEIVER) </assetReceiver>
-             <assetASender> DecodeAddressString(ASSET_SENDER) </assetASender>
-             <assetCloseTo> DecodeAddressString(CLOSE_TO) </assetCloseTo>
+             <assetASender> PARAM_ZERO_ADDR </assetASender>
+             <assetCloseTo> #if isString(CLOSE_TO) #then DecodeAddressString({CLOSE_TO}:>String) #else PARAM_ZERO_ADDR #fi </assetCloseTo>
            </assetTransferTxFields>
            ...
          </transaction>
@@ -649,9 +676,9 @@ TODO: if an account contains an app, the state specification must also contain t
                            "apbx": BOX_REFS:JSON,
                            "apep": EXTRA_PAGES:Int,
                            "apfa": FOREIGN_APPS:JSON,
-                           "apgs": { "nui": GLOBAL_NUM_UINTS:Int, "nbs": GLOBAL_NUM_BYTES:Int },
+                           "apgs": { "nbs": GLOBAL_NUM_BYTES:Int, "nui": GLOBAL_NUM_UINTS:Int },
                            "apid": APPLICATION_ID:Int,
-                           "apls": { "nui": LOCAL_NUM_UINTS:Int, "nbs": LOCAL_NUM_BYTES:Int },
+                           "apls": { "nbs": LOCAL_NUM_BYTES:Int, "nui": LOCAL_NUM_UINTS:Int },
                            "apsu": CLEAR_STATE_NAME:JSON,
                            "fee": _FEE:Int,
                            "fv": _FIRST_VALID:Int,
@@ -721,17 +748,18 @@ TODO: if an account contains an app, the state specification must also contain t
 ```k
     rule <k> #addTxnJSON({
                            "apar": {
-                             "t": TOTAL:Int,
-                             "dc": DECIMALS:Int,
-                             "df": DEFAULT_FROZEN:Bool,
-                             "un": UNIT_NAME:String,
+                             "am": METADATA_HASH:String,
                              "an": ASSET_NAME:String,
                              "au": URL:String,
-                             "am": METADATA_HASH:String,
+                             "c": CLAWBACK_ADDR:String,
+                             "dc": DECIMALS:Int,
+                             "df": DEFAULT_FROZEN:Bool,
+                             "f": FREEZE_ADDR:String,
                              "m": MANAGER_ADDR:String,
                              "r": RESERVE_ADDR:String,
-                             "f": FREEZE_ADDR:String,
-                             "c": CLAWBACK_ADDR:String
+                             "t": TOTAL:Int,
+                             "un": UNIT_NAME:String
+
                            },
                            "caid": ASSET_ID:Int,
                            "fee": _FEE:Int,
@@ -781,6 +809,12 @@ TODO: if an account contains an app, the state specification must also contain t
        <nextTxnID> ID => ID +Int 1 </nextTxnID>
 ```
 
+### Invalid input
+
+```k
+    rule <k> #addTxnJSON(INPUT:JSON) => panic("Invalid transaction JSON:" +String JSON2String(INPUT)) ... </k> [owise]
+```
+
 
 ```k
     syntax JSONs ::= #dumpConfirmedTransactions(TransactionsCell)            [function]
@@ -811,7 +845,7 @@ TODO: if an account contains an app, the state specification must also contain t
               <txConfigAsset>   CREATED_ASSET_ID </txConfigAsset>
               <txApplicationID> CREATED_APP_ID   </txApplicationID>
               <log>
-                <logData> _LOG_DATA  </logData>
+                <logData> LOG_DATA  </logData>
                 <logSize> _LOG_SIZE </logSize>
               </log>
               ...
@@ -829,11 +863,17 @@ TODO: if an account contains an app, the state specification must also contain t
                        , "sender-rewards": null
                        , "local-state-delta": null
                        , "global-state-delta": null
-                       , "logs": null
+                       , "logs": BytesList2JSONList(LOG_DATA)
                        , "inner-txns": null
                        , "txn": null
                        }
             }
+
+  syntax JSON ::= BytesList2JSONList(TValueList) [function]
+
+  rule BytesList2JSONList(.TValueList)  => [.JSONs]
+  rule BytesList2JSONList(B:Bytes)      => [Base64Encode(B)]
+  rule BytesList2JSONList(B:Bytes REST) => [Base64Encode(B), BytesList2JSONList(REST)]
 ```
 
 ```k

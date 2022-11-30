@@ -16,6 +16,7 @@ module KAVM-HOOKS-TESTS
   syntax String ::= EncodeAddressBytesInternal(Bytes)   [function, hook(KAVM.address_encode)]
   syntax Bool   ::= IsAddressValid(String)              [function, hook(KAVM.check_address)]
 
-  syntax Bytes ::= Base64Decode(String) [function, hook(KAVM.b64_decode)]
-  //---------------------------------------------------------------------
+  syntax Bytes  ::= Base64Decode(String) [function, hook(KAVM.b64_decode)]
+  syntax String ::= Base64Encode(Bytes)  [function, hook(KAVM.b64_encode)]
+
 endmodule

@@ -32,16 +32,18 @@ def test_run_simulation(filename: str) -> None:
 
     kavm = KAVM(definition_dir=Path(os.path.join(project_path, str(kavm_definition_dir))))
 
-    scenario = KAVMScenario.from_json(Path(filename).read_text())
-
-    teals = kavm.parse_teals(
-        teal_paths=scenario._teal_files, teal_sources_dir=Path(os.path.join(project_path, 'tests/teal-sources/'))
+    scenario = KAVMScenario.from_json(
+        scenario_json_str=Path(filename).read_text(),
+        teal_sources_dir=Path(os.path.join(project_path, 'tests/teal-sources/')),
     )
+
+    # teals = kavm.parse_teals(
+    #     teal_paths=scenario._teal_files, teal_sources_dir=Path(os.path.join(project_path, 'tests/teal-sources/'))
+    # )
     proc_result = kavm.run_avm_json(
-        scenario=scenario.to_json(),
+        scenario=scenario,
         output='none',
         profile=True,
-        teals=teals,
         depth=0,
     )
 

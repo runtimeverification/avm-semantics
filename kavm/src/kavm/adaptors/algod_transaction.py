@@ -1,5 +1,5 @@
 from base64 import b64decode, b64encode
-from typing import Any, Dict, List, Optional, OrderedDict, cast
+from typing import Any, Dict, List, Optional, cast
 
 from algosdk.constants import APPCALL_TXN, ASSETTRANSFER_TXN, PAYMENT_TXN
 from algosdk.encoding import encode_address
@@ -85,14 +85,17 @@ class KAVMTransaction(Transaction):
         }
 
     @staticmethod
-    def sanitize_byte_fields(txn_dict: OrderedDict[str, Any]) -> OrderedDict[str, Any]:
+    def sanitize_byte_fields(txn_dict: Dict[str, Any]) -> Dict[str, Any]:
         """Convert bytes fields of Transaction into base64-encoded strigns"""
         for k, v in txn_dict.items():
             if type(v) is bytes:
-                if k in ['snd', 'rcv', 'close']:
+                if k in ['snd', 'rcv', 'close', 'asnd', 'arcv', 'aclose']:
                     txn_dict[k] = encode_address(v)
                 else:
                     txn_dict[k] = b64encode(v).decode('utf8')
+            # base64 encode application arguments
+            if k == 'apaa':
+                txn_dict[k] = [b64encode(v).decode('utf8') for v in txn_dict[k]]
         return txn_dict
 
     @staticmethod

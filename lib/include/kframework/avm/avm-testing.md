@@ -46,7 +46,7 @@ module AVM-TESTING
 
 ### Scenario validation
 
-A valid testing scenario must have a unique `"setup-network"` stage as the first stage, followed by any amount of `"execute-transactions"` stages.
+A valid testing scenario must have a unique `"setup-network"` stage as the first stage, followed by any amount of `"submit-transactions"` stages.
 The following rules validate the parsed scenario JSON.
 
 ```k
@@ -59,11 +59,15 @@ The following rules validate the parsed scenario JSON.
   rule setupStageIsUniqueAndComesFirst(.JSONs) => false
   rule setupStageIsUniqueAndComesFirst(FIRST, OTHERS:JSONs)
        => assertStageTypes("setup-network", FIRST) andBool
-          assertStageTypes("execute-transactions", OTHERS)
+          assertStageTypes("submit-transactions", OTHERS)
 
   syntax Bool ::= assertStageTypes(String, JSONs) [function]
   //--------------------------------------------------------
-  rule assertStageTypes(EXPECTED_TYPE, { "stage-type": STAGE_TYPE, _ }
+  rule assertStageTypes(EXPECTED_TYPE, { "data" : _, "stage-type": STAGE_TYPE }
+                                       , OTHER_STAGES:JSONs
+                                       )
+       => STAGE_TYPE ==String EXPECTED_TYPE andBool assertStageTypes(EXPECTED_TYPE, OTHER_STAGES)
+  rule assertStageTypes(EXPECTED_TYPE, { "data": _, "expected-paniccode": _, "expected-returncode": _, "stage-type": STAGE_TYPE }
                                        , OTHER_STAGES:JSONs
                                        )
        => STAGE_TYPE ==String EXPECTED_TYPE andBool assertStageTypes(EXPECTED_TYPE, OTHER_STAGES)
@@ -99,8 +103,8 @@ Note that the applications and ASAs are part of the accounts' state as well, and
 ```k
   syntax TestingCommand ::= #readSetupStage(JSON)
   //---------------------------------------------
-  rule <k> #readSetupStage({ "stage-type": "setup-network"
-                           , "data": {"accounts": ACCTS:JSON}
+  rule <k> #readSetupStage({ "data": {"accounts": ACCTS:JSON}
+                           , "stage-type": "setup-network"
                            })
         => #setupAccounts(ACCTS) ...
        </k>
@@ -119,10 +123,10 @@ Note that the applications and ASAs are part of the accounts' state as well, and
 
   syntax TestingCommand ::= #readExecutionStage(JSON)
   //-------------------------------------------------
-  rule <k> #readExecutionStage({ "stage-type": "execute-transactions"
-                               , "data": {"transactions": TXNS:JSON}
-                               , "expected-returncode": EXPECTED_RETURN_CODE
+  rule <k> #readExecutionStage({ "data": {"transactions": TXNS:JSON}
                                , "expected-paniccode": EXPECTED_PANIC_CODE
+                               , "expected-returncode": EXPECTED_RETURN_CODE
+                               , "stage-type": "submit-transactions"
                                })
         => #setupTransactions(TXNS) ~> #initGlobals() ~> #evalTxGroup()
         ~> #checkExecutionResults(EXPECTED_RETURN_CODE, EXPECTED_PANIC_CODE) ...
