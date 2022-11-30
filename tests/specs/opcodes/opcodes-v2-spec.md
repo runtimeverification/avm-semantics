@@ -316,17 +316,19 @@ module OPCODES-V2-SPEC
         </transaction>
         <currentApplicationID> APP_ID </currentApplicationID>
         <account>
-          <address> _ </address>
+          <address> ADDR:Bytes </address>
           <appsCreated>
             <app>
               <appID> APP_ID </appID>
-              <globalInts> A |-> 123 </globalInts>
+              <globalInts> .Map [ A <- 123 ] </globalInts>
+              <globalBytes> .Map </globalBytes>
               ...
             </app>
             ...
           </appsCreated>
           ...
         </account>
+        <appCreator> .Map [ APP_ID <- ADDR ] </appCreator>
 ```
 </details>
 </td></tr>
@@ -348,17 +350,19 @@ module OPCODES-V2-SPEC
           ...
         </transaction>
         <account>
-          <address> _ </address>
+          <address> ADDR:Bytes </address>
           <appsCreated>
             <app>
               <appID> A </appID>
-              <globalInts> B |-> 123 </globalInts>
+              <globalInts> .Map [ B <- 123 ] </globalInts>
+              <globalBytes> .Map </globalBytes>
               ...
             </app>
             ...
           </appsCreated>
           ...
         </account>
+        <appCreator> .Map [ A <- ADDR ] </appCreator>
 ```
 </details>
 </td></tr>
@@ -579,14 +583,14 @@ module OPCODES-V2-SPEC
         <stack> (1 : 2 : .TStack) => (1 : .TStack) </stack>
         <stacksize> 2 => 1 </stacksize>
         <currentTx> TX_ID </currentTx>
-        <transactions>
+        (<transactions>
           <transaction>
             <txID> TX_ID </txID>
             <typeEnum> @ appl </typeEnum> 
             <txType> "appl" </txType>
             ...
           </transaction>
-        </transactions>
+        </transactions> => <transactions> ?_ </transactions>)
         <currentApplicationID> APP_ID:Int </currentApplicationID>
         <activeApps> (SetItem(APP_ID) .Set) => .Set </activeApps>
         <paniccode> 0 </paniccode>

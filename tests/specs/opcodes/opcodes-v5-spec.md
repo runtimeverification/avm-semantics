@@ -332,23 +332,39 @@ claim <k> log => . </k>
 <summary>K claims</summary>
 
 ```k
-  claim <k> itxn_submit => . </k>
+  claim <k> itxn_submit ~> #incrementPC() ~> #fetchOpcode() => #evalNextTx() </k>
         <currentTxnExecution>
-          <pc> 0 </pc>
-          <program> .Map </program>
-          <jumped> true => false </jumped>
-          <currentApplicationID> 1 </currentApplicationID>
-          <stack> 1 : .TStack </stack>
-          <stacksize> 1 </stacksize>
-          <lastTxnGroupID> "1" </lastTxnGroupID>
+          <globals>
+            <groupSize> _ => ?_ </groupSize>
+            <globalRound> _ => ?_ </globalRound>
+            <latestTimestamp> _ => ?_ </latestTimestamp>
+            <currentApplicationID> 1 => ?_ </currentApplicationID>
+            <currentApplicationAddress> _ => ?_ </currentApplicationAddress>
+            <creatorAddress> _ => ?_ </creatorAddress>
+          </globals>
+          <teal>
+            <pc> 0 => ?_ </pc>
+            <program> .Map => ?_ </program>
+            <mode> _ => ?_ </mode>
+            <version> _ => ?_ </version>
+            <stack> 1 : .TStack => ?_ </stack>
+            <stacksize> 1 => ?_ </stacksize>
+            <jumped> true => ?_ </jumped>
+            <labels> _ => ?_ </labels>
+            <callStack> _ => ?_ </callStack>
+            <scratch> _ => ?_ </scratch>
+            <intcblock> _ => ?_ </intcblock>
+            <bytecblock> _ => ?_ </bytecblock>
+          </teal>
+          <lastTxnGroupID> "1" => ?_ </lastTxnGroupID>
           ...
         </currentTxnExecution>
         <paniccode> 0 </paniccode>
         <returncode> 4 => 0 </returncode>
-        <returnstatus> _ => "Success - transaction group accepted" </returnstatus>
-        <activeApps> SetItem(1) => .Set </activeApps>
-        <touchedAccounts> .Set </touchedAccounts>
-        <currentTx> "1" </currentTx>
+        <returnstatus> _ => "Success - no errors on non-application transaction" </returnstatus>
+        <activeApps> SetItem(1) => ?_ </activeApps>
+        <touchedAccounts> .List => ?_ </touchedAccounts>
+        <currentTx> "1" => "5" </currentTx>
         <transactions>
           <transaction>
             <txID> "1" </txID>
@@ -386,7 +402,7 @@ claim <k> log => . </k>
         </innerTransactions>
         <nextTxnID> 5 => 6 </nextTxnID>
         <nextGroupID> 1 </nextGroupID>
-        <deque> ListItem("1") => .List </deque>
+        <deque> ListItem("1") </deque>
         <dequeIndexSet> SetItem("1") => (SetItem("1") SetItem("5")) </dequeIndexSet>
         <txnIndexMap> .Bag => ?_ </txnIndexMap>
         <accountsMap>
