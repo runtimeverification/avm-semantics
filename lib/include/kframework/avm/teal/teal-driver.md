@@ -1004,7 +1004,7 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
     requires S <Int MAX_STACK_DEPTH
 
   rule <k> method METHOD => .K ... </k>
-       <stack> XS => substrBytes(String2Bytes(Sha512_256raw(METHOD)), 0, 4) : XS </stack>
+       <stack> XS => methodSelector(METHOD) : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
 
@@ -1039,10 +1039,9 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
 Extract method selector from an API method description, see [the documentation](https://developer.algorand.org/docs/get-details/dapps/smart-contracts/ABI/?from_query=method#methods), and the [reference implementation](https://github.com/algorand/go-algorand/blob/0cb9a2e4f7470cbcb88039886d6e0f586102b545/data/transactions/logic/assembler.go#L804)
 
 ```k
-  syntax String ::= methodSelector(String) [function]
-  //-------------------------------------------------
-//  rule methodSelector(S) => 
-    
+  syntax TBytes ::= methodSelector(TBytes) [function, total]
+  //------------------------------------------------------
+  rule methodSelector(METHOD) => substrBytes(String2Bytes(Sha512_256raw(METHOD)), 0, 4)
 ```
 
 ### Flow Control
