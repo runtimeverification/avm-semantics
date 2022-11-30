@@ -44,6 +44,8 @@ there may be some remaining artefacts of the previous transaction's TEAL.
        </currentTxnExecution>
 
   rule <k> #restoreContext() => . ...</k>
+       <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
+       <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
        <currentTx> TX_ID </currentTx>
        <transaction>
          <txID> TX_ID </txID>
