@@ -223,6 +223,7 @@ class KAVMClient(algod.AlgodClient):
         final_state = {}
         try:
             # on succeful execution, the final state will be serialized and prineted to stderr
+            print(proc_result.stderr)
             final_state = json.loads(proc_result.stderr)
         except json.decoder.JSONDecodeError as e:
             _LOGGER.critical(f'Failed to parse the final state JSON: {e}')

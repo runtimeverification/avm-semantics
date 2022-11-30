@@ -106,6 +106,8 @@ the attached stateless TEAL if the transaction is logicsig-signed.
           ~> #if (getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)) #then .K #else #finalizeExecution() #fi
        ... 
        </k>
+       <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
+       <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID> TXN_ID </txID>
@@ -358,8 +360,6 @@ TODO: address contact creation.
   syntax AlgorandCommand ::= #evalTeal()
 
   rule <k> #evalTeal() => #startExecution() ... </k>
-       <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
-       <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
 
   syntax AlgorandCommand ::= #loadInputPgm( TealInputPgm )
 
