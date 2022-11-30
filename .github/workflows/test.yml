@@ -28,7 +28,7 @@ jobs:
           ./package/version.sh bump $(git show origin/${GITHUB_BASE_REF}:package/version)
           ./package/version.sh sub
           if git add --update && git commit --message "Set Version: $(cat package/version)"; then
-            git push
+            git push origin HEAD:${GITHUB_HEAD_REF}
           fi
 
   build-nix:
