@@ -20,7 +20,7 @@
             }
         },
         {
-            "stage-type": "execute-transactions",
+            "stage-type": "submit-transactions",
             "data": {
                 "transactions": [
                     {

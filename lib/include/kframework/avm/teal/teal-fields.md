@@ -25,6 +25,7 @@ module TEAL-FIELDS
                        | "CreatorAddress"
                        | "CurrentApplicationAddress"
                        | "OpcodeBudget"
+                       | "CreatorAddress"
 ```
 
 ## Asset Fields
