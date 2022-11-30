@@ -236,9 +236,9 @@ module ALGO-TXN
          ...
        </transaction>
 
-  syntax MaybeTValue ::= getTxnField(String, TxnField)                 [function]
-  syntax MaybeTValue ::= getTxnField(String, TxnaField, Int)           [function]
-  syntax TValueList  ::= getTxnField(String, TxnaField)                [function]
+  syntax MaybeTValue ::= getTxnField(String, TxnField)                 [function, total]
+  syntax MaybeTValue ::= getTxnField(String, TxnaField, Int)           [function, total]
+  syntax TValueList  ::= getTxnField(String, TxnaField)                [function, total]
   //-----------------------------------------------------------------------------
 
   rule [[ getTxnField(I, TxID) => normalize(I) ]]
@@ -736,6 +736,15 @@ module ALGO-TXN
          ...
        </transaction>
     requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, NumAssets) => size(X) ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <foreignAssets> X </foreignAssets>
+         ...
+       </transaction>
+    requires #isValidForTxnType(NumAssets, TYPE)
 
   rule [[ getTxnField(I, LastLog) => MSG ]]
        <transaction>

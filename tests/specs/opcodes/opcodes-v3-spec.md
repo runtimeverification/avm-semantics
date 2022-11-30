@@ -90,12 +90,12 @@ module OPCODES-V3-SPEC
         <stack> 0 : _ </stack>
         <currentTx> TX_ID </currentTx>
         <transactions>
-          <transaction>
+          (<transaction>
             <txID> TX_ID </txID>
             <typeEnum> @ appl </typeEnum>
             <txType> "appl" </txType>
             ...
-          </transaction>
+          </transaction> => <transaction> ?_ </transaction>)
         </transactions>
         <returncode> 4 => 3 </returncode>
         <currentApplicationID> APP_ID </currentApplicationID>

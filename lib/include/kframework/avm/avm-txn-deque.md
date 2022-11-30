@@ -105,12 +105,17 @@ we will know immediately, since `#pushTxnFront()`/`#pushTxnBack()` would panic.
        <deque> .List </deque>
 
   syntax TxnDequeCommand ::= #popTxnFront()
-  //-----------------------------------------------
+  //---------------------------------------
   rule <k> #popTxnFront() => .K ... </k>
        <deque> ListItem(_TXN_ID) TXNS => TXNS </deque>
 
   rule <k> #popTxnFront() => .K ... </k>
        <deque> .List </deque>
+
+  syntax String ::= getNextTxnID() [function]
+  //-----------------------------------------
+  rule [[ getNextTxnID() => TXN_ID ]]
+       <deque> ListItem(TXN_ID) _ </deque>
 
 endmodule
 ```
