@@ -200,7 +200,7 @@ END:
                 <globalNumInts>   1             </globalNumInts>
                 <globalNumBytes>  0             </globalNumBytes>
                 <globalBytes>     .Map             </globalBytes>
-                <globalInts>      .Map  [Int2Bytes(ASSET_ID, BE, Unsigned) <- SCALING_FACTOR:Int]                </globalInts>
+                <globalInts>      .Map  [padLeftBytes(Int2Bytes(ASSET_ID, BE, Unsigned), 8, 0) <- SCALING_FACTOR:Int]                </globalInts>
               </globalState>
               <clearStatePgmSrc> (int 1 return):TealInputPgm => ?_ </clearStatePgmSrc>
               ...
