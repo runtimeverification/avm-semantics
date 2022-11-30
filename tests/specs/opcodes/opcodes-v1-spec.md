@@ -353,7 +353,7 @@ module OPCODES-V1-SPEC
 
 ```k
   claim <k> itob => . ...</k>
-        <stack> 6382179 : XS => b"abc" : XS </stack>
+        <stack> 6382179 : XS => b"\x00\x00\x00\x00\x00abc" : XS </stack>
         <stacksize> _ </stacksize>
 ```
 </details>
@@ -367,7 +367,7 @@ module OPCODES-V1-SPEC
 
 ```k
   claim <k> btoi => . ...</k>
-        <stack> b"abc" : XS => 6382179 : XS </stack>
+        <stack> b"\x00\x00\x00\x00\x00abc" : XS => 6382179 : XS </stack>
         <stacksize> _ </stacksize>
 ```
 </details>

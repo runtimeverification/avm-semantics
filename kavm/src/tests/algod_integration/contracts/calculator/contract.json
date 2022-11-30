@@ -1,0 +1,74 @@
+{
+  "name": "calculator",
+  "methods": [
+    {
+      "name": "add",
+      "args": [
+        {
+          "type": "uint64",
+          "name": "a"
+        },
+        {
+          "type": "uint64",
+          "name": "b"
+        }
+      ],
+      "returns": {
+        "type": "uint64"
+      },
+      "desc": "sum a and b, return the result"
+    },
+    {
+      "name": "sub",
+      "args": [
+        {
+          "type": "uint64",
+          "name": "a"
+        },
+        {
+          "type": "uint64",
+          "name": "b"
+        }
+      ],
+      "returns": {
+        "type": "uint64"
+      },
+      "desc": "subtract b from a, return the result"
+    },
+    {
+      "name": "mul",
+      "args": [
+        {
+          "type": "uint64",
+          "name": "a"
+        },
+        {
+          "type": "uint64",
+          "name": "b"
+        }
+      ],
+      "returns": {
+        "type": "uint64"
+      },
+      "desc": "multiply a and b, return the result"
+    },
+    {
+      "name": "div",
+      "args": [
+        {
+          "type": "uint64",
+          "name": "a"
+        },
+        {
+          "type": "uint64",
+          "name": "b"
+        }
+      ],
+      "returns": {
+        "type": "uint64"
+      },
+      "desc": "divide a by b, return the result"
+    }
+  ],
+  "networks": {}
+}

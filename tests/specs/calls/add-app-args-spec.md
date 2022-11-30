@@ -139,7 +139,7 @@ claim
    andBool SENDER_BALANCE >=Int SENDER_MIN_BALANCE
    andBool ARG1 +Int ARG2 <=Int MAX_UINT64
 
-  ensures ?APP_RESULT ==K Int2Bytes(ARG1 +Int ARG2, BE, Unsigned)
+  ensures ?APP_RESULT ==K padLeftBytes(Int2Bytes(ARG1 +Int ARG2, BE, Unsigned), 8, 0)
 
 ```
 

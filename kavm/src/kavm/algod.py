@@ -9,6 +9,18 @@ from typing import Any, Dict, Final, Iterable, List, Optional, cast
 
 import msgpack
 from algosdk import encoding
+from algosdk.atomic_transaction_composer import (
+    ABI_RETURN_HASH,
+    ABIResult,
+    AtomicTransactionComposer,
+    AtomicTransactionComposerStatus,
+    AtomicTransactionResponse,
+    abi,
+    base64,
+    error,
+    transaction,
+)
+from algosdk.error import AlgodHTTPError
 from algosdk.future.transaction import PaymentTxn, Transaction
 from algosdk.v2client import algod
 
@@ -16,7 +28,7 @@ from kavm import constants
 from kavm.adaptors.algod_account import KAVMAccount
 from kavm.adaptors.algod_transaction import KAVMTransaction
 from kavm.kavm import KAVM
-from kavm.scenario import KAVMScenario
+from kavm.scenario import KAVMScenario, _sort_dict
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -50,10 +62,15 @@ class KAVMClient(algod.AlgodClient):
     * pretend it is algod.
     """
 
-    def __init__(self, algod_token: str, algod_address: str, faucet_address: str) -> None:
+    def __init__(
+        self,
+        faucet_address: str,
+        algod_token: Optional[str] = None,
+        algod_address: Optional[str] = None,
+        log_level: Optional[int] = None,
+    ) -> None:
         super().__init__(algod_token, algod_address)
         self.pretty_printer = PrettyPrinter(width=41, compact=True)
-        self.set_log_level(logging.DEBUG)
 
         # self._apps = AppCellMap()
         self._committed_txns: Dict[str, Dict[str, Any]] = {}
@@ -119,7 +136,13 @@ class KAVMClient(algod.AlgodClient):
                 }
             elif params[0] == 'pending':
                 if len(params) >= 2:
-                    return self._committed_txns[params[1]]
+                    try:
+                        return self._committed_txns[params[1]]
+                    # hack to temporarily make py-algorand-sdk happy:
+                    # if the txn id is not found, return the last committed txn
+                    except KeyError:
+                        (_, txn) = sorted(self._committed_txns.items())[-1]
+                        return txn
                 else:
                     raise NotImplementedError(f'Endpoint not implemented: {requrl}')
             else:
@@ -135,10 +158,33 @@ class KAVMClient(algod.AlgodClient):
             app_id = int(params[0])
             try:
                 creator_address = self._app_creators[app_id]
-                return self._accounts[creator_address].created_apps[app_id]
             except KeyError as e:
-                raise ValueError(f'Cannot find app with id {app_id}') from e
-
+                raise ValueError(f'Cannot find creator of app {app_id}') from e
+            try:
+                result = list(filter(lambda app: app['id'] == app_id, self._accounts[creator_address].created_apps))
+                return result[0]
+            except (KeyError, IndexError) as e:
+                raise ValueError(
+                    f'Cannot find app with id {app_id} in account {self._accounts[creator_address]}'
+                ) from e
+        elif endpoint == 'status':
+            return {
+                'catchup-time': 0,
+                'last-round': 1000000000000000,
+                'last-version': 'kavm',
+                'next-version': 'kavm',
+                'next-version-round': 0,
+                'next-version-supported': True,
+                'stopped-at-unsupported-round': True,
+                'time-since-last-round': 0,
+                'last-catchpoint': 'kavm',
+                'catchpoint': 'kavm',
+                'catchpoint-total-accounts': 0,
+                'catchpoint-processed-accounts': 0,
+                'catchpoint-verified-accounts': 0,
+                'catchpoint-total-blocks': 0,
+                'catchpoint-acquired-blocks': 0,
+            }
         else:
             _LOGGER.debug(requrl.split('/'))
             raise NotImplementedError(f'Endpoint not implemented: {requrl}')
@@ -205,20 +251,23 @@ class KAVMClient(algod.AlgodClient):
                     self._accounts[txn.receiver] = KAVMAccount(address=txn.receiver, amount=0)
 
         scenario = self._construct_scenario(accounts=self._accounts.values(), transactions=txns)
+        self._last_scenario = scenario
 
         try:
             _LOGGER.debug(f'Executing scenario: {json.dumps(scenario.dictify(), indent=4)}')
             proc_result = self.kavm.run_avm_json(
-                scenario=scenario.to_json(),
-                teals=self.kavm.parse_teals(scenario._teal_files, self._decompiled_teal_dir_path),
+                scenario=scenario,
                 depth=0,
                 output='final-state-json',
+                existing_decompiled_teal_dir=self._decompiled_teal_dir_path,
             )
         except CalledProcessError as e:
             _LOGGER.critical(
                 f'Transaction group evaluation failed, last generated scenario was: {json.dumps(scenario.dictify(), indent=4)}'
             )
-            raise e
+            raise AlgodHTTPError(
+                msg='KAVM has failed, rerun witn --log-level=ERROR to see the executed JSON scenario'
+            ) from e
 
         final_state = {}
         try:
@@ -226,7 +275,7 @@ class KAVMClient(algod.AlgodClient):
             final_state = json.loads(proc_result.stderr)
         except json.decoder.JSONDecodeError as e:
             _LOGGER.critical(f'Failed to parse the final state JSON: {e}')
-            raise
+            raise AlgodHTTPError(msg='KAVM has failed, see logs for reasons') from e
 
         _LOGGER.debug(f'Successfully parsed final state JSON: {json.dumps(final_state, indent=4)}')
         # substitute the tracked accounts by KAVM's state
@@ -234,6 +283,10 @@ class KAVMClient(algod.AlgodClient):
         for acc_dict in KAVMScenario.sanitize_accounts(final_state['accounts']):
             acc_dict_translated = {KAVMAccount.inverted_attribute_map[k]: v for k, v in acc_dict.items()}
             self._accounts[acc_dict_translated['address']] = KAVMAccount(**acc_dict_translated)
+            # update app creators
+            for addr, acc in self._accounts.items():
+                for app in acc.created_apps:
+                    self._app_creators[app['id']] = addr
         # merge confirmed transactions with the ones received from KAVM
         for txn in final_state['transactions']:
             self._committed_txns[txn['id']] = txn['params']
@@ -242,15 +295,16 @@ class KAVMClient(algod.AlgodClient):
     def _construct_scenario(self, accounts: Iterable[KAVMAccount], transactions: Iterable[Transaction]) -> KAVMScenario:
         """Construct a JSON simulation scenario to run on KAVM"""
         scenario = KAVMScenario.from_json(
-            json.dumps(
+            scenario_json_str=json.dumps(
                 {
                     "stages": [
                         {"stage-type": "setup-network", "data": {"accounts": [acc.dictify() for acc in accounts]}},
                         {
-                            "stage-type": "execute-transactions",
+                            "stage-type": "submit-transactions",
                             "data": {
                                 "transactions": [
-                                    KAVMTransaction.sanitize_byte_fields(txn.dictify()) for txn in transactions
+                                    KAVMTransaction.sanitize_byte_fields(_sort_dict(txn.dictify()))
+                                    for txn in transactions
                                 ]
                             },
                             "expected-returncode": 0,
@@ -258,7 +312,106 @@ class KAVMClient(algod.AlgodClient):
                         },
                     ]
                 }
-            )
+            ),
+            teal_sources_dir=self._decompiled_teal_dir_path,
         )
-        scenario.decompile_teal_programs(self._decompiled_teal_dir_path)
         return scenario
+
+
+class KAVMAtomicTransactionComposer(AtomicTransactionComposer):
+    def execute(
+        self, client: algod.AlgodClient, wait_rounds: int, override_tx_ids: Optional[List[str]] = None
+    ) -> "AtomicTransactionResponse":
+        """
+        Send the transaction group to the network and wait until it's committed
+        to a block. An error will be thrown if submission or execution fails.
+        The composer's status must be SUBMITTED or lower before calling this method,
+        since execution is only allowed once. If submission is successful,
+        this composer's status will update to SUBMITTED.
+        If the execution is also successful, this composer's status will update to COMMITTED.
+        Note: a group can only be submitted again if it fails.
+        Args:
+            client (AlgodClient): Algod V2 client
+            wait_rounds (int): maximum number of rounds to wait for transaction confirmation
+        Returns:
+            AtomicTransactionResponse: Object with confirmed round for this transaction,
+                a list of txIDs of the submitted transactions, and an array of
+                results for each method call transaction in this group. If a
+                method has no return value (void), then the method results array
+                will contain None for that method's return value.
+        """
+        if self.status > AtomicTransactionComposerStatus.SUBMITTED:  # type: ignore
+            raise error.AtomicTransactionComposerError(
+                "AtomicTransactionComposerStatus must be submitted or lower to execute a group"
+            )
+
+        self.submit(client)
+        self.status = AtomicTransactionComposerStatus.SUBMITTED
+
+        # HACK: override the real transaction ids with the ones KAVM gave us
+        if override_tx_ids:
+            self.tx_ids = override_tx_ids
+
+        resp = transaction.wait_for_confirmation(client, self.tx_ids[0], wait_rounds)
+
+        self.status = AtomicTransactionComposerStatus.COMMITTED
+
+        confirmed_round = resp["confirmed-round"]
+        method_results = []
+
+        for i, tx_id in enumerate(self.tx_ids):
+            raw_value = None
+            return_value = None
+            decode_error = None
+            tx_info = None
+
+            if i not in self.method_dict:
+                continue
+
+            # Parse log for ABI method return value
+            try:
+                tx_info = client.pending_transaction_info(tx_id)
+                if self.method_dict[i].returns.type == abi.Returns.VOID:
+                    method_results.append(
+                        ABIResult(
+                            tx_id=tx_id,
+                            raw_value=raw_value,
+                            return_value=return_value,
+                            decode_error=decode_error,
+                            tx_info=tx_info,
+                            method=self.method_dict[i],
+                        )
+                    )
+                    continue
+
+                logs = tx_info["logs"] if "logs" in tx_info else []
+
+                # Look for the last returned value in the log
+                if not logs:
+                    raise error.AtomicTransactionComposerError("app call transaction did not log a return value")
+                result = logs[-1]
+                # Check that the first four bytes is the hash of "return"
+                result_bytes = base64.b64decode(result)
+                if len(result_bytes) < 4 or result_bytes[:4] != ABI_RETURN_HASH:
+                    raise error.AtomicTransactionComposerError("app call transaction did not log a return value")
+                raw_value = result_bytes[4:]
+                return_value = self.method_dict[i].returns.type.decode(raw_value)
+            except Exception as e:
+                decode_error = e
+                raise
+
+            abi_result = ABIResult(
+                tx_id=tx_id,
+                raw_value=raw_value,
+                return_value=return_value,
+                decode_error=decode_error,
+                tx_info=tx_info,
+                method=self.method_dict[i],
+            )
+            method_results.append(abi_result)
+
+        return AtomicTransactionResponse(
+            confirmed_round=confirmed_round,
+            tx_ids=self.tx_ids,
+            results=method_results,
+        )
