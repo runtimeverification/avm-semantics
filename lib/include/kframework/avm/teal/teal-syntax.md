@@ -198,6 +198,7 @@ module TEAL-OPCODES
   syntax PseudoOpCode ::= "int" PseudoTUInt64
                         | "byte" TBytesLiteral
                         | "addr" TAddressLiteral
+                        | "method" TBytesLiteral
 ```
 
 #### Blockchain State Accessors
@@ -550,6 +551,7 @@ module TEAL-UNPARSER
   rule unparseTEAL(int I:TUInt64Token)            => "int" +&+ IntToken2String(I)
   rule unparseTEAL(byte ByteConst)                => "byte" +&+ TValue2String(ByteConst:TBytesLiteral)
   rule unparseTEAL(addr AddrConst)                => "addr" +&+ TValue2String(AddrConst:TAddressLiteral)
+  rule unparseTEAL(method S:String)               => "method" +&+ S
   rule unparseTEAL(txn FieldName)                 => "txn" +&+ TealField2String(FieldName:TxnField)
   rule unparseTEAL(txn FieldName ArrIdx)          => "txn" +&+ TealField2String(FieldName:TxnaField) +&+ Int2String(ArrIdx:Int)
   rule unparseTEAL(gtxn TxnIdx TxnField)          => "gtxn" +&+ Int2String(TxnIdx:Int) +&+ TealField2String(TxnField:TxnField)
@@ -657,6 +659,7 @@ module TEAL-UNPARSER
   rule TealField2String(Round)                    => "Round"
   rule TealField2String(LatestTimestamp)          => "LatestTimestamp"
   rule TealField2String(CurrentApplicationID)     => "CurrentApplicationID"
+  rule TealField2String(CreatorAddress)           => "CreatorAddress"
   rule TealField2String(AssetBalance)             => "AssetBalance"
   rule TealField2String(AssetFrozen)              => "AssetFrozen"
   rule TealField2String(AssetTotal)               => "AssetTotal"

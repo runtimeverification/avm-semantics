@@ -274,10 +274,10 @@ Close asset account to
          <address> FROM </address>
          <assetsOptedIn>
            (<optInAsset>
-             <optInAssetID> ASSET_ID </optInAssetID>
-             <optInAssetBalance> BALANCE </optInAssetBalance>
-             ...
-           </optInAsset>) => .Bag
+             <optInAssetID>      ASSET_ID </optInAssetID>
+             <optInAssetBalance> BALANCE  </optInAssetBalance>
+             <optInAssetFrozen>  _        </optInAssetFrozen>
+           </optInAsset> => .Bag)
            ...
          </assetsOptedIn>
          <minBalance> MIN_BALANCE => MIN_BALANCE -Int PARAM_MIN_BALANCE </minBalance>
@@ -648,6 +648,7 @@ Asset transfer with a non-zero amount fails if:
          <xferAsset>     ASSET_ID </xferAsset>
          <assetReceiver> RECEIVER </assetReceiver>
          <assetCloseTo>  CLOSE_TO </assetCloseTo>
+         <assetAmount>   AMOUNT   </assetAmount>
          ...
        </transaction>
        <account>
@@ -660,6 +661,7 @@ Asset transfer with a non-zero amount fails if:
        </account>
     requires SENDER =/=K RECEIVER
      andBool CLOSE_TO ==K getGlobalField(ZeroAddress)
+     andBool AMOUNT >Int 0
      andBool (notBool hasOptedInAsset(ASSET_ID, SENDER)
       orBool notBool hasOptedInAsset(ASSET_ID, RECEIVER))
 
@@ -670,10 +672,12 @@ Asset transfer with a non-zero amount fails if:
          <sender>        SENDER   </sender>
          <assetReceiver> RECEIVER </assetReceiver>
          <xferAsset>     ASSET_ID </xferAsset>
+         <assetAmount>   AMOUNT   </assetAmount>
          ...
        </transaction>
-    requires (hasOptedInAsset(ASSET_ID, SENDER)
-     andBool hasOptedInAsset(ASSET_ID, RECEIVER))
+    requires (AMOUNT >Int 0
+     andBool (hasOptedInAsset(ASSET_ID, SENDER)
+              andBool hasOptedInAsset(ASSET_ID, RECEIVER)))
      andThenBool
             ((getOptInAssetField(AssetFrozen, SENDER, ASSET_ID) ==K 1)
      orBool  (getOptInAssetField(AssetFrozen, RECEIVER, ASSET_ID) ==K 1))

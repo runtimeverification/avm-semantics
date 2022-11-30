@@ -140,7 +140,7 @@ claim
    andBool PAY_TX_ID =/=K TX_ID
    andBool ARG1 +Int ARG2 <=Int MAX_UINT64
 
-  ensures ?APP_RESULT ==K Int2Bytes(ARG1 +Int ARG2, BE, Unsigned)
+  ensures ?APP_RESULT ==K padLeftBytes(Int2Bytes(ARG1 +Int ARG2, BE, Unsigned), 8, 0)
 
 ```
 

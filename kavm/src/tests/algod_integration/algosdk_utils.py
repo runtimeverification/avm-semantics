@@ -8,8 +8,8 @@ from algosdk.future import transaction
 from algosdk.v2client import algod
 
 
-def app_account_address(app_id: int) -> str:
-    return encode_address(checksum(b'appID' + (1).to_bytes(8, 'big')))
+def app_account_address(app_id: int) -> bytes | str:
+    return encode_address(checksum(b'appID' + (app_id).to_bytes(8, 'big')))
 
 
 @typing.no_type_check
@@ -28,7 +28,7 @@ def list_to_dict_apps_created(l):
     return d
 
 
-def generate_and_fund_account(client: algod.AlgodClient, faucet: Dict[str, str]) -> Dict[str, str]:
+def generate_and_fund_account(client: algod.AlgodClient, faucet: Dict[str, str]) -> Dict[str, bytes | str]:
     private_key, address = account.generate_account()
 
     # fund the account from the faucet
@@ -74,15 +74,25 @@ def get_local_bytes(client: algod.AlgodClient, app_id: int, address: str, key: s
 
 
 def get_global_int(client: algod.AlgodClient, app_id: int, key: str) -> Optional[int]:
-    global_state = list_to_dict_state(client.application_info(app_id)['params']['global-state'])
+    global_state = client.application_info(app_id)['params']['global-state']
     encoded_key = b64encode(key.encode('ascii')).decode('ascii')
-    return global_state[encoded_key]['uint']
+    value = None
+    for item in global_state:
+        if item['key'] == encoded_key and item['value']['uint']:
+            value = item['value']['uint']
+    if value:
+        return value
+    else:
+        return None
 
 
 def get_global_bytes(client: algod.AlgodClient, app_id: int, key: str) -> Optional[bytes]:
-    global_state = list_to_dict_state(client.application_info(app_id)['params']['global-state'])
+    global_state = client.application_info(app_id)['params']['global-state']
     encoded_key = b64encode(key.encode('ascii')).decode('ascii')
-    value = global_state[encoded_key]['bytes']
+    value = None
+    for item in global_state:
+        if item['key'] == encoded_key and item['value']['bytes']:
+            value = item['value']['bytes']
     if value:
         return b64decode(value.encode('ascii'))
     else:
