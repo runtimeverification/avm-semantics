@@ -12,12 +12,10 @@ from typing import Any, Final, List, Optional
 from pyk.cli_utils import dir_path, file_path
 from pyk.kast.inner import KApply
 from pyk.kast.manip import get_cell
-from pyk.prelude.kjson import kjson_to_dict
 
+from kavm.kavm import KAVM
 from kavm.kompile import kompile
 from kavm.scenario import KAVMScenario
-
-from .kavm import KAVM
 
 _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
@@ -129,7 +127,9 @@ def exec_run(
                 state_dumps = get_cell(final_state, 'STATE_DUMPS_CELL')
                 assert type(state_dumps) is KApply
                 assert state_dumps.label.name == 'ListItem'
-                state_dump = kjson_to_dict(state_dumps.args[0])
+                state_dump = json.loads(
+                    kavm.pretty_print(state_dumps.args[0]).replace(', .JSONs', '').replace('.JSONs', '')
+                )
                 assert type(state_dump) is dict
                 print(json.dumps(state_dump, indent=4))
             exit(0)

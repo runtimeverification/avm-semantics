@@ -26,7 +26,6 @@ from algosdk.v2client import algod
 
 from pyk.kast.inner import KApply
 from pyk.kast.manip import get_cell
-from pyk.prelude.kjson import kjson_to_dict
 
 from kavm import constants
 from kavm.adaptors.algod_account import KAVMAccount
@@ -277,7 +276,9 @@ class KAVMClient(algod.AlgodClient):
             assert type(state_dumps) is KApply
             assert state_dumps.label.name == 'ListItem'
             _LOGGER.info(f'Converting KJSON to Dict {state_dumps.args[0]}')
-            state_dump = kjson_to_dict(state_dumps.args[0])
+            state_dump = json.loads(
+                self.kavm.pretty_print(state_dumps.args[0]).replace(', .JSONs', '').replace('.JSONs', '')
+            )
             assert type(state_dump) is dict
         except json.decoder.JSONDecodeError as e:
             _LOGGER.critical(f'Failed to parse the final state JSON: {e}')
