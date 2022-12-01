@@ -259,7 +259,7 @@ END:
    andBool END =/=K BUY
    andBool SENDER_BALANCE -Int AMOUNT >=Int SENDER_MIN_BALANCE
    andBool SENDER_MIN_BALANCE >=Int 0
-   andBool SENDER_MIN_BALANCE >=Int 0
+   andBool APP_MIN_BALANCE    >=Int 0
    andBool FUNCTION_NAME ==K b"buy"
    andBool PAY_TX_ID =/=K APPL_TX_ID
    andBool SCALING_FACTOR *Int AMOUNT <=Int MAX_UINT64
@@ -270,6 +270,7 @@ END:
    andBool ASSET_BAL >=Int 0
    andBool AMOUNT >=Int 0
    andBool Int2String(NEXT_GROUP_ID +Int 1) =/=String GROUP_ID
+   andBool ASSET_ID >Int 0
 
 ```
 
