@@ -11,7 +11,7 @@ from pyk.kast.inner import KInner, KSort
 from pyk.kore.parser import KoreParser
 from pyk.kore.syntax import Pattern
 from pyk.ktool.kprint import paren
-from pyk.ktool.krun import KRun
+from pyk.ktool.krun import KRun, _krun, KRunOutput
 from pyk.prelude.k import K
 
 from kavm.scenario import KAVMScenario
@@ -92,30 +92,40 @@ class KAVM(KRun):
 
         with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_scenario_file, (
             existing_decompiled_teal_dir if existing_decompiled_teal_dir else tempfile.TemporaryDirectory()  # type: ignore
-        ) as decompiled_teal_dir:
+        ) as decompiled_teal_dir, tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_teals_file:
 
             _LOGGER.info('Parsing TEAL_PROGRAMS')
             for teal_file, teal_src in scenario._teal_programs.items():
                 (Path(decompiled_teal_dir) / teal_file).write_text(teal_src)
             parsed_teal = self.parse_teals(scenario._teal_programs.keys(), Path(decompiled_teal_dir))
+            tmp_teals_file.write(parsed_teal.text)
+            tmp_teals_file.flush()
 
             _LOGGER.info('Parsing PGM')
             tmp_scenario_file.write(scenario.to_json())
             tmp_scenario_file.flush()
-            _pgm_parsed = run_process(
-                [str(self._scenario_parser), str(tmp_scenario_file.name)], logger=_LOGGER, profile=profile
-            )
-            pgm_parsed = KoreParser(_pgm_parsed.stdout).pattern()
-
-            # _LOGGER.warning(f'Executing scenario: {json.dumps(scenario.dictify(), indent=4, sort_keys=True)}')
             _LOGGER.info('Running KAVM')
-            kore_config = {
-                'TEAL_PROGRAMS': parsed_teal,
-                'PGM': pgm_parsed,
-            }
             os.environ['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
-            final_pattern = self.run_kore_config(kore_config, depth=depth, expand_macros=False)
+
+            proc_result = _krun(
+                input_file=Path(tmp_scenario_file.name),
+                definition_dir=self.definition_dir,
+                output=KRunOutput.KORE,
+                depth=depth,
+                no_expand_macros=False,
+                profile=profile,
+                check=check,
+                cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
+                pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
+            )
+
+            if proc_result.returncode != 0:
+                raise RuntimeError('Non-zero exit-code from krun.')
+
             _LOGGER.info('Converting Kore => Kast')
+            parser = KoreParser(proc_result.stdout)
+            final_pattern = parser.pattern()
+            assert parser.eof
             return self.kore_to_kast(final_pattern)
 
     def kast(
