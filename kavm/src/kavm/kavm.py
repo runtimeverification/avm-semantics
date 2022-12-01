@@ -57,6 +57,7 @@ class KAVM(KRun):
         command += ['--debugger'] if debugger else []
         command += ['--debug-script', str(debug_script)] if debug_script else []
 
+        _LOGGER.info(f"Executing command: {' '.join(command)}")
         return subprocess.run(command, check=True, text=True)
 
     # def extract_teals(self, scenario: str, teal_sources_dir: Path) -> str:
