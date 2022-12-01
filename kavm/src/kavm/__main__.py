@@ -10,11 +10,12 @@ from subprocess import CalledProcessError
 from typing import Any, Final, List, Optional
 
 from pyk.cli_utils import dir_path, file_path
+from pyk.kast.inner import KApply
+from pyk.kast.manip import get_cell
 
+from kavm.kavm import KAVM
 from kavm.kompile import kompile
 from kavm.scenario import KAVMScenario
-
-from .kavm import KAVM
 
 _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
@@ -119,21 +120,19 @@ def exec_run(
     try:
         if input_file.suffix == '.json':
             scenario = KAVMScenario.from_json(input_file.read_text(), teal_sources_dir)
-            proc_result = kavm.run_avm_json(
-                scenario=scenario,
-                # teals=kavm.parse_teals(scenario._teal_files, Path(decompiled_teal_dir)),
-                output=output,
-                profile=profile,
-                depth=depth if depth else 0,
-            )
+            final_state = kavm.run_avm_json(scenario=scenario, profile=profile, depth=depth)
             if not output in ['none', 'final-state-json']:
-                print(proc_result.stdout)
-            if output == 'final-state-json' and proc_result.returncode == 0:
-                print(json.dumps(json.loads(proc_result.stderr), indent=4))
-            if proc_result.returncode:
-                print(proc_result.stdout)
-                print(proc_result.stderr)
-            exit(proc_result.returncode)
+                print(kavm.pretty_print(final_state))
+            if output == 'final-state-json':
+                state_dumps = get_cell(final_state, 'STATE_DUMPS_CELL')
+                assert type(state_dumps) is KApply
+                assert state_dumps.label.name == 'ListItem'
+                state_dump = json.loads(
+                    kavm.pretty_print(state_dumps.args[0]).replace(', .JSONs', '').replace('.JSONs', '')
+                )
+                assert type(state_dump) is dict
+                print(json.dumps(state_dump, indent=4))
+            exit(0)
         else:
             print(f'Unrecognized input file extension: {input_file.suffix}')
             exit(1)
