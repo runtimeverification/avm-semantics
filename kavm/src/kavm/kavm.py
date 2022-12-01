@@ -27,7 +27,7 @@ class KAVM(KRun):
     def __init__(
         self,
         definition_dir: Path,
-        use_directory: Any = None,
+        use_directory: Optional[Path] = None,
         teal_parser: Optional[Path] = None,
         scenario_parser: Optional[Path] = None,
     ) -> None:
