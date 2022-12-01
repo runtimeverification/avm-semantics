@@ -43,9 +43,12 @@ class KAVM(KRun):
         main_file: Path,
         debugger: bool,
         debug_script: Path,
+        haskell_backend_command: Optional[str] = None,
     ) -> CompletedProcess:
         command = [
             'kprove',
+            '--haskell-backend-command',
+            haskell_backend_command if haskell_backend_command else 'kore-exec',
             '--definition',
             str(definition),
             str(main_file),
