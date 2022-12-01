@@ -57,53 +57,6 @@ class KAVM(KRun):
 
         return subprocess.run(command, check=True, text=True)
 
-    # def extract_teals(self, scenario: str, teal_sources_dir: Path) -> str:
-    #     """Extract TEAL programs filenames and source code from a test scenario"""
-    #     parsed_scenario = json.loads(scenario)
-    #     teal_paths = set()
-    #     try:
-    #         setup_network_stage = [
-    #             stage for stage in parsed_scenario['stages'] if stage['stage-type'] == 'setup-network'
-    #         ][0]
-    #     except KeyError as e:
-    #         raise ValueError(f'Test scenario {scenario} does not contain a "setup-network" stage') from e
-    #     for acc in setup_network_stage['data']['accounts']:
-    #         for app in acc['created-apps']:
-    #             teal_paths.add(app['params']['approval-program'])
-    #             teal_paths.add(app['params']['clear-state-program'])
-
-    #     try:
-    #         execute_transactions_stage = [
-    #             stage for stage in parsed_scenario['stages'] if stage['stage-type'] == 'execute-transactions'
-    #         ][0]
-    #     except KeyError as e:
-    #         raise ValueError(f'Test scenario {scenario} does not contain an "execute-transactions" stage') from e
-    #     for txn in execute_transactions_stage['data']['transactions']:
-    #         if 'apap' in txn:
-    #             teal_paths.add(txn['apap'])
-    #         if 'apsu' in txn:
-    #             teal_paths.add(txn['apsu'])
-
-    #     def run_process_on_bison_parser(path: Path) -> str:
-    #         command = [self._teal_parser] + [str(path)]
-    #         res = subprocess.run(command, stdout=subprocess.PIPE, check=True, text=True)
-
-    #         return res.stdout
-
-    #     map_union_op = "Lbl'Unds'Map'Unds'{}"
-    #     map_item_op = "Lbl'UndsPipe'-'-GT-Unds'{}"
-    #     empty_map_label = "Lbl'Stop'Map{}()"
-    #     current_teal_pgms_map = empty_map_label
-    #     for teal_path in teal_paths:
-    #         teal_path_parsed = 'inj{SortString{},SortKItem{}}(\\dv{SortString{}}("' + str(teal_path) + '"))'
-    #         teal_parsed = (
-    #             'inj{SortTealInputPgm{},SortKItem{}}(' + run_process_on_bison_parser(teal_sources_dir / teal_path) + ')'
-    #         )
-    #         teal_kore_map_item = map_item_op + '(' + teal_path_parsed + ',' + teal_parsed + ')'
-    #         current_teal_pgms_map = map_union_op + "(" + current_teal_pgms_map + "," + teal_kore_map_item + ")"
-
-    #     return current_teal_pgms_map
-
     def parse_teals(self, teal_paths: Iterable[str], teal_sources_dir: Path) -> Pattern:
         """Extract TEAL programs filenames and source code from a test scenario"""
 
