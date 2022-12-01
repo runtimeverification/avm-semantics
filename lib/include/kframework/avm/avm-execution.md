@@ -57,13 +57,23 @@ and the current configuration is frozen for examination.
 ```k
   // #evalTxGroup
   //---------------------------------------
-  rule <k> #evalTxGroup() => #initTxnIndexMap() ~> #evalNextTx() ...</k>
+  rule <k> #evalTxGroup() => #initTxnIndexMap() ~> #evalFirstTx() ...</k>
 
-  syntax AlgorandCommand ::= #evalNextTx()
+  syntax AlgorandCommand ::= #evalFirstTx()
+                           | #evalNextTx()
+
+  rule <k> #evalFirstTx() => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalNextTx() ... </k>
+       <deque> TXN_DEQUE </deque>
+    requires TXN_DEQUE =/=K .List
 
   rule <k> #evalNextTx() => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalNextTx() ... </k>
        <deque> TXN_DEQUE </deque>
-    requires TXN_DEQUE =/=K .List
+    requires TXN_DEQUE =/=K .List andBool (getTxnGroupID(getNextTxnID()) ==K getTxnGroupID(getCurrentTxn()))
+
+  // Finish executing inner transaction group and resume next outer layer
+  rule <k> #evalNextTx() => #getNextTxn() ~> #evalTx() ... </k>
+       <deque> TXN_DEQUE </deque>
+    requires TXN_DEQUE =/=K .List andBool (getTxnGroupID(getNextTxnID()) =/=K getTxnGroupID(getCurrentTxn()))
 
   // Minimum balances are only checked at the conclusion of the outer-level group.
   rule <k> #evalNextTx() => #checkSufficientBalance() ... </k>
@@ -93,8 +103,11 @@ the attached stateless TEAL if the transaction is logicsig-signed.
              #initContext()
           ~> #checkTxnSignature() 
           ~> #executeTxn(TXN_TYPE) 
+          ~> #if (getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)) #then .K #else #finalizeExecution() #fi
        ... 
        </k>
+       <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
+       <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID> TXN_ID </txID>
@@ -103,7 +116,7 @@ the attached stateless TEAL if the transaction is logicsig-signed.
          <sender> SENDER_ADDR </sender>
          ...
        </transaction>
-       <touchedAccounts> .Set => SetItem(SENDER_ADDR) ...</touchedAccounts>
+       <touchedAccounts> TA => addToListNoDup(SENDER_ADDR, TA) </touchedAccounts>
 
   rule <k> #evalTx() => #restoreContext() ~> #evalTeal() ... </k>
        <currentTx> TXN_ID </currentTx>
@@ -114,7 +127,7 @@ the attached stateless TEAL if the transaction is logicsig-signed.
          <sender> SENDER_ADDR </sender>
          ...
        </transaction>
-       <touchedAccounts> .Set => SetItem(SENDER_ADDR) ...</touchedAccounts>
+       <touchedAccounts> TA => addToListNoDup(SENDER_ADDR, TA) </touchedAccounts>
 
 ```
 
@@ -303,10 +316,10 @@ Add asset to account
   syntax AlgorandCommand ::= #checkSufficientBalance()
   //--------------------------------------------------
   rule <k> #checkSufficientBalance() => (#checkSufficientBalance(ADDR) ~> #checkSufficientBalance()) ...</k>
-       <touchedAccounts> (SetItem(ADDR) => .Set) ...</touchedAccounts>
+       <touchedAccounts> (ListItem(ADDR) => .List) ...</touchedAccounts>
 
   rule <k> #checkSufficientBalance() => . ...</k>
-       <touchedAccounts> .Set </touchedAccounts>
+       <touchedAccounts> .List </touchedAccounts>
   
   syntax AlgorandCommand ::= #checkSufficientBalance(Bytes)
   //-------------------------------------------------------
@@ -346,9 +359,7 @@ TODO: address contact creation.
 ```k
   syntax AlgorandCommand ::= #evalTeal()
 
-  rule <k> #evalTeal() => #startExecution() ~> #saveScratch() ... </k>
-       <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
-       <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
+  rule <k> #evalTeal() => #startExecution() ... </k>
 
   syntax AlgorandCommand ::= #loadInputPgm( TealInputPgm )
 
@@ -391,7 +402,11 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
          <balance> RECEIVER_BALANCE => RECEIVER_BALANCE +Int AMOUNT </balance>
          ...
        </account>
-       <touchedAccounts> (.Set => SetItem(RECEIVER)) ...</touchedAccounts>
+       <touchedAccounts> TA => addToListNoDup(RECEIVER, TA) </touchedAccounts>
+
+  syntax List ::= addToListNoDup(Bytes, List) [function, total]
+  rule addToListNoDup(X, L) => ListItem(X) L requires notBool(X in L)
+  rule addToListNoDup(X, L) => L requires X in L
 
   rule <k> #executeTxn(@pay) => panic(INSUFFICIENT_FUNDS) ... </k>
        <currentTx> TXN_ID </currentTx>
@@ -631,6 +646,7 @@ Asset transfer with a non-zero amount fails if:
          <txID>          TXN_ID   </txID>
          <sender>        SENDER   </sender>
          <xferAsset>     ASSET_ID </xferAsset>
+         <assetReceiver> RECEIVER </assetReceiver>
          <assetCloseTo>  CLOSE_TO </assetCloseTo>
          <assetAmount>   AMOUNT   </assetAmount>
          ...

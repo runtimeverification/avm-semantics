@@ -84,7 +84,7 @@ module AVM-CONFIGURATION
 
         // Accounts for which a check will be made at the end of the top-level transaction group to ensure their balance is at 
         // or above their minimum balance
-        <touchedAccounts> .Set </touchedAccounts>
+        <touchedAccounts> .List </touchedAccounts>
 
       </avmExecution>
 

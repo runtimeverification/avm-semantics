@@ -1347,7 +1347,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
   //-------------------------------------------
   rule <k> loadFromGroup(GROUP_IDX, FIELD) => . ... </k>
        <stacksize> S => S +Int 1 </stacksize>
-       <stack> XS => {getGroupFieldByIdx(GROUP_ID, GROUP_IDX, FIELD)}:>TValue : XS </stack>
+       <stack> XS => fromMaybeTVal(getGroupFieldByIdx(GROUP_ID, GROUP_IDX, FIELD)) : XS </stack>
        <currentTx> CURRENT_TX_ID </currentTx>
        <transaction>
          <txID> CURRENT_TX_ID </txID>
@@ -1382,10 +1382,14 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        </transaction>
     requires notBool(isTValue(getGroupFieldByIdx(GROUP_ID, GROUP_IDX, FIELD)))
 
+  syntax TValue ::= fromMaybeTVal(MaybeTValue) [function]
+
+  rule fromMaybeTVal(V:TValue) => V
+
   syntax KItem ::= loadFromGroup(Int, TxnaField, Int)
   //-------------------------------------------------
   rule <k> loadFromGroup(GROUP_IDX, FIELD, IDX) => . ...</k>
-       <stack> XS => {getGroupFieldByIdx(GROUP_ID, GROUP_IDX, FIELD, IDX)}:>TValue : XS </stack>
+       <stack> XS => fromMaybeTVal(getGroupFieldByIdx(GROUP_ID, GROUP_IDX, FIELD, IDX)) : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
        <currentTx> CURRENT_TX_ID </currentTx>
        <transaction>
@@ -1859,8 +1863,11 @@ Stateful TEAL Operations
 
 ```k
   rule <k> app_global_get =>
-           #app_global_get getAppGlobal(getGlobalField(CurrentApplicationID), KEY) ... </k>
+           #app_global_get getAppGlobal(getAppCell({AC[{getGlobalField(CurrentApplicationID)}:>Int]}:>Bytes, {getGlobalField(CurrentApplicationID)}:>Int), KEY) ... </k>
        <stack> (KEY:Bytes) : _ </stack>
+       <appCreator>
+         AC
+       </appCreator>
 
   syntax KItem ::= "#app_global_get" TValue
   //---------------------------------------
@@ -1876,9 +1883,31 @@ Stateful TEAL Operations
 *app_global_get_ex*
 
 ```k
+
+  syntax KItem ::= testAbc(Bytes, Int)
+  rule <k> testAbc(CREATOR_ADDR, APP_ID) => getAppCell(CREATOR_ADDR, APP_ID) ... </k>
+
+  syntax AppCell ::= getAppCell(Bytes, Int) [function]
+  rule [[ getAppCell(CREATOR_ADDR, APP_ID) => <app> <appID> APP_ID </appID> APP_DATA </app> ]]
+       <account>
+         <address> CREATOR_ADDR </address>
+         <app>
+           <appID> APP_ID </appID>
+           APP_DATA
+         </app>
+         ...
+       </account>
+
+  rule getAppCell(_, APP_ID) => <app> <appID> APP_ID </appID> ... </app> [owise]
+
+
   rule <k> app_global_get_ex =>
-           #app_global_get_ex getAppGlobal({appReference(APP)}:>TValue, KEY) ... </k>
+           #app_global_get_ex getAppGlobal(getAppCell({AC[{appReference(APP)}:>Int]}:>Bytes, {appReference(APP)}:>Int), KEY) ... </k>
        <stack> (KEY:Bytes) : (APP:TUInt64) : _ </stack>
+       <appCreator>
+         AC
+       </appCreator>
+
     requires isTValue(appReference(APP))
 
   rule <k> app_global_get_ex => panic(TXN_ACCESS_FAILED) ... </k>
@@ -2732,7 +2761,7 @@ Stateful TEAL Operations
        </innerTransactions>
        <nextGroupID> GROUP_ID => GROUP_ID +Int 1 </nextGroupID>
 
-  rule <k> itxn_submit => #incrementPC() ~> #checkItxns(T) ~> #executeItxnGroup()...</k>
+  rule <k> (itxn_submit ~> #incrementPC() ~> #fetchOpcode()) => (#incrementPC() ~> #checkItxns(T) ~> #executeItxnGroup()) ...</k>
        <innerTransactions> T </innerTransactions>
        <lastTxnGroupID> _ => Int2String(GROUP_ID) </lastTxnGroupID>
        <nextGroupID> GROUP_ID </nextGroupID>
