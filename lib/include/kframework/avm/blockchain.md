@@ -635,54 +635,35 @@ Accessor functions
   // if the account exists but is not opted in, or does not exist, return NoTValue
   rule getAppLocal(_, _, _) => NoTValue [owise]
 
-  syntax TValue ::= getAppGlobal(TValue, TValue) [function]
+  syntax TValue ::= getAppGlobal(AppCell, TValue) [function, total]
   // ---------------------------------------------------
-  rule [[ getAppGlobal(APP, KEY) => V ]]
-       <appsCreated>
-         <app>
-           <appID> APP </appID>
-           <globalState>
-             <globalInts> KEY |-> V ... </globalInts>
-             ...
-           </globalState>
-           ...
-         </app>
-         ...
-       </appsCreated>
-  rule [[ getAppGlobal(APP, KEY) => V ]]
-       <appsCreated>
-         <app>
-           <appID> APP </appID>
-           <globalState>
-             <globalBytes> KEY |-> V ... </globalBytes>
-             ...
-           </globalState>
-           ...
-         </app>
-         ...
-       </appsCreated>
 
-  // if the key doesn't exist, return -1
-  rule [[ getAppGlobal(APP, KEY) => -1 ]]
-       <appsCreated>
-         <app>
-           <appID> APP </appID>
-           <globalState>
-             <globalInts> MI </globalInts>
-             <globalBytes> MB </globalBytes>
-             ...
-           </globalState>
-           ...
-         </app>
-         ...
-       </appsCreated>
-    requires notBool ((KEY in_keys (MI)) orBool (KEY in_keys(MB)))
+  rule getAppGlobal(<app>
+                      <globalState>
+                        <globalInts> GI:Map </globalInts>
+                        <globalBytes> GB:Map </globalBytes>
+                        ...
+                      </globalState>
+                      ...
+                    </app>, KEY) =>
+          {GI[KEY]}:>Int
+    requires ((KEY in_keys(GI)) andThenBool (isInt(GI[KEY])))
+     andBool notBool (KEY in_keys(GB)) 
 
-  // if the app doesn't exist, return -1
-  rule [[ getAppGlobal(APP, _) => -1 ]]
-       <accountsMap> AMAP  </accountsMap>
-    requires notBool (APP in_apps(<accountsMap> AMAP </accountsMap>))
+  rule getAppGlobal(<app>
+                      <globalState>
+                        <globalInts> GI:Map </globalInts>
+                        <globalBytes> GB:Map </globalBytes>
+                        ...
+                      </globalState>
+                      ...
+                    </app>, KEY) =>
+          {GB[KEY]}:>Bytes
+    requires ((KEY in_keys(GB)) andThenBool (isBytes(GB[KEY])))
+     andBool notBool (KEY in_keys(GI)) 
 
+  // if the app or key doesn't exist, return -1
+  rule getAppGlobal(_, _) => -1 [owise]
 
   syntax Bool ::= appCreated(TValue) [function]
   // -----------------------------------------

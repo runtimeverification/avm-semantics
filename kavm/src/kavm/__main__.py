@@ -56,14 +56,10 @@ def exec_prove(
     main_file: Path,
     debugger: bool,
     debug_script: Path,
+    haskell_backend_command: Optional[str],
     **kwargs: Any,
 ) -> None:
-    proc_result = KAVM.prove(
-        definition,
-        main_file,
-        debugger,
-        debug_script,
-    )
+    proc_result = KAVM.prove(definition, main_file, debugger, debug_script, haskell_backend_command)
     exit(proc_result.returncode)
 
 
@@ -229,6 +225,7 @@ def create_argument_parser() -> ArgumentParser:
     prove_subparser.add_argument('--definition', type=dir_path)
     prove_subparser.add_argument('--debugger', default=False, action='store_true')
     prove_subparser.add_argument('--debug-script', type=file_path)
+    prove_subparser.add_argument('--haskell-backend-command', type=str)
 
     # kast
     kast_subparser = command_parser.add_parser('kast', help='Kast a term', parents=[shared_args])

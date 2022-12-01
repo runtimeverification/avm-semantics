@@ -43,9 +43,12 @@ class KAVM(KRun):
         main_file: Path,
         debugger: bool,
         debug_script: Path,
+        haskell_backend_command: Optional[str] = None,
     ) -> CompletedProcess:
         command = [
             'kprove',
+            '--haskell-backend-command',
+            haskell_backend_command if haskell_backend_command else 'kore-exec',
             '--definition',
             str(definition),
             str(main_file),
@@ -54,6 +57,7 @@ class KAVM(KRun):
         command += ['--debugger'] if debugger else []
         command += ['--debug-script', str(debug_script)] if debug_script else []
 
+        _LOGGER.info(f"Executing command: {' '.join(command)}")
         return subprocess.run(command, check=True, text=True)
 
     # def extract_teals(self, scenario: str, teal_sources_dir: Path) -> str:

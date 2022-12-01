@@ -4,13 +4,14 @@ requires "avm/avm-execution.md"
 module VERIFICATION
   imports AVM-EXECUTION
   imports TEAL-TYPES
+//  imports SET-SYMBOLIC
 
 
   syntax StepSort ::= MaybeTValue
 // ------------------------------------------------
 
-  syntax KItem ::= runLemma ( StepSort )
-                 | doneLemma( StepSort )
+  syntax KItem ::= runLemma ( KItem )
+                 | doneLemma( KItem )
 // --------------------------------------
   rule runLemma( T ) => doneLemma( T )
 
@@ -68,6 +69,18 @@ module VERIFICATION
 ////////////////////////////////////////////////////////////////////////////////
   
   rule _ in .Set => false [simplification]
+
+  rule X in (SetItem(Y) S:Set) => X in S requires X =/=K Y [simplification]
+
+////////////////////////////////////////////////////////////////////////////////
+// List reasoning
+////////////////////////////////////////////////////////////////////////////////
+  
+  rule _ in .List => false [simplification]
+
+  rule X in (ListItem(Y) L:List) => X in L requires X =/=K Y [simplification]
+
+  rule X in (ListItem(X) _:List) => true [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // TStack
@@ -168,8 +181,8 @@ module VERIFICATION
   // rule getAppAddressBytes(APP_ID:Int) => padLeftBytes(b"appID" +Bytes Int2Bytes(8, APP_ID, BE), 58, 0) [simplification]
   // The following lemma does the jon of the commented-out lemma for getAppAddressBytes, which
   // does not apply because the rule for getAppAddressBytes applies first
-  rule String2Bytes(Sha512_256raw(S:String)) => padLeftBytes(String2Bytes(S), 58, 0)  [simplification, concrete]
-  rule Sha512_256raw(S:String) => S  [simplification, symbolic]
+
+  rule Sha512_256raw(S:String) => Bytes2String(padLeftBytes(String2Bytes(S), 58, 0)) [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Cryptographic function hooks 
