@@ -2,6 +2,7 @@ import glob
 import os
 from os.path import abspath
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -17,13 +18,13 @@ def scenario_files() -> list:
 
 
 @pytest.fixture(scope="session")
-def kavm_run_dir(tmp_path_factory):
+def kavm_run_dir(tmp_path_factory: Any) -> Path:
     tmp_path_factory._retention_policy = 'failed'
     return tmp_path_factory.mktemp(".kavm")
 
 
 @pytest.mark.parametrize("filename", scenario_files())
-def test_run_simulation(filename: str, kavm_run_dir) -> None:
+def test_run_simulation(filename: str, kavm_run_dir: Path) -> None:
     if not os.environ.get('KAVM_DEFINITION_DIR'):
         raise RuntimeError('Cannot access KAVM_DEFINITION_DIR environment variable. Is it set?')
 

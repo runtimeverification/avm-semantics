@@ -4,14 +4,14 @@ import subprocess
 import tempfile
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Any, Callable, Dict, Final, Iterable, List, Optional, Union
+from typing import Callable, Dict, Final, Iterable, List, Optional, Union
 
 from pyk.cli_utils import run_process
 from pyk.kast.inner import KInner, KSort
 from pyk.kore.parser import KoreParser
 from pyk.kore.syntax import Pattern
 from pyk.ktool.kprint import paren
-from pyk.ktool.krun import KRun, _krun, KRunOutput
+from pyk.ktool.krun import KRun, KRunOutput, _krun
 from pyk.prelude.k import K
 
 from kavm.scenario import KAVMScenario
