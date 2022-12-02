@@ -17,13 +17,24 @@ def parse_program(file: Path):
     return KInner.from_dict(json.loads(result.stdout)["term"])
 
 
+def python_list_to_bytes_list(bl: List[KInner]):
+    if bl == []:
+        return KToken(".BytesList", "BytesList")
+    else:
+        return KApply(
+            "___KAVM-MINI_BytesList_Bytes_BytesList",
+            bl[0],
+            python_list_to_bytes_list(bl[1:]),
+        )
+
+
 class KAVMTransaction:
     def __init__(
         self,
         txn_id: KInner,
         program_file: Path,
-        args: List[str],
-        foreign_accts: List[str],
+        args: List[KInner],
+        foreign_accts: List[KInner],
     ):
         self._txn_id = txn_id
         self._args = args
@@ -44,8 +55,10 @@ class KAVMTransaction:
             [
                 KApply("<txID>", self._txn_id),
                 KApply("<pgm>", self._program),
-                KApply("<args>", KToken(".BytesList", "BytesList")),
-                KApply("<foreignAccounts>", KToken(".BytesList", "BytesList")),
+                KApply("<args>", python_list_to_bytes_list(self._args)),
+                KApply(
+                    "<foreignAccounts>", python_list_to_bytes_list(self._foreign_accts)
+                ),
             ],
         )
 
@@ -71,23 +84,23 @@ class KAVMAccount:
 
 class KAVMProof:
     def __init__(self):
-        print("__init__")
         self._txns = []
         self._accts = []
+        self._preconditions = []
 
     def add_txn(self, txn: KAVMTransaction):
-        print("add_txn")
         self._txns.append(txn.to_kast())
 
     def add_acct(self, acct: KAVMAccount):
-        print("add_acct")
         self._accts.append(acct.to_kast())
+
+    def add_precondition(self, pc: KInner):
+        self._preconditions.append(pc)
 
     def add_postcondition(self):
         print("not implemented.")
 
     def prove(self):
-        print("prove")
 
         transactions_kast = KApply(
             "<transactions>",
@@ -136,10 +149,14 @@ class KAVMProof:
             ],
         )
 
+        requires = build_assoc(
+            KToken("true", "Bool"), KLabel("_andBool_"), self._preconditions
+        )
+
         claim = KClaim(
             body=KRewrite(lhs, rhs),
-            #            requires=requires,
-            #            ensures=ensures
+            requires=requires,
+            # ensures=ensures
         )
 
         proof = KProve(definition_dir="verification-kompiled/")
@@ -147,7 +164,24 @@ class KAVMProof:
 
         defn = read_kast_definition("verification-kompiled/parsed.json")
         symbol_table = build_symbol_table(defn)
-        print(pretty_print_kast(result, symbol_table=symbol_table))
+
+        if type(result) is KApply and result.label.name == '#Top':
+            print('Proved claim')
+        else:
+            print('Failed to prove claim')
+            print('counterexample:')
+
+            for condition in flatten_conditions(result):
+                print(pretty_print_kast(condition, symbol_table=symbol_table))
+
+
+def flatten_conditions(term: KInner):
+    if term.label.name == "#And":
+        return flatten_conditions(term.args[0]) + flatten_conditions(term.args[1])
+    if term.label.name == '<generatedTop>':
+        return []
+    else:
+        return [term]
 
 
 def main():
@@ -155,8 +189,8 @@ def main():
     txn = KAVMTransaction(
         txn_id=KVariable("TX_ID"),
         program_file="test.teal",
-        args=[],
-        foreign_accts=[],
+        args=[KVariable("ARG1"), KVariable("ARG2")],
+        foreign_accts=[KVariable("ACCT1_ADDR"), KVariable("ACCT2_ADDR")],
     )
 
     acct1 = KAVMAccount(
@@ -172,6 +206,7 @@ def main():
     kavm_proof.add_txn(txn)
     kavm_proof.add_acct(acct1)
     kavm_proof.add_acct(acct2)
+    #    kavm_proof.add_precondition()
     kavm_proof.add_postcondition()
     kavm_proof.prove()
 
