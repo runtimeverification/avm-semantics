@@ -37,6 +37,10 @@ module KAVM-MINI
 
   syntax KItem ::= #incrementPC()
 
+  syntax Int ::= "MAX_UINT_64" [macro]
+
+  rule MAX_UINT_64 => 18446744073709551615
+
   syntax BytesList ::= Bytes BytesList
                      | ".BytesList"
   syntax Bytes ::= BytesList "[" Int "]" [function]
@@ -100,6 +104,7 @@ module KAVM-MINI
 
   rule <k> + => . ... </k>
        <stack> I2:Int : I1:Int : XS:TStack => (I1 +Int I2) : XS </stack>
+    requires I1 +Int I2 <=Int MAX_UINT_64
 
   rule <k> btoi => . ... </k>
        <stack> B:Bytes : XS:TStack => Bytes2Int(B, BE, Unsigned) : XS </stack>
