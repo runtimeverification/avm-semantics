@@ -3,19 +3,23 @@
 import json
 import logging
 import os
+import subprocess
 import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from subprocess import CalledProcessError
-from typing import Any, Final, List, Optional
+from typing import Any, Callable, Final, Iterable, List, Optional, TypeVar
 
 from pyk.cli_utils import dir_path, file_path
 from pyk.kast.inner import KApply
-from pyk.kast.manip import get_cell
+from pyk.kast.manip import get_cell, minimize_term
+from pyk.ktool.kprove import KoreExecLogFormat
 
 from kavm.kavm import KAVM
 from kavm.kompile import kompile
 from kavm.scenario import KAVMScenario
+
+T = TypeVar('T')
 
 _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
@@ -53,15 +57,80 @@ def exec_kompile(
 
 
 def exec_prove(
-    definition: Path,
-    main_file: Path,
-    debugger: bool,
-    debug_script: Path,
-    haskell_backend_command: Optional[str],
+    definition_dir: Path,
+    spec_file: Path,
+    bug_report: bool = False,
+    depth: Optional[int] = None,
+    debug_equations: Iterable[str] = (),
+    claims: Iterable[str] = (),
+    exclude_claims: Iterable[str] = (),
+    profile: bool = False,
+    minimize: bool = True,
+    haskell_log_format: str = KoreExecLogFormat.ONELINE.value,
+    haskell_log_debug_transition: bool = True,
+    haskell_log_entries: Iterable[str] = (),
     **kwargs: Any,
 ) -> None:
-    proc_result = KAVM.prove(definition, main_file, debugger, debug_script, haskell_backend_command)
-    exit(proc_result.returncode)
+    kavm = KAVM(definition_dir=definition_dir, profile=profile)
+    prove_args = []
+    haskell_args = []
+    for de in debug_equations:
+        haskell_args += ['--debug-equation', de]
+    if bug_report:
+        haskell_args += ['--bug-report', str(spec_file.with_suffix(''))]
+    if depth is not None:
+        prove_args += ['--depth', str(depth)]
+    if claims:
+        prove_args += ['--claims', ','.join(claims)]
+    if exclude_claims:
+        prove_args += ['--exclude', ','.join(exclude_claims)]
+    try:
+        final_state = kavm.prove(
+            spec_file=spec_file,
+            args=prove_args,
+            haskell_args=haskell_args,
+            haskell_log_entries=haskell_log_entries if haskell_log_entries else [],
+            haskell_log_format=KoreExecLogFormat(haskell_log_format),
+            haskell_log_debug_transition=haskell_log_debug_transition,
+        )
+        if not (type(final_state) is KApply and final_state.label.name == '#Top'):
+            _LOGGER.error(f'Proof failed! See log file: {spec_file.resolve().name}.debug-log')
+            sys.exit(1)
+        if minimize:
+            final_state = minimize_term(final_state)
+        print(kavm.pretty_print(final_state) + '\n')
+    except RuntimeError as e:
+        error_msg = f'Proof failed! See log file: {spec_file.resolve().name}.debug-log'
+        _LOGGER.error(error_msg)
+        raise RuntimeError(error_msg) from e
+
+
+def exec_kore_repl(
+    definition: Path,
+    spec_file: Path,
+    debugger: bool,
+    debug_script: Path,
+    **kwargs: Any,
+) -> None:
+    command = [
+        'kprove',
+        '--definition',
+        str(definition),
+        str(spec_file),
+    ]
+
+    command += ['--debugger'] if debugger else []
+    command += ['--debug-script', str(debug_script)] if debug_script else []
+
+    _LOGGER.info(f"Executing command: {' '.join(command)}")
+
+    try:
+        proc_result = subprocess.run(command, check=True, text=True)
+        print(proc_result.stdout)
+    except CalledProcessError as err:
+        raise RuntimeError(
+            f'Command kprove exited with code {err.returncode} for: {spec_file}', err.stdout, err.stderr
+        ) from err
 
 
 def exec_kast(
@@ -149,7 +218,9 @@ def main() -> None:
         if env_definition_dir:
             args.definition_dir = Path(env_definition_dir)
         else:
-            raise RuntimeError('Cannot find KAVM definition, plese specify either --definition or KAVM_DEFINITION_DIR')
+            raise RuntimeError(
+                'Cannot find KAVM definition, plese specify either --definition-dir or KAVM_DEFINITION_DIR'
+            )
 
     executor_name = 'exec_' + args.command.lower().replace('-', '_')
     if executor_name not in globals():
@@ -160,6 +231,12 @@ def main() -> None:
 
 
 def create_argument_parser() -> ArgumentParser:
+    def list_of(elem_type: Callable[[str], T], delim: str = ';') -> Callable[[str], List[T]]:
+        def parse(s: str) -> List[T]:
+            return [elem_type(elem) for elem in s.split(delim)]
+
+        return parse
+
     parser = ArgumentParser(prog='kavm')
 
     shared_args = ArgumentParser(add_help=False)
@@ -220,16 +297,38 @@ def create_argument_parser() -> ArgumentParser:
 
     # prove
     prove_subparser = command_parser.add_parser('prove', help='Prove claims', parents=[shared_args])
-    prove_subparser.add_argument('main_file', type=file_path, help='Path to the main file')
-    prove_subparser.add_argument('--definition', type=dir_path)
+    prove_subparser.add_argument('spec_file', type=file_path, help='Path to the K spec file')
+    prove_subparser.add_argument('--definition-dir', dest='definition_dir', type=dir_path)
     prove_subparser.add_argument('--debugger', default=False, action='store_true')
     prove_subparser.add_argument('--debug-script', type=file_path)
-    prove_subparser.add_argument('--haskell-backend-command', type=str)
+    prove_subparser.add_argument(
+        '--haskell-log-format',
+        type=str,
+        choices=[f.value for f in KoreExecLogFormat],
+        default=KoreExecLogFormat.ONELINE.value,
+    )
+    prove_subparser.add_argument(
+        '--debug-equations', type=list_of(str, delim=','), default=[], help='Comma-separate list of equations to debug.'
+    )
+    prove_subparser.add_argument(
+        '--haskell-log-entries',
+        type=list_of(str, delim=','),
+        default=[],
+    )
+
+    # kore-repl
+    kore_repl_subparser = command_parser.add_parser(
+        'kore-repl', help='Prove claims interactively', parents=[shared_args]
+    )
+    kore_repl_subparser.add_argument('spec_file', type=file_path, help='Path to the spec file')
+    kore_repl_subparser.add_argument('--definition', type=dir_path)
+    kore_repl_subparser.add_argument('--debugger', default=False, action='store_true')
+    kore_repl_subparser.add_argument('--debug-script', type=file_path)
 
     # kast
     kast_subparser = command_parser.add_parser('kast', help='Kast a term', parents=[shared_args])
     kast_subparser.add_argument(
-        '--definition',
+        '--definition-dir',
         dest='definition_dir',
         type=dir_path,
         help='Path to definition to use.',
@@ -251,7 +350,7 @@ def create_argument_parser() -> ArgumentParser:
     # run
     run_subparser = command_parser.add_parser('run', help='Run KAVM simulation', parents=[shared_args])
     run_subparser.add_argument(
-        '--definition',
+        '--definition-dir',
         dest='definition_dir',
         type=dir_path,
         help='Path to definition to use',

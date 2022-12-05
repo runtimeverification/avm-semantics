@@ -11,6 +11,7 @@ from pyk.kast.inner import KInner, KSort
 from pyk.kore.parser import KoreParser
 from pyk.kore.syntax import Pattern
 from pyk.ktool.kprint import paren
+from pyk.ktool.kprove import KProve
 from pyk.ktool.krun import KRun, KRunOutput, _krun
 from pyk.prelude.k import K
 
@@ -19,7 +20,7 @@ from kavm.scenario import KAVMScenario
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-class KAVM(KRun):
+class KAVM(KRun, KProve):
     """
     Interact with the K semantics of AVM: evaluate Algorand transaction groups
     """
@@ -30,36 +31,20 @@ class KAVM(KRun):
         use_directory: Optional[Path] = None,
         teal_parser: Optional[Path] = None,
         scenario_parser: Optional[Path] = None,
+        profile: bool = False,
+        definition: Optional[Path] = None,
+        main_file: Optional[Path] = None,
     ) -> None:
-        super().__init__(definition_dir, use_directory=use_directory)
+        KRun.__init__(self, definition_dir, use_directory=use_directory, profile=profile)
+        KProve.__init__(
+            self, definition, use_directory=use_directory, main_file=main_file, profile=profile
+        ) if definition else None
+
         self._catcat_parser = definition_dir / 'catcat'
         self._teal_parser = teal_parser if teal_parser else definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
         self._scenario_parser = (
             scenario_parser if scenario_parser else definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
         )
-
-    @staticmethod
-    def prove(
-        definition: Path,
-        main_file: Path,
-        debugger: bool,
-        debug_script: Path,
-        haskell_backend_command: Optional[str] = None,
-    ) -> CompletedProcess:
-        command = [
-            'kprove',
-            '--haskell-backend-command',
-            haskell_backend_command if haskell_backend_command else 'kore-exec',
-            '--definition',
-            str(definition),
-            str(main_file),
-        ]
-
-        command += ['--debugger'] if debugger else []
-        command += ['--debug-script', str(debug_script)] if debug_script else []
-
-        _LOGGER.info(f"Executing command: {' '.join(command)}")
-        return subprocess.run(command, check=True, text=True)
 
     def parse_teals(self, teal_paths: Iterable[str], teal_sources_dir: Path) -> Pattern:
         """Extract TEAL programs filenames and source code from a test scenario"""
@@ -177,71 +162,3 @@ class KAVM(KRun):
         return [
             'TEAL-TYPES.getAppAddressBytes',
         ]
-
-    # @property
-    # def _empty_config(self) -> KInner:
-    #     """Return the KAST term for the empty generated top cell"""
-    #     return self.definition.empty_config(KSort('GeneratedTopCell'))
-
-    # @property
-    # def current_config(self) -> KInner:
-    #     """Return the current configuration KAST term"""
-    #     return self._current_config
-
-    # @current_config.setter
-    # def current_config(self, new_config: KInner) -> None:
-    #     self._current_config = new_config
-
-    # def eval_transactions(self, txns: List[KAVMTransaction], new_addresses: Optional[Set[str]]) -> Any:
-    #     """
-    #     Evaluate a transaction group
-
-    #     Parameters
-    #     ----------
-    #     txns
-    #         transaction group
-    #     new_addresses
-    #         Algorand addresses discovered while pre-precessing the transactions in the KAVMClinet class
-
-    #     Embed the group into the current configuration, and trigger its evaluation
-
-    #     If the group is accepted, put resulting configuration as the new current, and roll back if regected.
-    #     """
-
-    #     if not new_addresses:
-    #         new_addresses = set()
-
-    #     # start tracking any newly discovered addresses with empty accounts
-    #     for addr in new_addresses.difference(self.accounts.keys()):
-    #         self.accounts[addr] = KAVMAccount(addr)
-
-    #     self.current_config = self.simulation_config(txns)
-
-    #     # construct the KAVM configuration and run it via krun
-    #     try:
-    #         (krun_return_code, output) = self._run_with_current_config()
-    #     except Exception:
-    #         _LOGGER.critical(
-    #             f'Transaction group evaluation failed, last configuration was: {self.pretty_print(self._current_config)}'
-    #         )
-    #         raise
-    #     if isinstance(output, KAst) and krun_return_code == 0:
-    #         # Finilize successful evaluation
-    #         self.current_config = cast(KInner, output)
-    #         (_, subst) = carefully_split_config_from(cast(KInner, self.current_config), ignore_cells={'<transaction>'})
-    #         # * update self.accounts with the new configuration cells
-    #         modified_accounts = AccountCellMap(subst['ACCOUNTSMAP_CELL'])
-    #         for address in self.accounts.keys():
-    #             self.accounts[address] = modified_accounts[address]
-    #             # * update self.apps with the new configuration cells
-    #             for appid, app in self.accounts[address]._apps_created.items():
-    #                 self.apps[appid] = app
-    #         # * TODO: update self.assets with the new configuration cells
-    #         # * save committed txns
-    #         post_txns = TransactionCellMap(self, subst['TRANSACTIONS_CELL'])
-    #         for txn in post_txns.values():
-    #             self._committed_txns[txn.txid] = self._commit_transaction(txn)
-    #         return {'txId': f'{txns[0].txid}'}
-    #     else:
-    #         _LOGGER.critical(output)
-    #         exit(krun_return_code)
