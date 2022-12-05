@@ -236,7 +236,7 @@ class KAVMProof:
             for condition in flatten_conditions(result):
                 print(pretty_print_kast(condition, symbol_table=symbol_table))
 
-        #print(pretty_print_kast(result, symbol_table=symbol_table))
+        # print(pretty_print_kast(result, symbol_table=symbol_table))
 
 
 def flatten_conditions(term: KInner):
@@ -258,17 +258,22 @@ def int_2_bytes(term: KInner):
         ],
     )
 
+
 def equals(a1: KInner, a2: KInner):
     return KApply("_==K_", [a1, a2])
+
 
 def nequals(a1: KInner, a2: KInner):
     return KApply("_=/=K_", [a1, a2])
 
+
 def gt(a1: KInner, a2: KInner):
     return KApply("_>Int_", [a1, a2])
 
+
 def add(a1: KInner, a2: KInner):
     return KApply("_+Int_", [a1, a2])
+
 
 def kvar(name: str):
     return KVariable(name)
@@ -293,8 +298,14 @@ def main():
     kavm_proof.add_txn(txn)
     kavm_proof.add_acct(acct1)
     kavm_proof.add_acct(acct2)
-    kavm_proof.add_precondition( nequals(acct1.address()["pre"], acct2.address()["pre"]))
-    kavm_proof.add_precondition( gt(acct1.balance()["pre"], add(kvar("ARG1"), kvar("ARG2"))))
+
+    kavm_proof.add_precondition(nequals(acct1.address()["pre"], acct2.address()["pre"]))
+    kavm_proof.add_precondition(
+        gt(acct1.balance()["pre"], add(kvar("ARG1"), kvar("ARG2")))
+    )
+#    kavm_proof.add_precondition(
+#        gt(KToken("MAX_UINT_64", "Int"), add(kvar("ARG1"), kvar("ARG2")))
+#    )
 
     kavm_proof.add_postcondition(
         equals(
@@ -303,6 +314,7 @@ def main():
         )
     )
     kavm_proof.prove()
+
 
 if __name__ == "__main__":
     main()
