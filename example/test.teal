@@ -1,0 +1,1 @@
+account 0 account 1 arg 0 btoi arg 1 btoi + pay .TealProgram
