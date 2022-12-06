@@ -5,22 +5,50 @@ from pyk.kast.inner import KApply, KToken, KVariable
 from pyk.kast.outer import KClaim, KRewrite, read_kast_definition
 from pyk.ktool.kprint import build_symbol_table, pretty_print_kast
 from pyk.ktool.kprove import KProve
+from collections import namedtuple 
 
-class SymbolicTransaction(Transaction):
-    def __init(self):
+PrePost = namedtuple('PrePost', ['pre', 'post'])
+
+class SymbolicTransaction:
+
+    def __init__(self, on_completion: int):
+        self.tx_id = PrePost(
+            KVariable("TX_ID_" + id(self)),
+            KVariable("?TX_ID_" + id(self)),
+        )
+        self.sender = PrePost(
+            KVariable("SENDER_" + id(self)),
+            KVariable("?SENDER_" + id(self)),
+        )
+        self.type_enum = KToken("6", "Int")
+        self.application_id = KVariable("APPLICATION_ID_" + id(self))
+        self.on_completion = KToken(str(on_completion), "Int")
+
+    def get_specific_field_pre(self):
+        # if txn type is appl:
+        return KApply(
+            "<appCallTxFields>",
+            [
+                KApply("<applicationID>", self.application_id),
+                KApply("<onCompletion>", self.on_completion),
+            ],
+        )
+
+    def get_symbolic_config_pre(self):
+
         self._startconfig = KApply(
             "<transaction>",
             [
-                KApply("<txID>", self.get_txid()),
+                KApply("<txID>", self.tx_id.pre),
                 KApply(
-                    "<txHeader>"
+                    "<txHeader>",
                     [
                         KApply("<fee>", KToken("0", "Int")),
                         KApply("<firstValid>", KToken("0", "Int")),
                         KApply("<lastValid>", KToken("0", "Int")),
                         KApply("<genesisHash>", KToken(".Bytes", "Bytes")),
-                        KApply("<sender>", KToken(".Bytes", "Bytes")),
-                        KApply("<txType>", KToken("\"\"", "String")),
+                        KApply("<sender>", self.sender.pre),
+                        KApply("<txType>", KToken("\"\"", "String")), # TODO
                         KApply("<typeEnum>", KToken("0", "Int")),
                         KApply("<groupID>", KToken("\"\"", "String")),
                         KApply("<groupIdx>", KToken("0", "Int")),
@@ -30,6 +58,24 @@ class SymbolicTransaction(Transaction):
                         KApply("<rekeyTo>", KToken(".Bytes", "Bytes")),
                     ],
                 ),
+                KApply("<txnTypeSpecificFields>", self.get_specific_field_pre()),
+                KApply(
+                    "<applyData>",
+                    [
+                        KApply("<txScratch>", KToken(".Map", "Map")),
+                        KApply("<txConfigAsset>", KToken("0", "Int")),
+                        KApply("<txApplicationID>", KToken("0", "Int")),
+                        KApply(
+                            "<log>",
+                            [
+                                KApply("<logData>", KToken(".TValueList", "TValueList")),
+                                KApply("<logSize>", KToken("0", "Int")),
+                            ],
+                        ),
+                    ],
+                ),
+                KApply("<txnExecutionContext>", KToken(".K", "KItem")),
+                KApply("<resume>", KToken("false", "Bool")),
             ],
         )
 
