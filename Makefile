@@ -291,6 +291,10 @@ ifeq ($(K_BACKEND),)
   K_BACKEND := llvm
 endif
 
+ifneq ($(BUILD_WITH_COVERAGE),)
+  BUILD_WITH_COVERAGE := --coverage
+endif
+
 avm_dir           := avm-llvm
 avm_main_module   := AVM-TESTING
 avm_syntax_module := AVM-TESTING-SYNTAX
@@ -314,7 +318,7 @@ $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM
                             --hook-namespaces KRYPTO KAVM                               \
                             --hook-cpp-files $(HOOK_KAVM_FILES) $(PLUGIN_CPP_FILES)     \
                             --hook-clang-flags $(HOOK_CC_OPTS)                          \
-                            --coverage
+                            $(BUILD_WITH_COVERAGE)
 	@make generate-parsers
 
 
