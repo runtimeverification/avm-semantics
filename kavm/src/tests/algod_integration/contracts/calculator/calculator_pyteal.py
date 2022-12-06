@@ -1,4 +1,8 @@
-from pyteal import Approve, BareCallActions, Expr, OnCompleteAction, OptimizeOptions, Router, abi
+from typing import Tuple
+
+from algosdk.abi import Contract
+from pyteal import Approve, BareCallActions, Expr, OnCompleteAction, Router, abi
+from pyteal.compiler.optimizer import optimizer
 
 # Main router class
 router = Router(
@@ -37,20 +41,9 @@ def div(a: abi.Uint64, b: abi.Uint64, *, output: abi.Uint64) -> Expr:
     return output.set(a.get() / b.get())
 
 
-if __name__ == "__main__":
-    import json
-    import os
-
-    path = os.path.dirname(os.path.abspath(__file__))
-    approval, clear, contract = router.compile_program(version=6, optimize=OptimizeOptions(scratch_slots=True))
-
-    # Dump out the contract as json that can be read in by any of the SDKs
-    with open(os.path.join(path, "contract.json"), "w") as f:
-        f.write(json.dumps(contract.dictify(), indent=2))
-
-    # Write out the approval and clear programs
-    with open(os.path.join(path, "approval.teal"), "w") as f:
-        f.write(approval)
-
-    with open(os.path.join(path, "clear.teal"), "w") as f:
-        f.write(clear)
+def compile_to_teal() -> Tuple[str, str, Contract]:
+    """Compile approval and clear programs, and generate the contract description object"""
+    approval, clear, contract = router.compile_program(
+        version=6, optimize=optimizer.OptimizeOptions(scratch_slots=True)
+    )
+    return approval, clear, contract

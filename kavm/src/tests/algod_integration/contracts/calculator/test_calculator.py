@@ -1,16 +1,16 @@
 import base64
 import contextlib
-import json
-import os
 from typing import Any, Dict, List, Optional
 
 import pytest
-from algosdk import abi, account, error
+from algosdk import abi, account
 from algosdk.atomic_transaction_composer import AccountTransactionSigner
 from algosdk.future import transaction
 from algosdk.v2client.algod import AlgodClient
 
 from kavm.algod import KAVMAtomicTransactionComposer, KAVMClient
+
+from ..calculator.calculator_pyteal import compile_to_teal
 
 
 def create_app(
@@ -81,20 +81,18 @@ def generate_and_fund_account(client: AlgodClient, faucet: Dict[str, str]) -> Di
     return {'address': address, 'private_key': private_key}
 
 
+def compile_teal(client: AlgodClient, source_code: str) -> bytes:
+    """Compile TEAL source code to binary for a transaction"""
+    compile_response = client.compile(source_code)
+    return base64.b64decode(compile_response["result"])
+
+
 def create_contract(client: AlgodClient, app_creator: Dict[str, str]) -> abi.Contract:
 
-    path = os.path.dirname(os.path.abspath(__file__))
-
-    # Read in approval and clear TEAL programs
-    with open(os.path.join(path, "./approval.teal")) as f:
-        approval_source = f.read()
-
-    with open(os.path.join(path, "clear.teal")) as f:
-        clear_source = f.read()
-
+    approval_source, clear_source, contract_interface = compile_to_teal()
     # Compile approval and clear TEAL programs
-    approval_program = compile_program(client, approval_source)
-    clear_program = compile_program(client, clear_source)
+    approval_program = compile_teal(client, approval_source)
+    clear_program = compile_teal(client, clear_source)
 
     # define empty schema
     global_schema = transaction.StateSchema(0, 0)
@@ -111,11 +109,7 @@ def create_contract(client: AlgodClient, app_creator: Dict[str, str]) -> abi.Con
         local_schema,
     )
 
-    # read json and create ABI Contract description
-    with open(os.path.join(path, "contract.json")) as f:
-        js = f.read()
-
-    app_abi_spec = json.loads(js)
+    app_abi_spec = contract_interface.dictify()
     app_abi_spec['networks']['sandbox'] = abi.NetworkInfo(app_id=app_id).dictify()
     return abi.Contract.undictify(app_abi_spec)
 
@@ -145,7 +139,6 @@ def calculator_contract(client: AlgodClient, app_creator: Dict[str, str]) -> abi
         ('div', [4, 2], 2, contextlib.nullcontext()),
         ('add', [1, 2], 3, contextlib.nullcontext()),
         ('mul', [2, 2], 4, contextlib.nullcontext()),
-        ('div', [42, 0], None, pytest.raises(error.AlgodHTTPError)),
     ],
 )
 def test_calculator(
