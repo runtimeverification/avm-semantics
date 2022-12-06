@@ -268,7 +268,7 @@ END:
    andBool Int2String(NEXT_TXN_ID) =/=String PAY_TX_ID
    andBool ASSET_BAL -Int (SCALING_FACTOR *Int AMOUNT) >=Int 0
    andBool ASSET_BAL >=Int 0
-   andBool AMOUNT >=Int 0
+   andBool AMOUNT >Int 0
    andBool Int2String(NEXT_GROUP_ID +Int 1) =/=String GROUP_ID
    andBool ASSET_ID >Int 0
 
