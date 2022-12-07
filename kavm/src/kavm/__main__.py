@@ -13,6 +13,7 @@ from typing import Any, Callable, Final, Iterable, List, Optional, TypeVar
 from pyk.cli_utils import dir_path, file_path
 from pyk.kast.inner import KApply
 from pyk.kast.manip import get_cell, minimize_term
+from pyk.kore import syntax as kore
 from pyk.ktool.kprove import KoreExecLogFormat
 
 from kavm.kavm import KAVM
@@ -215,14 +216,14 @@ def exec_run(
             if not output in ['none', 'final-state-json']:
                 print(kavm.pretty_print(final_state))
             if output == 'final-state-json':
-                state_dumps = get_cell(final_state, 'STATE_DUMPS_CELL')
-                assert type(state_dumps) is KApply
-                assert state_dumps.label.name == 'ListItem'
-                state_dump = json.loads(
-                    kavm.pretty_print(state_dumps.args[0]).replace(', .JSONs', '').replace('.JSONs', '')
-                )
-                assert type(state_dump) is dict
-                print(json.dumps(state_dump, indent=4))
+                _LOGGER.info('Extracting <state_dumps> cell from KORE output')
+                state_dumps_kore = get_state_dumps_kore(final_state)
+                assert state_dumps_kore
+                _LOGGER.info('Converting KORE => Kast')
+                state_dumps = kavm.kore_to_kast(state_dumps_kore)
+                _LOGGER.info('Pretty-printing <state_dumps> JSON')
+                state_dump_str = kavm.pretty_print(state_dumps).replace(', .JSONs', '').replace('.JSONs', '')
+                print(json.dumps(json.loads(state_dump_str), indent=4))
             exit(0)
         else:
             print(f'Unrecognized input file extension: {input_file.suffix}')
