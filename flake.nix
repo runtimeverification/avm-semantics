@@ -76,6 +76,7 @@
             # We remove `"dev"` from `checkGroups`, so that poetry2nix does not try to resolve dev dependencies.
             checkGroups = [ ];
             propagatedBuildInputs = [ k prev.llvm-backend ];
+
           };
         in {
           avm-semantics = prev.stdenv.mkDerivation {
@@ -126,15 +127,18 @@
               mkdir -p $out
               mv .build/usr/* $out/
               ln -s ${k} $out/lib/kavm/kframework
-              mkdir $out/bin
-              makeWrapper ${kavm}/bin/kavm $out/bin/kavm \
-                --set KAVM_DEFINITION_DIR $out/lib/kavm/avm-llvm/avm-testing-kompiled \
-                --set KAVM_LIB $out/lib/kavm
             '';
           };
           kavm-deps = kavm-deps;
-          kavm = kavm;
 
+          # rebuild the kavm executable, giving it the newly determined path to the K definition
+          kavm = kavm.overrideAttrs (oldAttrs: {
+            buildInputs = oldAttrs.buildInputs or [] ++ [ prev.makeWrapper ];
+            postInstall = oldAttrs.postInstall or "" + ''
+              wrapProgram $out/bin/kavm \
+                --set KAVM_DEFINITION_DIR ${(toString final.avm-semantics) + "/lib/kavm/avm-llvm/avm-testing-kompiled"}
+            '';
+          });
         };
     in flake-utils.lib.eachSystem [
       "x86_64-linux"

@@ -207,6 +207,15 @@ def exec_run(
         exit(err.returncode)
 
 
+def exec_env(
+    **kwargs: Any,
+) -> None:
+    """
+    Report KAVM's environment variables or attempt to establish their vaules
+    """
+    print(f"KAVM_DEFINITION_DIR={os.environ.get('KAVM_DEFINITION_DIR')}")
+
+
 def main() -> None:
     sys.setrecursionlimit(15000000)
     parser = create_argument_parser()
@@ -245,6 +254,14 @@ def create_argument_parser() -> ArgumentParser:
     shared_args.add_argument('--profile', default=False, action='store_true', help='Coarse process-level profiling.')
 
     command_parser = parser.add_subparsers(dest='command', required=True, help='Command to execute')
+
+    # env
+    command_parser.add_parser(
+        'env',
+        help='Show KAVM environment variables',
+        parents=[shared_args],
+        allow_abbrev=False,
+    )
 
     # kompile
     kompile_subparser = command_parser.add_parser(
