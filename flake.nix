@@ -169,6 +169,13 @@
               blockchain-k-plugin.submodule = "deps/plugin";
             };
         };
+        devShell = pkgs.kavm.dependencyEnv.overrideAttrs(old: {
+          shellHook = ''
+            echo "Welcome to KAVM!"
+            export KAVM_DEFINITION_DIR=${(toString pkgs.avm-semantics) + "/lib/kavm/avm-llvm/avm-testing-kompiled"}
+            echo KAVM definition is at $KAVM_DEFINITION_DIR
+          '';
+          });
       }) // {
         overlays.default = nixpkgs.lib.composeManyExtensions [
           k-framework.overlay
