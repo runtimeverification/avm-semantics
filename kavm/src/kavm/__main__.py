@@ -8,11 +8,11 @@ import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from subprocess import CalledProcessError
-from typing import Any, Callable, Final, Iterable, List, Optional, TypeVar
+from typing import Any, Callable, Dict, Final, Iterable, List, Optional, TypeVar
 
 from pyk.cli_utils import dir_path, file_path
 from pyk.kast.inner import KApply
-from pyk.kast.manip import get_cell, minimize_term
+from pyk.kast.manip import minimize_term
 from pyk.kore import syntax as kore
 from pyk.ktool.kprove import KoreExecLogFormat
 
@@ -212,9 +212,13 @@ def exec_run(
     try:
         if input_file.suffix == '.json':
             scenario = KAVMScenario.from_json(input_file.read_text(), teal_sources_dir)
-            final_state = kavm.run_avm_json(scenario=scenario, profile=profile, depth=depth)
-            if not output in ['none', 'final-state-json']:
-                print(kavm.pretty_print(final_state))
+            final_state, kavm_stderr = kavm.run_avm_json(scenario=scenario, profile=profile, depth=depth)
+            if output == 'kore':
+                print(final_state)
+                exit(0)
+            if output == 'pretty':
+                final_state_kast = kavm.kore_to_kast(final_state)
+                print(kavm.pretty_print(final_state_kast))
             if output == 'final-state-json':
                 _LOGGER.info('Extracting <state_dumps> cell from KORE output')
                 state_dumps_kore = get_state_dumps_kore(final_state)
@@ -224,6 +228,8 @@ def exec_run(
                 _LOGGER.info('Pretty-printing <state_dumps> JSON')
                 state_dump_str = kavm.pretty_print(state_dumps).replace(', .JSONs', '').replace('.JSONs', '')
                 print(json.dumps(json.loads(state_dump_str), indent=4))
+            if output == 'stderr-json':
+                print(json.dumps(json.loads(kavm_stderr), indent=4))
             exit(0)
         else:
             print(f'Unrecognized input file extension: {input_file.suffix}')
@@ -434,7 +440,7 @@ def create_argument_parser() -> ArgumentParser:
         dest='output',
         type=str,
         help='Output mode',
-        choices=['pretty', 'json', 'kore', 'kast', 'none', 'final-state-json'],
+        choices=['pretty', 'json', 'kore', 'kast', 'none', 'final-state-json', 'stderr-json'],
         required=True,
     )
     run_subparser.add_argument(
