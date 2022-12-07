@@ -164,6 +164,32 @@ def exec_kast(
         exit(err.returncode)
 
 
+def top_down_kore(f: Callable[[kore.Pattern], kore.Pattern], pattern: kore.Pattern) -> kore.Pattern:
+    return f(pattern).map_pattern(lambda _kpattern: top_down_kore(f, _kpattern))
+
+
+def get_state_dumps_kore(input: kore.Pattern) -> Optional[kore.Pattern]:
+    state_dumps_cell_symbol = "Lbl'-LT-'state-dumps'-GT-'"
+
+    result = None
+
+    def get_it(input: kore.Pattern) -> kore.Pattern:
+        nonlocal result
+        if isinstance(input, kore.App) and input.symbol == state_dumps_cell_symbol:
+            result = input
+        return input
+
+    top_down_kore(get_it, input)
+    if isinstance(result, kore.App):
+        return result.patterns[0].app.patterns[0].patterns[0]  # type: ignore
+    else:
+        return None
+
+
+def kore_json_to_dict(input: kore.Pattern) -> Dict[str, Any]:
+    return {}
+
+
 def exec_run(
     definition_dir: Path,
     input_file: Path,
