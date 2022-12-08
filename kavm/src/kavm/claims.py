@@ -44,8 +44,8 @@ class SymbolicApplTxn:
         sender: str,
         index: int,
         on_complete: int,
-        local_schema: StateSchema = StateSchema(0, 0),
-        global_schema: StateSchema = StateSchema(0, 0),
+        local_schema: Optional[StateSchema] = None,
+        global_schema: Optional[StateSchema] = None,
         approval_program_path: Optional[Path] = None,
         clear_program_path: Optional[Path] = None,
         note=None,
@@ -59,8 +59,8 @@ class SymbolicApplTxn:
         self.on_complete = KToken(str(on_complete), "Int")
         self.approval_program_path = approval_program_path
         self.clear_program_path = clear_program_path
-        self.local_schema = local_schema
-        self.global_schema = global_schema
+        self.local_schema = local_schema if local_schema else StateSchema(0, 0)
+        self.global_schema = global_schema if global_schema else StateSchema(0, 0)
         self.extra_pages = extra_pages
         self.app_args = []
 
