@@ -4,8 +4,8 @@ requires "avm/avm-execution.md"
 module VERIFICATION
   imports AVM-EXECUTION
   imports TEAL-TYPES
+//  imports TEAL-PARSER-SYNTAX
 //  imports SET-SYMBOLIC
-
 
   syntax StepSort ::= MaybeTValue
 // ------------------------------------------------
@@ -49,6 +49,8 @@ module VERIFICATION
   // in_keys
   rule X:Label in_keys( M:Map [Y:Label <- _] ) => false
     requires (notBool (X in_keys ( M ))) andBool (X =/=K Y)  [simplification]
+
+  rule _ in_keys ( .Map ) => false [simplification]
 
   rule X in_keys( _:Map [X <- _] ) => true  [simplification]
   rule X in_keys( M:Map [Y <- _] ) => X in_keys(M) 
