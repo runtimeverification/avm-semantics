@@ -4,10 +4,10 @@ import subprocess
 import tempfile
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Callable, Dict, Final, Iterable, List, Optional, Union
+from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union
 
 from pyk.cli_utils import run_process
-from pyk.kast.inner import KInner, KSort
+from pyk.kast.inner import KSort
 from pyk.kore.parser import KoreParser
 from pyk.kore.syntax import Pattern
 from pyk.ktool.kprint import paren
@@ -76,7 +76,7 @@ class KAVM(KRun, KProve):
         profile: bool = False,
         check: bool = True,
         existing_decompiled_teal_dir: Optional[Path] = None,
-    ) -> KInner:
+    ) -> Tuple[Pattern, str]:
         """Run an AVM simulaion scenario with krun"""
 
         with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_scenario_file, (
@@ -106,16 +106,17 @@ class KAVM(KRun, KProve):
                 check=check,
                 cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
                 pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
+                pipe_stderr=True,
             )
 
             if proc_result.returncode != 0:
                 raise RuntimeError('Non-zero exit-code from krun.')
 
-            _LOGGER.info('Converting Kore => Kast')
             parser = KoreParser(proc_result.stdout)
             final_pattern = parser.pattern()
             assert parser.eof
-            return self.kore_to_kast(final_pattern)
+
+            return final_pattern, proc_result.stderr
 
     def kast(
         self,

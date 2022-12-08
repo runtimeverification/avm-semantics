@@ -23,8 +23,6 @@ from algosdk.atomic_transaction_composer import (
 from algosdk.error import AlgodHTTPError
 from algosdk.future.transaction import PaymentTxn, Transaction
 from algosdk.v2client import algod
-from pyk.kast.inner import KApply
-from pyk.kast.manip import get_cell
 
 from kavm import constants
 from kavm.adaptors.algod_account import KAVMAccount
@@ -257,7 +255,7 @@ class KAVMClient(algod.AlgodClient):
         self._last_scenario = scenario
 
         try:
-            final_state = self.kavm.run_avm_json(
+            final_state, kavm_stderr = self.kavm.run_avm_json(
                 scenario=scenario,
                 existing_decompiled_teal_dir=self._decompiled_teal_dir_path,
             )
@@ -271,13 +269,7 @@ class KAVMClient(algod.AlgodClient):
 
         try:
             # on succeful execution, the final state will be serialized and prineted to stderr
-            state_dumps = get_cell(final_state, 'STATE_DUMPS_CELL')
-            assert type(state_dumps) is KApply
-            assert state_dumps.label.name == 'ListItem'
-            _LOGGER.info(f'Converting KJSON to Dict {state_dumps.args[0]}')
-            state_dump = json.loads(
-                self.kavm.pretty_print(state_dumps.args[0]).replace(', .JSONs', '').replace('.JSONs', '')
-            )
+            state_dump = json.loads(kavm_stderr)
             assert type(state_dump) is dict
         except json.decoder.JSONDecodeError as e:
             _LOGGER.critical(f'Failed to parse the final state JSON: {e}')

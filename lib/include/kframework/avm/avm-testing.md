@@ -31,6 +31,7 @@ module AVM-TESTING
   imports AVM-CONFIGURATION
   imports ALGOD-MODELS
   imports AVM-EXECUTION
+  imports K-IO
 
   configuration
     <avm-testing>
@@ -164,7 +165,11 @@ Note that the applications and ASAs are part of the accounts' state as well, and
 
   syntax TestingCommand ::= #dumpFinalState()
   //-----------------------------------------
-  rule <k> #dumpFinalState() => . ... </k>
+  rule <k> #dumpFinalState()
+        => #log(JSON2String({ "accounts": [ #dumpAccounts(<accountsMap> ACCS </accountsMap>)]
+                            , "transactions": [ #dumpConfirmedTransactions(<transactions> TXNS </transactions>)]}))
+        ...
+       </k>
        <accountsMap>  ACCS </accountsMap>
        <transactions> TXNS </transactions>
        <state-dumps>

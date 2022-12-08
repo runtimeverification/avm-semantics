@@ -8,11 +8,12 @@ import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from subprocess import CalledProcessError
-from typing import Any, Callable, Final, Iterable, List, Optional, TypeVar
+from typing import Any, Callable, Dict, Final, Iterable, List, Optional, TypeVar
 
 from pyk.cli_utils import dir_path, file_path
 from pyk.kast.inner import KApply
-from pyk.kast.manip import get_cell, minimize_term
+from pyk.kast.manip import minimize_term
+from pyk.kore import syntax as kore
 from pyk.ktool.kprove import KoreExecLogFormat
 
 from kavm.kavm import KAVM
@@ -164,6 +165,32 @@ def exec_kast(
         exit(err.returncode)
 
 
+def top_down_kore(f: Callable[[kore.Pattern], kore.Pattern], pattern: kore.Pattern) -> kore.Pattern:
+    return f(pattern).map_pattern(lambda _kpattern: top_down_kore(f, _kpattern))
+
+
+def get_state_dumps_kore(input: kore.Pattern) -> Optional[kore.Pattern]:
+    state_dumps_cell_symbol = "Lbl'-LT-'state-dumps'-GT-'"
+
+    result = None
+
+    def get_it(input: kore.Pattern) -> kore.Pattern:
+        nonlocal result
+        if isinstance(input, kore.App) and input.symbol == state_dumps_cell_symbol:
+            result = input
+        return input
+
+    top_down_kore(get_it, input)
+    if isinstance(result, kore.App):
+        return result.patterns[0].app.patterns[0].patterns[0]  # type: ignore
+    else:
+        return None
+
+
+def kore_json_to_dict(input: kore.Pattern) -> Dict[str, Any]:
+    return {}
+
+
 def exec_run(
     definition_dir: Path,
     input_file: Path,
@@ -185,18 +212,24 @@ def exec_run(
     try:
         if input_file.suffix == '.json':
             scenario = KAVMScenario.from_json(input_file.read_text(), teal_sources_dir)
-            final_state = kavm.run_avm_json(scenario=scenario, profile=profile, depth=depth)
-            if not output in ['none', 'final-state-json']:
-                print(kavm.pretty_print(final_state))
+            final_state, kavm_stderr = kavm.run_avm_json(scenario=scenario, profile=profile, depth=depth)
+            if output == 'kore':
+                print(final_state)
+                exit(0)
+            if output == 'pretty':
+                final_state_kast = kavm.kore_to_kast(final_state)
+                print(kavm.pretty_print(final_state_kast))
             if output == 'final-state-json':
-                state_dumps = get_cell(final_state, 'STATE_DUMPS_CELL')
-                assert type(state_dumps) is KApply
-                assert state_dumps.label.name == 'ListItem'
-                state_dump = json.loads(
-                    kavm.pretty_print(state_dumps.args[0]).replace(', .JSONs', '').replace('.JSONs', '')
-                )
-                assert type(state_dump) is dict
-                print(json.dumps(state_dump, indent=4))
+                _LOGGER.info('Extracting <state_dumps> cell from KORE output')
+                state_dumps_kore = get_state_dumps_kore(final_state)
+                assert state_dumps_kore
+                _LOGGER.info('Converting KORE => Kast')
+                state_dumps = kavm.kore_to_kast(state_dumps_kore)
+                _LOGGER.info('Pretty-printing <state_dumps> JSON')
+                state_dump_str = kavm.pretty_print(state_dumps).replace(', .JSONs', '').replace('.JSONs', '')
+                print(json.dumps(json.loads(state_dump_str), indent=4))
+            if output == 'stderr-json':
+                print(json.dumps(json.loads(kavm_stderr), indent=4))
             exit(0)
         else:
             print(f'Unrecognized input file extension: {input_file.suffix}')
@@ -407,7 +440,7 @@ def create_argument_parser() -> ArgumentParser:
         dest='output',
         type=str,
         help='Output mode',
-        choices=['pretty', 'json', 'kore', 'kast', 'none', 'final-state-json'],
+        choices=['pretty', 'json', 'kore', 'kast', 'none', 'final-state-json', 'stderr-json'],
         required=True,
     )
     run_subparser.add_argument(
