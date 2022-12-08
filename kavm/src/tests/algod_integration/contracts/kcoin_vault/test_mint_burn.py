@@ -6,7 +6,7 @@ from hypothesis import strategies as st
 
 MIN_ARG_VALUE = 10
 MAX_ARG_VALUE = 1 * 10**6
-TEST_CASE_DEADLINE = timedelta(seconds=2)
+TEST_CASE_DEADLINE = timedelta(seconds=5)
 N_TESTS = 25
 
 

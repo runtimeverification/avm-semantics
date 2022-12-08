@@ -86,6 +86,7 @@ class KAVMClient(algod.AlgodClient):
         definition_dir = os.environ.get('KAVM_DEFINITION_DIR')
         if definition_dir is not None:
             self.kavm = KAVM(definition_dir=Path(definition_dir))
+            self.kavm.definition
         else:
             _LOGGER.critical('Cannot initialize KAVM: KAVM_DEFINITION_DIR env variable is not set')
             exit(1)
@@ -254,11 +255,8 @@ class KAVMClient(algod.AlgodClient):
         self._last_scenario = scenario
 
         try:
-            _LOGGER.debug(f'Executing scenario: {json.dumps(scenario.dictify(), indent=4)}')
-            proc_result = self.kavm.run_avm_json(
+            final_state, kavm_stderr = self.kavm.run_avm_json(
                 scenario=scenario,
-                depth=0,
-                output='final-state-json',
                 existing_decompiled_teal_dir=self._decompiled_teal_dir_path,
             )
         except CalledProcessError as e:
@@ -269,18 +267,18 @@ class KAVMClient(algod.AlgodClient):
                 msg='KAVM has failed, rerun witn --log-level=ERROR to see the executed JSON scenario'
             ) from e
 
-        final_state = {}
         try:
             # on succeful execution, the final state will be serialized and prineted to stderr
-            final_state = json.loads(proc_result.stderr)
+            state_dump = json.loads(kavm_stderr)
+            assert type(state_dump) is dict
         except json.decoder.JSONDecodeError as e:
             _LOGGER.critical(f'Failed to parse the final state JSON: {e}')
             raise AlgodHTTPError(msg='KAVM has failed, see logs for reasons') from e
 
-        _LOGGER.debug(f'Successfully parsed final state JSON: {json.dumps(final_state, indent=4)}')
+        _LOGGER.debug(f'Successfully parsed final state JSON: {json.dumps(state_dump, indent=4)}')
         # substitute the tracked accounts by KAVM's state
         self._accounts = {}
-        for acc_dict in KAVMScenario.sanitize_accounts(final_state['accounts']):
+        for acc_dict in KAVMScenario.sanitize_accounts(state_dump['accounts']):
             acc_dict_translated = {KAVMAccount.inverted_attribute_map[k]: v for k, v in acc_dict.items()}
             self._accounts[acc_dict_translated['address']] = KAVMAccount(**acc_dict_translated)
             # update app creators
@@ -288,9 +286,9 @@ class KAVMClient(algod.AlgodClient):
                 for app in acc.created_apps:
                     self._app_creators[app['id']] = addr
         # merge confirmed transactions with the ones received from KAVM
-        for txn in final_state['transactions']:
+        for txn in state_dump['transactions']:
             self._committed_txns[txn['id']] = txn['params']
-        return {'txId': final_state['transactions'][0]['id']}
+        return {'txId': state_dump['transactions'][0]['id']}
 
     def _construct_scenario(self, accounts: Iterable[KAVMAccount], transactions: Iterable[Transaction]) -> KAVMScenario:
         """Construct a JSON simulation scenario to run on KAVM"""

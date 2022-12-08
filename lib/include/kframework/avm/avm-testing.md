@@ -32,6 +32,12 @@ module AVM-TESTING
   imports ALGOD-MODELS
   imports AVM-EXECUTION
   imports K-IO
+
+  configuration
+    <avm-testing>
+      <kavm/>
+      <state-dumps> .List </state-dumps>
+    </avm-testing>
 ```
 
 ```k
@@ -162,11 +168,19 @@ Note that the applications and ASAs are part of the accounts' state as well, and
   rule <k> #dumpFinalState()
         => #log(JSON2String({ "accounts": [ #dumpAccounts(<accountsMap> ACCS </accountsMap>)]
                             , "transactions": [ #dumpConfirmedTransactions(<transactions> TXNS </transactions>)]}))
-            ...
+        ...
        </k>
        <accountsMap>  ACCS </accountsMap>
        <transactions> TXNS </transactions>
-
+       <state-dumps>
+         ...
+         ( .List
+        => ListItem({ "accounts"     : [ #dumpAccounts(<accountsMap> ACCS </accountsMap>)                ]
+                    , "transactions" : [ #dumpConfirmedTransactions(<transactions> TXNS </transactions>) ]
+                    , .JSONs
+                   })
+         )
+       </state-dumps>
 ```
 
 ```k

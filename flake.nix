@@ -10,7 +10,7 @@
     blockchain-k-plugin.url = "github:runtimeverification/blockchain-k-plugin/df271ba0f0d7fb3b361ef5f0e80c461cb474d699";
     blockchain-k-plugin.inputs.flake-utils.follows = "k-framework/flake-utils";
     blockchain-k-plugin.inputs.nixpkgs.follows = "k-framework/nixpkgs";
-    pyk.url = "github:runtimeverification/pyk/v0.1.75";
+    pyk.url = "github:runtimeverification/pyk/v0.1.79";
     pyk.inputs.flake-utils.follows = "k-framework/flake-utils";
     pyk.inputs.nixpkgs.follows = "k-framework/nixpkgs";
 
@@ -76,6 +76,7 @@
             # We remove `"dev"` from `checkGroups`, so that poetry2nix does not try to resolve dev dependencies.
             checkGroups = [ ];
             propagatedBuildInputs = [ k prev.llvm-backend ];
+
           };
         in {
           avm-semantics = prev.stdenv.mkDerivation {
@@ -126,15 +127,18 @@
               mkdir -p $out
               mv .build/usr/* $out/
               ln -s ${k} $out/lib/kavm/kframework
-              mkdir $out/bin
-              makeWrapper ${kavm}/bin/kavm $out/bin/kavm \
-                --set KAVM_DEFINITION_DIR $out/lib/kavm/avm-llvm/avm-testing-kompiled \
-                --set KAVM_LIB $out/lib/kavm
             '';
           };
           kavm-deps = kavm-deps;
-          kavm = kavm;
 
+          # rebuild the kavm executable, giving it the newly determined path to the K definition
+          kavm = kavm.overrideAttrs (oldAttrs: {
+            buildInputs = oldAttrs.buildInputs or [] ++ [ prev.makeWrapper ];
+            postInstall = oldAttrs.postInstall or "" + ''
+              wrapProgram $out/bin/kavm \
+                --set KAVM_DEFINITION_DIR ${(toString final.avm-semantics) + "/lib/kavm/avm-llvm/avm-testing-kompiled"}
+            '';
+          });
         };
     in flake-utils.lib.eachSystem [
       "x86_64-linux"
@@ -169,6 +173,13 @@
               blockchain-k-plugin.submodule = "deps/plugin";
             };
         };
+        devShell = pkgs.kavm.dependencyEnv.overrideAttrs(old: {
+          shellHook = ''
+            echo "Welcome to KAVM!"
+            export KAVM_DEFINITION_DIR=${(toString pkgs.avm-semantics) + "/lib/kavm/avm-llvm/avm-testing-kompiled"}
+            echo KAVM definition is at $KAVM_DEFINITION_DIR
+          '';
+          });
       }) // {
         overlays.default = nixpkgs.lib.composeManyExtensions [
           k-framework.overlay
