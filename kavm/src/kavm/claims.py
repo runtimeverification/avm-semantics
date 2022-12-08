@@ -38,7 +38,6 @@ def parse_program(file: Optional[Path]):
     return KInner.from_dict(json.loads(result.stdout)["term"])
 
 
-# class SymbolicApplTxn(ApplicationCallTxn):
 class SymbolicApplTxn:
     def __init__(
         self,
