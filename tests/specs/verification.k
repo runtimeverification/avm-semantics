@@ -4,8 +4,6 @@ requires "avm/avm-execution.md"
 module VERIFICATION
   imports AVM-EXECUTION
   imports TEAL-TYPES
-//  imports TEAL-PARSER-SYNTAX
-//  imports SET-SYMBOLIC
 
   syntax StepSort ::= MaybeTValue
 // ------------------------------------------------
@@ -178,8 +176,6 @@ module VERIFICATION
 
   rule lengthBytes(B1 +Bytes B2) => lengthBytes(B1) +Int lengthBytes(B2) [simplification, symbolic(B2)]
 
-//   rule lengthBytes(padLeftBytes(B:Bytes, PAD_LEN:Int, _:Int)) >Int N  => false
-//     requires (lengthBytes(B) <=Int N) andBool (PAD_LEN <=Int N) [simplification]
   rule lengthBytes(padLeftBytes(B:Bytes, PAD_LEN:Int, _:Int)) >Int N  => lengthBytes(B) >Int N 
     requires PAD_LEN <=Int N [simplification]
 
