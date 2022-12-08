@@ -1,38 +1,44 @@
-import typing
-from pathlib import Path
-from algosdk.future.transaction import Transaction
 import json
-from pyk.kast.inner import KApply, KToken, KVariable, KLabel, build_assoc, KSort, KInner
+from collections import namedtuple
+from pathlib import Path
+from typing import Optional
+
+from algosdk.abi.contract import Contract
+from algosdk.abi.method import Method
+from algosdk.future.transaction import StateSchema
+from pyk.cli_utils import run_process
+from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, build_assoc
 from pyk.kast.outer import KClaim, KRewrite, read_kast_definition
 from pyk.ktool.kprint import build_symbol_table, pretty_print_kast
 from pyk.ktool.kprove import KProve
-from collections import namedtuple 
-from algosdk.future.transaction import ApplicationCallTxn, StateSchema
-from algosdk.abi.contract import Contract
-from pyk.cli_utils import run_process
-
-from pyk.prelude.bytes import bytesToken
-
-from pyteal import Mode
-from pyteal import compileTeal
-from typing import Optional
 
 PrePost = namedtuple('PrePost', ['pre', 'post'])
 
-def parse_program(file: Optional[Path]):
-    if not(file):
-        return KApply(label=KLabel(name='int__TEAL-OPCODES_PseudoOpCode_PseudoTUInt64', params=()), args=(KToken(token='1', sort=KSort(name='Int')),))
 
-    kast_command = ["kast", "--output", "json", "--definition",
-            ".build/usr/lib/kavm/avm-llvm/avm-testing-kompiled", "--sort", "TealInputPgm", "--module",
-            "TEAL-PARSER-SYNTAX"]
+def parse_program(file: Optional[Path]):
+    if not (file):
+        return KApply(
+            label=KLabel(name='int__TEAL-OPCODES_PseudoOpCode_PseudoTUInt64', params=()),
+            args=(KToken(token='1', sort=KSort(name='Int')),),
+        )
+
+    kast_command = [
+        "kast",
+        "--output",
+        "json",
+        "--definition",
+        ".build/usr/lib/kavm/avm-llvm/avm-testing-kompiled",
+        "--sort",
+        "TealInputPgm",
+        "--module",
+        "TEAL-PARSER-SYNTAX",
+    ]
     kast_command += [file]
     result = run_process(kast_command)
     return KInner.from_dict(json.loads(result.stdout)["term"])
 
 
-
-#class SymbolicApplTxn(ApplicationCallTxn):
+# class SymbolicApplTxn(ApplicationCallTxn):
 class SymbolicApplTxn:
     def __init__(
         self,
@@ -44,10 +50,6 @@ class SymbolicApplTxn:
         global_schema: StateSchema = StateSchema(0, 0),
         approval_program_path: Optional[Path] = None,
         clear_program_path: Optional[Path] = None,
-#        num_app_args: int = 0,
-        num_accounts: int = 0,
-        num_foreign_apps: int = 0,
-        num_foreign_assets: int = 0,
         note=None,
         lease=None,
         rekey_to=None,
@@ -57,12 +59,8 @@ class SymbolicApplTxn:
         self.sender = KToken("b\"" + sender + "\"", "Bytes")
         self.index = KToken(str(index), "Int")
         self.on_complete = KToken(str(on_complete), "Int")
-        self.num_accounts = num_accounts
         self.approval_program_path = approval_program_path
         self.clear_program_path = clear_program_path
-#        self.num_app_args = num_app_args
-        self.num_foreign_apps = num_foreign_apps
-        self.num_foreign_assets = num_foreign_assets
         self.local_schema = local_schema
         self.global_schema = global_schema
         self.extra_pages = extra_pages
@@ -71,30 +69,16 @@ class SymbolicApplTxn:
     def add_app_arg(self, arg: KInner):
         self.app_args.append(arg)
 
-    def generate_vars(self, num: int, name: str, sort: str):
-        def generate_vars_recursive(obj_id: int, next: int, num: int, name: str, sort: str):
-            if next >= num:
-                return KVariable(name + "_ETC_" + str(obj_id), sort=KSort("TValueNeList"))
-            else:
-                return KApply(
-                    "___TEAL-TYPES-SYNTAX_TValueNeList_TValue_TValueNeList", 
-                    [
-                        KVariable(name + "_" + str(next) + "_" + str(obj_id), sort=KSort(sort)),
-                        generate_vars_recursive(obj_id, next + 1, num, name, sort),
-                    ]
-                )
-        return generate_vars_recursive(id(self), 0, num, name, sort)
-    
     def generate_tvalue_list(self, tvlist):
         if len(tvlist) == 1:
             return tvlist[0]
         else:
             return KApply(
-                "___TEAL-TYPES-SYNTAX_TValueNeList_TValue_TValueNeList", 
+                "___TEAL-TYPES-SYNTAX_TValueNeList_TValue_TValueNeList",
                 [
                     tvlist[0],
                     self.generate_tvalue_list(tvlist[1:]),
-                ]
+                ],
             )
 
     def get_specific_field_pre(self):
@@ -103,16 +87,14 @@ class SymbolicApplTxn:
             [
                 KApply("<applicationID>", self.index),
                 KApply("<onCompletion>", self.on_complete),
-                KApply("<accounts>", self.generate_vars(num=self.num_accounts, name="ACCTS", sort="Bytes")),
+                KApply("<accounts>", KToken(".TValueList", "TValueList")),
                 KApply("<approvalProgramSrc>", parse_program(self.approval_program_path)),
                 KApply("<clearStateProgramSrc>", parse_program(self.clear_program_path)),
                 KApply("<approvalProgram>", KToken(".Bytes", "Bytes")),
                 KApply("<clearStateProgram>", KToken(".Bytes", "Bytes")),
                 KApply("<applicationArgs>", self.generate_tvalue_list(self.app_args)),
-                KApply("<foreignApps>", self.generate_vars(num=self.num_foreign_apps, name="FOREIGN_APPS",
-                    sort="Int")),
-                KApply("<foreignAssets>", self.generate_vars(num=self.num_foreign_assets, name="FOREIGN_ASSETS",
-                    sort="Int")),
+                KApply("<foreignApps>", KToken(".TValueList", "TValueList")),
+                KApply("<foreignAssets>", KToken(".TValueList", "TValueList")),
                 KApply("<boxReferences>", KToken(".TValuePairList", "TValuePairList")),
                 KApply(
                     "<globalStateSchema>",
@@ -128,7 +110,7 @@ class SymbolicApplTxn:
                         KApply("<localNbs>", KToken(str(self.local_schema.num_byte_slices), "Int")),
                     ],
                 ),
-                KApply("<extraProgramPages>", KToken(str(self.extra_pages), "Int"))
+                KApply("<extraProgramPages>", KToken(str(self.extra_pages), "Int")),
             ],
         )
 
@@ -146,7 +128,7 @@ class SymbolicApplTxn:
                         KApply("<lastValid>", KToken("0", "Int")),
                         KApply("<genesisHash>", KToken(".Bytes", "Bytes")),
                         KApply("<sender>", self.sender),
-                        KApply("<txType>", KToken("\"appl\"", "String")), # TODO
+                        KApply("<txType>", KToken("\"appl\"", "String")),
                         KApply("<typeEnum>", KToken("6", "Int")),
                         KApply("<groupID>", KToken("\"\"", "String")),
                         KApply("<groupIdx>", KToken("0", "Int")),
@@ -191,7 +173,7 @@ class SymbolicApplTxn:
                         KApply("<lastValid>", KToken("0", "Int")),
                         KApply("<genesisHash>", KToken(".Bytes", "Bytes")),
                         KApply("<sender>", self.sender),
-                        KApply("<txType>", KToken("\"\"", "String")), # TODO
+                        KApply("<txType>", KToken("\"\"", "String")),
                         KApply("<typeEnum>", KToken("0", "Int")),
                         KApply("<groupID>", KToken("\"\"", "String")),
                         KApply("<groupIdx>", KToken("0", "Int")),
@@ -222,6 +204,7 @@ class SymbolicApplTxn:
             ],
         )
 
+
 class SymbolicApplication:
     def __init__(
         self,
@@ -238,20 +221,24 @@ class SymbolicApplication:
         self.clear_pgm_path = clear_pgm_path
         self.labels = []
 
-    def convert_labels_to_vars(self, term: KInner):
-
+    def preprocess_kast(self, term: KInner):
         def hex_token_to_k_string(ht: str):
             string = ""
             for i in range(0, len(ht), 2):
                 string += "\\x"
-                string += ht[i] + ht[i+1]
+                string += ht[i] + ht[i + 1]
             return string
 
         if type(term) is KApply:
+            if term.label.name == "method__TEAL-OPCODES_PseudoOpCode_TBytesLiteral":
+                selector = str(Method.from_signature(term.args[0].token[1:-1]).get_selector())[2:-1]
+                return KApply(
+                    "byte__TEAL-OPCODES_PseudoOpCode_TBytesLiteral", KToken("\"" + str(selector) + "\"", "String")
+                )
             if len(term.args) == 0:
                 return term
             else:
-                result = KApply(label=term.label, args=[self.convert_labels_to_vars(arg) for arg in term.args])
+                result = KApply(label=term.label, args=[self.preprocess_kast(arg) for arg in term.args])
                 return result
         else:
             if type(term) is KToken:
@@ -272,8 +259,8 @@ class SymbolicApplication:
             "<app>",
             [
                 KApply("<appID>", KToken(str(self.app_id), "Int")),
-                KApply("<approvalPgmSrc>", self.convert_labels_to_vars(parse_program(self.approval_pgm_path))),
-                KApply("<clearStatePgmSrc>", self.convert_labels_to_vars(parse_program(self.clear_pgm_path))),
+                KApply("<approvalPgmSrc>", self.preprocess_kast(parse_program(self.approval_pgm_path))),
+                KApply("<clearStatePgmSrc>", self.preprocess_kast(parse_program(self.clear_pgm_path))),
                 KApply("<approvalPgm>", KToken(".Bytes", "Bytes")),
                 KApply("<clearStatePgm>", KToken(".Bytes", "Bytes")),
                 KApply(
@@ -283,18 +270,19 @@ class SymbolicApplication:
                         KApply("<globalNumBytes>", KToken(str(self.global_state_schema.num_byte_slices), "Int")),
                         KApply("<globalInts>", KToken(".Map", "Map")),
                         KApply("<globalBytes>", KToken(".Map", "Map")),
-                    ]
+                    ],
                 ),
                 KApply(
                     "<localState>",
                     [
                         KApply("<localNumInts>", KToken(str(self.local_state_schema.num_uints), "Int")),
                         KApply("<localNumBytes>", KToken(str(self.local_state_schema.num_byte_slices), "Int")),
-                    ]
+                    ],
                 ),
                 KApply("<extraPages>", KToken("0", "Int")),
-            ]
+            ],
         )
+
 
 class SymbolicAccount:
     def __init__(
@@ -334,9 +322,10 @@ class SymbolicAccount:
                 KApply("<appsOptedIn>", KToken(".Bag", "OptInAppMapCell")),
                 KApply("<assetsCreated>", KToken(".Bag", "AssetMapCell")),
                 KApply("<assetsOptedIn>", KToken(".Bag", "OptInAssetMapCell")),
-                KApply("<boxes>", KToken(".Bag", "BoxMapCell"))
-            ]
+                KApply("<boxes>", KToken(".Bag", "BoxMapCell")),
+            ],
         )
+
 
 class KAVMProof:
     def __init__(self):
@@ -356,17 +345,15 @@ class KAVMProof:
         self._accts_config.append(acct.get_symbolic_config_pre())
         self._accts.append(acct)
 
+    def add_precondition(self, precondition: KInner):
+        self._preconditions.append(precondition)
+
     def build_app_creator_map(self):
         creator_map = []
         for acct in self._accts:
-            print(acct)
             for app in acct.apps:
                 creator_map.append(KApply("_|->_", [KToken(str(app.app_id), "Int"), acct.address]))
-        return build_assoc(
-            KApply(".Map"),
-            KLabel("_Map_"),
-            creator_map
-        )
+        return build_assoc(KApply(".Map"), KLabel("_Map_"), creator_map)
 
     def build_transactions(self):
         return build_assoc(
@@ -386,14 +373,14 @@ class KAVMProof:
         return build_assoc(
             KApply(".List"),
             KLabel("_List_"),
-            [KApply("ListItem", KToken("\"" + str(i) + "\"", "Int")) for i in range(0, len(self._txns))]
+            [KApply("ListItem", KToken("\"" + str(i) + "\"", "Int")) for i in range(0, len(self._txns))],
         )
 
     def build_deque_set(self):
         return build_assoc(
             KApply(".Set"),
             KLabel("_Set_"),
-            [KApply("SetItem", KToken("\"" + str(i) + "\"", "Int")) for i in range(0, len(self._txns))]
+            [KApply("SetItem", KToken("\"" + str(i) + "\"", "Int")) for i in range(0, len(self._txns))],
         )
 
     def prove(self):
@@ -404,21 +391,21 @@ class KAVMProof:
         lhs = KApply(
             "<kavm>",
             [
-                KApply("<k>", KApply("#evalTxGroup")),  # TODO
+                KApply("<k>", KApply("#evalTxGroup")),
                 KApply("<panicstatus>", KToken("\"\"", "String")),
                 KApply("<paniccode>", KToken("0", "Int")),
                 KApply("<returnstatus>", KToken("\"Failure - AVM is stuck\"", "String")),
-                KApply("<returncode>", KToken("4", "Int")),
-                KApply("<transactions>", [self.build_transactions()]),  # TODO
+                KApply("<returncode>", KToken("0", "Int")),
+                KApply("<transactions>", [self.build_transactions()]),
                 KApply(
                     "<avmExecution>",
                     [
-                        KApply("<currentTx>", KToken("\"\"", "String")),  # TODO
+                        KApply("<currentTx>", KToken("\"\"", "String")),
                         KApply(
                             "<txnDeque>",
                             [
-                                KApply("<deque>", self.build_deque()),  # TODO
-                                KApply("<dequeIndexSet>", self.build_deque_set()),  # TODO
+                                KApply("<deque>", self.build_deque()),
+                                KApply("<dequeIndexSet>", self.build_deque_set()),
                             ],
                         ),
                         KApply(
@@ -464,16 +451,16 @@ class KAVMProof:
                 KApply(
                     "<blockchain>",
                     [
-                        KApply("<accountsMap>", self.build_accounts()),  # TODO
-                        KApply("<appCreator>", self.build_app_creator_map()),  # TODO
-                        KApply("<assetCreator>", KToken(".Map", "Map")),  # TODO
+                        KApply("<accountsMap>", self.build_accounts()),
+                        KApply("<appCreator>", self.build_app_creator_map()),
+                        KApply("<assetCreator>", KToken(".Map", "Map")),
                         KApply("<blocks>", KToken(".Map", "Map")),
                         KApply("<blockheight>", KToken("0", "Int")),
                         KApply("<nextTxnID>", KToken("0", "Int")),
                         KApply("<nextAppID>", KToken("1", "Int")),
                         KApply("<nextAssetID>", KToken("1", "Int")),
                         KApply("<nextGroupID>", KToken("0", "Int")),
-                        KApply("<txnIndexMap>", KToken(".Bag", "TxnIndexMapGroupCell")),  # TODO
+                        KApply("<txnIndexMap>", KToken(".Bag", "TxnIndexMapGroupCell")),
                     ],
                 ),
                 KApply("<tealPrograms>", KToken(".Map", "Map")),
@@ -543,9 +530,9 @@ class KAVMProof:
                 KApply(
                     "<blockchain>",
                     [
-                        KApply("<accountsMap>", KToken(".Bag", "AccountsMapCell")),  # TODO
-                        KApply("<appCreator>", KToken(".Map", "Map")),  # TODO
-                        KApply("<assetCreator>", KToken(".Map", "Map")),  # TODO
+                        KApply("<accountsMap>", KToken(".Bag", "AccountsMapCell")),
+                        KApply("<appCreator>", KToken(".Map", "Map")),
+                        KApply("<assetCreator>", KToken(".Map", "Map")),
                         KApply("<blocks>", KToken(".Map", "Map")),
                         KApply("<blockheight>", KToken("0", "Int")),
                         KApply("<nextTxnID>", KVariable("?_")),
@@ -555,7 +542,7 @@ class KAVMProof:
                         KApply("<txnIndexMap>", KVariable("?_")),
                     ],
                 ),
-                KApply("<tealPrograms>", KToken(".Map", "Map")),  # TODO
+                KApply("<tealPrograms>", KToken(".Map", "Map")),
             ],
         )
 
@@ -571,21 +558,15 @@ class KAVMProof:
                             continue
                         self._preconditions.append(KApply("_=/=K_", [app.labels[i], app.labels[j]]))
 
-        requires = build_assoc(
-            KToken("true", "Bool"), KLabel("_andBool_"), self._preconditions
-        )
+        requires = build_assoc(KToken("true", "Bool"), KLabel("_andBool_"), self._preconditions)
 
-        ensures = build_assoc(
-            KToken("true", "Bool"), KLabel("_andBool_"), self._postconditions
-        )
+        ensures = build_assoc(KToken("true", "Bool"), KLabel("_andBool_"), self._postconditions)
 
         claim = KClaim(
             body=KRewrite(lhs, rhs),
             requires=requires,
             ensures=ensures,
         )
-
-        print(claim)
 
         proof = KProve(definition_dir="tests/specs/verification-kompiled/", use_directory=Path("proofs"))
         result = proof.prove_claim(claim=claim, claim_id="test")
@@ -597,6 +578,7 @@ class KAVMProof:
             print("counterexample:")
 
             print(pretty_print_kast(result, symbol_table=symbol_table))
+
 
 def int_2_bytes(term: KInner):
     return KApply(
@@ -619,25 +601,22 @@ class AutoProver:
 
         for method in contract.methods:
             proof = KAVMProof()
-            txn = SymbolicApplTxn(sender="test", index=1, on_complete=0)
+            txn = SymbolicApplTxn(sender="acct1_addr", index=1, on_complete=0)
             app1 = SymbolicApplication(
-                app_id = 1,
-                local_state_schema = StateSchema(0, 0),
-                global_state_schema = StateSchema(0, 0),
+                app_id=1,
+                local_state_schema=StateSchema(0, 0),
+                global_state_schema=StateSchema(0, 0),
                 approval_pgm_path=approval_pgm,
                 clear_pgm_path=clear_pgm,
             )
-            account1 = SymbolicAccount(
-                address="acct1_addr",
-                balance=1000000000
-            )
+            account1 = SymbolicAccount(address="acct1_addr", balance=1000000000)
             account1.add_app(app1)
             proof.add_acct(account1)
-            txn.add_app_arg(KToken("b\"" + str(method.get_selector()) + "\"", "Bytes"))
+            proof.add_precondition(
+                KApply("_<=Int_", [KApply("_+Int_", [KVariable("A"), KVariable("B")]), KToken("MAX_UINT64", "Int")])
+            )
+            txn.add_app_arg(KToken("b\"" + str(method.get_selector())[2:-1] + "\"", "Bytes"))
             for arg in method.args:
-                print("test")
-                print(arg.type)
-                print(type(arg.type))
                 if str(arg.type) == 'uint64':
                     txn.add_app_arg(int_2_bytes(KVariable(str(arg.name).upper(), sort=KSort("Int"))))
                 else:
@@ -650,37 +629,32 @@ class AutoProver:
 def main():
 
     txn = SymbolicApplTxn(
-        sender = "test",
-        index = 1,
-        on_complete = 0,
-        local_schema = StateSchema(0, 0),
-        global_schema = StateSchema(0, 0),
+        sender="test",
+        index=1,
+        on_complete=0,
+        local_schema=StateSchema(0, 0),
+        global_schema=StateSchema(0, 0),
         approval_program_path="tests/teal-sources/test.teal",
         clear_program_path="tests/teal-sources/test.teal",
-#        num_app_args=2
     )
 
     app1 = SymbolicApplication(
-        app_id = 1,
-        local_state_schema = StateSchema(0, 0),
-        global_state_schema = StateSchema(0, 0),
+        app_id=1,
+        local_state_schema=StateSchema(0, 0),
+        global_state_schema=StateSchema(0, 0),
         approval_pgm_path="tests/teal-sources/test.teal",
         clear_pgm_path="tests/teal-sources/test.teal",
     )
 
-    account1 = SymbolicAccount(
-        address="acct1_addr",
-        balance=1000000000
-    )
+    account1 = SymbolicAccount(address="acct1_addr", balance=1000000000)
     account1.add_app(app1)
-
-    print(account1.get_symbolic_config_pre())
 
     proof = KAVMProof()
     proof.add_acct(account1)
     proof.add_txn(txn)
 
     proof.prove()
+
 
 if __name__ == "__main__":
     main()

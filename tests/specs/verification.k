@@ -153,6 +153,9 @@ module VERIFICATION
   rule N:Int +Int M:Int >Int M:Int => N:Int >Int 0
     requires M =/=Int 0 [simplification, concrete(M)]
 
+  rule I1:Int +Int I2:Int >Int I3 => I1 >Int I3 -Int I2 [simplification, concrete(I2, I3), symbolic(I1)]
+  rule I1:Int >=Int I2:Int +Int I3:Int => I1 -Int I3 >=Int I2 [simplification, concrete(I1, I3), symbolic(I2)]
+
   rule N:Int /Int N:Int => 1 requires N =/=Int 0 [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -169,7 +172,33 @@ module VERIFICATION
 // Bytes and String reasoning
 ////////////////////////////////////////////////////////////////////////////////
 
-  rule lengthBytes(B1) +Int lengthBytes(B2) => lengthBytes(B1 +Bytes B2)  [simplification]
+  rule lengthBytes(B1) +Int lengthBytes(B2) => lengthBytes(B1 +Bytes B2)  [simplification, concrete(B1, B2)]
+
+  rule lengthBytes(B1 +Bytes B2) => lengthBytes(B1) +Int lengthBytes(B2) [simplification, symbolic(B1)]
+
+  rule lengthBytes(B1 +Bytes B2) => lengthBytes(B1) +Int lengthBytes(B2) [simplification, symbolic(B2)]
+
+//   rule lengthBytes(padLeftBytes(B:Bytes, PAD_LEN:Int, _:Int)) >Int N  => false
+//     requires (lengthBytes(B) <=Int N) andBool (PAD_LEN <=Int N) [simplification]
+  rule lengthBytes(padLeftBytes(B:Bytes, PAD_LEN:Int, _:Int)) >Int N  => lengthBytes(B) >Int N 
+    requires PAD_LEN <=Int N [simplification]
+
+  rule lengthBytes(padLeftBytes(B:Bytes, PAD_LEN:Int, _:Int)) >Int N  => PAD_LEN >Int N
+    requires lengthBytes(B) <=Int N [simplification]
+
+  rule N >=Int lengthBytes(padLeftBytes(B:Bytes, PAD_LEN:Int, _:Int))  => N >=Int lengthBytes(B)
+    requires PAD_LEN <=Int N [simplification]
+
+  rule N >=Int lengthBytes(padLeftBytes(B:Bytes, PAD_LEN:Int, _:Int))  => N >=Int PAD_LEN
+    requires lengthBytes(B) <=Int N [simplification]
+
+  rule lengthBytes(Int2Bytes(I:Int, BE, Unsigned)) >Int N => false
+    requires I <Int (2 ^Int (N *Int 8)) [simplification]
+
+  rule N >=Int lengthBytes(Int2Bytes(I:Int, BE, Unsigned)) => true
+    requires I <Int (2 ^Int (N *Int 8)) [simplification]
+
+
   rule String2Bytes(Bytes2String(B)) => B  [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
