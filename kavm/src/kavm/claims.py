@@ -42,7 +42,6 @@ class SymbolicApplTxn:
     def __init__(
         self,
         sender: str,
-        #        sp,
         index: int,
         on_complete: int,
         local_schema: StateSchema = StateSchema(0, 0),
