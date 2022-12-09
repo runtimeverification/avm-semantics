@@ -12,6 +12,7 @@ from pyk.cli_utils import run_process
 from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, build_assoc, KRewrite
 from pyk.kast.outer import KClaim, read_kast_definition
 from pyk.kore.parser import KoreParser
+from pyk.kast.manip import push_down_rewrites
 from pyk.ktool.kprint import build_symbol_table, pretty_print_kast
 from pyk.ktool.kprove import KProve
 
@@ -554,7 +555,7 @@ class KAVMProof:
         ensures = build_assoc(KToken("true", "Bool"), KLabel("_andBool_"), self._postconditions)
 
         claim = KClaim(
-            body=KRewrite(lhs, rhs),
+            body=push_down_rewrites(KRewrite(lhs, rhs)),
             requires=requires,
             ensures=ensures,
         )
