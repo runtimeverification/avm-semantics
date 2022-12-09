@@ -615,37 +615,3 @@ class AutoProver:
                     exit(1)
             proof.add_txn(txn)
             proof.prove()
-
-
-def main() -> None:
-
-    txn = SymbolicApplTxn(
-        sender="test",
-        index=1,
-        on_complete=0,
-        local_schema=StateSchema(0, 0),
-        global_schema=StateSchema(0, 0),
-        approval_program_path=Path("tests/teal-sources/test.teal"),
-        clear_program_path=Path("tests/teal-sources/test.teal"),
-    )
-
-    app1 = SymbolicApplication(
-        app_id=1,
-        local_state_schema=StateSchema(0, 0),
-        global_state_schema=StateSchema(0, 0),
-        approval_pgm_path=Path("tests/teal-sources/test.teal"),
-        clear_pgm_path=Path("tests/teal-sources/test.teal"),
-    )
-
-    account1 = SymbolicAccount(address="acct1_addr", balance=1000000000)
-    account1.add_app(app1)
-
-    proof = KAVMProof()
-    proof.add_acct(account1)
-    proof.add_txn(txn)
-
-    proof.prove()
-
-
-if __name__ == "__main__":
-    main()
