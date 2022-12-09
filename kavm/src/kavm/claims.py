@@ -320,7 +320,10 @@ class SymbolicAccount:
 
 
 class KAVMProof:
-    def __init__(self) -> None:
+    def __init__(self, definition_dir: Path, use_directory: Path) -> None:
+        self._definition_dir = definition_dir
+        self._use_directory = use_directory
+
         self._txns: List[KInner] = []
         self._txn_ids: List[int] = []
         self._txns_post: List[KInner] = []
@@ -560,7 +563,7 @@ class KAVMProof:
             ensures=ensures,
         )
 
-        proof = KProve(definition_dir=Path("tests/specs/verification-kompiled/"), use_directory=Path("proofs"))
+        proof = KProve(definition_dir=self._definition_dir, use_directory=self._use_directory)
         result = proof.prove_claim(claim=claim, claim_id="test")
 
         if type(result) is KApply and result.label.name == "#Top":
@@ -592,7 +595,7 @@ class AutoProver:
     ):
 
         for method in contract.methods:
-            proof = KAVMProof()
+            proof = KAVMProof(definition_dir=Path('tests/specs/verification-kompiled'), use_directory=Path("proofs"))
             txn = SymbolicApplTxn(sender="acct1_addr", index=1, on_complete=0)
             app1 = SymbolicApplication(
                 app_id=1,
