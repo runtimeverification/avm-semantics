@@ -461,11 +461,11 @@ class KAVMProof:
         rhs = KApply(
             "<kavm>",
             [
-                KApply("<k>", KToken("1", "Int")),
+                KApply("<k>", KToken(".K", "KItem ")),
                 KApply("<panicstatus>", KToken("\"\"", "String")),
                 KApply("<paniccode>", KToken("0", "Int")),
                 KApply("<returnstatus>", KToken("\"Success - transaction group accepted\"", "String")),
-                KApply("<returncode>", KToken("1234123", "Int")),
+                KApply("<returncode>", KToken("0", "Int")),
                 KApply("<transactions>", KVariable("?_")),
                 KApply(
                     "<avmExecution>",
@@ -521,9 +521,9 @@ class KAVMProof:
                 KApply(
                     "<blockchain>",
                     [
-                        KApply("<accountsMap>", KToken(".Bag", "AccountsMapCell")),
-                        KApply("<appCreator>", KToken(".Map", "Map")),
-                        KApply("<assetCreator>", KToken(".Map", "Map")),
+                        KApply("<accountsMap>", KVariable("?_")),
+                        KApply("<appCreator>", KVariable("?_")),
+                        KApply("<assetCreator>", KVariable("?_")),
                         KApply("<blocks>", KToken(".Map", "Map")),
                         KApply("<blockheight>", KToken("0", "Int")),
                         KApply("<nextTxnID>", KVariable("?_")),
