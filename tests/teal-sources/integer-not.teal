@@ -1,0 +1,12 @@
+#pragma version 8
+
+int 123
+~
+
+int 18446744073709551492
+==
+
+assert
+
+int 1
+return
