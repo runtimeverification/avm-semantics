@@ -2,17 +2,24 @@ import json
 from collections import namedtuple
 from pathlib import Path
 from typing import List, Optional
+import subprocess
+
 
 from algosdk.abi.contract import Contract
 from algosdk.abi.method import Method
 from algosdk.future.transaction import StateSchema
 from pyk.cli_utils import run_process
-from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, build_assoc
-from pyk.kast.outer import KClaim, KRewrite, read_kast_definition
+from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, build_assoc, KRewrite
+from pyk.kast.outer import KClaim, read_kast_definition
+from pyk.kore.parser import KoreParser
 from pyk.ktool.kprint import build_symbol_table, pretty_print_kast
 from pyk.ktool.kprove import KProve
 
+from kavm.kavm import KAVM
+
 PrePost = namedtuple('PrePost', ['pre', 'post'])
+
+kavm = KAVM(definition_dir=Path(".build/usr/lib/kavm/avm-llvm/avm-testing-kompiled/"))
 
 
 def parse_program(file: Optional[Path]) -> KInner:
@@ -22,20 +29,9 @@ def parse_program(file: Optional[Path]) -> KInner:
             args=(KToken(token='1', sort=KSort(name='Int')),),
         )
 
-    kast_command = [
-        "kast",
-        "--output",
-        "json",
-        "--definition",
-        ".build/usr/lib/kavm/avm-llvm/avm-testing-kompiled",
-        "--sort",
-        "TealInputPgm",
-        "--module",
-        "TEAL-PARSER-SYNTAX",
-    ]
-    kast_command += [str(file)]
-    result = run_process(kast_command)
-    return KInner.from_dict(json.loads(result.stdout)["term"])
+    command = [str(kavm._teal_parser)] + [str(file)]
+    result = run_process(command)
+    return kavm.kore_to_kast(KoreParser(result.stdout).pattern())
 
 
 class SymbolicApplTxn:
