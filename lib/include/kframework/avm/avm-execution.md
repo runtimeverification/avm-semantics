@@ -77,7 +77,6 @@ and the current configuration is frozen for examination.
 
   // Minimum balances are only checked at the conclusion of the outer-level group.
   rule <k> #evalNextTx() => #checkSufficientBalance() ... </k>
-      <returncode> _ => 0 </returncode>
       <deque> .List </deque>
 ```
 
@@ -103,7 +102,6 @@ the attached stateless TEAL if the transaction is logicsig-signed.
           ~> #executeTxn(TXN_TYPE) 
        ... 
        </k>
-       <returncode> _ => 4 </returncode>   // (re-)initialize the code with "in-progress" value
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID> TXN_ID </txID>
