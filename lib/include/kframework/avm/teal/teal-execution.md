@@ -44,8 +44,7 @@ there may be some remaining artefacts of the previous transaction's TEAL.
        </currentTxnExecution>
 
   rule <k> #restoreContext() => . ...</k>
-       <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
-       <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
+       <returncode> _ => 4 </returncode>   // (re-)initialize the code with "in-progress" value
        <currentTx> TX_ID </currentTx>
        <transaction>
          <txID> TX_ID </txID>
@@ -89,10 +88,10 @@ Pragmas are applied directly, and then the `#LoadPgm` performs program pre-proce
 * the program is transformed into a `Map` from program addresses to opcodes and stored
   into the `<program>` cell;
 * every opcode is checked to be valid for the current execution mode and
-  `panic(INVALID_OP_FOR_MODE)` is triggered accordingly;
+  `#panic(INVALID_OP_FOR_MODE)` is triggered accordingly;
 * the labels are collected and stored into the `<labels>` cell as keys, with their program
   addresses as values;
-* if a label is encountered twice, the `panic(DUPLICATE_LABEL)` computation is triggered.
+* if a label is encountered twice, the `#panic(DUPLICATE_LABEL)` computation is triggered.
 
 ```k
   rule <k> OpaqueTeal(Rs:TealPragmas P:TealPgm) => Rs ~> #LoadPgm(P, 0) ... </k>
@@ -116,11 +115,11 @@ Pragmas are applied directly, and then the `#LoadPgm` performs program pre-proce
        <labels> LL => LL[L <- PC] </labels>
     requires notBool (L in_labels LL)
 
-  rule <k> #LoadPgm( (L:) _, _ ) => panic(DUPLICATE_LABEL) ... </k>
+  rule <k> #LoadPgm( (L:) _, _ ) => #panic(DUPLICATE_LABEL) ... </k>
        <labels> LL </labels>
     requires L in_labels LL
 
-  rule <k> #LoadPgm( Op _, _) => panic(INVALID_OP_FOR_MODE) ... </k>
+  rule <k> #LoadPgm( Op _, _) => #panic(INVALID_OP_FOR_MODE) ... </k>
        <mode> Mode </mode>
     requires notBool #ValidOpForMode( Mode, Op )
 
@@ -135,11 +134,11 @@ Pragmas are applied directly, and then the `#LoadPgm` performs program pre-proce
        <labels> LL => LL[L <- PC] </labels>
     requires notBool (L in_labels LL)
 
-  rule <k> #LoadPgm( (L:) , _ ) => panic(DUPLICATE_LABEL) ... </k>
+  rule <k> #LoadPgm( (L:) , _ ) => #panic(DUPLICATE_LABEL) ... </k>
        <labels> LL </labels>
     requires L in_labels LL
 
-  rule <k> #LoadPgm( Op, _) => panic(INVALID_OP_FOR_MODE) ... </k>
+  rule <k> #LoadPgm( Op, _) => #panic(INVALID_OP_FOR_MODE) ... </k>
        <mode> Mode </mode>
     requires notBool #ValidOpForMode( Mode, Op )
 
@@ -228,91 +227,37 @@ Note: For stateless teal, failure means rejecting the transaction. For stateful
 teal, failure means undoing changes made to the state (for more details, see
 [this article](https://developer.algorand.org/docs/features/asc1/).)
 ```k
-  syntax KItem ::= #calcReturn()
   syntax KItem ::= #deactivateApp()
-  syntax KItem ::= #stopIfError()
+  syntax KItem ::= #checkStack()
 
-  rule <k> #finalizeExecution() => #saveScratch() ~> #deactivateApp() ~> #calcReturn() ~> #stopIfError() ... </k>
+  rule <k> #finalizeExecution() => #saveScratch() ~> #deactivateApp() ~> #checkStack() ... </k>
     requires getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)
-
-  rule <k> #finalizeExecution() => #calcReturn() ~> #stopIfError() ... </k>
-    requires getTxnField(getCurrentTxn(), TypeEnum) =/=K (@ appl)
 
   rule <k> #deactivateApp() => . ... </k>
        <currentApplicationID> APP_ID </currentApplicationID>
        <activeApps> (SetItem(APP_ID) => .Set) ...</activeApps>
 
-  rule <k> #calcReturn() => .K ... </k>
+  rule <k> #checkStack() => .K ... </k>
        <stack> I : .TStack </stack>
        <stacksize> SIZE </stacksize>
-       <paniccode> 0 </paniccode>
-       <returncode> 4 => 0 </returncode>
-       <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
     requires I >Int 0 andBool SIZE ==Int 1
-     andBool getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)
 
-  rule <k> #calcReturn() => .K ... </k>
-       <paniccode> 0 </paniccode>
-       <returncode> 4 => 0 </returncode>
-       <returnstatus> _ => "Success - no errors on non-application transaction" </returnstatus>
-     requires getTxnField(getCurrentTxn(), TypeEnum) =/=K (@ appl)
-
-  rule <k> #calcReturn() => .K ... </k>
+  rule <k> #checkStack() => #panic(ZERO_STACK) ... </k>
        <stack> I : .TStack </stack>
        <stacksize> _ </stacksize>
-       <paniccode> 0 </paniccode>
-       <returncode> 4 => 1 </returncode>
-       <returnstatus> _ => "Failure - zero-valued singleton stack" </returnstatus>
     requires 0 >=Int I
-     andBool getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)
 
-  rule <k> #calcReturn() => .K ... </k>
+  rule <k> #checkStack() => #panic(BAD_STACK) ... </k>
        <stack> _ </stack>
        <stacksize> SIZE </stacksize>
-       <paniccode> 0 </paniccode>
-       <returncode> 4 => 2 </returncode>
-       <returnstatus> _ => "Failure - stack size greater than 1" </returnstatus>
     requires SIZE >Int 1
-     andBool getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)
 
-  rule <k> #calcReturn() => .K ... </k>
+  rule <k> #checkStack() => #panic(BAD_STACK) ... </k>
        <stack> .TStack </stack>
-       <paniccode> 0 </paniccode>
-       <returncode> 4 => 2 </returncode>
-       <returnstatus> _ => "Failure - empty stack" </returnstatus>
-     requires getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)
 
-  rule <k> #calcReturn() => .K ... </k>
+  rule <k> #checkStack() => #panic(BAD_STACK) ... </k>
        <stack> (_:Bytes) : .TStack </stack>
        <stacksize> _ </stacksize>
-       <paniccode> 0 </paniccode>
-       <returncode> 4 => 2 </returncode>
-       <returnstatus> _ => "Failure - singleton stack with byte array type" </returnstatus>
-     requires getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)
-
-  rule <k> #calcReturn() => .K ... </k>
-       <paniccode> PANIC_CODE </paniccode>
-       <panicstatus> S </panicstatus>
-       <returncode> 4 => 3 </returncode>
-       <returnstatus> _ => "Failure - panic: " +String S </returnstatus>
-    requires PANIC_CODE =/=Int 0
-
-  // Leave the testing commands on the K cell
-  rule <k> #stopIfError() ~> X:TestingCommand => X:TestingCommand ~> #stopIfError() ... </k>
-
-  // Consume the rest of the K cell if the execution terminated with an error
-  rule <k> #stopIfError() ~> (ITEM:KItem => .K) ... </k>
-       <returncode> RETURN_CODE </returncode>
-    requires RETURN_CODE =/=Int 0
-     andBool notBool(isTestingCommand(ITEM))
-
-  rule <k> #stopIfError() => .K </k>
-       <returncode> RETURN_CODE </returncode>
-    requires RETURN_CODE =/=Int 0
-
-  rule <k> #stopIfError() => . ... </k>
-       <returncode> RETURN_CODE </returncode>
-    requires RETURN_CODE ==Int 0
 ```
 
 ```k
@@ -328,210 +273,6 @@ teal, failure means undoing changes made to the state (for more details, see
        <scratch> SCRATCH </scratch>
 ```
 
-Panic Behaviors
----------------
-
-A TEAL program may panic for one of the following reasons:
-
-1.  Opcode used not valid for current mode of execution
-
-2.  The `err` opcode is encountered
-
-3.  Integer overflow
-
-4.  Integer underflow
-
-5.  Division by zero
-
-6.  `concat`: The resulting byte array is too large (> 4k bytes)
-
-7.  `txn`/`txna`: Accessing a transaction field failed
-    - The transaction does not exist
-    - The transaction type is invalid
-    - The requested field is invalid for the transaction type
-    - Indexing an array field out of bounds
-    - Access to a field of transaction beyond `GroupIndex` is requested via `gaid(s)` or `gload(s)` opcode
-
-8.  An opcode attempts to write to or read from an invalid scratch space
-    location
-
-9.  An opcode attempts to use an invalid index for a byte array (`substring*`,
-    `arg`)
-
-10. branching beyond the end of the program or brcnhing backwards (`b*`)
-
-11. An input in the stack is not of the expected type
-
-12. An input in the stack is not in the expected range, for example not `0` or `1` for `setbit`
-
-13. An opcode attempts to push to a full stack
-
-14. An opcode attempts to pop from an empty stack
-
-15. An assertion is violated, i.e. the asserted expression evaluates to zero
-
-16. A negative number is supplied on stack. That panic behavior is impossible in concrete
-    execution, but is helpful in some symbolic execution scenarios.
-
-17. A subroutine call attempt with a full call stack, or a subroutine return with an empty one.
-
-18. Math attempted on a byte-array larger than `MAX_BYTE_MATH_SIZE`.
-
-Other reasons for panic behavior, which do not apply to this specification
-of TEAL, include:
-
-19. `global`: Wrong global field (rejected by our TEAL parser; syntax
-    definition disallows invalid fields)
-
-20. `txn/txna`: wrong type argument (rejected by our TEAL parser; syntax
-    definition disallows invalid fields)
-
-21. Loading constants from beyond the bytecblock or the intcblock of the
-    program (This is specific to post-assembly TEAL and does not apply to our
-    abstract semantics)
-
-22. Invalid opcode (rejected by our TEAL parser; syntax definition disallows
-    invalid opcodes)
-
-Panic conditions (1 -- 18 above) are captured by the `panic` computation,
-which carries a message describing the reason for panicking and sets the
-return code to 3 (see return codes below).
-
-```k
-  // Panic types
-  syntax String ::= "INVALID_OP_FOR_MODE"        [macro]
-  syntax String ::= "ERR_OPCODE"                 [macro]
-  syntax String ::= "INT_OVERFLOW"               [macro]
-  syntax String ::= "INT_UNDERFLOW"              [macro]
-  syntax String ::= "DIV_BY_ZERO"                [macro]
-  syntax String ::= "BYTES_OVERFLOW"             [macro]
-  syntax String ::= "TXN_ACCESS_FAILED"          [macro]
-  syntax String ::= "TXN_INVALID"                [macro]
-  syntax String ::= "INVALID_SCRATCH_LOC"        [macro]
-  syntax String ::= "TXN_OUT_OF_BOUNDS"          [macro]
-  syntax String ::= "FUTURE_TXN"                 [macro]
-  syntax String ::= "INDEX_OUT_OF_BOUNDS"        [macro]
-  syntax String ::= "ILLEGAL_JUMP"               [macro]
-  syntax String ::= "ILL_TYPED_STACK"            [macro]
-  syntax String ::= "LOG_CALLS_EXCEEDED"         [macro]
-  syntax String ::= "LOG_SIZE_EXCEEDED"          [macro]
-  syntax String ::= "GLOBAL_BYTES_EXCEEDED"      [macro]
-  syntax String ::= "GLOBAL_INTS_EXCEEDED"       [macro]
-  syntax String ::= "LOCAL_BYTES_EXCEEDED"       [macro]
-  syntax String ::= "LOCAL_INTS_EXCEEDED"        [macro]
-  syntax String ::= "STACK_OVERFLOW"             [macro]
-  syntax String ::= "STACK_UNDERFLOW"            [macro]
-  syntax String ::= "ASSERTION_VIOLATION"        [macro]
-  syntax String ::= "IMPOSSIBLE_NEGATIVE_NUMBER" [macro]
-  syntax String ::= "DUPLICATE_LABEL"            [macro]
-  syntax String ::= "CALLSTACK_UNDERFLOW"        [macro]
-  syntax String ::= "CALLSTACK_OVERFLOW"         [macro]
-  syntax String ::= "INVALID_ARGUMENT"           [macro]
-  syntax String ::= "ITXN_REENTRY"               [macro]
-  syntax String ::= "MATH_BYTES_ARG_TOO_LONG"    [macro]
-  syntax String ::= "INSUFFICIENT_FUNDS"         [macro]
-  syntax String ::= "KEY_TOO_LARGE"              [macro]
-  syntax String ::= "BYTE_VALUE_TOO_LARGE"       [macro]
-  syntax String ::= "KEY_VALUE_TOO_LARGE"        [macro]
-  syntax String ::= "BOX_TOO_LARGE"              [macro]
-  syntax String ::= "CHANGED_BOX_SIZE"           [macro]
-  syntax String ::= "BOX_NOT_FOUND"              [macro]
-  syntax String ::= "BOX_UNAVAILABLE"            [macro]
-  syntax String ::= "BOX_WRONG_LENGTH"           [macro]
-  syntax String ::= "BOX_OUT_OF_BOUNDS"          [macro]
-  syntax String ::= "BOX_CREATE_EXTERNAL"        [macro]
-  //----------------------------------------------------
-  rule INVALID_OP_FOR_MODE => "invalid opcode for current execution mode"
-  rule ERR_OPCODE          => "err opcode encountered"
-  rule INT_OVERFLOW        => "integer overflow"
-  rule INT_UNDERFLOW       => "integer underflow"
-  rule DIV_BY_ZERO         => "division by zero"
-  rule BYTES_OVERFLOW      => "resulting byte array too large"
-  rule TXN_ACCESS_FAILED   => "transaction field access failed"
-  rule TXN_INVALID         => "a transaction is malformed"
-  rule INVALID_SCRATCH_LOC => "invalid scratch space location"
-  rule TXN_OUT_OF_BOUNDS   => "transaction index out of bounds"
-  rule FUTURE_TXN          => "tried to access transaction that hasn't executed yet"
-  rule INDEX_OUT_OF_BOUNDS => "array index out of bounds"
-  rule ILLEGAL_JUMP        => "illegal branch to a non-existing label"
-  rule ILL_TYPED_STACK     => "wrong argument type(s) for opcode"
-  rule LOG_CALLS_EXCEEDED  => "too many log calls in transaction"
-  rule LOG_SIZE_EXCEEDED   => "total size of log calls in transaction is too large"
-  rule GLOBAL_BYTES_EXCEEDED => "tried to store too many byte values in global storage"
-  rule GLOBAL_INTS_EXCEEDED => "tried to store too many int values in global storage"
-  rule LOCAL_BYTES_EXCEEDED => "tried to store too many byte values in local storage"
-  rule LOCAL_INTS_EXCEEDED => "tried to store too many int values in local storage"
-  rule INVALID_ARGUMENT    => "wrong argument range(s) for opcode"
-  rule STACK_OVERFLOW      => "stack overflow"
-  rule STACK_UNDERFLOW     => "stack underflow"
-  rule ASSERTION_VIOLATION => "assertion violation"
-  rule DUPLICATE_LABEL     => "duplicate label"
-  rule IMPOSSIBLE_NEGATIVE_NUMBER => "impossible happened: negative number on stack"
-  rule CALLSTACK_UNDERFLOW => "call stack underflow: illegal retsub"
-  rule CALLSTACK_OVERFLOW  => "call stack overflow: recursion is too deep"
-  rule ITXN_REENTRY        => "application called from itself"
-  rule MATH_BYTES_ARG_TOO_LONG => "math attempted on large byte-array"
-  rule INSUFFICIENT_FUNDS  => "negative balance reached"
-  rule KEY_TOO_LARGE       => "key is too long"
-  rule BYTE_VALUE_TOO_LARGE => "tried to store too large of a byte value"
-  rule KEY_VALUE_TOO_LARGE => "sum of key length and value length is too high"
-  rule ASSERTION_VIOLATION => "assertion violation"
-  rule BOX_TOO_LARGE       => "tried to create a box which is too large"
-  rule CHANGED_BOX_SIZE    => "called box_create on existing box with a different size"
-  rule BOX_NOT_FOUND       => "tried to access a box name that doesn't exist"
-  rule BOX_UNAVAILABLE     => "tried to access box not referenced in any transaction in this group"
-  rule BOX_WRONG_LENGTH    => "tried to replace a box byte array with one of a different length"
-  rule BOX_OUT_OF_BOUNDS   => "tried to access out of bounds of a box byte array"
-  rule BOX_CREATE_EXTERNAL => "tried to create a box for which a reference already exists tied to another application"
-  //--------------------------------------------------------------------------------
-
-  rule panicCode(INVALID_OP_FOR_MODE)        => 1
-  rule panicCode(ERR_OPCODE)                 => 2
-  rule panicCode(INT_OVERFLOW)               => 3
-  rule panicCode(INT_UNDERFLOW)              => 4
-  rule panicCode(DIV_BY_ZERO)                => 5
-  rule panicCode(BYTES_OVERFLOW)             => 6
-  rule panicCode(TXN_ACCESS_FAILED)          => 7
-  rule panicCode(TXN_INVALID)                => 8
-  rule panicCode(INVALID_SCRATCH_LOC)        => 9
-  rule panicCode(TXN_OUT_OF_BOUNDS)          => 10
-  rule panicCode(FUTURE_TXN)                 => 11
-  rule panicCode(INDEX_OUT_OF_BOUNDS)        => 12
-  rule panicCode(ILLEGAL_JUMP)               => 13
-  rule panicCode(ILL_TYPED_STACK)            => 14
-  rule panicCode(LOG_CALLS_EXCEEDED)         => 15
-  rule panicCode(LOG_SIZE_EXCEEDED)          => 16
-  rule panicCode(GLOBAL_BYTES_EXCEEDED)      => 17
-  rule panicCode(GLOBAL_INTS_EXCEEDED)       => 18
-  rule panicCode(LOCAL_BYTES_EXCEEDED)       => 19
-  rule panicCode(LOCAL_INTS_EXCEEDED)        => 20
-  rule panicCode(INVALID_ARGUMENT)           => 21
-  rule panicCode(STACK_OVERFLOW)             => 22
-  rule panicCode(STACK_UNDERFLOW)            => 23
-  rule panicCode(ASSERTION_VIOLATION)        => 24
-  rule panicCode(DUPLICATE_LABEL)            => 25
-  rule panicCode(IMPOSSIBLE_NEGATIVE_NUMBER) => 26
-  rule panicCode(CALLSTACK_UNDERFLOW)        => 27
-  rule panicCode(CALLSTACK_OVERFLOW)         => 28
-  rule panicCode(ITXN_REENTRY)               => 29
-  rule panicCode(MATH_BYTES_ARG_TOO_LONG)    => 30
-  rule panicCode(INSUFFICIENT_FUNDS)         => 31
-  rule panicCode(KEY_TOO_LARGE)              => 32
-  rule panicCode(BYTE_VALUE_TOO_LARGE)       => 33
-  rule panicCode(KEY_VALUE_TOO_LARGE)        => 34
-  rule panicCode(ASSERTION_VIOLATION)        => 35
-  rule panicCode(BOX_TOO_LARGE)              => 36
-  rule panicCode(CHANGED_BOX_SIZE)           => 37
-  rule panicCode(BOX_NOT_FOUND)              => 38
-  rule panicCode(BOX_UNAVAILABLE)            => 39
-  rule panicCode(BOX_WRONG_LENGTH)           => 40
-  rule panicCode(BOX_OUT_OF_BOUNDS)          => 41
-  rule panicCode(BOX_CREATE_EXTERNAL)        => 42
-
-  rule <k> panic(S) => #finalizeExecution() ... </k>
-       <paniccode> _ => panicCode(S) </paniccode>
-       <panicstatus> _ => S </panicstatus>
-```
 
 ```k
 endmodule
