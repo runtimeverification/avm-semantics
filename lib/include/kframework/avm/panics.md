@@ -229,7 +229,7 @@ return code to 3 (see return codes below).
   rule KEY_TOO_LARGE              => 37
   rule BYTE_VALUE_TOO_LARGE       => 38
   rule KEY_VALUE_TOO_LARGE        => 39
-  rule ASSERTION_VIOLATION        => 40
+  rule TXN_DEQUE_ERROR            => 40
   rule BOX_TOO_LARGE              => 41
   rule CHANGED_BOX_SIZE           => 42
   rule BOX_NOT_FOUND              => 43
@@ -243,7 +243,6 @@ return code to 3 (see return codes below).
   rule ASSET_NOT_OPT_IN           => 51
   rule UNKNOWN_ADDRESS            => 52
   rule ASSET_NO_PERMISSION        => 53
-  rule TXN_DEQUE_ERROR            => 54
 
   syntax KItem ::= #panic(Int)
   syntax KItem ::= #stopIfError()

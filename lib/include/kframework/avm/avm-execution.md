@@ -328,7 +328,6 @@ Add asset to account
     requires BALANCE >=Int MIN_BALANCE
 
   rule <k> #checkSufficientBalance(ADDR) => #panic(MIN_BALANCE_VIOLATION) ...</k>
-       <currentTx> TX_ID </currentTx>
        <account>
          <address> ADDR </address>
          <balance> BALANCE </balance>
@@ -440,7 +439,6 @@ Not supported.
 
 ```k
   rule <k> #executeTxn(@keyreg) => #panic(UNSUPPORTED_TXN_TYPE) ... </k>
-       <currentTx> TXN_ID </currentTx>
 ```
 
 * **Asset Configuration**
@@ -595,8 +593,7 @@ TODO split into other cases?
   - Maybe more?
 
 ```k
-  rule <k> #executeTxn(@acfg) => #panic(ASSET_NO_PERMISSION) ...</k>
-       <currentTx> TXN_ID </currentTx> [owise]
+  rule <k> #executeTxn(@acfg) => #panic(ASSET_NO_PERMISSION) ...</k> [owise]
 ```
 
 * **Asset Transfer**
@@ -1075,13 +1072,10 @@ TODO: determine if we need to support them an all.
 
 ```k
   rule <k> #executeTxn(@ccfg) => #panic(UNSUPPORTED_TXN_TYPE) ... </k>
-       <currentTx> TXN_ID </currentTx>
 
   rule <k> #executeTxn(@ccall) => #panic(UNSUPPORTED_TXN_TYPE) ... </k>
-       <currentTx> TXN_ID </currentTx>
 
   rule <k> #executeTxn(@cfx) => #panic(UNSUPPORTED_TXN_TYPE) ... </k>
-       <currentTx> TXN_ID </currentTx>
 ```
 
 ```k
