@@ -77,7 +77,8 @@ and the current configuration is frozen for examination.
 
   // Minimum balances are only checked at the conclusion of the outer-level group.
   rule <k> #evalNextTx() => #checkSufficientBalance() ... </k>
-      <deque> .List </deque>
+       <returncode> _ => 0 </returncode>
+       <deque> .List </deque>
 ```
 
 ### Executing next transaction
