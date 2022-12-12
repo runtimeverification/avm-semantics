@@ -26,9 +26,6 @@ build:
 	poetry build
 
 poetry-install: venv-config
-	export LC_ALL=C.UTF-8
-	export LANG=C.UTF-8
-	export LANGUAGE=C.UTF-8
 	poetry install
 
 
