@@ -122,3 +122,27 @@ def carefully_split_config_from(configuration: KInner, ignore_cells: Optional[Se
 
     symbolic_config = top_down(_replace_with_var, configuration)
     return (symbolic_config, initial_substitution)
+
+
+def int_2_bytes(term: KInner) -> KInner:
+    return KApply(
+        "Int2Bytes",
+        [
+            term,
+            KToken("BE", "Endianness"),
+            KToken("Unsigned", "Signedness"),
+        ],
+    )
+
+
+def generate_tvalue_list(tvlist: List[KInner]) -> KInner:
+    if len(tvlist) == 1:
+        return tvlist[0]
+    else:
+        return KApply(
+            "___TEAL-TYPES-SYNTAX_TValueNeList_TValue_TValueNeList",
+            [
+                tvlist[0],
+                generate_tvalue_list(tvlist[1:]),
+            ],
+        )

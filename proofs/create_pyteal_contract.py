@@ -1,6 +1,12 @@
 from pathlib import Path
+from algosdk.account import generate_account
+from algosdk.future.transaction import PaymentTxn
+from kavm.adaptors.algod_transaction import transaction_k_term
+from kavm.algod import KAVMClient
 from pyteal import *
 from kavm.claims import AutoProver
+
+from pyk.kast.inner import KApply, KInner, KSort, KToken, Subst, KVariable
 
 router = Router(
     name="Calculator",
@@ -37,6 +43,6 @@ if __name__ == "__main__":
 #      print(approval_pgm)
 #      print(clear_pgm)
 #      print(contract.dictify())
-    prover = AutoProver("approval.teal", "clear.teal", contract)
+    prover = AutoProver(Path('./tests/specs/verification-kompiled'), "approval.teal", "clear.teal", contract)
 
 

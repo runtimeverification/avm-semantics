@@ -1,199 +1,32 @@
-import json
-from collections import namedtuple
 from pathlib import Path
 from typing import List, Optional
-import subprocess
-
 
 from algosdk.abi.contract import Contract
 from algosdk.abi.method import Method
-from algosdk.future.transaction import StateSchema
+from algosdk.account import generate_account
+from algosdk.future.transaction import ApplicationCallTxn, StateSchema
 from pyk.cli_utils import run_process
-from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, build_assoc, KRewrite
+from pyk.kast.inner import KApply, KInner, KLabel, KRewrite, KSort, KToken, KVariable, Subst, build_assoc
+from pyk.kast.manip import inline_cell_maps, push_down_rewrites
 from pyk.kast.outer import KClaim, read_kast_definition
 from pyk.kore.parser import KoreParser
-from pyk.kast.manip import push_down_rewrites
-from pyk.ktool.kprint import build_symbol_table, pretty_print_kast
+from pyk.ktool.kprint import build_symbol_table, paren, pretty_print_kast
 from pyk.ktool.kprove import KProve
+from pyk.prelude.bytes import bytesToken
+from pyk.prelude.kint import intToken
 
+from kavm.adaptors.algod_transaction import transaction_k_term
+from kavm.algod import KAVMClient
 from kavm.kavm import KAVM
+from kavm.pyk_utils import generate_tvalue_list, int_2_bytes
 
-PrePost = namedtuple('PrePost', ['pre', 'post'])
-
-kavm = KAVM(definition_dir=Path(".build/usr/lib/kavm/avm-llvm/avm-testing-kompiled/"))
-
-
-def parse_program(file: Optional[Path]) -> KInner:
-    if not (file):
-        return KApply(
-            label=KLabel(name='int__TEAL-OPCODES_PseudoOpCode_PseudoTUInt64', params=()),
-            args=(KToken(token='1', sort=KSort(name='Int')),),
-        )
-
-    command = [str(kavm._teal_parser)] + [str(file)]
-    result = run_process(command)
-    return kavm.kore_to_kast(KoreParser(result.stdout).pattern())
+kavm = KAVM(
+    definition_dir=Path("/home/geo2a/Workspace/RV/avm-semantics/.build/usr/lib/kavm/avm-llvm/avm-testing-kompiled/")
+)
 
 
 class SymbolicApplTxn:
-    def __init__(
-        self,
-        sender: str,
-        index: int,
-        on_complete: int,
-        local_schema: Optional[StateSchema] = None,
-        global_schema: Optional[StateSchema] = None,
-        approval_program_path: Optional[Path] = None,
-        clear_program_path: Optional[Path] = None,
-        extra_pages: int = 0,
-    ) -> None:
-        self.sender = KToken("b\"" + sender + "\"", "Bytes")
-        self.index = KToken(str(index), "Int")
-        self.on_complete = KToken(str(on_complete), "Int")
-        self.approval_program_path = approval_program_path
-        self.clear_program_path = clear_program_path
-        self.local_schema = local_schema if local_schema else StateSchema(0, 0)
-        self.global_schema = global_schema if global_schema else StateSchema(0, 0)
-        self.extra_pages = extra_pages
-        self.app_args: List[KInner] = []
-
-    def add_app_arg(self, arg: KInner) -> None:
-        self.app_args.append(arg)
-
-    def generate_tvalue_list(self, tvlist: List[KInner]) -> KInner:
-        if len(tvlist) == 1:
-            return tvlist[0]
-        else:
-            return KApply(
-                "___TEAL-TYPES-SYNTAX_TValueNeList_TValue_TValueNeList",
-                [
-                    tvlist[0],
-                    self.generate_tvalue_list(tvlist[1:]),
-                ],
-            )
-
-    def get_specific_field_pre(self) -> KInner:
-        return KApply(
-            "<appCallTxFields>",
-            [
-                KApply("<applicationID>", self.index),
-                KApply("<onCompletion>", self.on_complete),
-                KApply("<accounts>", KToken(".TValueList", "TValueList")),
-                KApply("<approvalProgramSrc>", parse_program(self.approval_program_path)),
-                KApply("<clearStateProgramSrc>", parse_program(self.clear_program_path)),
-                KApply("<approvalProgram>", KToken(".Bytes", "Bytes")),
-                KApply("<clearStateProgram>", KToken(".Bytes", "Bytes")),
-                KApply("<applicationArgs>", self.generate_tvalue_list(self.app_args)),
-                KApply("<foreignApps>", KToken(".TValueList", "TValueList")),
-                KApply("<foreignAssets>", KToken(".TValueList", "TValueList")),
-                KApply("<boxReferences>", KToken(".TValuePairList", "TValuePairList")),
-                KApply(
-                    "<globalStateSchema>",
-                    [
-                        KApply("<globalNui>", KToken(str(self.global_schema.num_uints), "Int")),
-                        KApply("<globalNbs>", KToken(str(self.global_schema.num_byte_slices), "Int")),
-                    ],
-                ),
-                KApply(
-                    "<localStateSchema>",
-                    [
-                        KApply("<localNui>", KToken(str(self.local_schema.num_uints), "Int")),
-                        KApply("<localNbs>", KToken(str(self.local_schema.num_byte_slices), "Int")),
-                    ],
-                ),
-                KApply("<extraProgramPages>", KToken(str(self.extra_pages), "Int")),
-            ],
-        )
-
-    def get_symbolic_config_pre(self) -> KInner:
-
-        return KApply(
-            "<transaction>",
-            [
-                KApply("<txID>", KToken("\"0\"", "String")),
-                KApply(
-                    "<txHeader>",
-                    [
-                        KApply("<fee>", KToken("0", "Int")),
-                        KApply("<firstValid>", KToken("0", "Int")),
-                        KApply("<lastValid>", KToken("0", "Int")),
-                        KApply("<genesisHash>", KToken(".Bytes", "Bytes")),
-                        KApply("<sender>", self.sender),
-                        KApply("<txType>", KToken("\"appl\"", "String")),
-                        KApply("<typeEnum>", KToken("6", "Int")),
-                        KApply("<groupID>", KToken("\"\"", "String")),
-                        KApply("<groupIdx>", KToken("0", "Int")),
-                        KApply("<genesisID>", KToken(".Bytes", "Bytes")),
-                        KApply("<lease>", KToken(".Bytes", "Bytes")),
-                        KApply("<note>", KToken(".Bytes", "Bytes")),
-                        KApply("<rekeyTo>", KToken(".Bytes", "Bytes")),
-                    ],
-                ),
-                KApply("<txnTypeSpecificFields>", self.get_specific_field_pre()),
-                KApply(
-                    "<applyData>",
-                    [
-                        KApply("<txScratch>", KToken(".Map", "Map")),
-                        KApply("<txConfigAsset>", KToken("0", "Int")),
-                        KApply("<txApplicationID>", KToken("0", "Int")),
-                        KApply(
-                            "<log>",
-                            [
-                                KApply("<logData>", KToken(".TValueList", "TValueList")),
-                                KApply("<logSize>", KToken("0", "Int")),
-                            ],
-                        ),
-                    ],
-                ),
-                KApply("<txnExecutionContext>", KToken(".K", "KItem")),
-                KApply("<resume>", KToken("false", "Bool")),
-            ],
-        )
-
-    def get_symbolic_config_post(self) -> KInner:
-
-        return KApply(
-            "<transaction>",
-            [
-                KApply("<txID>", KToken("\"0\"", "String")),
-                KApply(
-                    "<txHeader>",
-                    [
-                        KApply("<fee>", KToken("0", "Int")),
-                        KApply("<firstValid>", KToken("0", "Int")),
-                        KApply("<lastValid>", KToken("0", "Int")),
-                        KApply("<genesisHash>", KToken(".Bytes", "Bytes")),
-                        KApply("<sender>", self.sender),
-                        KApply("<txType>", KToken("\"\"", "String")),
-                        KApply("<typeEnum>", KToken("0", "Int")),
-                        KApply("<groupID>", KToken("\"\"", "String")),
-                        KApply("<groupIdx>", KToken("0", "Int")),
-                        KApply("<genesisID>", KToken(".Bytes", "Bytes")),
-                        KApply("<lease>", KToken(".Bytes", "Bytes")),
-                        KApply("<note>", KToken(".Bytes", "Bytes")),
-                        KApply("<rekeyTo>", KToken(".Bytes", "Bytes")),
-                    ],
-                ),
-                KApply("<txnTypeSpecificFields>", self.get_specific_field_pre()),
-                KApply(
-                    "<applyData>",
-                    [
-                        KApply("<txScratch>", KToken(".Map", "Map")),
-                        KApply("<txConfigAsset>", KToken("0", "Int")),
-                        KApply("<txApplicationID>", KToken("0", "Int")),
-                        KApply(
-                            "<log>",
-                            [
-                                KApply("<logData>", KVariable("LOG" + str(id(self)))),
-                                KApply("<logSize>", KVariable("?_")),
-                            ],
-                        ),
-                    ],
-                ),
-                KApply("<txnExecutionContext>", KToken(".K", "KItem")),
-                KApply("<resume>", KToken("false", "Bool")),
-            ],
-        )
+    pass
 
 
 class SymbolicApplication:
@@ -251,8 +84,14 @@ class SymbolicApplication:
             "<app>",
             [
                 KApply("<appID>", KToken(str(self.app_id), "Int")),
-                KApply("<approvalPgmSrc>", self.preprocess_kast(parse_program(self.approval_pgm_path))),
-                KApply("<clearStatePgmSrc>", self.preprocess_kast(parse_program(self.clear_pgm_path))),
+                KApply(
+                    "<approvalPgmSrc>",
+                    self.preprocess_kast(kavm.kore_to_kast(kavm.parse_teal(self.approval_pgm_path))),
+                ),
+                KApply(
+                    "<clearStatePgmSrc>",
+                    self.preprocess_kast(kavm.kore_to_kast(kavm.parse_teal(self.clear_pgm_path))),
+                ),
                 KApply("<approvalPgm>", KToken(".Bytes", "Bytes")),
                 KApply("<clearStatePgm>", KToken(".Bytes", "Bytes")),
                 KApply(
@@ -333,8 +172,9 @@ class KAVMProof:
         self._preconditions: List[KInner] = []
         self._postconditions: List[KInner] = []
 
-    def add_txn(self, txn: SymbolicApplTxn) -> None:
-        self._txns.append(txn.get_symbolic_config_pre())
+    def add_txn(self, txn_pre: KInner, txn_post: KInner) -> None:
+        self._txns.append(txn_pre)
+        self._txns_post.append(txn_post)
 
     def add_acct(self, acct: SymbolicAccount) -> None:
         self._accts_config.append(acct.get_symbolic_config_pre())
@@ -343,6 +183,9 @@ class KAVMProof:
     def add_precondition(self, precondition: KInner) -> None:
         self._preconditions.append(precondition)
 
+    def add_postcondition(self, postcondition: KInner) -> None:
+        self._postconditions.append(postcondition)
+
     def build_app_creator_map(self) -> KInner:
         creator_map = []
         for acct in self._accts:
@@ -350,11 +193,11 @@ class KAVMProof:
                 creator_map.append(KApply("_|->_", [KToken(str(app.app_id), "Int"), acct.address]))
         return build_assoc(KApply(".Map"), KLabel("_Map_"), creator_map)
 
-    def build_transactions(self) -> KInner:
+    def build_transactions(self, txns) -> KInner:
         return build_assoc(
             KApply(".TransactionCellMap"),
             KLabel("_TransactionCellMap_"),
-            self._txns,
+            txns,
         )
 
     def build_accounts(self) -> KInner:
@@ -380,9 +223,6 @@ class KAVMProof:
 
     def prove(self) -> None:
 
-        defn = read_kast_definition("tests/specs/verification-kompiled/parsed.json")
-        symbol_table = build_symbol_table(defn)
-
         lhs = KApply(
             "<kavm>",
             [
@@ -391,7 +231,7 @@ class KAVMProof:
                 KApply("<paniccode>", KToken("0", "Int")),
                 KApply("<returnstatus>", KToken("\"Failure - AVM is stuck\"", "String")),
                 KApply("<returncode>", KToken("0", "Int")),
-                KApply("<transactions>", [self.build_transactions()]),
+                KApply("<transactions>", [self.build_transactions(self._txns)]),
                 KApply(
                     "<avmExecution>",
                     [
@@ -470,7 +310,7 @@ class KAVMProof:
                 KApply("<paniccode>", KToken("0", "Int")),
                 KApply("<returnstatus>", KToken("\"Success - transaction group accepted\"", "String")),
                 KApply("<returncode>", KToken("0", "Int")),
-                KApply("<transactions>", KVariable("?_")),
+                KApply("<transactions>", [self.build_transactions(self._txns_post)]),
                 KApply(
                     "<avmExecution>",
                     [
@@ -563,7 +403,13 @@ class KAVMProof:
             ensures=ensures,
         )
 
+        defn = read_kast_definition(self._definition_dir / 'parsed.json')
+        symbol_table = build_symbol_table(defn)
+        symbol_table['_+Bytes_'] = paren(lambda a1, a2: a1 + '+Bytes' + a2)
+
         proof = KProve(definition_dir=self._definition_dir, use_directory=self._use_directory)
+        proof._symbol_table = symbol_table
+
         result = proof.prove_claim(claim=claim, claim_id="test")
 
         if type(result) is KApply and result.label.name == "#Top":
@@ -572,31 +418,36 @@ class KAVMProof:
             print("Failed to prove claim")
             print("counterexample:")
 
-            print(pretty_print_kast(result, symbol_table=symbol_table))
-
-
-def int_2_bytes(term: KInner) -> KInner:
-    return KApply(
-        "Int2Bytes",
-        [
-            term,
-            KToken("BE", "Endianness"),
-            KToken("Unsigned", "Signedness"),
-        ],
-    )
+            print(pretty_print_kast(inline_cell_maps(result), symbol_table=symbol_table))
 
 
 class AutoProver:
     def __init__(
         self,
+        definition_dir: Path,
         approval_pgm: Path,
         clear_pgm: Path,
         contract: Contract,
     ):
 
+        faucet_pk, faucet_addr = generate_account()
+        algod = KAVMClient(faucet_address=str(faucet_addr))
+        pk1, addr1 = generate_account()
+        pk2, addr2 = generate_account()
+        sp = algod.suggested_params()
+
         for method in contract.methods:
-            proof = KAVMProof(definition_dir=Path('tests/specs/verification-kompiled'), use_directory=Path("proofs"))
-            txn = SymbolicApplTxn(sender="acct1_addr", index=1, on_complete=0)
+            proof = KAVMProof(definition_dir=definition_dir, use_directory=Path("proofs"))
+            sdk_txn = ApplicationCallTxn(sender=addr1, index=1, on_complete=0, sp=sp)
+
+            app_args: List[KInner] = [KToken("b\"" + str(method.get_selector())[2:-1] + "\"", "Bytes")]
+            for arg in method.args:
+                if str(arg.type) == 'uint64':
+                    app_args.append(int_2_bytes(KVariable(str(arg.name).upper(), sort=KSort("Int"))))
+                else:
+                    print("Not yet supported.")
+                    exit(1)
+
             app1 = SymbolicApplication(
                 app_id=1,
                 local_state_schema=StateSchema(0, 0),
@@ -604,18 +455,63 @@ class AutoProver:
                 approval_pgm_path=approval_pgm,
                 clear_pgm_path=clear_pgm,
             )
-            account1 = SymbolicAccount(address="acct1_addr", balance=1000000000)
+            account1 = SymbolicAccount(address=str(addr1), balance=1000000000)
             account1.add_app(app1)
             proof.add_acct(account1)
             proof.add_precondition(
                 KApply("_<=Int_", [KApply("_+Int_", [KVariable("A"), KVariable("B")]), KToken("MAX_UINT64", "Int")])
             )
-            txn.add_app_arg(KToken("b\"" + str(method.get_selector())[2:-1] + "\"", "Bytes"))
-            for arg in method.args:
-                if str(arg.type) == 'uint64':
-                    txn.add_app_arg(int_2_bytes(KVariable(str(arg.name).upper(), sort=KSort("Int"))))
-                else:
-                    print("Not yet supported.")
-                    exit(1)
-            proof.add_txn(txn)
+            txn_pre = transaction_k_term(
+                kavm=algod.kavm,
+                txn=sdk_txn,
+                txid='0',
+                symbolic_fileds_subst=Subst(
+                    {'APPLICATIONARGS_CELL': generate_tvalue_list(app_args), 'GROUPIDX_CELL': intToken(0)}
+                ),
+            )
+            txn_post = transaction_k_term(
+                kavm=algod.kavm,
+                txn=sdk_txn,
+                txid='0',
+                symbolic_fileds_subst=Subst(
+                    {
+                        'APPLICATIONARGS_CELL': generate_tvalue_list(app_args),
+                        'GROUPIDX_CELL': intToken(0),
+                        'TXSCRATCH_CELL': KVariable('?_'),
+                        'LOGDATA_CELL': KVariable('?FINAL_LOGDATA_CELL'),
+                        'LOGSIZE_CELL': KVariable('?_'),
+                        'RESUME_CELL': KVariable('?_'),
+                    }
+                ),
+            )
+            proof.add_txn(txn_pre, txn_post)
+            # ensures ?FINAL_LOGDATA ==K b"\x15\x1f|u" +Bytes  padLeftBytes(Int2Bytes(A +Int B, BE, Unsigned), 8, 0)
+            ensures = KApply(
+                "_==K_",
+                [
+                    KVariable('?FINAL_LOGDATA_CELL'),
+                    KApply(
+                        '_+Bytes_',
+                        [
+                            bytesToken("\\x15\\x1f|u"),
+                            KApply(
+                                'padLeftBytes',
+                                [
+                                    KApply(
+                                        'Int2Bytes',
+                                        [
+                                            KApply("_+Int_", [KVariable("A"), KVariable("B")]),
+                                            KToken('BE', KSort('Endianness')),
+                                            KToken('Unsigned', KSort('Signedness')),
+                                        ],
+                                    ),
+                                    intToken(8),
+                                    intToken(0),
+                                ],
+                            ),
+                        ],
+                    ),
+                ],
+            )
+            proof.add_postcondition(ensures)
             proof.prove()
