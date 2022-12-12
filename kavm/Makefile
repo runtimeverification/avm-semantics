@@ -26,6 +26,7 @@ build:
 	poetry build
 
 poetry-install: venv-config
+	export PYTHON_KEYRING_BACKEND=keyring.backends.fail.Keyring
 	poetry install
 
 
