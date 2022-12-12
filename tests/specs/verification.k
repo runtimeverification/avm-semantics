@@ -54,6 +54,8 @@ module VERIFICATION
   rule X in_keys( M:Map [Y <- _] ) => X in_keys(M) 
     requires X =/=K Y [simplification]
 
+  rule _ in_keys (.Map) => false [simplification]
+
   // size
   rule size( _:Map [_ <- _] )  >Int 0 => true   [simplification]
   rule size( _:Map [_ <- _] ) ==Int 0 => false  [simplification]
@@ -128,6 +130,9 @@ module VERIFICATION
   rule 0            >=Int bool2Int(B) => notBool B  [simplification]
   rule bool2Int(B)   >Int 0           =>         B  [simplification]
 
+  rule 0 >Int bool2Int(_) => false [simplification]
+  rule { 0 #Equals bool2Int(B:Bool) } => { true #Equals notBool(B) } [simplification]
+
   rule A           >=Int bool2Int(_) => true requires A >=Int 1 [simplification]
   rule bool2Int(_) >=Int A           => true requires 0 >=Int A [simplification]
 
@@ -162,6 +167,8 @@ module VERIFICATION
 
   rule notBool (N  >Int M) => M >=Int N  [simplification]
   rule notBool (N >=Int M) => M  >Int N  [simplification]
+
+//  rule notBool (N ==K M) => N =/=K M [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Bytes and String reasoning
