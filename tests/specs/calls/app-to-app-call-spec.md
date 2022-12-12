@@ -32,13 +32,17 @@ claim
           <appCallTxFields>
             <applicationID> CALCULATOR_APP_ID </applicationID>
             <onCompletion> @ NoOp </onCompletion>
-            <applicationArgs> METHOD_SIG:Bytes Int2Bytes(ARG1:Int, BE, Unsigned) Int2Bytes(ARG2:Int, BE, Unsigned) </applicationArgs>
+            <applicationArgs>
+              METHOD_SIG:Bytes
+              Int2Bytes(ARG1:Int, BE, Unsigned)
+              Int2Bytes(ARG2:Int, BE, Unsigned) 
+            </applicationArgs>
             ...
           </appCallTxFields>
         </txnTypeSpecificFields>
         <applyData>
           <txScratch> _ => ?_ </txScratch>
-          <logData> .TValueList => ?_ </logData>
+          <logData> .TValueList => b"\x15\x1f\x7c\x75" +Bytes padLeftBytes(Int2Bytes(ARG1 +Int ARG2, BE, Unsigned), 8, 0) </logData>
           <logSize> 0 => ?_ </logSize>
           ...
         </applyData>
@@ -90,6 +94,275 @@ claim
           <balance> _ => ?_ </balance>
           <minBalance> _ => ?_ </minBalance>
           <appsCreated>
+            <app>
+              <appID> CALL_CALCULATOR_APP_ID </appID>
+              <approvalPgmSrc> (
+#pragma version 6
+txn NumAppArgs
+int 0
+==
+bnz MAIN_L10
+txna ApplicationArgs 0
+method "add(application,uint64,uint64)uint64"
+==
+bnz MAIN_L9
+txna ApplicationArgs 0
+method "sub(application,uint64,uint64)uint64"
+==
+bnz MAIN_L8
+txna ApplicationArgs 0
+method "mul(application,uint64,uint64)uint64"
+==
+bnz MAIN_L7
+txna ApplicationArgs 0
+method "div(application,uint64,uint64)uint64"
+==
+bnz MAIN_L6
+err
+MAIN_L6:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+int 0
+getbyte
+store 21
+txna ApplicationArgs 2
+btoi
+store 22
+txna ApplicationArgs 3
+btoi
+store 23
+load 21
+load 22
+load 23
+callsub DIV_3
+store 24
+byte "\x15\x1f\x7c\x75"
+load 24
+itob
+concat
+log
+int 1
+return
+MAIN_L7:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+int 0
+getbyte
+store 14
+txna ApplicationArgs 2
+btoi
+store 15
+txna ApplicationArgs 3
+btoi
+store 16
+load 14
+load 15
+load 16
+callsub MUL_2
+store 17
+byte "\x15\x1f\x7c\x75"
+load 17
+itob
+concat
+log
+int 1
+return
+MAIN_L8:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+int 0
+getbyte
+store 7
+txna ApplicationArgs 2
+btoi
+store 8
+txna ApplicationArgs 3
+btoi
+store 9
+load 7
+load 8
+load 9
+callsub SUB_1
+store 10
+byte "\x15\x1f\x7c\x75"
+load 10
+itob
+concat
+log
+int 1
+return
+MAIN_L9:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+int 0
+getbyte
+store 0
+txna ApplicationArgs 2
+btoi
+store 1
+txna ApplicationArgs 3
+btoi
+store 2
+load 0
+load 1
+load 2
+callsub ADD_0
+store 3
+byte "\x15\x1f\x7c\x75"
+load 3
+itob
+concat
+log
+int 1
+return
+MAIN_L10:
+txn OnCompletion
+int NoOp
+==
+bnz MAIN_L12
+err
+MAIN_L12:
+txn ApplicationID
+int 0
+==
+assert
+int 1
+return
+
+// add
+ADD_0:
+store 6
+store 5
+store 4
+itxn_begin
+int appl
+itxn_field TypeEnum
+load 4
+txnas Applications
+itxn_field ApplicationID
+method "add(uint64,uint64)uint64"
+itxn_field ApplicationArgs
+load 5
+itob
+itxn_field ApplicationArgs
+load 6
+itob
+itxn_field ApplicationArgs
+itxn_submit
+itxn LastLog
+btoi
+retsub
+
+// sub
+SUB_1:
+store 13
+store 12
+store 11
+itxn_begin
+int appl
+itxn_field TypeEnum
+load 11
+txnas Applications
+itxn_field ApplicationID
+method "sub(uint64,uint64)uint64"
+itxn_field ApplicationArgs
+load 12
+itob
+itxn_field ApplicationArgs
+load 13
+itob
+itxn_field ApplicationArgs
+itxn_submit
+itxn LastLog
+btoi
+retsub
+
+// mul
+MUL_2:
+store 20
+store 19
+store 18
+itxn_begin
+int appl
+itxn_field TypeEnum
+load 18
+txnas Applications
+itxn_field ApplicationID
+method "mul(uint64,uint64)uint64"
+itxn_field ApplicationArgs
+load 19
+itob
+itxn_field ApplicationArgs
+load 20
+itob
+itxn_field ApplicationArgs
+itxn_submit
+itxn LastLog
+btoi
+retsub
+
+// div
+DIV_3:
+store 27
+store 26
+store 25
+itxn_begin
+int appl
+itxn_field TypeEnum
+load 25
+txnas Applications
+itxn_field ApplicationID
+method "div(uint64,uint64)uint64"
+itxn_field ApplicationArgs
+load 26
+itob
+itxn_field ApplicationArgs
+load 27
+itob
+itxn_field ApplicationArgs
+itxn_submit
+itxn LastLog
+btoi
+retsub
+                ):TealInputPgm => ?_
+              </approvalPgmSrc>
+              <globalState>
+                <globalNumInts>   0             </globalNumInts>
+                <globalNumBytes>  0             </globalNumBytes>
+                <globalBytes>     .Map             </globalBytes>
+                <globalInts>      .Map             </globalInts>
+              </globalState>
+              <clearStatePgmSrc> (int 1 return):TealInputPgm => ?_ </clearStatePgmSrc>
+              ...
+            </app>
             <app>
               <appID> CALCULATOR_APP_ID </appID>
               <approvalPgmSrc> (
@@ -281,7 +554,7 @@ retsub
           ...
         </account>
       </accountsMap>
-      <appCreator> .Map [CALCULATOR_APP_ID <- CREATOR_ADDRESS] </appCreator>
+      <appCreator> .Map [CALCULATOR_APP_ID <- CREATOR_ADDRESS] [CALL_CALCULATOR_APP_ID <- CREATOR_ADDRESS] </appCreator>
       <txnIndexMap> .Bag => ?_ </txnIndexMap>
       <nextTxnID> NEXT_TXN_ID => ?_ </nextTxnID>
       <nextGroupID> NEXT_GROUP_ID => ?_ </nextGroupID>
@@ -299,6 +572,8 @@ retsub
    andBool SENDER_ADDRESS  =/=K APP_ADDRESS
    andBool SENDER_ADDRESS  =/=K CREATOR_ADDRESS
    andBool SENDER_BALANCE >=Int SENDER_MIN_BALANCE
+
+   andBool CALCULATOR_APP_ID =/=K CALL_CALCULATOR_APP_ID
 
    andBool SENDER_MIN_BALANCE >=Int 0
    andBool APP_MIN_BALANCE    >=Int 0
