@@ -588,7 +588,7 @@ i18n = ["Babel (>=2.7)"]
 name = "lxml"
 version = "4.9.1"
 description = "Powerful and Pythonic XML processing library combining libxml2/libxslt with the ElementTree API."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, != 3.4.*"
 files = [
@@ -1032,7 +1032,7 @@ pynacl = ">=1.4.0,<2"
 name = "pycobertura"
 version = "3.0.0"
 description = "\"A Cobertura coverage parser that can diff reports and show coverage progress.\""
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -1315,7 +1315,7 @@ requests = ">=2.0.1,<3.0.0"
 name = "ruamel-yaml"
 version = "0.17.21"
 description = "ruamel.yaml is a YAML parser/emitter that supports roundtrip preservation of comments, seq/map flow style, and map key order"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3"
 files = [
@@ -1555,5 +1555,5 @@ multidict = ">=4.0"
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.11"
-content-hash = "5476103989a60ea10ea4d2663dac8764d39ec7877d700f2db659deb6c261df15"
+python-versions = "3.11.0"
+content-hash = "e64103eb63da88b9a706f87af6eabfec176f9d8507431c10df0dbd740e2883f5"

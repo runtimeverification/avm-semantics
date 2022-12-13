@@ -1,5 +1,5 @@
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.4.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
@@ -12,13 +12,12 @@ authors = [
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 py-algorand-sdk = "1.20.1"
 pyteal = "0.20.1"
 tabulate = "0.8.10"
 types-tabulate = "0.8.10"
 pyk = { git = "https://github.com/runtimeverification/pyk.git", tag="v0.1.79" }
-pycobertura = "^3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 autoflake = "*"
@@ -33,6 +32,7 @@ pytest = "*"
 pytest-xdist = "*"
 pytest-profiling = "*"
 hypothesis= "*"
+pycobertura = "*"
 
 [tool.poetry.scripts]
 kavm = "kavm.__main__:main"

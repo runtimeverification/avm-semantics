@@ -206,7 +206,13 @@ HOOK_KOMPILE_OPTS := --hook-namespaces "$(HOOK_NAMESPACES)"  \
 ## * kavm --- Python library and CLI app
 
 PY_KAVM_DIR := ./kavm
-POETRY_RUN  := poetry run -C $(PY_KAVM_DIR)
+
+ifeq ($(SKIP_POETRY_RUN),)
+  POETRY_RUN  := poetry run -C $(PY_KAVM_DIR)
+else
+  POETRY_RUN  :=
+endif
+
 
 check-kavm-codestyle:
 	$(MAKE) check -C $(PY_KAVM_DIR)
