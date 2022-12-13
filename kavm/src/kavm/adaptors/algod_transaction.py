@@ -329,6 +329,6 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fileds_s
         .compose(symbolic_fileds_subst)
     )
 
-    transaction_cell = fields_subst.apply(empty_transaction_cell(type_specific_fileds_cell))
+    transaction_cell = fields_subst.apply(empty_transaction_cell(type_specific_fileds_cell))  # type: ignore
 
     return transaction_cell

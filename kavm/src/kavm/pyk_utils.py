@@ -2,6 +2,7 @@ import typing
 from base64 import b64encode
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+from algosdk.encoding import decode_address
 from algosdk.future.transaction import OnComplete
 from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, build_assoc, top_down
 from pyk.prelude.kint import intToken
@@ -146,3 +147,13 @@ def generate_tvalue_list(tvlist: List[KInner]) -> KInner:
                 generate_tvalue_list(tvlist[1:]),
             ],
         )
+
+
+def algorand_addres_to_k_bytes(addr: str) -> KToken:
+    """Serialize an Algorand address string to K Bytes token"""
+    return KToken("b\"" + str(decode_address(addr))[2:-1] + "\"", "Bytes")
+
+
+def method_selector_to_k_bytes(method_selector: bytes) -> KToken:
+    """Serialize an Algorand address string to K Bytes token"""
+    return KToken("b\"" + str(method_selector)[2:-1] + "\"", "Bytes")

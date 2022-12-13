@@ -1,10 +1,9 @@
 import logging
 from pathlib import Path
-from typing import Dict, Final, List, Optional
+from typing import Dict, Final, List, Optional, Tuple
 
 from algosdk.abi.contract import Contract
 from algosdk.abi.method import Method
-from algosdk.account import generate_account
 from algosdk.encoding import checksum, decode_address, encode_address
 from algosdk.future.transaction import ApplicationCallTxn, PaymentTxn, StateSchema
 from pyk.kast.inner import KApply, KInner, KLabel, KRewrite, KSort, KToken, KVariable, Subst, build_assoc
@@ -13,11 +12,12 @@ from pyk.kast.outer import KClaim, read_kast_definition
 from pyk.ktool.kprint import build_symbol_table, paren, pretty_print_kast
 from pyk.ktool.kprove import KProve
 from pyk.prelude.kint import intToken
+from pyk.prelude.string import stringToken
 
 from kavm.adaptors.algod_transaction import transaction_k_term
 from kavm.algod import KAVMClient
 from kavm.kavm import KAVM
-from kavm.pyk_utils import generate_tvalue_list, int_2_bytes
+from kavm.pyk_utils import algorand_addres_to_k_bytes, generate_tvalue_list, int_2_bytes, method_selector_to_k_bytes
 
 _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
@@ -59,9 +59,7 @@ class SymbolicApplication:
             if term.label.name == "method__TEAL-OPCODES_PseudoOpCode_TBytesLiteral":
                 if type(term.args[0]) is KToken:
                     selector = str(Method.from_signature(term.args[0].token[1:-1]).get_selector())[2:-1]
-                    return KApply(
-                        "byte__TEAL-OPCODES_PseudoOpCode_TBytesLiteral", KToken("\"" + str(selector) + "\"", "String")
-                    )
+                    return KApply("byte__TEAL-OPCODES_PseudoOpCode_TBytesLiteral", stringToken(selector))
             if len(term.args) == 0:
                 return term
             else:
@@ -74,7 +72,7 @@ class SymbolicApplication:
                     self.labels.append(var)
                     return var
                 elif term.sort == KSort(name="HexToken"):
-                    return KToken("\"" + hex_token_to_k_string(term.token[2:]) + "\"", "String")
+                    return stringToken(hex_token_to_k_string(term.token[2:]))
 
                 else:
                     return term
@@ -123,7 +121,8 @@ class SymbolicAccount:
         address: str,
         balance: int,
     ):
-        self.address = KToken("b\"" + str(decode_address(address))[2:-1] + "\"", "Bytes")
+        # self.address = KToken("b\"" + str(decode_address(address))[2:-1] + "\"", "Bytes")
+        self.address = algorand_addres_to_k_bytes(address)
         self.balance = KToken(str(balance), "Int")
         self.apps_config: List[KInner] = []
         self.apps: List[SymbolicApplication] = []
@@ -196,7 +195,7 @@ class KAVMProof:
                 creator_map.append(KApply("_|->_", [KToken(str(app.app_id), "Int"), acct.address]))
         return build_assoc(KApply(".Map"), KLabel("_Map_"), creator_map)
 
-    def build_transactions(self, txns) -> KInner:
+    def build_transactions(self, txns: List[KInner]) -> KInner:
         return build_assoc(
             KApply(".TransactionCellMap"),
             KLabel("_TransactionCellMap_"),
@@ -214,14 +213,14 @@ class KAVMProof:
         return build_assoc(
             KApply(".List"),
             KLabel("_List_"),
-            [KApply("ListItem", KToken("\"" + str(i) + "\"", "Int")) for i in range(0, len(self._txns))],
+            [KApply("ListItem", stringToken(str(i))) for i in range(0, len(self._txns))],
         )
 
     def build_deque_set(self) -> KInner:
         return build_assoc(
             KApply(".Set"),
             KLabel("_Set_"),
-            [KApply("SetItem", KToken("\"" + str(i) + "\"", "Int")) for i in range(0, len(self._txns))],
+            [KApply("SetItem", stringToken(str(i))) for i in range(0, len(self._txns))],
         )
 
     def prove(self) -> None:
@@ -230,10 +229,10 @@ class KAVMProof:
             "<kavm>",
             [
                 KApply("<k>", KApply("#evalTxGroup")),
-                KApply("<panicstatus>", KToken("\"\"", "String")),
-                KApply("<paniccode>", KToken("0", "Int")),
-                KApply("<returnstatus>", KToken("\"Failure - AVM is stuck\"", "String")),
-                KApply("<returncode>", KToken("0", "Int")),
+                KApply("<panicstatus>", stringToken("")),
+                KApply("<paniccode>", intToken(0)),
+                KApply("<returnstatus>", stringToken("Failure - AVM is stuck")),
+                KApply("<returncode>", intToken(0)),
                 KApply("<transactions>", [self.build_transactions(self._txns)]),
                 KApply(
                     "<avmExecution>",
@@ -252,10 +251,10 @@ class KAVMProof:
                                 KApply(
                                     "<globals>",
                                     [
-                                        KApply("<groupSize>", KToken("0", "Int")),
-                                        KApply("<globalRound>", KToken("0", "Int")),
-                                        KApply("<latestTimestamp>", KToken("0", "Int")),
-                                        KApply("<currentApplicationID>", KToken("0", "Int")),
+                                        KApply("<groupSize>", intToken(0)),
+                                        KApply("<globalRound>", intToken(0)),
+                                        KApply("<latestTimestamp>", intToken(0)),
+                                        KApply("<currentApplicationID>", intToken(0)),
                                         KApply("<currentApplicationAddress>", KToken(".Bytes", "Bytes")),
                                         KApply("<creatorAddress>", KToken(".Bytes", "Bytes")),
                                     ],
@@ -263,12 +262,12 @@ class KAVMProof:
                                 KApply(
                                     "<teal>",
                                     [
-                                        KApply("<pc>", KToken("0", "Int")),
+                                        KApply("<pc>", intToken(0)),
                                         KApply("<program>", KToken(".Map", "Map")),
                                         KApply("<mode>", KToken("undefined", "TealMode")),
                                         KApply("<version>", KToken("8", "Int")),
                                         KApply("<stack>", KToken(".TStack", "TStack")),
-                                        KApply("<stacksize>", KToken("0", "Int")),
+                                        KApply("<stacksize>", intToken(0)),
                                         KApply("<jumped>", KToken("false", "Bool")),
                                         KApply("<labels>", KToken(".Map", "Map")),
                                         KApply("<callStack>", KToken(".List", "List")),
@@ -278,7 +277,7 @@ class KAVMProof:
                                     ],
                                 ),
                                 KApply("<effects>", KToken(".List", "List")),
-                                KApply("<lastTxnGroupID>", KToken("\"\"", "String")),
+                                KApply("<lastTxnGroupID>", stringToken("")),
                             ],
                         ),
                         KApply("<innerTransactions>", KToken(".List", "List")),
@@ -293,11 +292,11 @@ class KAVMProof:
                         KApply("<appCreator>", self.build_app_creator_map()),
                         KApply("<assetCreator>", KToken(".Map", "Map")),
                         KApply("<blocks>", KToken(".Map", "Map")),
-                        KApply("<blockheight>", KToken("0", "Int")),
-                        KApply("<nextTxnID>", KToken("0", "Int")),
-                        KApply("<nextAppID>", KToken("1", "Int")),
-                        KApply("<nextAssetID>", KToken("1", "Int")),
-                        KApply("<nextGroupID>", KToken("0", "Int")),
+                        KApply("<blockheight>", intToken(0)),
+                        KApply("<nextTxnID>", intToken(0)),
+                        KApply("<nextAppID>", intToken(1)),
+                        KApply("<nextAssetID>", intToken(1)),
+                        KApply("<nextGroupID>", intToken(0)),
                         KApply("<txnIndexMap>", KToken(".Bag", "TxnIndexMapGroupCell")),
                     ],
                 ),
@@ -310,9 +309,9 @@ class KAVMProof:
             [
                 KApply("<k>", KToken(".K", "KItem ")),
                 KApply("<panicstatus>", KToken("\"\"", "String")),
-                KApply("<paniccode>", KToken("0", "Int")),
+                KApply("<paniccode>", intToken(0)),
                 KApply("<returnstatus>", KToken("\"Success - transaction group accepted\"", "String")),
-                KApply("<returncode>", KToken("0", "Int")),
+                KApply("<returncode>", intToken(0)),
                 KApply("<transactions>", [self.build_transactions(self._txns_post)]),
                 KApply(
                     "<avmExecution>",
@@ -372,7 +371,7 @@ class KAVMProof:
                         KApply("<appCreator>", KVariable("?_")),
                         KApply("<assetCreator>", KVariable("?_")),
                         KApply("<blocks>", KToken(".Map", "Map")),
-                        KApply("<blockheight>", KToken("0", "Int")),
+                        KApply("<blockheight>", intToken(0)),
                         KApply("<nextTxnID>", KVariable("?_")),
                         KApply("<nextAppID>", KVariable("?_")),
                         KApply("<nextAssetID>", KVariable("?_")),
@@ -446,13 +445,33 @@ class MethodWithSpec(Method):
 
 class AutoProver:
     @staticmethod
-    def _in_bounds_uint64(term: KInner):
+    def _in_bounds_uint64(term: KInner) -> KInner:
         return KApply(
             '_andBool_',
             [
-                KApply("_>=Int_", [term, KToken("0", "Int")]),
+                KApply("_>=Int_", [term, intToken(0)]),
                 KApply("_<=Int_", [term, KToken("MAX_UINT64", "Int")]),
             ],
+        )
+
+    @classmethod
+    def _faucet_account(cls) -> Tuple[str, str]:
+        """
+        Return a pre-generatd pair of private key and Algorand adress for the faucet account
+        """
+        return (
+            'cz+FBjUbtcM8bkMHCZfs/L9WnZVx7VSEa6KwRk9BQIQVVR6aLOAyPc66Z0b6PMC2TmX2ZEBlyNvG/XhtQmK04g==',
+            'CVKR5GRM4AZD3TV2M5DPUPGAWZHGL5TEIBS4RW6G7V4G2QTCWTRIGNDVXQ',
+        )
+
+    @classmethod
+    def _creator_account(cls) -> Tuple[str, str]:
+        """
+        Return a pre-generatd pair of private key and Algorand adress for the app creator account
+        """
+        return (
+            '/3LVAqbrt+sxF+tXe4KGKBhAPGPtqHAOyLTe6PhTXIz+C+kwBB+NS6fftG8gZ2Norh5VBrNoivQ2CE0M4hhfHQ==',
+            '7YF6SMAED6GUXJ67WRXSAZ3DNCXB4VIGWNUIV5BWBBGQZYQYL4ORSSFRIY',
         )
 
     def prove(self, method_name: str) -> None:
@@ -468,9 +487,9 @@ class AutoProver:
 
         self._proofs: Dict[str, KAVMProof] = {}
 
-        _, faucet_addr = generate_account()
+        _, faucet_addr = AutoProver._faucet_account()
         algod = KAVMClient(faucet_address=str(faucet_addr))
-        creator_pk, creator_addr = generate_account()
+        _, creator_addr = AutoProver._creator_account()
         sp = algod.suggested_params()
 
         _LOGGER.info(f'Initializing proofs for contract {contract.name}')
@@ -500,7 +519,7 @@ class AutoProver:
             _LOGGER.info(f'Generating K claim for method {method.name}')
             assert isinstance(method, MethodWithSpec)
 
-            app_args: List[KInner] = [KToken("b\"" + str(method.get_selector())[2:-1] + "\"", "Bytes")]
+            app_args: List[KInner] = [method_selector_to_k_bytes(method.get_selector())]
             for i, arg in enumerate(method.args):
                 _LOGGER.info(f'Analyzing method argument {i} with name {arg.name} of type {arg.type}')
                 if str(arg.type) == 'uint64':
@@ -520,12 +539,8 @@ class AutoProver:
                             {
                                 'AMOUNT_CELL': amount_k_var,
                                 'GROUPIDX_CELL': intToken(0),
-                                'SENDER_CELL': KToken(
-                                    "b\"" + str(decode_address(sdk_txn.sender))[2:-1] + "\"", "Bytes"
-                                ),
-                                'RECEIVER_CELL': KToken(
-                                    "b\"" + str(decode_address(sdk_txn.receiver))[2:-1] + "\"", "Bytes"
-                                ),
+                                'SENDER_CELL': algorand_addres_to_k_bytes(sdk_txn.sender),
+                                'RECEIVER_CELL': algorand_addres_to_k_bytes(sdk_txn.receiver),
                             }
                         ),
                     )
