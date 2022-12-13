@@ -101,7 +101,7 @@ module OPCODES-V2-SPEC
         <stack> b"def" : b"abc" : XS => b"abcdef" : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> concat => panic(BYTES_OVERFLOW) </k>
+  claim <k> concat => #panic(BYTES_OVERFLOW) </k>
         <stack> B2 : B1 : _ </stack>
     requires lengthBytes(B1) +Int lengthBytes(B2) >Int 4096
 ```
@@ -593,9 +593,6 @@ module OPCODES-V2-SPEC
         </transactions> => <transactions> ?_ </transactions>)
         <currentApplicationID> APP_ID:Int </currentApplicationID>
         <activeApps> (SetItem(APP_ID) .Set) => .Set </activeApps>
-        <paniccode> 0 </paniccode>
-        <returncode> 4 => 0 </returncode>
-        <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
 
 ```
 </details>
