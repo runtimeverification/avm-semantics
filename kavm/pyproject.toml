@@ -12,7 +12,7 @@ authors = [
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 py-algorand-sdk = "1.20.1"
 pyteal = "0.20.1"
 tabulate = "0.8.10"
