@@ -2,11 +2,11 @@ import logging
 from pathlib import Path
 from algosdk.abi.contract import get_method_by_name
 from algosdk.account import generate_account
-from algosdk.future.transaction import PaymentTxn
+from algosdk.future.transaction import PaymentTxn, StateSchema
 from kavm.adaptors.algod_transaction import transaction_k_term
 from kavm.algod import KAVMClient
 from pyteal import *
-from kavm.claims import AutoProver, MethodWithSpec
+from kavm.prover import AutoProver, MethodWithSpec
 
 from pyk.prelude.bytes import bytesToken
 from pyk.prelude.kint import intToken
@@ -133,9 +133,11 @@ if __name__ == "__main__":
     )
 
     prover = AutoProver(
-        Path('./tests/specs/verification-kompiled'),
-        Path('approval.teal'),
-        Path('clear.teal'),
-        contract,
+        definition_dir=Path('./tests/specs/verification-kompiled'),
+        approval_pgm=Path('approval.teal'),
+        clear_pgm=Path('clear.teal'),
+        contract=contract,
+        global_schema=StateSchema(0, 0),
+        local_schema=StateSchema(0, 0),
     )
     prover.prove('donate')

@@ -160,8 +160,10 @@ class SymbolicAccount:
 
 
 class KAVMProof:
-    def __init__(self, definition_dir: Path, use_directory: Path, claim_name: str) -> None:
-        self._definition_dir = definition_dir
+    def __init__(self, kavm: KAVM, use_directory: Path, claim_name: str) -> None:
+        self.kavm = kavm
+
+        self._definition_dir = kavm.definition_dir
         self._use_directory = use_directory
         self._claim_name = claim_name
 
@@ -480,17 +482,19 @@ class AutoProver:
     def __init__(
         self,
         definition_dir: Path,
+        contract: Contract,
         approval_pgm: Path,
         clear_pgm: Path,
-        contract: Contract,
+        global_schema: StateSchema,
+        local_schema: StateSchema,
     ):
 
         self._proofs: Dict[str, KAVMProof] = {}
 
         _, faucet_addr = AutoProver._faucet_account()
-        algod = KAVMClient(faucet_address=str(faucet_addr))
+        self.algod = KAVMClient(faucet_address=str(faucet_addr))
         _, creator_addr = AutoProver._creator_account()
-        sp = algod.suggested_params()
+        sp = self.algod.suggested_params()
 
         _LOGGER.info(f'Initializing proofs for contract {contract.name}')
 
@@ -498,8 +502,8 @@ class AutoProver:
         app_id = 42
         app = SymbolicApplication(
             app_id=app_id,
-            local_state_schema=StateSchema(0, 0),
-            global_state_schema=StateSchema(0, 0),
+            local_state_schema=local_schema,
+            global_state_schema=global_schema,
             approval_pgm_path=approval_pgm,
             clear_pgm_path=clear_pgm,
         )
@@ -509,7 +513,7 @@ class AutoProver:
 
         for method in contract.methods:
             proof = KAVMProof(
-                definition_dir=definition_dir,
+                kavm=self.algod.kavm,
                 use_directory=Path("proofs"),
                 claim_name=f'{contract.name}-{method.name}',
             )
@@ -517,7 +521,10 @@ class AutoProver:
             proof.add_acct(app_account)
 
             _LOGGER.info(f'Generating K claim for method {method.name}')
-            assert isinstance(method, MethodWithSpec)
+
+            # skip generating claims for plain Method's
+            if not isinstance(method, MethodWithSpec):
+                continue
 
             app_args: List[KInner] = [method_selector_to_k_bytes(method.get_selector())]
             for i, arg in enumerate(method.args):
@@ -526,13 +533,15 @@ class AutoProver:
                     arg_k_var = KVariable(str(arg.name).upper(), sort=KSort("Int"))
                     app_args.append(int_2_bytes(arg_k_var))
                     arg_pre = AutoProver._in_bounds_uint64(arg_k_var)
-                    _LOGGER.info(f'Adding precondiotion on argument {arg.name}: {algod.kavm.pretty_print(arg_pre)}')
+                    _LOGGER.info(
+                        f'Adding precondiotion on argument {arg.name}: {self.algod.kavm.pretty_print(arg_pre)}'
+                    )
                     method.preconditions.append(arg_pre)
                 elif str(arg.type) == 'pay':
                     sdk_txn = PaymentTxn(sender=creator_addr, receiver=app_addr, sp=sp, amt=0)
                     amount_k_var = KVariable(str(arg.name).upper(), sort=KSort("Int"))
                     txn_pre = transaction_k_term(
-                        kavm=algod.kavm,
+                        kavm=self.algod.kavm,
                         txn=sdk_txn,
                         txid='0',
                         symbolic_fileds_subst=Subst(
@@ -545,7 +554,7 @@ class AutoProver:
                         ),
                     )
                     txn_post = transaction_k_term(
-                        kavm=algod.kavm,
+                        kavm=self.algod.kavm,
                         txn=sdk_txn,
                         txid='0',
                         symbolic_fileds_subst=Subst(
@@ -563,7 +572,9 @@ class AutoProver:
                         ),
                     )
                     amount_pre = AutoProver._in_bounds_uint64(amount_k_var)
-                    _LOGGER.info(f'Adding precondiotion on argument {arg.name}: {algod.kavm.pretty_print(amount_pre)}')
+                    _LOGGER.info(
+                        f'Adding precondiotion on argument {arg.name}: {self.algod.kavm.pretty_print(amount_pre)}'
+                    )
                     method.preconditions.append(amount_pre)
                     proof.add_txn(txn_pre, txn_post)
                 else:
@@ -578,7 +589,7 @@ class AutoProver:
             # for method_txn in method.txn_calls:
             sdk_txn = ApplicationCallTxn(sender=creator_addr, index=app_id, on_complete=0, sp=sp)
             txn_pre = transaction_k_term(
-                kavm=algod.kavm,
+                kavm=self.algod.kavm,
                 txn=sdk_txn,
                 txid='1',
                 symbolic_fileds_subst=Subst(
@@ -590,7 +601,7 @@ class AutoProver:
                 ),
             )
             txn_post = transaction_k_term(
-                kavm=algod.kavm,
+                kavm=self.algod.kavm,
                 txn=sdk_txn,
                 txid='1',
                 symbolic_fileds_subst=Subst(

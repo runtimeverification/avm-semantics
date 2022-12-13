@@ -34,7 +34,7 @@ SCALING_FACTOR = Int(100)
 
 # The PyTeal router
 router = Router(
-    name="K Coin Vault",
+    name="K-Coin-Vault",
     bare_calls=BareCallActions(
         no_op=OnCompleteAction.create_only(Approve()),
         update_application=OnCompleteAction.never(),
@@ -103,6 +103,7 @@ def mint(payment: abi.PaymentTransaction, *, output: abi.Uint64) -> Expr:
     amount_to_mint = algos_to_kcoin(payment.get().amount())
     asset_id = App.globalGet(Bytes("asset_id"))
     return Seq(
+        Assert(asset_id),
         Assert(payment.get().receiver() == Global.current_application_address()),
         InnerTxnBuilder.Begin(),
         InnerTxnBuilder.SetFields(
