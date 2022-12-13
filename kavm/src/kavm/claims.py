@@ -1,24 +1,26 @@
+import logging
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, Final, List, Optional
 
 from algosdk.abi.contract import Contract
 from algosdk.abi.method import Method
 from algosdk.account import generate_account
-from algosdk.future.transaction import ApplicationCallTxn, StateSchema
-from pyk.cli_utils import run_process
+from algosdk.encoding import checksum, decode_address, encode_address
+from algosdk.future.transaction import ApplicationCallTxn, PaymentTxn, StateSchema
 from pyk.kast.inner import KApply, KInner, KLabel, KRewrite, KSort, KToken, KVariable, Subst, build_assoc
 from pyk.kast.manip import inline_cell_maps, push_down_rewrites
 from pyk.kast.outer import KClaim, read_kast_definition
-from pyk.kore.parser import KoreParser
 from pyk.ktool.kprint import build_symbol_table, paren, pretty_print_kast
 from pyk.ktool.kprove import KProve
-from pyk.prelude.bytes import bytesToken
 from pyk.prelude.kint import intToken
 
 from kavm.adaptors.algod_transaction import transaction_k_term
 from kavm.algod import KAVMClient
 from kavm.kavm import KAVM
 from kavm.pyk_utils import generate_tvalue_list, int_2_bytes
+
+_LOGGER: Final = logging.getLogger(__name__)
+_LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
 
 kavm = KAVM(
     definition_dir=Path("/home/geo2a/Workspace/RV/avm-semantics/.build/usr/lib/kavm/avm-llvm/avm-testing-kompiled/")
@@ -121,7 +123,7 @@ class SymbolicAccount:
         address: str,
         balance: int,
     ):
-        self.address = KToken("b\"" + address + "\"", "Bytes")
+        self.address = KToken("b\"" + str(decode_address(address))[2:-1] + "\"", "Bytes")
         self.balance = KToken(str(balance), "Int")
         self.apps_config: List[KInner] = []
         self.apps: List[SymbolicApplication] = []
@@ -132,7 +134,7 @@ class SymbolicAccount:
 
     def build_created_apps(self) -> KInner:
         return build_assoc(
-            KApply(".AppCellMap"),
+            KToken(".Bag", "AppMapCell"),
             KLabel("_AppCellMap_"),
             self.apps_config,
         )
@@ -159,9 +161,10 @@ class SymbolicAccount:
 
 
 class KAVMProof:
-    def __init__(self, definition_dir: Path, use_directory: Path) -> None:
+    def __init__(self, definition_dir: Path, use_directory: Path, claim_name: str) -> None:
         self._definition_dir = definition_dir
         self._use_directory = use_directory
+        self._claim_name = claim_name
 
         self._txns: List[KInner] = []
         self._txn_ids: List[int] = []
@@ -405,12 +408,12 @@ class KAVMProof:
 
         defn = read_kast_definition(self._definition_dir / 'parsed.json')
         symbol_table = build_symbol_table(defn)
-        symbol_table['_+Bytes_'] = paren(lambda a1, a2: a1 + '+Bytes' + a2)
+        symbol_table['_+Bytes_'] = paren(lambda a1, a2: a1 + ' +Bytes ' + a2)
 
         proof = KProve(definition_dir=self._definition_dir, use_directory=self._use_directory)
         proof._symbol_table = symbol_table
 
-        result = proof.prove_claim(claim=claim, claim_id="test")
+        result = proof.prove_claim(claim=claim, claim_id=self._claim_name)
 
         if type(result) is KApply and result.label.name == "#Top":
             print("Proved claim")
@@ -421,7 +424,40 @@ class KAVMProof:
             print(pretty_print_kast(inline_cell_maps(result), symbol_table=symbol_table))
 
 
+class MethodWithSpec(Method):
+    def __init__(
+        self,
+        sdk_method: Method,
+        preconditions: Optional[List[KInner]] = None,
+        postconditions: Optional[List[KInner]] = None,
+    ):
+        super().__init__(name=sdk_method.name, args=sdk_method.args, returns=sdk_method.returns, desc=sdk_method.desc)
+        self._preconditions = preconditions if preconditions else []
+        self._postconditions = postconditions if postconditions else []
+
+    @property
+    def preconditions(self) -> List[KInner]:
+        return self._preconditions
+
+    @property
+    def postconditions(self) -> List[KInner]:
+        return self._postconditions
+
+
 class AutoProver:
+    @staticmethod
+    def _in_bounds_uint64(term: KInner):
+        return KApply(
+            '_andBool_',
+            [
+                KApply("_>=Int_", [term, KToken("0", "Int")]),
+                KApply("_<=Int_", [term, KToken("MAX_UINT64", "Int")]),
+            ],
+        )
+
+    def prove(self, method_name: str) -> None:
+        self._proofs[method_name].prove()
+
     def __init__(
         self,
         definition_dir: Path,
@@ -430,53 +466,123 @@ class AutoProver:
         contract: Contract,
     ):
 
-        faucet_pk, faucet_addr = generate_account()
+        self._proofs: Dict[str, KAVMProof] = {}
+
+        _, faucet_addr = generate_account()
         algod = KAVMClient(faucet_address=str(faucet_addr))
-        pk1, addr1 = generate_account()
-        pk2, addr2 = generate_account()
+        creator_pk, creator_addr = generate_account()
         sp = algod.suggested_params()
 
+        _LOGGER.info(f'Initializing proofs for contract {contract.name}')
+
+        creator_account = SymbolicAccount(address=str(creator_addr), balance=1000000000)
+        app_id = 42
+        app = SymbolicApplication(
+            app_id=app_id,
+            local_state_schema=StateSchema(0, 0),
+            global_state_schema=StateSchema(0, 0),
+            approval_pgm_path=approval_pgm,
+            clear_pgm_path=clear_pgm,
+        )
+        app_addr = str(encode_address(checksum(b'appID' + (app_id).to_bytes(8, 'big'))))
+        app_account = SymbolicAccount(address=app_addr, balance=42424242424242)
+        creator_account.add_app(app)
+
         for method in contract.methods:
-            proof = KAVMProof(definition_dir=definition_dir, use_directory=Path("proofs"))
-            sdk_txn = ApplicationCallTxn(sender=addr1, index=1, on_complete=0, sp=sp)
+            proof = KAVMProof(
+                definition_dir=definition_dir,
+                use_directory=Path("proofs"),
+                claim_name=f'{contract.name}-{method.name}',
+            )
+            proof.add_acct(creator_account)
+            proof.add_acct(app_account)
+
+            _LOGGER.info(f'Generating K claim for method {method.name}')
+            assert isinstance(method, MethodWithSpec)
 
             app_args: List[KInner] = [KToken("b\"" + str(method.get_selector())[2:-1] + "\"", "Bytes")]
-            for arg in method.args:
+            for i, arg in enumerate(method.args):
+                _LOGGER.info(f'Analyzing method argument {i} with name {arg.name} of type {arg.type}')
                 if str(arg.type) == 'uint64':
-                    app_args.append(int_2_bytes(KVariable(str(arg.name).upper(), sort=KSort("Int"))))
+                    arg_k_var = KVariable(str(arg.name).upper(), sort=KSort("Int"))
+                    app_args.append(int_2_bytes(arg_k_var))
+                    arg_pre = AutoProver._in_bounds_uint64(arg_k_var)
+                    _LOGGER.info(f'Adding precondiotion on argument {arg.name}: {algod.kavm.pretty_print(arg_pre)}')
+                    method.preconditions.append(arg_pre)
+                elif str(arg.type) == 'pay':
+                    sdk_txn = PaymentTxn(sender=creator_addr, receiver=app_addr, sp=sp, amt=0)
+                    amount_k_var = KVariable(str(arg.name).upper(), sort=KSort("Int"))
+                    txn_pre = transaction_k_term(
+                        kavm=algod.kavm,
+                        txn=sdk_txn,
+                        txid='0',
+                        symbolic_fileds_subst=Subst(
+                            {
+                                'AMOUNT_CELL': amount_k_var,
+                                'GROUPIDX_CELL': intToken(0),
+                                'SENDER_CELL': KToken(
+                                    "b\"" + str(decode_address(sdk_txn.sender))[2:-1] + "\"", "Bytes"
+                                ),
+                                'RECEIVER_CELL': KToken(
+                                    "b\"" + str(decode_address(sdk_txn.receiver))[2:-1] + "\"", "Bytes"
+                                ),
+                            }
+                        ),
+                    )
+                    txn_post = transaction_k_term(
+                        kavm=algod.kavm,
+                        txn=sdk_txn,
+                        txid='0',
+                        symbolic_fileds_subst=Subst(
+                            {
+                                'AMOUNT_CELL': amount_k_var,
+                                'GROUPIDX_CELL': intToken(0),
+                                'SENDER_CELL': KToken(
+                                    "b\"" + str(decode_address(sdk_txn.sender))[2:-1] + "\"", "Bytes"
+                                ),
+                                'RECEIVER_CELL': KToken(
+                                    "b\"" + str(decode_address(sdk_txn.receiver))[2:-1] + "\"", "Bytes"
+                                ),
+                                'RESUME_CELL': KVariable('?_'),
+                            }
+                        ),
+                    )
+                    amount_pre = AutoProver._in_bounds_uint64(amount_k_var)
+                    _LOGGER.info(f'Adding precondiotion on argument {arg.name}: {algod.kavm.pretty_print(amount_pre)}')
+                    method.preconditions.append(amount_pre)
+                    proof.add_txn(txn_pre, txn_post)
                 else:
-                    print("Not yet supported.")
+                    _LOGGER.critical(f"Not yet supported: method argument of type {arg.type}")
                     exit(1)
 
-            app1 = SymbolicApplication(
-                app_id=1,
-                local_state_schema=StateSchema(0, 0),
-                global_state_schema=StateSchema(0, 0),
-                approval_pgm_path=approval_pgm,
-                clear_pgm_path=clear_pgm,
-            )
-            account1 = SymbolicAccount(address=str(addr1), balance=1000000000)
-            account1.add_app(app1)
-            proof.add_acct(account1)
-            proof.add_precondition(
-                KApply("_<=Int_", [KApply("_+Int_", [KVariable("A"), KVariable("B")]), KToken("MAX_UINT64", "Int")])
-            )
+            for pre in method.preconditions:
+                proof.add_precondition(pre)
+            for post in method.postconditions:
+                proof.add_postcondition(post)
+
+            # for method_txn in method.txn_calls:
+            sdk_txn = ApplicationCallTxn(sender=creator_addr, index=app_id, on_complete=0, sp=sp)
             txn_pre = transaction_k_term(
                 kavm=algod.kavm,
                 txn=sdk_txn,
-                txid='0',
+                txid='1',
                 symbolic_fileds_subst=Subst(
-                    {'APPLICATIONARGS_CELL': generate_tvalue_list(app_args), 'GROUPIDX_CELL': intToken(0)}
+                    {
+                        'APPLICATIONARGS_CELL': generate_tvalue_list(app_args),
+                        'GROUPIDX_CELL': intToken(1),
+                        'SENDER_CELL': KToken("b\"" + str(decode_address(sdk_txn.sender))[2:-1] + "\"", "Bytes"),
+                    }
                 ),
             )
             txn_post = transaction_k_term(
                 kavm=algod.kavm,
                 txn=sdk_txn,
-                txid='0',
+                txid='1',
                 symbolic_fileds_subst=Subst(
                     {
+                        'SENDER_CELL': KToken("b\"" + str(decode_address(sdk_txn.sender))[2:-1] + "\"", "Bytes"),
                         'APPLICATIONARGS_CELL': generate_tvalue_list(app_args),
-                        'GROUPIDX_CELL': intToken(0),
+                        'GROUPIDX_CELL': intToken(1),
                         'TXSCRATCH_CELL': KVariable('?_'),
                         'LOGDATA_CELL': KVariable('?FINAL_LOGDATA_CELL'),
                         'LOGSIZE_CELL': KVariable('?_'),
@@ -485,33 +591,8 @@ class AutoProver:
                 ),
             )
             proof.add_txn(txn_pre, txn_post)
-            # ensures ?FINAL_LOGDATA ==K b"\x15\x1f|u" +Bytes  padLeftBytes(Int2Bytes(A +Int B, BE, Unsigned), 8, 0)
-            ensures = KApply(
-                "_==K_",
-                [
-                    KVariable('?FINAL_LOGDATA_CELL'),
-                    KApply(
-                        '_+Bytes_',
-                        [
-                            bytesToken("\\x15\\x1f|u"),
-                            KApply(
-                                'padLeftBytes',
-                                [
-                                    KApply(
-                                        'Int2Bytes',
-                                        [
-                                            KApply("_+Int_", [KVariable("A"), KVariable("B")]),
-                                            KToken('BE', KSort('Endianness')),
-                                            KToken('Unsigned', KSort('Signedness')),
-                                        ],
-                                    ),
-                                    intToken(8),
-                                    intToken(0),
-                                ],
-                            ),
-                        ],
-                    ),
-                ],
-            )
-            proof.add_postcondition(ensures)
-            proof.prove()
+            self._proofs[method.name] = proof
+
+        _LOGGER.info(
+            f'Initialized K proofs for methods: {[contract.name + "-" + proof_name for proof_name in self._proofs.keys()]}'
+        )

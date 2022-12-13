@@ -7,9 +7,9 @@ from subprocess import CompletedProcess
 from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union
 
 from pyk.cli_utils import run_process
-from pyk.kast.inner import KSort, KInner, KApply, KLabel, KToken
-from pyk.kore.parser import KoreParser
+from pyk.kast.inner import KSort
 from pyk.kore import syntax as kore
+from pyk.kore.parser import KoreParser
 from pyk.ktool.kprint import paren
 from pyk.ktool.kprove import KProve
 from pyk.ktool.krun import KRun, KRunOutput, _krun

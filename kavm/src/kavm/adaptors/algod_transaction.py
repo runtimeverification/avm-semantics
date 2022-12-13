@@ -15,6 +15,7 @@ from algosdk.future.transaction import (
 from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, Subst
 from pyk.kast.manip import split_config_from
 from pyk.prelude.bytes import bytesToken
+from pyk.prelude.string import stringToken
 
 from kavm.pyk_utils import maybe_tvalue, tvalue_list
 
@@ -199,7 +200,7 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fileds_s
         return KApply(
             "<transaction>",
             [
-                KApply("<txID>", KToken("\"0\"", "String")),
+                KApply("<txID>", stringToken(txid)),
                 kavm.definition.empty_config(KSort('TxHeaderCell')),
                 KApply("<txnTypeSpecificFields>", type_specific_fields),
                 kavm.definition.empty_config(KSort('ApplyDataCell')),
@@ -325,10 +326,9 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fileds_s
         .compose(apply_data_subst)
         .compose(header_subst)
         .compose(type_specific_subst)
+        .compose(symbolic_fileds_subst)
     )
 
-    transaction_cell = fields_subst.compose(symbolic_fileds_subst).apply(
-        empty_transaction_cell(type_specific_fileds_cell)
-    )
+    transaction_cell = fields_subst.apply(empty_transaction_cell(type_specific_fileds_cell))
 
     return transaction_cell
