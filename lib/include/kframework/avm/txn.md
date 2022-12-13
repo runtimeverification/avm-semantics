@@ -166,6 +166,7 @@ module ALGO-TXN
   imports SET
   imports LIST
   imports BYTES-HOOKED
+  imports GLOBALS
 ```
 
 *Transaction Group Configuration*
@@ -699,7 +700,16 @@ module ALGO-TXN
        </transaction>
     requires #isValidForTxnType(FreezeAssetFrozen, TYPE)
 
-  rule [[ getTxnField(I, Applications, J) => normalize(getTValueAt(J, X)) ]]
+  rule [[ getTxnField(I, Applications, 0) => normalize(A) ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         ...
+       </transaction>
+       <currentApplicationID> A </currentApplicationID>
+    requires #isValidForTxnType(Applications, TYPE)
+
+  rule [[ getTxnField(I, Applications, J) => normalize(getTValueAt(J -Int 1, X)) ]]
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
@@ -709,13 +719,14 @@ module ALGO-TXN
     requires #isValidForTxnType(Applications, TYPE)
      andBool 0 <=Int J andBool J <Int size(X)
 
-  rule [[ getTxnField(I, Applications) => X ]]
+  rule [[ getTxnField(I, Applications) => (A X) ]]
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
          <foreignApps> X </foreignApps>
          ...
        </transaction>
+       <currentApplicationID> A </currentApplicationID>
     requires #isValidForTxnType(Applications, TYPE)
 
   rule [[ getTxnField(I, Assets, J) => normalize(getTValueAt(J, X)) ]]

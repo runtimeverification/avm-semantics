@@ -474,33 +474,6 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
     requires X >Int MAX_BYTEARRAY_LEN
 ```
 
-*Byte-array access and modification*
-
-```k
-  rule <k> getbyte => .K ... </k>
-       <stack> ARRAY : B : XS => ARRAY[B] : XS </stack>
-       <stacksize> S => S -Int 1 </stacksize>
-    requires 0 <=Int B andBool B <Int lengthBytes(ARRAY)
-
-  rule <k> getbyte => panic(INDEX_OUT_OF_BOUNDS) ... </k>
-       <stack> ARRAY : B : _ </stack>
-    requires 0 >Int B orBool B >=Int lengthBytes(ARRAY)
-
-  rule <k> setbyte => .K ... </k>
-       <stack> ARRAY : B : C : XS => ARRAY[B <- C] : XS </stack>
-       <stacksize> S => S -Int 2 </stacksize>
-    requires 0 <=Int B andBool B <Int lengthBytes(ARRAY)
-             andBool 0 <=Int C andBool C <=Int MAX_UINT8
-
-  rule <k> setbyte => panic(INDEX_OUT_OF_BOUNDS) ... </k>
-       <stack> ARRAY : B : _ </stack>
-    requires 0 >Int B orBool B >=Int lengthBytes(ARRAY)
-
-  rule <k> setbyte => panic(ILL_TYPED_STACK) ... </k>
-       <stack> _ : _ : C : _ </stack>
-    requires 0 >Int C orBool C >Int MAX_UINT8
-```
-
 *Byte-array sub-array extraction*
 
 ```k

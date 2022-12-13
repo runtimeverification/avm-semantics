@@ -30,13 +30,15 @@ claim
         </txHeader>
         <txnTypeSpecificFields>
           <appCallTxFields>
-            <applicationID> CALCULATOR_APP_ID </applicationID>
+            <applicationID> CALL_CALCULATOR_APP_ID </applicationID>
             <onCompletion> @ NoOp </onCompletion>
             <applicationArgs>
               METHOD_SIG:Bytes
+              b"\x01"
               Int2Bytes(ARG1:Int, BE, Unsigned)
               Int2Bytes(ARG2:Int, BE, Unsigned) 
             </applicationArgs>
+            <foreignApps> CALCULATOR_APP_ID </foreignApps>
             ...
           </appCallTxFields>
         </txnTypeSpecificFields>
@@ -543,7 +545,18 @@ retsub
           ...
         </account>
         <account>
-          <address> APP_ADDRESS:Bytes </address>
+          <address> CALCULATOR_APP_ADDRESS:Bytes </address>
+          <balance> APP_BALANCE:Int => ?_ </balance>
+          <minBalance> APP_MIN_BALANCE:Int </minBalance>
+          <appsCreated> .Bag </appsCreated>
+          <appsOptedIn> .Bag </appsOptedIn>
+          <assetsCreated> .Bag </assetsCreated>
+          <assetsOptedIn> .Bag </assetsOptedIn>
+          <boxes> .Bag </boxes>
+          ...
+        </account>
+        <account>
+          <address> CALL_CALCULATOR_APP_ADDRESS:Bytes </address>
           <balance> APP_BALANCE:Int => ?_ </balance>
           <minBalance> APP_MIN_BALANCE:Int </minBalance>
           <appsCreated> .Bag </appsCreated>
@@ -566,11 +579,20 @@ retsub
   </kavm>
 
   requires CALCULATOR_APP_ID >Int 0
-   andBool APP_ADDRESS ==K getAppAddressBytes(CALCULATOR_APP_ID)
+   andBool CALL_CALCULATOR_APP_ID >Int 0
+
+   andBool CALCULATOR_APP_ADDRESS ==K getAppAddressBytes(CALCULATOR_APP_ID)
+   andBool CALL_CALCULATOR_APP_ADDRESS ==K getAppAddressBytes(CALL_CALCULATOR_APP_ID)
+
    andBool APP_BALANCE >=Int APP_MIN_BALANCE
-   andBool CREATOR_ADDRESS =/=K APP_ADDRESS
-   andBool SENDER_ADDRESS  =/=K APP_ADDRESS
-   andBool SENDER_ADDRESS  =/=K CREATOR_ADDRESS
+
+   andBool CREATOR_ADDRESS =/=K CALCULATOR_APP_ADDRESS
+   andBool CREATOR_ADDRESS =/=K CALL_CALCULATOR_APP_ADDRESS
+   andBool CREATOR_ADDRESS =/=K SENDER_ADDRESS
+   andBool SENDER_ADDRESS =/=K CALCULATOR_APP_ADDRESS
+   andBool SENDER_ADDRESS =/=K CALL_CALCULATOR_APP_ADDRESS
+   andBool CALL_CALCULATOR_APP_ADDRESS =/=K CALCULATOR_APP_ADDRESS
+
    andBool SENDER_BALANCE >=Int SENDER_MIN_BALANCE
 
    andBool CALCULATOR_APP_ID =/=K CALL_CALCULATOR_APP_ID
