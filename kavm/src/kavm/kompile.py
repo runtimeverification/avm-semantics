@@ -1,9 +1,13 @@
+import logging
 import subprocess
 from pathlib import Path
 from subprocess import CalledProcessError, CompletedProcess
-from typing import List, Optional
+from typing import Final, List, Optional
 
 from kavm.kavm import KAVM
+
+_LOGGER: Final = logging.getLogger(__name__)
+_LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
 
 
 def kompile(
@@ -77,6 +81,8 @@ def kompile_haskell(
     command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
     command += ['--concrete-rules', ','.join(KAVM.concrete_rules())]
     command += [str(arg) for include in includes for arg in ['-I', include]] if includes else []
+
+    _LOGGER.info(' '.join(command))
 
     return subprocess.run(command, check=True, text=True)
 
