@@ -68,15 +68,15 @@
           };
 
           kavm = prev.poetry2nix.mkPoetryApplication {
+            # buildInputs = [ prev.python311Packages.pip ];
             python = prev.python310;
             projectDir = ./kavm;
-            overrides = prev.poetry2nix.overrides.withDefaults
+            overrides = prev.poetry2nix.overrides.withoutDefaults
               (finalPython: prevPython: { pyk = prev.python310Packages.pyk; });
-            groups = [ ];
+            preferWheels = true;
             # We remove `"dev"` from `checkGroups`, so that poetry2nix does not try to resolve dev dependencies.
             checkGroups = [ ];
             propagatedBuildInputs = [ k prev.llvm-backend ];
-
           };
         in {
           avm-semantics = prev.stdenv.mkDerivation {
@@ -90,6 +90,7 @@
               msgpack
               openssl.dev
               procps
+              poetry
             ];
             nativeBuildInputs = [ prev.makeWrapper ];
 
@@ -118,7 +119,7 @@
               cp -r ${kavm-deps}/* .build/usr/
               chmod -R u+w .build/
               make \
-                SHELL=$SHELL VENV_ACTIVATE=true \
+                SKIP_POETRY_RUN=1 SHELL=$SHELL VENV_ACTIVATE=true \
                 ${if prev.stdenv.isDarwin then "UNAME_S=" else ""} \
                 build
             '';
@@ -133,7 +134,7 @@
 
           # rebuild the kavm executable, giving it the newly determined path to the K definition
           kavm = kavm.overrideAttrs (oldAttrs: {
-            buildInputs = oldAttrs.buildInputs or [] ++ [ prev.makeWrapper ];
+            buildInputs = oldAttrs.buildInputs or [] ++ [ prev.makeWrapper prev.python311.pkgs.pip ];
             postInstall = oldAttrs.postInstall or "" + ''
               wrapProgram $out/bin/kavm \
                 --set KAVM_DEFINITION_DIR ${(toString final.avm-semantics) + "/lib/kavm/avm-llvm/avm-testing-kompiled"}
