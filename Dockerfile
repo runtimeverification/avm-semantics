@@ -35,8 +35,8 @@ RUN set -ex \
     && pyenv global $PYTHON_VERSION  \
     && pyenv rehash
 
-RUN curl -sSL https://install.python-poetry.org | POETRY_VERSION=1.2.1 python3 -
-# RUN poetry --version
-# RUN poetry config virtualenvs.in-project true
-# RUN poetry config virtualenvs.prefer-active-python true
+RUN curl -sSL https://install.python-poetry.org | POETRY_VERSION=1.2.1 POETRY_HOME=/usr python3 -
+RUN poetry --version
+RUN poetry config virtualenvs.in-project true
+RUN poetry config virtualenvs.prefer-active-python true
 
