@@ -26,7 +26,7 @@ ARG GROUP_ID=1000
 RUN groupadd -g $GROUP_ID user && useradd -m -u $USER_ID -s /bin/sh -g user user
 
 # Install pyenv
-ENV PYTHON_VERSION 3.11.1
+ENV PYTHON_VERSION 3.11.0
 ENV PYENV_ROOT /home/user/.pyenv
 ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
 RUN set -ex \
