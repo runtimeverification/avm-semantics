@@ -17,7 +17,7 @@ Global Field State Representation
 module GLOBALS
   imports TEAL-CONSTANTS
   imports TEAL-FIELDS
-  imports ALGO-TXN
+  imports TEAL-TYPES
   imports AVM-CONSTANTS
 ```
 
@@ -961,6 +961,7 @@ The transaction index connects a transaction groups ID to the transaction IDs co
         </txnIndexMapGroup>
 
   rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD, FIELD_INDEX) => getTxnField( {MV[GROUP_INDEX]}:>String, FIELD, FIELD_INDEX) ]]
+
         <txnIndexMapGroup>
           <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
           <txnIndexMapGroupValues> MV </txnIndexMapGroupValues>
