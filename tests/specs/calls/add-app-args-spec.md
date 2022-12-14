@@ -22,7 +22,6 @@ claim
           <sender> SENDER_ADDRESS:Bytes </sender>
           <txType> "appl" </txType>
           <typeEnum> @ appl </typeEnum>
-//          <groupID> GROUP_ID:String </groupID>
           <groupIdx> 1 </groupIdx>
           ...
         </txHeader>
@@ -137,7 +136,6 @@ claim
    andBool SENDER_ADDRESS  =/=K APP_ADDRESS
    andBool SENDER_ADDRESS  =/=K CREATOR_ADDRESS
    andBool SENDER_BALANCE >=Int SENDER_MIN_BALANCE
-//   andBool PAY_TX_ID =/=K TX_ID
    andBool ARG1 +Int ARG2 <=Int MAX_UINT64
 
   ensures ?APP_RESULT ==K padLeftBytes(Int2Bytes(ARG1 +Int ARG2, BE, Unsigned), 8, 0)
