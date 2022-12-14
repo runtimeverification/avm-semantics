@@ -2,7 +2,7 @@ from typing import Tuple
 
 from algosdk.abi import Contract
 from pyteal import (Approve, BareCallActions, Expr, OnCompleteAction, Router, abi, InnerTxnBuilder, Int,
-    InnerTxn, Seq, Btoi)
+        Extract, InnerTxn, Seq, Btoi)
 from pyteal.compiler.optimizer import optimizer
 
 # Main router class
@@ -28,7 +28,7 @@ def add(app: abi.Application, a: abi.Uint64, b: abi.Uint64, *, output: abi.Uint6
                 method_signature="add(uint64,uint64)uint64",
                 args=[a, b],
             ),
-            Btoi(InnerTxn.last_log())
+            Btoi(Extract(InnerTxn.last_log(), Int(4), Int(8)))
         ])
     )
 
@@ -43,7 +43,7 @@ def sub(app: abi.Application, a: abi.Uint64, b: abi.Uint64, *, output: abi.Uint6
                 method_signature="sub(uint64,uint64)uint64",
                 args=[a, b],
             ),
-            Btoi(InnerTxn.last_log())
+            Btoi(Extract(InnerTxn.last_log(), Int(4), Int(8)))
         ])
     )
 
@@ -58,7 +58,7 @@ def mul(app: abi.Application, a: abi.Uint64, b: abi.Uint64, *, output: abi.Uint6
                 method_signature="mul(uint64,uint64)uint64",
                 args=[a, b],
             ),
-            Btoi(InnerTxn.last_log())
+            Btoi(Extract(InnerTxn.last_log(), Int(4), Int(8)))
         ])
     )
 
@@ -73,7 +73,7 @@ def div(app: abi.Application, a: abi.Uint64, b: abi.Uint64, *, output: abi.Uint6
                 method_signature="div(uint64,uint64)uint64",
                 args=[a, b],
             ),
-            Btoi(InnerTxn.last_log())
+            Btoi(Extract(InnerTxn.last_log(), Int(4), Int(8)))
         ])
     )
 

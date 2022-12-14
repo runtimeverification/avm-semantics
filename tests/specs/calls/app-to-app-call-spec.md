@@ -280,6 +280,7 @@ itob
 itxn_field ApplicationArgs
 itxn_submit
 itxn LastLog
+extract 4 8
 btoi
 retsub
 
@@ -304,6 +305,7 @@ itob
 itxn_field ApplicationArgs
 itxn_submit
 itxn LastLog
+extract 4 8
 btoi
 retsub
 
@@ -328,6 +330,7 @@ itob
 itxn_field ApplicationArgs
 itxn_submit
 itxn LastLog
+extract 4 8
 btoi
 retsub
 
@@ -352,6 +355,7 @@ itob
 itxn_field ApplicationArgs
 itxn_submit
 itxn LastLog
+extract 4 8
 btoi
 retsub
                 ):TealInputPgm => ?_
@@ -581,11 +585,13 @@ retsub
   requires CALCULATOR_APP_ID >Int 0
    andBool CALL_CALCULATOR_APP_ID >Int 0
 
+
    andBool CALCULATOR_APP_ADDRESS ==K getAppAddressBytes(CALCULATOR_APP_ID)
    andBool CALL_CALCULATOR_APP_ADDRESS ==K getAppAddressBytes(CALL_CALCULATOR_APP_ID)
 
    andBool APP_BALANCE >=Int APP_MIN_BALANCE
 
+  // Addresses are unique
    andBool CREATOR_ADDRESS =/=K CALCULATOR_APP_ADDRESS
    andBool CREATOR_ADDRESS =/=K CALL_CALCULATOR_APP_ADDRESS
    andBool CREATOR_ADDRESS =/=K SENDER_ADDRESS
@@ -606,7 +612,14 @@ retsub
    andBool Int2String(NEXT_GROUP_ID +Int 1) =/=String GROUP_ID
 
    andBool ARG1 +Int ARG2 <=Int MAX_UINT64
+   
+  // Input values are in the correct range according to their size
+   andBool ARG1 <=Int MAX_UINT64
+   andBool ARG2 <=Int MAX_UINT64
+   andBool ARG1 >=Int 0
+   andBool ARG2 >=Int 0
 
+  // Label uniqueness
    andBool 0 ==K ADD_0
    andBool 1 ==K SUB_1
    andBool 2 ==K MUL_2

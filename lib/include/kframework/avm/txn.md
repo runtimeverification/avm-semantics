@@ -717,7 +717,7 @@ module ALGO-TXN
          ...
        </transaction>
     requires #isValidForTxnType(Applications, TYPE)
-     andBool 0 <=Int J andBool J <Int size(X)
+     andBool 0 <=Int J andBool J <=Int size(X)
 
   rule [[ getTxnField(I, Applications) => (A X) ]]
        <transaction>
