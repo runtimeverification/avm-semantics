@@ -17,7 +17,6 @@ POETRY_RUN := poetry run
 PYTEST_ARGS := -n $(THREADS) $(if $(PYTEST_PROFILING),--profile,)
 
 venv-config:
-	mkdir -p .venv
 	poetry config --local virtualenvs.in-project true
 	poetry config --local virtualenvs.create true
 	poetry config --local virtualenvs.path .venv
