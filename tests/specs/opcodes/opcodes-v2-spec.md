@@ -32,7 +32,7 @@ module OPCODES-V2-SPEC
 <summary>K claims</summary>
 
 ```k
-  claim <k> txna Applications 1 => . </k>
+  claim <k> txna Applications 2 => . </k>
         <stack> XS => APPL : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
         <currentTx> TX_ID </currentTx>
@@ -186,24 +186,27 @@ module OPCODES-V2-SPEC
         <stack> (B:Int : normalize(A:Bytes) : XS) => 1 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
         <currentTx> TX_ID </currentTx>
-        <transaction>
-          <txID> TX_ID </txID>
-          <typeEnum> @ appl </typeEnum>
-          <sender> A </sender>
-          <foreignApps> B _ </foreignApps>
-          ...
-        </transaction>
-        <account>
-          <address> A </address>
-          <appsOptedIn>
-            <optInApp>
-              <optInAppID> B </optInAppID>
-              ...
-            </optInApp>
+        <transactions>
+          <transaction>
+            <txID> TX_ID </txID>
+            <typeEnum> @ appl </typeEnum>
+            <sender> A </sender>
+            <foreignApps> B _ </foreignApps>
             ...
-          </appsOptedIn>
-          ...
-        </account>
+          </transaction>
+        </transactions>
+        <accountsMap>
+          <account>
+            <address> A </address>
+            <appsOptedIn>
+              <optInApp>
+                <optInAppID> B </optInAppID>
+                ...
+              </optInApp>
+            </appsOptedIn>
+            ...
+          </account>
+        </accountsMap>
 
   claim <k> app_opted_in => . </k>
         <stack> (B:Int : normalize(A:Bytes) : XS) => 0 : XS </stack>

@@ -483,7 +483,7 @@ claim <k> log => . </k>
 
 ```k
   claim <k> txnas Applications => . </k>
-        <stack> 1 : XS => APPL : XS </stack>
+        <stack> 2 : XS => APPL : XS </stack>
         <stacksize> S </stacksize>
         <currentTx> TX_ID </currentTx>
         <transaction>
