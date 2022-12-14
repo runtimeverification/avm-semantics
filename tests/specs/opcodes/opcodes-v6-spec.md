@@ -103,14 +103,14 @@ module OPCODES-V6-SPEC
         <stack> 54321 : 12345 : 3 : XS => 1018763134351883 : XS </stack>
         <stacksize> S => S -Int 2 </stacksize>
 
-  claim <k> divw => panic(DIV_BY_ZERO) </k>
+  claim <k> divw => #panic(DIV_BY_ZERO) </k>
         <stack> 0 : _:Int : _:Int : _ </stack>
 
   // (5 << 64) / 2 > MAX_UINT
-  claim <k> divw => panic(INT_OVERFLOW) </k>
+  claim <k> divw => #panic(INT_OVERFLOW) </k>
         <stack> 2 : 0 : 5 : _ </stack>
 
-  claim <k> divw => panic(ILL_TYPED_STACK) </k>
+  claim <k> divw => #panic(ILL_TYPED_STACK) </k>
         <stack> C : B : A : _ </stack>
     requires (isBytes(A) orBool isBytes(B) orBool isBytes(C))
      andBool C =/=K 0

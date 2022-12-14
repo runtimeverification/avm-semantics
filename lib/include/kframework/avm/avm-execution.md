@@ -77,10 +77,8 @@ and the current configuration is frozen for examination.
 
   // Minimum balances are only checked at the conclusion of the outer-level group.
   rule <k> #evalNextTx() => #checkSufficientBalance() ... </k>
-      <returncode> _ => 0 </returncode>
-      <returnstatus> _ => "Success - transaction group accepted"
-      </returnstatus>
-      <deque> .List </deque>
+       <returncode> _ => 0 </returncode>
+       <deque> .List </deque>
 ```
 
 ### Executing next transaction
@@ -103,11 +101,8 @@ the attached stateless TEAL if the transaction is logicsig-signed.
              #initContext()
           ~> #checkTxnSignature() 
           ~> #executeTxn(TXN_TYPE) 
-          ~> #if (getTxnField(getCurrentTxn(), TypeEnum) ==K (@ appl)) #then .K #else #finalizeExecution() #fi
        ... 
        </k>
-       <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
-       <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID> TXN_ID </txID>
@@ -332,8 +327,7 @@ Add asset to account
        </account>
     requires BALANCE >=Int MIN_BALANCE
 
-  rule <k> #checkSufficientBalance(ADDR) => #avmPanic(TX_ID, MIN_BALANCE_VIOLATION) ...</k>
-       <currentTx> TX_ID </currentTx>
+  rule <k> #checkSufficientBalance(ADDR) => #panic(MIN_BALANCE_VIOLATION) ...</k>
        <account>
          <address> ADDR </address>
          <balance> BALANCE </balance>
@@ -408,7 +402,7 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
   rule addToListNoDup(X, L) => ListItem(X) L requires notBool(X in L)
   rule addToListNoDup(X, L) => L requires X in L
 
-  rule <k> #executeTxn(@pay) => panic(INSUFFICIENT_FUNDS) ... </k>
+  rule <k> #executeTxn(@pay) => #panic(INSUFFICIENT_FUNDS) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>     TXN_ID   </txID>
@@ -423,7 +417,7 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
        </account>
     requires SENDER_BALANCE -Int AMOUNT <Int 0
 
-  rule <k> #executeTxn(@pay) => #avmPanic(TXN_ID, UNKNOWN_ADDRESS) ... </k>
+  rule <k> #executeTxn(@pay) => #panic(UNKNOWN_ADDRESS) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>     TXN_ID   </txID>
@@ -444,8 +438,7 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
 Not supported.
 
 ```k
-  rule <k> #executeTxn(@keyreg) => #avmPanic(TXN_ID, UNSUPPORTED_TXN_TYPE) ... </k>
-       <currentTx> TXN_ID </currentTx>
+  rule <k> #executeTxn(@keyreg) => #panic(UNSUPPORTED_TXN_TYPE) ... </k>
 ```
 
 * **Asset Configuration**
@@ -600,8 +593,7 @@ TODO split into other cases?
   - Maybe more?
 
 ```k
-  rule <k> #executeTxn(@acfg) => #avmPanic(TXN_ID, ASSET_NO_PERMISSION) ...</k>
-       <currentTx> TXN_ID </currentTx> [owise]
+  rule <k> #executeTxn(@acfg) => #panic(ASSET_NO_PERMISSION) ...</k> [owise]
 ```
 
 * **Asset Transfer**
@@ -640,7 +632,7 @@ Asset transfer with a non-zero amount fails if:
 - sender's holdings are frozen
 
 ```k
-  rule <k> #executeTxn(@axfer) => #avmPanic(TXN_ID, ASSET_NOT_OPT_IN) ... </k>
+  rule <k> #executeTxn(@axfer) => #panic(ASSET_NOT_OPT_IN) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID   </txID>
@@ -665,7 +657,7 @@ Asset transfer with a non-zero amount fails if:
      andBool (notBool hasOptedInAsset(ASSET_ID, SENDER)
       orBool notBool hasOptedInAsset(ASSET_ID, RECEIVER))
 
-  rule <k> #executeTxn(@axfer) => #avmPanic(TXN_ID, ASSET_FROZEN) ... </k>
+  rule <k> #executeTxn(@axfer) => #panic(ASSET_FROZEN) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID   </txID>
@@ -1079,14 +1071,11 @@ Not supported.
 TODO: determine if we need to support them an all.
 
 ```k
-  rule <k> #executeTxn(@ccfg) => #avmPanic(TXN_ID, UNSUPPORTED_TXN_TYPE) ... </k>
-       <currentTx> TXN_ID </currentTx>
+  rule <k> #executeTxn(@ccfg) => #panic(UNSUPPORTED_TXN_TYPE) ... </k>
 
-  rule <k> #executeTxn(@ccall) => #avmPanic(TXN_ID, UNSUPPORTED_TXN_TYPE) ... </k>
-       <currentTx> TXN_ID </currentTx>
+  rule <k> #executeTxn(@ccall) => #panic(UNSUPPORTED_TXN_TYPE) ... </k>
 
-  rule <k> #executeTxn(@cfx) => #avmPanic(TXN_ID, UNSUPPORTED_TXN_TYPE) ... </k>
-       <currentTx> TXN_ID </currentTx>
+  rule <k> #executeTxn(@cfx) => #panic(UNSUPPORTED_TXN_TYPE) ... </k>
 ```
 
 ```k
