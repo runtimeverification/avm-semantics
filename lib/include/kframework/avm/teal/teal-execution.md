@@ -64,7 +64,11 @@ there may be some remaining artefacts of the previous transaction's TEAL.
        <lastTxnGroupID> _ => "" </lastTxnGroupID>
        <mode> _ => stateful </mode>
        <appCreator> AC </appCreator>
-    requires notBool(APP_ID in REST)
+    requires notBool(APP_ID in REST) andBool (APP_ID in_keys(AC))
+
+  rule <k> #initApp(APP_ID) => panic(MISSING_APP_CREATOR) ... </k>
+       <appCreator> AC </appCreator>
+    requires notBool(APP_ID in_keys(AC))
 ```
 
 ```k
@@ -241,6 +245,12 @@ teal, failure means undoing changes made to the state (for more details, see
   rule <k> #deactivateApp() => . ... </k>
        <currentApplicationID> APP_ID </currentApplicationID>
        <activeApps> (SetItem(APP_ID) => .Set) ...</activeApps>
+       <paniccode> PANIC_CODE </paniccode>
+    requires PANIC_CODE ==Int 0
+
+  rule <k> #deactivateApp() => . ... </k>
+       <paniccode> PANIC_CODE </paniccode>
+    requires PANIC_CODE =/=Int 0
 
   rule <k> #calcReturn() => .K ... </k>
        <stack> I : .TStack </stack>
@@ -440,6 +450,7 @@ return code to 3 (see return codes below).
   syntax String ::= "BOX_WRONG_LENGTH"           [macro]
   syntax String ::= "BOX_OUT_OF_BOUNDS"          [macro]
   syntax String ::= "BOX_CREATE_EXTERNAL"        [macro]
+  syntax String ::= "MISSING_APP_CREATOR"        [macro]
   //----------------------------------------------------
   rule INVALID_OP_FOR_MODE => "invalid opcode for current execution mode"
   rule ERR_OPCODE          => "err opcode encountered"
@@ -483,7 +494,8 @@ return code to 3 (see return codes below).
   rule BOX_WRONG_LENGTH    => "tried to replace a box byte array with one of a different length"
   rule BOX_OUT_OF_BOUNDS   => "tried to access out of bounds of a box byte array"
   rule BOX_CREATE_EXTERNAL => "tried to create a box for which a reference already exists tied to another application"
-  //--------------------------------------------------------------------------------
+  rule MISSING_APP_CREATOR => "app creator not found"
+  //-------------------------------------------------
 
   rule panicCode(INVALID_OP_FOR_MODE)        => 1
   rule panicCode(ERR_OPCODE)                 => 2
@@ -527,6 +539,7 @@ return code to 3 (see return codes below).
   rule panicCode(BOX_WRONG_LENGTH)           => 40
   rule panicCode(BOX_OUT_OF_BOUNDS)          => 41
   rule panicCode(BOX_CREATE_EXTERNAL)        => 42
+  rule panicCode(MISSING_APP_CREATOR)        => 43
 
   rule <k> panic(S) => #finalizeExecution() ... </k>
        <paniccode> _ => panicCode(S) </paniccode>
