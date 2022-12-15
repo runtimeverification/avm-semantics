@@ -11,9 +11,6 @@ claim
     <k> #evalTxGroup() => . </k>
 
     <returncode>   4                        => 0                                      </returncode>
-    <returnstatus> "Failure - AVM is stuck" => "Success - transaction group accepted" </returnstatus>
-    <paniccode>    0                        => 0                                      </paniccode>
-    <panicstatus>  ""                       => ""                                     </panicstatus>
 
     <transactions>
       <transaction>
