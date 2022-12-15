@@ -659,8 +659,7 @@ Asset transfer with a non-zero amount fails if:
      andBool (notBool hasOptedInAsset(ASSET_ID, SENDER)
       orBool notBool hasOptedInAsset(ASSET_ID, RECEIVER))
 
-  rule <k> #executeTxn(@axfer) => #panic(ASSET_FROZEN) ... </k>
-  rule <k> #executeTxn(@axfer) => #avmPanic(TXN_ID, ASSET_NOT_FOUND) ... </k>
+  rule <k> #executeTxn(@axfer) => #panic(ASSET_NOT_FOUND) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID   </txID>
@@ -669,7 +668,7 @@ Asset transfer with a non-zero amount fails if:
        </transaction>
     requires notBool(assetCreated(ASSET_ID))
 
-  rule <k> #executeTxn(@axfer) => #avmPanic(TXN_ID, ASSET_FROZEN) ... </k>
+  rule <k> #executeTxn(@axfer) => #panic(ASSET_FROZEN) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID   </txID>

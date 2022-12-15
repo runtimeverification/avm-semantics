@@ -134,6 +134,7 @@ return code to 3 (see return codes below).
                | "UNKNOWN_ADDRESS" [macro]
                | "ASSET_NO_PERMISSION" [macro]
                | "TXN_DEQUE_ERROR" [macro]
+               | "ASSET_NOT_FOUND" [macro]
 
   syntax String ::= returnDesc(Int) [function]
   //----------------------------------------------------
@@ -186,6 +187,7 @@ return code to 3 (see return codes below).
   rule returnDesc(UNKNOWN_ADDRESS)            => "address is not in the <accountsMap>"
   rule returnDesc(ASSET_NO_PERMISSION)        => "sender does not have permission to modify asset"
   rule returnDesc(TXN_DEQUE_ERROR)            => "txn deque error"
+  rule returnDesc(ASSET_NOT_FOUND)            => "tried to modify an asset which hasn't been created"
 
   //------------------------------------
   rule SUCCESS                    => 0
@@ -243,6 +245,7 @@ return code to 3 (see return codes below).
   rule ASSET_NOT_OPT_IN           => 51
   rule UNKNOWN_ADDRESS            => 52
   rule ASSET_NO_PERMISSION        => 53
+  rule ASSET_NOT_FOUND            => 54
 
   syntax KItem ::= #panic(Int)
   syntax KItem ::= #stopIfError()
