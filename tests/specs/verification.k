@@ -156,6 +156,11 @@ module VERIFICATION
 
   rule N:Int /Int N:Int => 1 requires N =/=Int 0 [simplification]
 
+  rule #Ceil ( log2Int ( X:Int ) ) => #Top requires X >Int 0 [simplification]
+  rule N:Int >=Int log2Int(X:Int) => 2 ^Int N >=Int X [simplification]
+  rule N:Int >=Int X /Int Y => N *Int Y >=Int X [simplification]
+  rule N:Int >=Int X +Int Y => N -Int Y >=Int X [simplification]
+
 ////////////////////////////////////////////////////////////////////////////////
 // Comparisons
 ////////////////////////////////////////////////////////////////////////////////
@@ -176,7 +181,10 @@ module VERIFICATION
 
   rule lengthBytes(B1 +Bytes B2) => lengthBytes(B1) +Int lengthBytes(B2) [simplification, symbolic(B2)]
 
-  rule lengthBytes(padLeftBytes(B:Bytes, PAD_LEN:Int, _:Int)) >Int N  => lengthBytes(B) >Int N 
+  // For Int2Bytes, if length is given explicitely, use that
+  rule lengthBytes(Int2Bytes(LENGTH:Int, _I:Int, _BYTE_ORDER)) => LENGTH [simplification]
+
+  rule lengthBytes(padLeftBytes(B:Bytes, PAD_LEN:Int, _:Int)) >Int N  => lengthBytes(B) >Int N
     requires PAD_LEN <=Int N [simplification]
 
   rule lengthBytes(padLeftBytes(B:Bytes, PAD_LEN:Int, _:Int)) >Int N  => PAD_LEN >Int N
@@ -196,6 +204,7 @@ module VERIFICATION
 
 
   rule String2Bytes(Bytes2String(B)) => B  [simplification]
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Address hooks
