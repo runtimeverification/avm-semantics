@@ -6,7 +6,7 @@
                 "accounts": [
                     {
                         "address": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
-                        "amount": 200000,
+                        "amount": 300000,
                         "created-apps": [],
                         "created-assets": []
                     },
@@ -83,8 +83,7 @@
                     }
                 ]
             },
-            "expected-returncode": 0,
-            "expected-paniccode": 0
+            "expected-returncode": 0
         }
     ]
 }

@@ -67,7 +67,7 @@ claim <k> cover 3 => . </k>
       <stacksize> S </stacksize>
   requires S >=Int 4
 
-claim <k> cover 3 => panic(STACK_UNDERFLOW) </k>
+claim <k> cover 3 => #panic(STACK_UNDERFLOW) </k>
       <stack> 123 : 0 : 0 : .TStack </stack>
       <stacksize> 3 </stacksize>
 ```
@@ -86,7 +86,7 @@ claim <k> uncover 3 => . </k>
       <stacksize> S </stacksize>
   requires S >=Int 4
 
-claim <k> uncover 3 => panic(STACK_UNDERFLOW) </k>
+claim <k> uncover 3 => #panic(STACK_UNDERFLOW) </k>
       <stack> 123 : 0 : 0 : .TStack </stack>
       <stacksize> 3 </stacksize>
 ```
@@ -359,9 +359,7 @@ claim <k> log => . </k>
           <lastTxnGroupID> "1" => ?_ </lastTxnGroupID>
           ...
         </currentTxnExecution>
-        <paniccode> 0 </paniccode>
-        <returncode> 4 => 0 </returncode>
-        <returnstatus> _ => "Success - no errors on non-application transaction" </returnstatus>
+        <returncode> 0 </returncode>
         <activeApps> SetItem(1) => ?_ </activeApps>
         <touchedAccounts> .List => ?_ </touchedAccounts>
         <currentTx> "1" => "5" </currentTx>

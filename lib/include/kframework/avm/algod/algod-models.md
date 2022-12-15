@@ -103,7 +103,7 @@ TODO: if an account contains an app, the state specification must also contain t
            </account>)
            ...
          </accountsMap>
-    rule <k> #addAccountJSON(INPUT:JSON) => panic("Invalid account JSON:" +String JSON2String(INPUT)) ... </k> [owise]
+    rule <k> #addAccountJSON(INPUT:JSON) => #panic(INVALID_JSON) ... </k> [owise]
 
     syntax JSONs ::= #dumpAccounts(AccountsMapCell)            [function]
                    | #dumpAccountsImpl(JSONs, AccountsMapCell) [function]
@@ -423,7 +423,7 @@ TODO: if an account contains an app, the state specification must also contain t
            <tealPrograms> TEAL_PROGRAMS </tealPrograms>
            <appCreator> (.Map => (APP_ID |-> DecodeAddressString(CREATOR_ADDR_STR))) ... </appCreator>
        requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR
-    rule <k> #addApplicationJSON(INPUT:JSON) => panic("Invalid app JSON:" +String JSON2String(INPUT)) ... </k> [owise]
+    rule <k> #addApplicationJSON(INPUT:JSON) => #panic(INVALID_JSON) ... </k> [owise]
 
     syntax JSONs ::= #dumpApps(String, AppsCreatedCell)            [function]
                    | #dumpAppsImpl(String, JSONs, AppsCreatedCell) [function]
@@ -812,7 +812,7 @@ TODO: if an account contains an app, the state specification must also contain t
 ### Invalid input
 
 ```k
-    rule <k> #addTxnJSON(INPUT:JSON) => panic("Invalid transaction JSON:" +String JSON2String(INPUT)) ... </k> [owise]
+    rule <k> #addTxnJSON(INPUT:JSON) => #panic(INVALID_JSON) ... </k> [owise]
 ```
 
 
