@@ -620,7 +620,8 @@ Asset transfer goes through if:
          <assetCloseTo>  CLOSE_TO </assetCloseTo>
          ...
        </transaction>
-    requires hasOptedInAsset(ASSET_ID, SENDER)
+    requires assetCreated(ASSET_ID)
+     andBool hasOptedInAsset(ASSET_ID, SENDER)
      andBool hasOptedInAsset(ASSET_ID, RECEIVER)
      andBool CLOSE_TO ==K getGlobalField(ZeroAddress)
      andBool (getOptInAssetField(AssetFrozen, RECEIVER, ASSET_ID) ==K 0)
@@ -651,13 +652,24 @@ Asset transfer with a non-zero amount fails if:
          <address> RECEIVER </address>
          ...
        </account>
-    requires SENDER =/=K RECEIVER
+    requires assetCreated(ASSET_ID)
+     andBool SENDER =/=K RECEIVER
      andBool CLOSE_TO ==K getGlobalField(ZeroAddress)
      andBool AMOUNT >Int 0
      andBool (notBool hasOptedInAsset(ASSET_ID, SENDER)
       orBool notBool hasOptedInAsset(ASSET_ID, RECEIVER))
 
   rule <k> #executeTxn(@axfer) => #panic(ASSET_FROZEN) ... </k>
+  rule <k> #executeTxn(@axfer) => #avmPanic(TXN_ID, ASSET_NOT_FOUND) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID   </txID>
+         <xferAsset>     ASSET_ID </xferAsset>
+         ...
+       </transaction>
+    requires notBool(assetCreated(ASSET_ID))
+
+  rule <k> #executeTxn(@axfer) => #avmPanic(TXN_ID, ASSET_FROZEN) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID   </txID>
@@ -667,12 +679,13 @@ Asset transfer with a non-zero amount fails if:
          <assetAmount>   AMOUNT   </assetAmount>
          ...
        </transaction>
-    requires (AMOUNT >Int 0
+    requires assetCreated(ASSET_ID)
+     andBool ((AMOUNT >Int 0
      andBool (hasOptedInAsset(ASSET_ID, SENDER)
               andBool hasOptedInAsset(ASSET_ID, RECEIVER)))
      andThenBool
             ((getOptInAssetField(AssetFrozen, SENDER, ASSET_ID) ==K 1)
-     orBool  (getOptInAssetField(AssetFrozen, RECEIVER, ASSET_ID) ==K 1))
+     orBool  (getOptInAssetField(AssetFrozen, RECEIVER, ASSET_ID) ==K 1)))
 ```
 
 **Asset opt-in** is a special case of asset transfer: a transfer of zero to self.
@@ -735,7 +748,8 @@ Asset opt-in goes through if:
          <assetCloseTo>  CLOSE_TO        </assetCloseTo>
          ...
        </transaction>
-    requires CLOSE_TO =/=K getGlobalField(ZeroAddress)
+    requires assetCreated(ASSET_ID)
+     andBool CLOSE_TO =/=K getGlobalField(ZeroAddress)
 ```
 
 * **Asset Freeze**
