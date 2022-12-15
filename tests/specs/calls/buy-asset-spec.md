@@ -239,6 +239,7 @@ END:
         </account>
       </accountsMap>
       <appCreator> .Map [APP_ID <- CREATOR_ADDRESS] </appCreator>
+      <assetCreator> .Map [ASSET_ID <- CREATOR_ADDRESS] </assetCreator>
       <txnIndexMap> .Bag => ?_ </txnIndexMap>
       <nextTxnID> NEXT_TXN_ID => ?_ </nextTxnID>
       <nextGroupID> NEXT_GROUP_ID => ?_ </nextGroupID>

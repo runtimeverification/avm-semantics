@@ -456,11 +456,12 @@ Accessor functions
   syntax Bool ::= assetCreated(TValue) [function]
   // -------------------------------------------
   rule [[ assetCreated(ASSET) => true ]]
-       <assetCreator> ASSET |-> _ ... </assetCreator>
+       <assetCreator> AC </assetCreator>
+    requires ASSET in_keys(AC)
 
   rule [[ assetCreated(ASSET) => false ]]
-       <assetCreator> AMap </assetCreator>
-    requires notBool (ASSET in_keys(AMap))
+       <assetCreator> AC </assetCreator>
+    requires notBool (ASSET in_keys(AC))
 
  syntax TValue ::= getAssetInfo(AssetField, TValue) [function]
   // -----------------------------------------------------------
