@@ -18,7 +18,7 @@ module OPCODES-V1-SPEC
 <summary>K claims</summary>
 
 ```k
-  claim <k> err => panic(ERR_OPCODE) ...</k>
+  claim <k> err => #panic(ERR_OPCODE) ...</k>
 ```
 
 </details>
@@ -55,7 +55,7 @@ module OPCODES-V1-SPEC
         <stack> 5 : 3 : XS => 8 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> + => panic(INT_OVERFLOW) ...</k>
+  claim <k> + => #panic(INT_OVERFLOW) ...</k>
         <stack> MAX_UINT64 : 3 : _ </stack>
 ```
 </details>
@@ -72,7 +72,7 @@ module OPCODES-V1-SPEC
         <stack> 6 : 10 : XS => 4 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> - => panic(INT_UNDERFLOW) ...</k>
+  claim <k> - => #panic(INT_UNDERFLOW) ...</k>
         <stack> 10 : 6 : _ </stack>
 ```
 </details>
@@ -89,7 +89,7 @@ module OPCODES-V1-SPEC
         <stack> 5 : 30 : XS => 6 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> / => panic(DIV_BY_ZERO) ...</k>
+  claim <k> / => #panic(DIV_BY_ZERO) ...</k>
         <stack> 0 : 30 : _</stack>
 ```
 </details>
@@ -106,7 +106,7 @@ module OPCODES-V1-SPEC
         <stack> 6 : 7 : XS => 42 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> * => panic(INT_OVERFLOW) ...</k>
+  claim <k> * => #panic(INT_OVERFLOW) ...</k>
         <stack> MAX_UINT64 : 2 : _ </stack>
 ```
 </details>
@@ -384,7 +384,7 @@ module OPCODES-V1-SPEC
         <stack> 3 : 5 : XS => 2 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> % => panic(DIV_BY_ZERO) ...</k>
+  claim <k> % => #panic(DIV_BY_ZERO) ...</k>
         <stack> 0 : 5 : _ </stack>
 ```
 </details>
@@ -443,7 +443,7 @@ module OPCODES-V1-SPEC
 //  claim <k> ~ => . </k>
 //        <stack> 123 : XS => 18446744073709551492 : XS </stack>
 //        <stacksize> _ </stacksize>
-  claim <k> ~ => panic(ILL_TYPED_STACK) </k>
+  claim <k> ~ => #panic(ILL_TYPED_STACK) </k>
         <stack> b"123" : _ </stack>
 ```
 </details>

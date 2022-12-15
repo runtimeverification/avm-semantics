@@ -19,17 +19,11 @@ module AVM-CONFIGURATION
   imports TEAL-INTERPRETER-STATE
   imports TEAL-SYNTAX
   imports ID-SYNTAX
-  imports AVM-PANIC
 
   configuration
     <kavm>
       <k> $PGM:JSON </k>
       <returncode exit=""> 4 </returncode> // the simulator exit code
-      <returnstatus>                       // the exit status message
-        "Failure - AVM is stuck"
-      </returnstatus>
-      <paniccode> 0 </paniccode>
-      <panicstatus> "" </panicstatus>
 
       // The transaction group as submitted
       <transactions/>
@@ -120,62 +114,7 @@ module AVM-CONFIGURATION
     <currentTx> I </currentTx>
 ```
 
-## Panic behaviors
-
-### Internal panic behaviors
-
-These panic behaviors indicate that internal assumptions of the semantics were violated.
-
 ```k
-  syntax InternalPanic ::= String
-  syntax InternalPanic ::= "TXN_DEQUE_ERROR" [macro]
-  //------------------------------------------------
-  rule TXN_DEQUE_ERROR => "attempt to push a duplicate or missing transaction into deque"
-
-  syntax AlgorandCommand ::= #internalPanic(InternalPanic)
-  //----------------------------------------------------------
-  rule <k> #internalPanic(S) ~> _ => .K </k>
-       <returncode> 4 => 3 </returncode>
-       <returnstatus> _ => "Failure - internal error: " +String S
-       </returnstatus>
-```
-
-### AVM panic behaviors
-
-These are AVM-specific panic behaviors, caused by issues like depleted balances, missing apps, etc.
-
-```k
-  syntax String ::= "MIN_BALANCE_VIOLATION"   [macro]
-  syntax String ::= "UNSUPPORTED_TXN_TYPE"    [macro]
-  syntax String ::= "ASSET_FROZEN"            [macro]
-  syntax String ::= "ASSET_NOT_OPT_IN"        [macro]
-  syntax String ::= "ASSET_NOT_FOUND"         [macro]
-  syntax String ::= "UNKNOWN_ADDRESS"         [macro]
-  syntax String ::= "ASSET_NO_PERMISSION"     [macro]
-
-  //------------------------------------------------
-  rule MIN_BALANCE_VIOLATION   => "account's balance falls below its allowed minimum balance"
-  rule UNSUPPORTED_TXN_TYPE    => "attempt to execute an unsupported transaction type"
-  rule ASSET_FROZEN            => "attempt to send frozen asset holdings"
-  rule ASSET_NOT_OPT_IN        => "either sender or receiver have not opted into asset"
-  rule UNKNOWN_ADDRESS         => "address is not in the <accountsMap>"
-  rule ASSET_NO_PERMISSION     => "sender does not have permission to modify asset"
-  rule ASSET_NOT_FOUND         => "attempt to access asset which has not been created"
-
-  syntax Int ::= panicCode(String)  [function]
-  //------------------------------------------
-  rule panicCode(MIN_BALANCE_VIOLATION) => 36
-  rule panicCode(UNSUPPORTED_TXN_TYPE) => 37
-  rule panicCode(ASSET_FROZEN) => 38
-  rule panicCode(ASSET_NOT_OPT_IN) => 39
-  rule panicCode(UNKNOWN_ADDRESS) => 40
-  rule panicCode(ASSET_NO_PERMISSION) => 41
-  rule panicCode(ASSET_NOT_FOUND) => 42
-
-  syntax AlgorandCommand ::= #avmPanic(String, String)
-  //-------------------------------------------
-  rule <k> #avmPanic(_, S) => panic(S) ... </k>
-
 endmodule
 ```
 
