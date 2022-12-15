@@ -149,6 +149,7 @@ These are AVM-specific panic behaviors, caused by issues like depleted balances,
   syntax String ::= "UNSUPPORTED_TXN_TYPE"    [macro]
   syntax String ::= "ASSET_FROZEN"            [macro]
   syntax String ::= "ASSET_NOT_OPT_IN"        [macro]
+  syntax String ::= "ASSET_NOT_FOUND"         [macro]
   syntax String ::= "UNKNOWN_ADDRESS"         [macro]
   syntax String ::= "ASSET_NO_PERMISSION"     [macro]
 
@@ -159,6 +160,7 @@ These are AVM-specific panic behaviors, caused by issues like depleted balances,
   rule ASSET_NOT_OPT_IN        => "either sender or receiver have not opted into asset"
   rule UNKNOWN_ADDRESS         => "address is not in the <accountsMap>"
   rule ASSET_NO_PERMISSION     => "sender does not have permission to modify asset"
+  rule ASSET_NOT_FOUND         => "attempt to access asset which has not been created"
 
   syntax Int ::= panicCode(String)  [function]
   //------------------------------------------
@@ -168,6 +170,7 @@ These are AVM-specific panic behaviors, caused by issues like depleted balances,
   rule panicCode(ASSET_NOT_OPT_IN) => 39
   rule panicCode(UNKNOWN_ADDRESS) => 40
   rule panicCode(ASSET_NO_PERMISSION) => 41
+  rule panicCode(ASSET_NOT_FOUND) => 42
 
   syntax AlgorandCommand ::= #avmPanic(String, String)
   //-------------------------------------------
