@@ -306,7 +306,6 @@ class KAVMClient(algod.AlgodClient):
                                 ]
                             },
                             "expected-returncode": 0,
-                            "expected-paniccode": 0,
                         },
                     ]
                 }

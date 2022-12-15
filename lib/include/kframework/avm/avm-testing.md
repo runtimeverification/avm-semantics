@@ -40,16 +40,6 @@ module AVM-TESTING
     </avm-testing>
 ```
 
-```k
-  syntax TestingCommand ::= #testingPanic(String)
-  //---------------------------------------------
-  rule <k> #testingPanic(S) ~> _ => .K </k>
-       <returncode> 4 => 3 </returncode>
-       <returnstatus> _ => "Failure - testing framwork setup error: " +String S
-       </returnstatus>
-```
-
-
 ### Scenario validation
 
 A valid testing scenario must have a unique `"setup-network"` stage as the first stage, followed by any amount of `"submit-transactions"` stages.
@@ -73,7 +63,7 @@ The following rules validate the parsed scenario JSON.
                                        , OTHER_STAGES:JSONs
                                        )
        => STAGE_TYPE ==String EXPECTED_TYPE andBool assertStageTypes(EXPECTED_TYPE, OTHER_STAGES)
-  rule assertStageTypes(EXPECTED_TYPE, { "data": _, "expected-paniccode": _, "expected-returncode": _, "stage-type": STAGE_TYPE }
+  rule assertStageTypes(EXPECTED_TYPE, { "data": _, "expected-returncode": _, "stage-type": STAGE_TYPE }
                                        , OTHER_STAGES:JSONs
                                        )
        => STAGE_TYPE ==String EXPECTED_TYPE andBool assertStageTypes(EXPECTED_TYPE, OTHER_STAGES)
@@ -92,7 +82,7 @@ cells of the configuration.
   rule <k> INPUT:JSON => #readScenario(INPUT) ... </k>
     requires isValidScenario(INPUT)
 
-  rule <k> INPUT:JSON => #testingPanic("Invalid input:" +String JSON2String(INPUT)) ... </k> [owise]
+  rule <k> INPUT:JSON => #panic(INVALID_JSON) ... </k> [owise]
 
   syntax TestingCommand ::= #readScenario(JSON)
   //-------------------------------------------
@@ -125,43 +115,31 @@ Note that the applications and ASAs are part of the accounts' state as well, and
   rule <k> #readExecutionStages([STAGE, .JSONs])
         => #readExecutionStage(STAGE) ...
        </k>
-//  rule <k> #readExecutionStages(X) => #testingPanic("Found multiple execution stages: not supported") ~> #readExecutionStages(X) ... </k> [owise]
+//  rule <k> #readExecutionStages(X) => #panic(INVALID_JSON) ~> #readExecutionStages(X) ... </k> [owise]
 
   syntax TestingCommand ::= #readExecutionStage(JSON)
   //-------------------------------------------------
   rule <k> #readExecutionStage({ "data": {"transactions": TXNS:JSON}
-                               , "expected-paniccode": EXPECTED_PANIC_CODE
                                , "expected-returncode": EXPECTED_RETURN_CODE
                                , "stage-type": "submit-transactions"
                                })
         => #setupTransactions(TXNS) ~> #initGlobals() ~> #evalTxGroup()
-        ~> #checkExecutionResults(EXPECTED_RETURN_CODE, EXPECTED_PANIC_CODE) ...
+        ~> #checkExecutionResults(EXPECTED_RETURN_CODE) ...
        </k>
 
-  syntax TestingCommand ::= #checkExecutionResults(Int, Int)
+  syntax TestingCommand ::= #checkExecutionResults(Int)
   //--------------------------------------------------------
-  rule <k> #checkExecutionResults(EXPECTED_RETURN_CODE, EXPECTED_PANIC_CODE)
+  rule <k> #checkExecutionResults(EXPECTED_RETURN_CODE)
         => #dumpFinalState() ...
        </k>
        <returncode> RETURN_CODE => 0 </returncode>
-       <paniccode> PANIC_CODE </paniccode>
    requires RETURN_CODE ==Int EXPECTED_RETURN_CODE
-    andBool PANIC_CODE ==Int EXPECTED_PANIC_CODE
 
-  rule <k> #checkExecutionResults(EXPECTED_RETURN_CODE, _)
-        => #testingPanic("Unexpected returncode:" +String Int2String(RETURN_CODE) +String
-                         ", expected " +String Int2String(EXPECTED_RETURN_CODE)) ...
+  rule <k> #checkExecutionResults(EXPECTED_RETURN_CODE)
+        => .K ...
        </k>
-       <returncode> RETURN_CODE => 5 </returncode>
+       <returncode> RETURN_CODE => 1 </returncode>
    requires notBool (RETURN_CODE ==Int EXPECTED_RETURN_CODE)
-
-  rule <k> #checkExecutionResults(_, EXPECTED_PANIC_CODE)
-        => #testingPanic("Unexpected paniccode:" +String Int2String(PANIC_CODE) +String
-                         ", expected " +String Int2String(EXPECTED_PANIC_CODE)) ...
-       </k>
-       <returncode> _RETURN_CODE => 5 </returncode>
-       <paniccode>  PANIC_CODE       </paniccode>
-   requires notBool (PANIC_CODE ==Int EXPECTED_PANIC_CODE)
 
   syntax TestingCommand ::= #dumpFinalState()
   //-----------------------------------------

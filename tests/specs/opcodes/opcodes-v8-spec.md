@@ -22,7 +22,7 @@ claim <k> bury 3 => . </k>
       <stack> 1 : 2 : 3 : 4 : 5 : 6 : .TStack => 2 : 3 : 1 : 5 : 6 : .TStack </stack>
       <stacksize> 6 => 5 </stacksize>
 
-claim <k> bury 6 => panic(STACK_UNDERFLOW) </k>
+claim <k> bury 6 => #panic(STACK_UNDERFLOW) </k>
       <stack> 1 : 2 : 3 : 4 : 5 : 6 : .TStack </stack>
       <stacksize> 6 </stacksize>
 ```
@@ -41,7 +41,7 @@ claim <k> popn 3 => . </k>
       <stack> 1 : 2 : 3 : 4 : 5 : 6 : .TStack => 4 : 5 : 6 : .TStack </stack>
       <stacksize> 6 => 3 </stacksize>
 
-claim <k> popn 7 => panic(STACK_UNDERFLOW) </k>
+claim <k> popn 7 => #panic(STACK_UNDERFLOW) </k>
       <stack> 1 : 2 : 3 : 4 : 5 : 6 : .TStack </stack>
       <stacksize> 6 </stacksize>
 ```
@@ -60,7 +60,7 @@ claim <k> dupn 3 => . </k>
       <stack> 1 : 2 : .TStack => 1 : 1 : 1 : 1 : 2 : .TStack </stack>
       <stacksize> 2 => 5 </stacksize>
 
-claim <k> dupn 7 => panic(STACK_OVERFLOW) </k>
+claim <k> dupn 7 => #panic(STACK_OVERFLOW) </k>
       <stack> 1 : _ => ?_ </stack>
       <stacksize> MAX_STACK_DEPTH -Int 6 => ?_ </stacksize>
 ```

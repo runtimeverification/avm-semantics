@@ -69,8 +69,7 @@
                     }
                 ]
             },
-            "expected-returncode": 3,
-            "expected-paniccode": 8
+            "expected-returncode": 13
         }
     ]
 }
