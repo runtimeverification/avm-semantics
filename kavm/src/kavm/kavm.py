@@ -45,6 +45,7 @@ class KAVM(KRun, KProve):
         self._scenario_parser = (
             scenario_parser if scenario_parser else definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
         )
+        self._verification_definition = definition
 
     def parse_teal(self, file: Optional[Path]) -> kore.Pattern:
         '''Parse a TEAL program with the fast Bison parser'''

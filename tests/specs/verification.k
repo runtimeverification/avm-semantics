@@ -5,6 +5,9 @@ module VERIFICATION
   imports AVM-EXECUTION
   imports TEAL-TYPES
 
+  syntax KItem ::= tealLogExpr(Bytes)
+// ------------------------------------
+
   syntax StepSort ::= MaybeTValue
 // ------------------------------------------------
 
