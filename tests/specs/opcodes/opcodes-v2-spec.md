@@ -32,7 +32,7 @@ module OPCODES-V2-SPEC
 <summary>K claims</summary>
 
 ```k
-  claim <k> txna Applications 1 => . </k>
+  claim <k> txna Applications 2 => . </k>
         <stack> XS => APPL : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
         <currentTx> TX_ID </currentTx>

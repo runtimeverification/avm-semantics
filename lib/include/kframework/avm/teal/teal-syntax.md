@@ -232,7 +232,7 @@ module TEAL-OPCODES
 #### Flow Control Operations
 
 ```k
-  syntax Label [token]
+  syntax Label ::= Int
 
   syntax BranchingOpCode ::= CondBranchOpCode
                            | JumpOpCode
