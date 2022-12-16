@@ -444,7 +444,7 @@ module ALGO-ITXN
                  </appCallTxFields>
                </txnTypeSpecificFields>
                ...
-             </transaction>) => panic(ITXN_REENTRY)
+             </transaction>) => #panic(ITXN_REENTRY)
              ...
        </k>
        <activeApps> AA </activeApps>
@@ -512,7 +512,7 @@ module ALGO-ITXN
          </transaction>) => . ... 
        </k>
 
-  rule <k> #checkItxnFieldsCoherent(<transaction> _T </transaction>) => panic(TXN_INVALID) ...</k> [owise]
+  rule <k> #checkItxnFieldsCoherent(<transaction> _T </transaction>) => #panic(TXN_INVALID) ...</k> [owise]
 
   syntax KItem ::= #checkItxns(List)
 

@@ -11,9 +11,6 @@ claim
     <k> #initGlobals() ~> #evalTxGroup() => . </k>
 
     <returncode>   4                        => 0                                      </returncode>
-    <returnstatus> "Failure - AVM is stuck" => "Success - transaction group accepted" </returnstatus>
-    <paniccode>    0                        => 0                                      </paniccode>
-    <panicstatus>  ""                       => ""                                     </panicstatus>
 
     <transactions>
       <transaction>
@@ -239,6 +236,7 @@ END:
         </account>
       </accountsMap>
       <appCreator> .Map [APP_ID <- CREATOR_ADDRESS] </appCreator>
+      <assetCreator> .Map [ASSET_ID <- CREATOR_ADDRESS] </assetCreator>
       <txnIndexMap> .Bag => ?_ </txnIndexMap>
       <nextTxnID> NEXT_TXN_ID => ?_ </nextTxnID>
       <nextGroupID> NEXT_GROUP_ID => ?_ </nextGroupID>

@@ -9,6 +9,12 @@
                         "amount": 200000,
                         "created-apps": [],
                         "created-assets": []
+                    },
+                    {
+                        "address": "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA",
+                        "amount": 400000,
+                        "created-apps": [],
+                        "created-assets": []
                     }
                 ]
             }
@@ -19,29 +25,16 @@
                 "transactions": [
                     {
                         "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
-                        "type": "appl",
-                        "apid": 0,
-                        "apan": 0,
-                        "apat": [],
-                        "apaa": [],
-                        "apfa": [],
-                        "apas": [],
-                        "apbx": [],
-                        "apgs": {
-                            "nui": 0,
-                            "nbs": 0
-                        },
-                        "apls": {
-                            "nui": 0,
-                            "nbs": 0
-                        },
-                        "apep": 0,
-                        "apap": "stack-dig.teal",
-                        "apsu": "clear-basic.teal"
+                        "type": "axfer",
+                        "xaid": 1,
+                        "aamt": 0,
+                        "asnd": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+                        "arcv": "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA",
+                        "aclose": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
                     }
                 ]
             },
-            "expected-returncode": 0
+            "expected-returncode": 54
         }
     ]
 }
