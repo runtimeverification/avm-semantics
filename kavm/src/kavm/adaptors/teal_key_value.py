@@ -1,3 +1,4 @@
+import base64
 import typing
 from typing import Dict, List, cast
 
@@ -14,6 +15,24 @@ from pyk.kast.inner import KApply, KInner, KToken
 #             value = item.value['uint']
 #         d[item.key] = value
 #     return d
+
+
+def raw_list_state_to_dict_bytes_bytes(l: List[Dict]) -> Dict[str, str]:
+    d = {}
+    for item in l:
+        if item['value'] and item['value']['type'] == 1:
+            value = item['value']['bytes']
+            d[base64.b64decode(item['key']).decode('ascii')] = base64.b64decode(value).decode('ascii')
+    return d
+
+
+def raw_list_state_to_dict_bytes_ints(l: List[Dict]) -> Dict[str, int]:
+    d = {}
+    for item in l:
+        if item['value'] and item['value']['type'] == 2:
+            value = item['value']['uint']
+            d[base64.b64decode(item['key']).decode('ascii')] = value
+    return d
 
 
 def list_state_to_dict_bytes_bytes(l: List[models.TealKeyValue]) -> Dict[str, str]:

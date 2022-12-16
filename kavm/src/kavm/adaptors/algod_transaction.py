@@ -12,10 +12,12 @@ from algosdk.future.transaction import (
     SuggestedParams,
     Transaction,
 )
-from pyk.kast.inner import KApply, KInner, KSort, KToken, Subst
-from pyk.kast.manip import free_vars, split_config_from
+from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, Subst
+from pyk.kast.manip import split_config_from
+from pyk.prelude.bytes import bytesToken
+from pyk.prelude.string import stringToken
 
-from kavm.pyk_utils import maybe_tvalue, tvalue, tvalue_list
+from kavm.pyk_utils import maybe_tvalue, tvalue_list
 
 
 class KAVMApplyData:
@@ -191,9 +193,23 @@ def txn_type_to_type_enum(txn_type: str) -> int:
         raise ValueError(f'unknown transaction type {txn_type}')
 
 
-def transaction_k_term(kavm: Any, txn: Transaction, txid: str) -> KInner:
+def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fileds_subst: Optional[Subst] = None) -> KInner:
     """Convert a Transaction objet to a K cell"""
-    empty_transaction_cell = kavm.definition.empty_config(KSort('TransactionCell'))
+
+    def empty_transaction_cell(type_specific_fields: KInner) -> KInner:
+        return KApply(
+            "<transaction>",
+            [
+                KApply("<txID>", stringToken(txid)),
+                kavm.definition.empty_config(KSort('TxHeaderCell')),
+                KApply("<txnTypeSpecificFields>", type_specific_fields),
+                kavm.definition.empty_config(KSort('ApplyDataCell')),
+                KApply("<txnExecutionContext>", KVariable('TXNEXECUTIONCONTEXT_CELL')),
+                KApply("<resume>", KVariable('RESUME_CELL')),
+            ],
+        )
+
+    symbolic_fileds_subst = symbolic_fileds_subst if symbolic_fileds_subst else Subst({})
 
     header_subst = Subst(
         {
@@ -202,33 +218,49 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str) -> KInner:
             'LASTVALID_CELL': maybe_tvalue(txn.last_valid_round),
             'GENESISHASH_CELL': maybe_tvalue(txn.genesis_hash),
             'GENESISID_CELL': maybe_tvalue(txn.genesis_id),
-            'SENDER_CELL': KToken(txn.sender.strip("'"), KSort('TAddressLiteral')),
+            'SENDER_CELL': bytesToken(txn.sender),
             'TXTYPE_CELL': maybe_tvalue(txn.type),
             'TYPEENUM_CELL': maybe_tvalue(txn_type_to_type_enum(txn.type)),
-            'GROUPIDX_CELL': maybe_tvalue(txn.group),
-            'GROUPID_CELL': KToken('"0"', KSort('String')),
+            'GROUPIDX_CELL': maybe_tvalue(None),
+            'GROUPID_CELL': maybe_tvalue(txn.group) if txn.group else KToken('"0"', KSort('String')),
             'LEASE_CELL': maybe_tvalue(txn.lease),
             'NOTE_CELL': maybe_tvalue(txn.note),
             'REKEYTO_CELL': maybe_tvalue(txn.rekey_to),
-            'TXCONFIGASSET_CELL': tvalue(0),
-            'TXAPPLICATIONID_CELL': tvalue(0),
-            'INNERTXNS_CELL': KApply('.List'),
-            'LOGSIZE_CELL': tvalue(0),
-            'LOGDATA_CELL': tvalue_list([]),
-            'RESUME_CELL': KToken('false', KSort('Bool')),
-            'TXSCRATCH_CELL': KApply('.Map'),
         }
     )
+
+    apply_data_subst = Subst(
+        {
+            'TXSCRATCH_CELL': KToken(".Map", "Map"),
+            'TXCONFIGASSET_CELL': KToken("0", "Int"),
+            'TXAPPLICATIONID_CELL': KToken("0", "Int"),
+            'LOGDATA_CELL': KToken(".TValueList", "TValueList"),
+            'LOGSIZE_CELL': KToken("0", "Int"),
+        }
+    )
+
+    service_fields_subst = Subst(
+        {'TXNEXECUTIONCONTEXT_CELL': KToken(".K", "KItem"), 'RESUME_CELL': KToken("false", "Bool")}
+    )
+
     type_specific_subst = None
     if txn.type == PAYMENT_TXN:
         txn = cast(PaymentTxn, txn)
         type_specific_subst = Subst(
             {
-                'RECEIVER_CELL': KToken(txn.receiver.strip("'"), KSort('TAddressLiteral')),
+                'RECEIVER_CELL': bytesToken(txn.receiver),
                 'AMOUNT_CELL': maybe_tvalue(txn.amt),
                 'CLOSEREMAINDERTO_CELL': maybe_tvalue(txn.close_remainder_to),
             }
         )
+        type_specific_fileds_cell = [
+            kavm.definition.empty_config(KSort('PayTxFieldsCell')),
+            KApply('.AppCallTxFieldsCell'),
+            KApply('.KeyRegTxFieldsCell'),
+            KApply('.AssetConfigTxFieldsCell'),
+            KApply('.AssetTransferTxFieldsCell'),
+            KApply('.AssetFreezeTxFieldsCell'),
+        ]
     if txn.type == ASSETTRANSFER_TXN:
         raise NotImplementedError()
     if txn.type == APPCALL_TXN:
@@ -243,11 +275,17 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str) -> KInner:
                 'APPROVALPROGRAM_CELL': maybe_tvalue(txn.approval_program),
                 'APPROVALPROGRAMSRC_CELL': maybe_tvalue(txn.approval_program)
                 if txn.approval_program
-                else kavm.parse_teal('int 1'),
+                else KApply(
+                    label=KLabel(name='int__TEAL-OPCODES_PseudoOpCode_PseudoTUInt64', params=()),
+                    args=[KToken(token='1', sort=KSort(name='Int'))],
+                ),
                 'CLEARSTATEPROGRAM_CELL': maybe_tvalue(txn.clear_program),
                 'CLEARSTATEPROGRAMSRC_CELL': maybe_tvalue(txn.clear_program)
                 if txn.clear_program
-                else kavm.parse_teal('int 1'),
+                else KApply(
+                    label=KLabel(name='int__TEAL-OPCODES_PseudoOpCode_PseudoTUInt64', params=()),
+                    args=[KToken(token='1', sort=KSort(name='Int'))],
+                ),
                 'APPLICATIONARGS_CELL': tvalue_list(txn.app_args if txn.app_args else []),
                 'FOREIGNAPPS_CELL': tvalue_list(txn.foreign_apps if txn.foreign_apps else []),
                 'FOREIGNASSETS_CELL': tvalue_list(txn.foreign_assets)
@@ -268,39 +306,29 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str) -> KInner:
                 'EXTRAPROGRAMPAGES_CELL': maybe_tvalue(txn.extra_pages)
                 if txn.extra_pages is not None
                 else maybe_tvalue(0),
+                'BOXREFERENCES_CELL': KToken(".TValuePairList", "TValuePairList"),
             }
         )
+        type_specific_fileds_cell = [
+            KApply('.PayTxFieldsCell'),
+            kavm.definition.empty_config(KSort('AppCallTxFieldsCell')),
+            KApply('.KeyRegTxFieldsCell'),
+            KApply('.AssetConfigTxFieldsCell'),
+            KApply('.AssetTransferTxFieldsCell'),
+            KApply('.AssetFreezeTxFieldsCell'),
+        ]
     if type_specific_subst is None:
         raise ValueError(f'Transaction object {txn} is invalid')
 
     fields_subst = (
         Subst({'TXID_CELL': KToken('"' + txid + '"', KSort('String'))})
+        .compose(service_fields_subst)
+        .compose(apply_data_subst)
         .compose(header_subst)
         .compose(type_specific_subst)
+        .compose(symbolic_fileds_subst)
     )
-    empty_array_fields_subst = Subst(
-        {
-            'ACCOUNTS_CELL': tvalue_list([]),
-            'APPLICATIONARGS_CELL': tvalue_list([]),
-            'FOREIGNAPPS_CELL': tvalue_list([]),
-            'FOREIGNASSETS_CELL': tvalue_list([]),
-            'TXNEXECUTIONCONTEXT_CELL': KToken('.K', KSort('K')),
-        }
-    )
-    empty_pgm_fileds_subst = Subst(
-        {
-            'APPROVALPROGRAM_CELL': maybe_tvalue(None),
-            'APPROVALPROGRAMSRC_CELL': KToken('int 0', KSort('TealInputPgm')),
-            'CLEARSTATEPROGRAM_CELL': maybe_tvalue(None),
-            'CLEARSTATEPROGRAMSRC_CELL': KToken('int 1', KSort('TealInputPgm')),
-        }
-    )
-    empty_service_fields_subst = Subst(
-        {'LOGDATA_CELL': tvalue_list([]), 'LOGSIZE_CELL': tvalue(0), 'TXSCRATCH_CELL': KApply('.Map')}
-    )
-    transaction_cell = fields_subst.apply(empty_transaction_cell)
-    empty_fields_subst = Subst({k: maybe_tvalue(None) for k in free_vars(empty_transaction_cell)})
 
-    return empty_fields_subst.compose(
-        empty_service_fields_subst.compose(empty_array_fields_subst.compose(empty_pgm_fileds_subst))
-    ).apply(transaction_cell)
+    transaction_cell = fields_subst.apply(empty_transaction_cell(type_specific_fileds_cell))  # type: ignore
+
+    return transaction_cell
