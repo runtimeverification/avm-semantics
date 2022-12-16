@@ -76,7 +76,7 @@ class KAVM(KRun, KProve):
         profile: bool = False,
         check: bool = True,
         existing_decompiled_teal_dir: Optional[Path] = None,
-    ) -> Tuple[Pattern, str]:
+    ) -> Tuple[Pattern, str, int]:
         """Run an AVM simulaion scenario with krun"""
 
         with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_scenario_file, (
@@ -109,14 +109,11 @@ class KAVM(KRun, KProve):
                 pipe_stderr=True,
             )
 
-            if proc_result.returncode != 0:
-                raise RuntimeError('Non-zero exit-code from krun.')
-
             parser = KoreParser(proc_result.stdout)
             final_pattern = parser.pattern()
             assert parser.eof
 
-            return final_pattern, proc_result.stderr
+            return final_pattern, proc_result.stderr, proc_result.returncode
 
     def kast(
         self,

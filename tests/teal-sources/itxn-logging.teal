@@ -27,7 +27,7 @@ itxn_field TypeEnum
 global CurrentApplicationAddress
 itxn_field Sender
 
-txn Applications 0
+txn Applications 1
 itxn_field ApplicationID
 
 int 2

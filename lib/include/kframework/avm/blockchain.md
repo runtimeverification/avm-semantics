@@ -17,7 +17,7 @@ Global Field State Representation
 module GLOBALS
   imports TEAL-CONSTANTS
   imports TEAL-FIELDS
-  imports ALGO-TXN
+  imports TEAL-TYPES
   imports AVM-CONSTANTS
 ```
 
