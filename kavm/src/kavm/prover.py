@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from typing import Dict, Final, List, Optional, Tuple, Set, Any, Callable
 import pytest
+import importlib
 
 from algosdk.abi.contract import Contract
 from algosdk.abi.method import Method
@@ -173,7 +174,12 @@ def router_precondition(
 
         for m in self.methods:
             if m.name == func.method_spec().name and isinstance(m, HoareMethod):
-                m._preconditions.append(pyteal_expr_to_kast(spec))
+                try:
+                    m._preconditions.append(pyteal_expr_to_kast(spec))
+                except AttributeError:
+                    _LOGGER.error(
+                        'Skipping precondition to method "{m.name}" as its not market with @router.hoare_method'
+                    )
         return func
 
     if not func:
@@ -218,7 +224,12 @@ def router_postcondition(
 
         for m in self.methods:
             if m.name == func.method_spec().name:
-                m._postconditions.append(last_log_item_eq(pyteal_expr_to_kast(spec.argRight)))
+                try:
+                    m._postconditions.append(last_log_item_eq(pyteal_expr_to_kast(spec.argRight)))
+                except AttributeError:
+                    _LOGGER.error(
+                        'Skipping precondition to method "{m.name}" as its not market with @router.hoare_method'
+                    )
         return func
 
     if not func:
@@ -617,13 +628,35 @@ class AutoProver:
     def __init__(
         self,
         definition_dir: Path,
-        router: pyteal.Router,
+        pyteal_module_name: str,
         app_id: int,
         sdk_app_creator_account_dict: Dict,
         sdk_app_account_dict: Dict,
     ):
 
-        approval_pgm, clear_pgm, contract = router.compile_program(version=8)
+        # monkey path the pyteal.Router class with pre-/post-conditions decorators
+        with pytest.MonkeyPatch.context() as monkeypatch:
+            monkeypatch.setattr(
+                target=pyteal.Router,
+                name='hoare_method',
+                value=router_hoare_method,
+                raising=False,
+            )
+            monkeypatch.setattr(
+                target=pyteal.Router,
+                name='precondition',
+                value=router_precondition,
+                raising=False,
+            )
+            monkeypatch.setattr(
+                target=pyteal.Router,
+                name='postcondition',
+                value=router_postcondition,
+                raising=False,
+            )
+            pyteal_module = importlib.import_module(pyteal_module_name)
+            approval_pgm, clear_pgm, contract = pyteal_module.router.compile_program(version=8)
+
         approval_pgm_path = Path('approval.teal')
         clear_pgm_path = Path('clear.teal')
         write_to_file(approval_pgm, approval_pgm_path)
@@ -634,8 +667,9 @@ class AutoProver:
         _, faucet_addr = AutoProver._faucet_account()
         self.algod = KAVMClient(faucet_address=str(faucet_addr))
         self.algod.kavm._verification_definition = definition_dir
-        # _, creator_addr = AutoProver._creator_account()
         sp = self.algod.suggested_params()
+        sp.flat_fee = True
+        sp.fee = 1000
 
         term_factory = KAVMTermFactory(self.algod.kavm)
 

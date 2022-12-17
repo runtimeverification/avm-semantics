@@ -8,7 +8,8 @@ from algosdk.abi.method import Method
 from algosdk.abi.contract import get_method_by_name
 from algosdk.future.transaction import StateSchema
 from algosdk.v2client import models
-from kcoin_vault_pyteal import router
+
+# from kcoin_vault_pyteal import router
 from pyk.kast.inner import KApply, KVariable, KSort, KToken
 from pyk.prelude.kint import intToken
 from pyk.prelude.bytes import bytesToken
@@ -32,7 +33,7 @@ if __name__ == "__main__":
 
     prover = AutoProver(
         definition_dir=Path('./tests/specs/verification-kompiled'),
-        router=router,
+        pyteal_module_name='kcoin_vault_pyteal',
         app_id=1,
         sdk_app_creator_account_dict=sdk_app_creator_account_dict,
         sdk_app_account_dict=sdk_app_account_dict,

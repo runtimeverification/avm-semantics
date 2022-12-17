@@ -27,14 +27,6 @@ from pyteal import (
 from pyteal.compiler.optimizer import optimizer
 import pyteal
 
-from kavm.prover import router_hoare_method, router_precondition, router_postcondition
-
-# Method._preconditions = []
-# Method._postconditions = []
-Router.hoare_method = router_hoare_method
-Router.precondition = router_precondition
-Router.postcondition = router_postcondition
-
 ASSET_TOTAL = 1000000
 ASSET_DECIMALS = 3
 INITIAL_EXCHANGE_RATE = 2
