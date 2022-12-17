@@ -18,20 +18,11 @@ from kavm.prover import AutoProver
 from kavm.kast.factory import KAVMTermFactory
 
 
-def write_to_file(program: str, path: Path):
-    with open(path, "w") as f:
-        f.write(program)
-
-
 if __name__ == "__main__":
     sys.setrecursionlimit(15000000)
     logging.basicConfig(level=logging.INFO)
 
     kavm = KAVM(definition_dir=Path('./tests/specs/verification-kompiled'))
-
-    approval_pgm, clear_pgm, contract = router.compile_program(version=8)
-    write_to_file(approval_pgm, Path('approval.teal'))
-    write_to_file(clear_pgm, Path('clear.teal'))
 
     # read initial state from files
     with open('app-creator-account.json', 'r') as file:
@@ -41,9 +32,7 @@ if __name__ == "__main__":
 
     prover = AutoProver(
         definition_dir=Path('./tests/specs/verification-kompiled'),
-        approval_pgm=Path('approval.teal'),
-        clear_pgm=Path('clear.teal'),
-        contract=contract,
+        router=router,
         app_id=1,
         sdk_app_creator_account_dict=sdk_app_creator_account_dict,
         sdk_app_account_dict=sdk_app_account_dict,

@@ -585,6 +585,11 @@ class KAVMProof:
             print(pretty_print_kast(inline_cell_maps(result), symbol_table=symbol_table))
 
 
+def write_to_file(program: str, path: Path):
+    with open(path, "w") as f:
+        f.write(program)
+
+
 class AutoProver:
     @staticmethod
     def _in_bounds_uint64(term: KInner) -> KInner:
@@ -612,13 +617,17 @@ class AutoProver:
     def __init__(
         self,
         definition_dir: Path,
-        contract: Contract,
-        approval_pgm: Path,
-        clear_pgm: Path,
+        router: pyteal.Router,
         app_id: int,
         sdk_app_creator_account_dict: Dict,
         sdk_app_account_dict: Dict,
     ):
+
+        approval_pgm, clear_pgm, contract = router.compile_program(version=8)
+        approval_pgm_path = Path('approval.teal')
+        clear_pgm_path = Path('clear.teal')
+        write_to_file(approval_pgm, approval_pgm_path)
+        write_to_file(clear_pgm, clear_pgm_path)
 
         self._proofs: Dict[str, KAVMProof] = {}
 
@@ -633,10 +642,10 @@ class AutoProver:
         _LOGGER.info(f'Initializing proofs for contract {contract.name}')
 
         approval_labels, parsed_approval_pgm = preprocess_teal_program(
-            self.algod.kavm.kore_to_kast(self.algod.kavm.parse_teal(approval_pgm))
+            self.algod.kavm.kore_to_kast(self.algod.kavm.parse_teal(approval_pgm_path))
         )
         clear_labels, parsed_clear_pgm = preprocess_teal_program(
-            self.algod.kavm.kore_to_kast(self.algod.kavm.parse_teal(clear_pgm))
+            self.algod.kavm.kore_to_kast(self.algod.kavm.parse_teal(clear_pgm_path))
         )
 
         app_account = SymbolicAccount.from_sdk_account(term_factory, sdk_app_account_dict)
