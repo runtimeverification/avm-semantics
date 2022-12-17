@@ -97,8 +97,8 @@ class KAVM(KRun, KProve):
             depth=depth,
         )
 
-        final_state = KInner.from_dict(json.loads(proc_result.stdout)['term'])
         print(proc_result)
+        final_state = KInner.from_dict(json.loads(proc_result.stdout)['term'])
         print(self.pretty_print(final_state) + '\n')
 
         if proc_result.returncode not in (0, 1):
