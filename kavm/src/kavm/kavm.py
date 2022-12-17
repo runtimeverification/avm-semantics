@@ -2,18 +2,21 @@ import logging
 import os
 import subprocess
 import tempfile
+import json
 from pathlib import Path
 from subprocess import CompletedProcess
 from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union
 
 from pyk.cli_utils import run_process
-from pyk.kast.inner import KSort
+from pyk.utils import unique
+from pyk.kast.inner import KSort, KInner
 from pyk.kore.parser import KoreParser
 from pyk.kore.syntax import Pattern
 from pyk.ktool.kprint import paren
-from pyk.ktool.kprove import KProve
+from pyk.ktool.kprove import KProve, KoreExecLogFormat, _kprove, KProveOutput, _get_rule_log
 from pyk.ktool.krun import KRun, KRunOutput, _krun
 from pyk.prelude.k import K
+from pyk.prelude.ml import is_top
 
 from kavm.scenario import KAVMScenario
 
@@ -45,6 +48,70 @@ class KAVM(KRun, KProve):
         self._scenario_parser = (
             scenario_parser if scenario_parser else definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
         )
+
+
+    def prove(
+        self,
+        spec_file: Path,
+        spec_module_name: Optional[str] = None,
+        args: Iterable[str] = (),
+        haskell_args: Iterable[str] = (),
+        haskell_log_entries: Iterable[str] = (),
+        log_axioms_file: Optional[Path] = None,
+        allow_zero_step: bool = False,
+        dry_run: bool = False,
+        depth: Optional[int] = None,
+        haskell_log_format: KoreExecLogFormat = KoreExecLogFormat.ONELINE,
+        haskell_log_debug_transition: bool = True,
+    ) -> KInner:
+        log_file = spec_file.with_suffix('.debug-log') if log_axioms_file is None else log_axioms_file
+        if log_file.exists():
+            log_file.unlink()
+        haskell_log_entries = unique(
+            list(haskell_log_entries) + (['DebugTransition'] if haskell_log_debug_transition else [])
+        )
+        haskell_log_args = [
+            '--log',
+            str(log_file),
+            '--log-format',
+            haskell_log_format.value,
+            '--log-entries',
+            ','.join(haskell_log_entries),
+        ]
+
+        kore_exec_opts = ' '.join(list(haskell_args) + haskell_log_args)
+        _LOGGER.debug(f'export KORE_EXEC_OPTS="{kore_exec_opts}"')
+        env = os.environ.copy()
+        env['KORE_EXEC_OPTS'] = kore_exec_opts
+
+        proc_result = _kprove(
+            spec_file=spec_file,
+            command=self.prover,
+            kompiled_dir=self.definition_dir,
+            spec_module_name=spec_module_name,
+            output=KProveOutput.JSON,
+            dry_run=dry_run,
+            args=self.prover_args + list(args),
+            env=env,
+            check=False,
+            profile=self._profile,
+            depth=depth,
+        )
+
+        final_state = KInner.from_dict(json.loads(proc_result.stdout)['term'])
+        print(proc_result)
+        print(self.pretty_print(final_state) + '\n')
+
+        if proc_result.returncode not in (0, 1):
+            raise RuntimeError('kprove failed!')
+
+        if dry_run:
+            return mlBottom()
+
+        debug_log = _get_rule_log(log_file)
+        if is_top(final_state) and len(debug_log) == 0 and not allow_zero_step:
+            raise ValueError(f'Proof took zero steps, likely the LHS is invalid: {spec_file}')
+        return final_state
 
     def parse_teals(self, teal_paths: Iterable[str], teal_sources_dir: Path) -> Pattern:
         """Extract TEAL programs filenames and source code from a test scenario"""
