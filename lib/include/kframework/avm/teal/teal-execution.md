@@ -62,7 +62,11 @@ there may be some remaining artefacts of the previous transaction's TEAL.
        <lastTxnGroupID> _ => "" </lastTxnGroupID>
        <mode> _ => stateful </mode>
        <appCreator> AC </appCreator>
-    requires notBool(APP_ID in REST)
+    requires notBool(APP_ID in REST) andBool (APP_ID in_keys(AC))
+
+  rule <k> #initApp(APP_ID) => panic(MISSING_APP_CREATOR) ... </k>
+       <appCreator> AC </appCreator>
+    requires notBool(APP_ID in_keys(AC))
 ```
 
 ```k
@@ -235,6 +239,12 @@ teal, failure means undoing changes made to the state (for more details, see
   rule <k> #deactivateApp() => . ... </k>
        <currentApplicationID> APP_ID </currentApplicationID>
        <activeApps> (SetItem(APP_ID) => .Set) ...</activeApps>
+       <paniccode> PANIC_CODE </paniccode>
+    requires PANIC_CODE ==Int 0
+
+  rule <k> #deactivateApp() => . ... </k>
+       <paniccode> PANIC_CODE </paniccode>
+    requires PANIC_CODE =/=Int 0
 
   rule <k> #checkStack() => .K ... </k>
        <stack> I : .TStack </stack>

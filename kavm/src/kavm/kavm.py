@@ -8,8 +8,8 @@ from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union
 
 from pyk.cli_utils import run_process
 from pyk.kast.inner import KSort
+from pyk.kore import syntax as kore
 from pyk.kore.parser import KoreParser
-from pyk.kore.syntax import Pattern
 from pyk.ktool.kprint import paren
 from pyk.ktool.kprove import KProve
 from pyk.ktool.krun import KRun, KRunOutput, _krun
@@ -45,15 +45,22 @@ class KAVM(KRun, KProve):
         self._scenario_parser = (
             scenario_parser if scenario_parser else definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
         )
+        self._verification_definition = definition
 
-    def parse_teals(self, teal_paths: Iterable[str], teal_sources_dir: Path) -> Pattern:
-        """Extract TEAL programs filenames and source code from a test scenario"""
+    def parse_teal(self, file: Optional[Path]) -> kore.Pattern:
+        '''Parse a TEAL program with the fast Bison parser'''
+        if not (file):
+            # return an error program
+            return KoreParser(
+                "inj{SortPseudoOpCode{}, SortTealInputPgm{}}(Lblint'UndsUnds'TEAL-OPCODES'Unds'PseudoOpCode'Unds'PseudoTUInt64{}(inj{SortInt{}, SortPseudoTUInt64{}}(\\dv{SortInt{}}(\"1\"))))"
+            ).pattern()
 
-        def run_process_on_bison_parser(path: Path) -> str:
-            command = [self._teal_parser] + [str(path)]
-            res = subprocess.run(command, stdout=subprocess.PIPE, check=True, text=True)
+        command = [str(self._teal_parser)] + [str(file)]
+        result = subprocess.run(command, stdout=subprocess.PIPE, check=True, text=True)
+        return KoreParser(result.stdout).pattern()
 
-            return res.stdout
+    def parse_teals(self, teal_paths: Iterable[str], teal_sources_dir: Path) -> kore.Pattern:
+        """Parse several TEAL progams and combine them into a single Kore pattern"""
 
         map_union_op = "Lbl'Unds'Map'Unds'{}"
         map_item_op = "Lbl'UndsPipe'-'-GT-Unds'{}"
@@ -62,7 +69,7 @@ class KAVM(KRun, KProve):
         for teal_path in teal_paths:
             teal_path_parsed = 'inj{SortString{},SortKItem{}}(\\dv{SortString{}}("' + str(teal_path) + '"))'
             teal_parsed = (
-                'inj{SortTealInputPgm{},SortKItem{}}(' + run_process_on_bison_parser(teal_sources_dir / teal_path) + ')'
+                'inj{SortTealInputPgm{},SortKItem{}}(' + self.parse_teal(teal_sources_dir / teal_path).text + ')'
             )
             teal_kore_map_item = map_item_op + '(' + teal_path_parsed + ',' + teal_parsed + ')'
             current_teal_pgms_map = map_union_op + "(" + current_teal_pgms_map + "," + teal_kore_map_item + ")"
@@ -76,7 +83,7 @@ class KAVM(KRun, KProve):
         profile: bool = False,
         check: bool = True,
         existing_decompiled_teal_dir: Optional[Path] = None,
-    ) -> Tuple[Pattern, str]:
+    ) -> Tuple[kore.Pattern, str]:
         """Run an AVM simulaion scenario with krun"""
 
         with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_scenario_file, (
@@ -157,6 +164,7 @@ class KAVM(KRun, KProve):
     @staticmethod
     def _patch_symbol_table(symbol_table: Dict[str, Callable[..., str]]) -> None:
         symbol_table['_+Int_'] = paren(symbol_table['_+Int_'])
+        symbol_table['_+Bytes_'] = paren(lambda a1, a2: a1 + '+Bytes' + a2)
 
     @staticmethod
     def concrete_rules() -> List[str]:
