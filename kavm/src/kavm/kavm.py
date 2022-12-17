@@ -1,22 +1,22 @@
+import json
 import logging
 import os
 import subprocess
 import tempfile
-import json
 from pathlib import Path
 from subprocess import CompletedProcess
 from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union
 
 from pyk.cli_utils import run_process
-from pyk.utils import unique
-from pyk.kast.inner import KSort, KInner
+from pyk.kast.inner import KInner, KSort
 from pyk.kore.parser import KoreParser
 from pyk.kore.syntax import Pattern
 from pyk.ktool.kprint import paren
-from pyk.ktool.kprove import KProve, KoreExecLogFormat, _kprove, KProveOutput, _get_rule_log
+from pyk.ktool.kprove import KoreExecLogFormat, KProve, KProveOutput, _get_rule_log, _kprove
 from pyk.ktool.krun import KRun, KRunOutput, _krun
 from pyk.prelude.k import K
-from pyk.prelude.ml import is_top
+from pyk.prelude.ml import is_top, mlBottom
+from pyk.utils import unique
 
 from kavm.scenario import KAVMScenario
 
@@ -48,7 +48,6 @@ class KAVM(KRun, KProve):
         self._scenario_parser = (
             scenario_parser if scenario_parser else definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
         )
-
 
     def prove(
         self,
