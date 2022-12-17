@@ -1,6 +1,6 @@
-from typing import Tuple
+from typing import Tuple, Optional
 
-from algosdk.abi import Contract
+from algosdk.abi import Contract, Method
 from pyteal import (
     App,
     Approve,
@@ -25,6 +25,15 @@ from pyteal import (
     abi,
 )
 from pyteal.compiler.optimizer import optimizer
+import pyteal
+
+from kavm.prover import router_hoare_method, router_precondition, router_postcondition
+
+# Method._preconditions = []
+# Method._postconditions = []
+Router.hoare_method = router_hoare_method
+Router.precondition = router_precondition
+Router.postcondition = router_postcondition
 
 ASSET_TOTAL = 1000000
 ASSET_DECIMALS = 3
@@ -89,6 +98,10 @@ def kcoin_to_algos(asset_amount: Expr) -> Expr:
     return Mul(asset_amount, App.globalGet(Bytes("exchange_rate")))
 
 
+@router.precondition(expr='payment.get().amount() >= Int(10000)')
+@router.precondition(expr='payment.get().amount() <= Int(20000)')
+@router.postcondition(expr=f'output.get() == payment.get().amount() / Int({INITIAL_EXCHANGE_RATE})')
+@router.hoare_method
 @router.method
 def mint(payment: abi.PaymentTransaction, *, output: abi.Uint64) -> Expr:
     """
@@ -120,6 +133,10 @@ def mint(payment: abi.PaymentTransaction, *, output: abi.Uint64) -> Expr:
     )
 
 
+@router.precondition(expr='asset_transfer.get().amount() >= Int(10000)')
+@router.precondition(expr='asset_transfer.get().amount() <= Int(20000)')
+@router.postcondition(expr=f'output.get() == asset_transfer.get().amount() * Int({INITIAL_EXCHANGE_RATE})')
+@router.hoare_method
 @router.method
 def burn(asset_transfer: abi.AssetTransferTransaction, *, output: abi.Uint64) -> Expr:
     """

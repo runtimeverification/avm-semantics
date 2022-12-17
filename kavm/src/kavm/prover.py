@@ -1,11 +1,15 @@
 import logging
 from pathlib import Path
-from typing import Dict, Final, List, Optional, Tuple, Set, Any
+from typing import Dict, Final, List, Optional, Tuple, Set, Any, Callable
+import pytest
 
 from algosdk.abi.contract import Contract
 from algosdk.abi.method import Method
 from algosdk.encoding import checksum, decode_address, encode_address
-from algosdk.future.transaction import ApplicationCallTxn, PaymentTxn, StateSchema
+from algosdk.future.transaction import ApplicationCallTxn, AssetTransferTxn, PaymentTxn, StateSchema
+
+import pyteal
+from pyteal.ir import Op
 
 from pyk.kast.inner import KApply, KInner, KLabel, KRewrite, KSort, KToken, KVariable, Subst, build_assoc
 from pyk.kast.manip import inline_cell_maps, push_down_rewrites, set_cell
@@ -25,6 +29,201 @@ from kavm.kast.factory import KAVMTermFactory
 
 _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
+
+
+def last_log_item_eq(int_term: KInner):
+    return KApply(  # ?FINAL_LOGDATA ==K b"\x15\x1f|u" +Bytes  padLeftBytes(Int2Bytes(int_term, BE, Unsigned), 8, 0)
+        "_==K_",
+        [
+            KVariable('?FINAL_LOGDATA_CELL'),
+            KApply(
+                '_+Bytes_',
+                [
+                    bytesToken("\\x15\\x1f|u"),
+                    KApply(
+                        'padLeftBytes',
+                        [
+                            KApply(
+                                'Int2Bytes',
+                                [
+                                    int_term,
+                                    KToken('BE', KSort('Endianness')),
+                                    KToken('Unsigned', KSort('Signedness')),
+                                ],
+                            ),
+                            intToken(8),
+                            intToken(0),
+                        ],
+                    ),
+                ],
+            ),
+        ],
+    )
+
+
+pyteal_op_to_k_op = {
+    Op.eq: '_==Int_',
+    Op.neq: '_=/=Int_',
+    Op.ge: '_>=Int_',
+    Op.gt: '_>Int_',
+    Op.le: '_<=Int_',
+    Op.lt: '_<Int_',
+    Op.div: '_/Int_',
+    Op.mul: '_*Int_',
+    Op.add: '_+Int_',
+    Op.minus: '_-Int_',
+}
+
+
+def pyteal_expr_to_kast(expr: pyteal.Expr) -> KInner:
+    if isinstance(expr, SymbolicInt):
+        return KVariable(expr.var_name.upper())
+    if isinstance(expr, pyteal.Int):
+        return intToken(expr.value)
+    if isinstance(expr, pyteal.BinaryExpr) and expr.op in pyteal_op_to_k_op.keys():
+        return KApply(
+            pyteal_op_to_k_op[expr.op],
+            [
+                pyteal_expr_to_kast(expr.argLeft),
+                pyteal_expr_to_kast(expr.argRight),
+            ],
+        )
+    if isinstance(expr, pyteal.NaryExpr) and len(expr.args) == 2 and expr.op in pyteal_op_to_k_op.keys():
+        return KApply(
+            pyteal_op_to_k_op[expr.op],
+            [
+                pyteal_expr_to_kast(expr.args[0]),
+                pyteal_expr_to_kast(expr.args[1]),
+            ],
+        )
+    else:
+        raise ValueError(f'Unsupported PyTeal expression: {expr} of type {type(expr)}')
+    # if not (isinstance(expr, pyteal.BinaryExpr) and expr.op in pyteal_op_to_k_op.keys()):
+    #     raise ValueError(f'Unsupported PyTeal expression: {expr}. Must be an "lhs ==,!=,>,>=,<,<= rhs"')
+
+
+class SymbolicInt(pyteal.Int):
+    """An expression that represents a symbolic uint64."""
+
+    def __init__(self, var_name: str) -> None:
+        """Create a new uint64.
+        Args:
+            value: The integer value this uint64 will represent. Must be a positive value less than
+                2**64.
+        """
+        super().__init__(0)
+        self.var_name = var_name
+
+    def amount(self):
+        self.var_name = self.var_name + '_amount'
+        return self
+
+
+class HoareMethod(Method):
+    def __init__(self, *args, **kwargs) -> None:
+        Method.__init__(self, *args, **kwargs)
+        self._preconditions = []
+        self._postconditions = []
+
+    @staticmethod
+    def from_plain_method(m: Method):
+        return HoareMethod(name=m.name, args=m.args, returns=m.returns, desc=m.desc)
+
+
+def router_hoare_method(
+    self: pyteal.Router, func: Optional[pyteal.ABIReturnSubroutine] = None
+) -> pyteal.ABIReturnSubroutine:
+    def wrap(func):
+        for idx, m in enumerate(self.methods):
+            if m.name == func.method_spec().name:
+                self.methods[idx] = HoareMethod.from_plain_method(m)
+        return func
+
+    if not func:
+        return wrap
+    return wrap(func)
+
+
+def router_precondition(
+    self: pyteal.Router,
+    func: Optional[pyteal.ABIReturnSubroutine] = None,
+    /,
+    *,
+    expr: pyteal.Expr,
+) -> pyteal.ABIReturnSubroutine:
+    def wrap(func):
+        expr_env = {'Int': pyteal.Int}
+        for k, v in func.subroutine.abi_args.items():
+            expr_env[k] = v.new_instance()
+
+        with pytest.MonkeyPatch.context() as monkeypatch:
+            monkeypatch.setattr(
+                target=pyteal.abi.PaymentTransaction,
+                name='get',
+                value=lambda txn: SymbolicInt(var_name=f'payment'),
+                raising=False,
+            )
+            monkeypatch.setattr(
+                target=pyteal.abi.AssetTransferTransaction,
+                name='get',
+                value=lambda txn: SymbolicInt(var_name=f'asset_transfer'),
+                raising=False,
+            )
+            spec = eval(expr, expr_env)
+
+        for m in self.methods:
+            if m.name == func.method_spec().name and isinstance(m, HoareMethod):
+                m._preconditions.append(pyteal_expr_to_kast(spec))
+        return func
+
+    if not func:
+        return wrap
+    return wrap(func)
+
+
+def router_postcondition(
+    self: pyteal.Router,
+    func: Optional[pyteal.ABIReturnSubroutine] = None,
+    /,
+    *,
+    expr: pyteal.Expr,
+) -> pyteal.ABIReturnSubroutine:
+    def wrap(func):
+        expr_env = {'Int': pyteal.Int}
+        for k, v in func.subroutine.abi_args.items():
+            expr_env[k] = v.new_instance()
+        for k, v in func.subroutine.output_kwarg.items():
+            expr_env[k] = v.new_instance()
+
+        with pytest.MonkeyPatch.context() as monkeypatch:
+            monkeypatch.setattr(
+                target=pyteal.abi.PaymentTransaction,
+                name='get',
+                value=lambda txn: SymbolicInt(var_name=f'payment'),
+                raising=False,
+            )
+            monkeypatch.setattr(
+                target=pyteal.abi.AssetTransferTransaction,
+                name='get',
+                value=lambda txn: SymbolicInt(var_name=f'asset_transfer'),
+                raising=False,
+            )
+            monkeypatch.setattr(
+                target=pyteal.abi.Uint,
+                name='get',
+                value=lambda txn: SymbolicInt(var_name=f'output'),
+                raising=False,
+            )
+            spec = eval(expr, expr_env)
+
+        for m in self.methods:
+            if m.name == func.method_spec().name:
+                m._postconditions.append(last_log_item_eq(pyteal_expr_to_kast(spec.argRight)))
+        return func
+
+    if not func:
+        return wrap
+    return wrap(func)
 
 
 def remove_duplicates(labels: List) -> List:
@@ -114,7 +313,7 @@ class SymbolicAccount:
             assets = {}
             for sdk_asset_dict in sdk_account_dict['created-assets']:
                 asset_id = sdk_asset_dict['index']
-                assets[asset_id] = SymbolicApplication(asset_id, term_factory.asset_cell(sdk_asset_dict), [])
+                assets[asset_id] = SymbolicAsset(asset_id, term_factory.asset_cell(sdk_asset_dict))
         except KeyError:
             assets = {}
         return SymbolicAccount(
@@ -357,15 +556,6 @@ class KAVMProof:
             ],
         )
 
-        # for account in self._accounts:
-        #     for app in account._apps.values():
-        #         labels = remove_duplicates(app._labels)
-        #         for i in range(len(labels)):
-        #             for j in range(len(labels)):
-        #                 if i == j:
-        #                     continue
-        #                 self._preconditions.append(KApply("_=/=K_", [labels[i], labels[j]]))
-
         requires = build_assoc(KToken("true", "Bool"), KLabel("_andBool_"), self._preconditions)
 
         ensures = build_assoc(KToken("true", "Bool"), KLabel("_andBool_"), self._postconditions)
@@ -379,6 +569,7 @@ class KAVMProof:
         defn = read_kast_definition(self.kavm._verification_definition / 'parsed.json')
         symbol_table = build_symbol_table(defn)
         symbol_table['_+Bytes_'] = paren(lambda a1, a2: a1 + ' +Bytes ' + a2)
+        symbol_table['_andBool_'] = paren(symbol_table['_andBool_'])
 
         proof = KProve(definition_dir=self.kavm._verification_definition, use_directory=self._use_directory)
         proof._symbol_table = symbol_table
@@ -386,32 +577,12 @@ class KAVMProof:
         result = proof.prove_claim(claim=claim, claim_id=self._claim_name)
 
         if type(result) is KApply and result.label.name == "#Top":
-            print("Proved claim")
+            print(f"Proved {self._claim_name}")
         else:
-            print("Failed to prove claim")
+            print(f"Failed to prove {self._claim_name}")
             print("counterexample:")
 
             print(pretty_print_kast(inline_cell_maps(result), symbol_table=symbol_table))
-
-
-class MethodWithSpec(Method):
-    def __init__(
-        self,
-        sdk_method: Method,
-        preconditions: Optional[List[KInner]] = None,
-        postconditions: Optional[List[KInner]] = None,
-    ):
-        super().__init__(name=sdk_method.name, args=sdk_method.args, returns=sdk_method.returns, desc=sdk_method.desc)
-        self._preconditions = preconditions if preconditions else []
-        self._postconditions = postconditions if postconditions else []
-
-    @property
-    def preconditions(self) -> List[KInner]:
-        return self._preconditions
-
-    @property
-    def postconditions(self) -> List[KInner]:
-        return self._postconditions
 
 
 class AutoProver:
@@ -475,6 +646,8 @@ class AutoProver:
         creator_account._acc_cell = set_cell(creator_account._acc_cell, 'APPROVALPGMSRC_CELL', parsed_approval_pgm)
         creator_account._acc_cell = set_cell(creator_account._acc_cell, 'CLEARSTATEPGMSRC_CELL', parsed_clear_pgm)
 
+        asset_id = list(app_account._assets.keys())[0]
+
         labels = remove_duplicates(approval_labels + clear_labels)
         labels_are_deduped = []
         for i in range(len(labels)):
@@ -484,6 +657,9 @@ class AutoProver:
                 labels_are_deduped.append(KApply("_=/=K_", [labels[i], labels[j]]))
 
         for method in contract.methods:
+            if not isinstance(method, HoareMethod):
+                _LOGGER.info(f'Skipping method {method.name} as it is not marked with @router.hoare_method')
+                continue
             proof = KAVMProof(
                 kavm=self.algod.kavm,
                 use_directory=Path("proofs"),
@@ -493,11 +669,6 @@ class AutoProver:
             proof.add_acct(app_account)
 
             _LOGGER.info(f'Generating K claim for method {method.name}')
-
-            # skip generating claims for plain Method's
-            if not isinstance(method, MethodWithSpec):
-                continue
-
             app_args: List[KInner] = [method_selector_to_k_bytes(method.get_selector())]
             for i, arg in enumerate(method.args):
                 _LOGGER.info(f'Analyzing method argument {i} with name {arg.name} of type {arg.type}')
@@ -508,15 +679,15 @@ class AutoProver:
                     _LOGGER.info(
                         f'Adding precondiotion on argument {arg.name}: {self.algod.kavm.pretty_print(arg_pre)}'
                     )
-                    method.preconditions.append(arg_pre)
+                    method._preconditions.append(arg_pre)
                 elif str(arg.type) == 'pay':
                     sdk_txn = PaymentTxn(sender=creator_account._address, receiver=app_account._address, sp=sp, amt=0)
-                    amount_k_var = KVariable(str(arg.name).upper(), sort=KSort("Int"))
+                    amount_k_var = KVariable(str(arg.name + '_AMOUNT').upper(), sort=KSort("Int"))
                     txn_pre = transaction_k_term(
                         kavm=self.algod.kavm,
                         txn=sdk_txn,
                         txid='0',
-                        symbolic_fileds_subst=Subst(
+                        symbolic_fields_subst=Subst(
                             {
                                 'AMOUNT_CELL': amount_k_var,
                                 'GROUPIDX_CELL': intToken(0),
@@ -529,7 +700,7 @@ class AutoProver:
                         kavm=self.algod.kavm,
                         txn=sdk_txn,
                         txid='0',
-                        symbolic_fileds_subst=Subst(
+                        symbolic_fields_subst=Subst(
                             {
                                 'AMOUNT_CELL': amount_k_var,
                                 'GROUPIDX_CELL': intToken(0),
@@ -547,55 +718,54 @@ class AutoProver:
                     _LOGGER.info(
                         f'Adding precondiotion on argument {arg.name}: {self.algod.kavm.pretty_print(amount_pre)}'
                     )
-                    method.preconditions.append(amount_pre)
+                    method._preconditions.append(amount_pre)
                     proof.add_txn(txn_pre, txn_post)
-                # elif str(arg.type) == 'axfer':
-                #     sdk_txn = AxferTxn(sender=creator_account._address, receiver=app_account._address, sp=sp, amt=0)
-                #     amount_k_var = KVariable(str(arg.name).upper(), sort=KSort("Int"))
-                #     txn_pre = transaction_k_term(
-                #         kavm=self.algod.kavm,
-                #         txn=sdk_txn,
-                #         txid='0',
-                #         symbolic_fileds_subst=Subst(
-                #             {
-                #                 'AMOUNT_CELL': amount_k_var,
-                #                 'GROUPIDX_CELL': intToken(0),
-                #                 'SENDER_CELL': algorand_addres_to_k_bytes(sdk_txn.sender),
-                #                 'RECEIVER_CELL': algorand_addres_to_k_bytes(sdk_txn.receiver),
-                #             }
-                #         ),
-                #     )
-                #     txn_post = transaction_k_term(
-                #         kavm=self.algod.kavm,
-                #         txn=sdk_txn,
-                #         txid='0',
-                #         symbolic_fileds_subst=Subst(
-                #             {
-                #                 'AMOUNT_CELL': amount_k_var,
-                #                 'GROUPIDX_CELL': intToken(0),
-                #                 'SENDER_CELL': KToken(
-                #                     "b\"" + str(decode_address(sdk_txn.sender))[2:-1] + "\"", "Bytes"
-                #                 ),
-                #                 'RECEIVER_CELL': KToken(
-                #                     "b\"" + str(decode_address(sdk_txn.receiver))[2:-1] + "\"", "Bytes"
-                #                 ),
-                #                 'RESUME_CELL': KVariable('?_'),
-                #             }
-                #         ),
-                #     )
-                #     amount_pre = AutoProver._in_bounds_uint64(amount_k_var)
-                #     _LOGGER.info(
-                #         f'Adding precondiotion on argument {arg.name}: {self.algod.kavm.pretty_print(amount_pre)}'
-                #     )
-                #     method.preconditions.append(amount_pre)
-                #     proof.add_txn(txn_pre, txn_post)
+                elif str(arg.type) == 'axfer':
+                    _LOGGER.info(f'Skipping {method.name}')
+                    sdk_txn = AssetTransferTxn(
+                        sender=creator_account._address, receiver=app_account._address, sp=sp, index=asset_id, amt=0
+                    )
+                    amount_k_var = KVariable(str(arg.name + '_AMOUNT').upper(), sort=KSort("Int"))
+                    txn_pre = transaction_k_term(
+                        kavm=self.algod.kavm,
+                        txn=sdk_txn,
+                        txid='0',
+                        symbolic_fields_subst=Subst(
+                            {
+                                'ASSETAMOUNT_CELL': amount_k_var,
+                                'GROUPIDX_CELL': intToken(0),
+                                'SENDER_CELL': algorand_addres_to_k_bytes(sdk_txn.sender),
+                                'ASSETRECEIVER_CELL': algorand_addres_to_k_bytes(sdk_txn.receiver),
+                            }
+                        ),
+                    )
+                    txn_post = transaction_k_term(
+                        kavm=self.algod.kavm,
+                        txn=sdk_txn,
+                        txid='0',
+                        symbolic_fields_subst=Subst(
+                            {
+                                'ASSETAMOUNT_CELL': amount_k_var,
+                                'GROUPIDX_CELL': intToken(0),
+                                'SENDER_CELL': algorand_addres_to_k_bytes(sdk_txn.sender),
+                                'ASSETRECEIVER_CELL': algorand_addres_to_k_bytes(sdk_txn.receiver),
+                                'RESUME_CELL': KVariable('?_'),
+                            }
+                        ),
+                    )
+                    amount_pre = AutoProver._in_bounds_uint64(amount_k_var)
+                    _LOGGER.info(
+                        f'Adding precondiotion on argument {arg.name}: {self.algod.kavm.pretty_print(amount_pre)}'
+                    )
+                    method._preconditions.append(amount_pre)
+                    proof.add_txn(txn_pre, txn_post)
                 else:
                     _LOGGER.critical(f"Not yet supported: method argument of type {arg.type}")
                     exit(1)
 
-            for pre in method.preconditions:
+            for pre in method._preconditions:
                 proof.add_precondition(pre)
-            for post in method.postconditions:
+            for post in method._postconditions:
                 proof.add_postcondition(post)
 
             # for method_txn in method.txn_calls:
@@ -604,7 +774,7 @@ class AutoProver:
                 kavm=self.algod.kavm,
                 txn=sdk_txn,
                 txid='1',
-                symbolic_fileds_subst=Subst(
+                symbolic_fields_subst=Subst(
                     {
                         'APPLICATIONARGS_CELL': generate_tvalue_list(app_args),
                         'GROUPIDX_CELL': intToken(1),
@@ -616,7 +786,7 @@ class AutoProver:
                 kavm=self.algod.kavm,
                 txn=sdk_txn,
                 txid='1',
-                symbolic_fileds_subst=Subst(
+                symbolic_fields_subst=Subst(
                     {
                         'SENDER_CELL': KToken("b\"" + str(decode_address(sdk_txn.sender))[2:-1] + "\"", "Bytes"),
                         'APPLICATIONARGS_CELL': generate_tvalue_list(app_args),

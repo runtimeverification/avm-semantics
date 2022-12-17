@@ -16,8 +16,10 @@ from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, Sub
 from pyk.kast.manip import split_config_from
 from pyk.prelude.bytes import bytesToken
 from pyk.prelude.string import stringToken
+from pyk.prelude.kint import intToken
 
-from kavm.pyk_utils import maybe_tvalue, tvalue_list
+from kavm.pyk_utils import algorand_addres_to_k_bytes, maybe_tvalue, tvalue_list
+from kavm.constants import ZERO_ADDRESS
 
 
 class KAVMApplyData:
@@ -193,7 +195,7 @@ def txn_type_to_type_enum(txn_type: str) -> int:
         raise ValueError(f'unknown transaction type {txn_type}')
 
 
-def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fileds_subst: Optional[Subst] = None) -> KInner:
+def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fields_subst: Optional[Subst] = None) -> KInner:
     """Convert a Transaction objet to a K cell"""
 
     def empty_transaction_cell(type_specific_fields: KInner) -> KInner:
@@ -209,7 +211,7 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fileds_s
             ],
         )
 
-    symbolic_fileds_subst = symbolic_fileds_subst if symbolic_fileds_subst else Subst({})
+    symbolic_fields_subst = symbolic_fields_subst if symbolic_fields_subst else Subst({})
 
     header_subst = Subst(
         {
@@ -250,10 +252,10 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fileds_s
             {
                 'RECEIVER_CELL': bytesToken(txn.receiver),
                 'AMOUNT_CELL': maybe_tvalue(txn.amt),
-                'CLOSEREMAINDERTO_CELL': maybe_tvalue(txn.close_remainder_to),
+                'CLOSEREMAINDERTO_CELL': algorand_addres_to_k_bytes(ZERO_ADDRESS),
             }
         )
-        type_specific_fileds_cell = [
+        type_specific_fields_cell = [
             kavm.definition.empty_config(KSort('PayTxFieldsCell')),
             KApply('.AppCallTxFieldsCell'),
             KApply('.KeyRegTxFieldsCell'),
@@ -262,7 +264,24 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fileds_s
             KApply('.AssetFreezeTxFieldsCell'),
         ]
     if txn.type == ASSETTRANSFER_TXN:
-        raise NotImplementedError()
+        txn = cast(AssetTransferTxn, txn)
+        type_specific_subst = Subst(
+            {
+                'XFERASSET_CELL': intToken(txn.index),
+                'ASSETRECEIVER_CELL': bytesToken(txn.receiver),
+                'ASSETAMOUNT_CELL': maybe_tvalue(txn.amount),
+                'ASSETCLOSETO_CELL': algorand_addres_to_k_bytes(ZERO_ADDRESS),
+                'ASSETASENDER_CELL': algorand_addres_to_k_bytes(ZERO_ADDRESS),
+            }
+        )
+        type_specific_fields_cell = [
+            KApply('.PayTxFieldsCell'),
+            KApply('.AppCallTxFieldsCell'),
+            KApply('.KeyRegTxFieldsCell'),
+            KApply('.AssetConfigTxFieldsCell'),
+            kavm.definition.empty_config(KSort('AssetTransferTxFieldsCell')),
+            KApply('.AssetFreezeTxFieldsCell'),
+        ]
     if txn.type == APPCALL_TXN:
         txn = cast(ApplicationCallTxn, txn)
         type_specific_subst = Subst(
@@ -309,7 +328,7 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fileds_s
                 'BOXREFERENCES_CELL': KToken(".TValuePairList", "TValuePairList"),
             }
         )
-        type_specific_fileds_cell = [
+        type_specific_fields_cell = [
             KApply('.PayTxFieldsCell'),
             kavm.definition.empty_config(KSort('AppCallTxFieldsCell')),
             KApply('.KeyRegTxFieldsCell'),
@@ -326,9 +345,9 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fileds_s
         .compose(apply_data_subst)
         .compose(header_subst)
         .compose(type_specific_subst)
-        .compose(symbolic_fileds_subst)
+        .compose(symbolic_fields_subst)
     )
 
-    transaction_cell = fields_subst.apply(empty_transaction_cell(type_specific_fileds_cell))  # type: ignore
+    transaction_cell = fields_subst.apply(empty_transaction_cell(type_specific_fields_cell))  # type: ignore
 
     return transaction_cell
