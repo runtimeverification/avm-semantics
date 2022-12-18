@@ -1,4 +1,4 @@
-```k
+#```k
 requires "avm/blockchain.md"
 requires "avm/constants.md"
 requires "avm/txn.md"
