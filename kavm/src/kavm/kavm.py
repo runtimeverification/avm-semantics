@@ -97,33 +97,47 @@ class KAVM(KRun, KProve):
             tmp_teals_file.write(parsed_teal.text)
             tmp_teals_file.flush()
 
-            _LOGGER.info('Parsing PGM')
+            _LOGGER.info(f'Writing scenario JSON to {tmp_scenario_file.name}')
             tmp_scenario_file.write(scenario.to_json())
             tmp_scenario_file.flush()
             _LOGGER.info('Running KAVM')
             os.environ['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
 
-            proc_result = _krun(
-                input_file=Path(tmp_scenario_file.name),
-                definition_dir=self.definition_dir,
-                output=KRunOutput.KORE,
-                depth=depth,
-                no_expand_macros=False,
-                profile=profile,
-                check=check,
-                cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
-                pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
-                pipe_stderr=True,
-            )
+            try:
+                proc_result = _krun(
+                    input_file=Path(tmp_scenario_file.name),
+                    definition_dir=self.definition_dir,
+                    output=KRunOutput.KORE,
+                    depth=depth,
+                    no_expand_macros=False,
+                    profile=profile,
+                    check=check,
+                    cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
+                    pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
+                    pipe_stderr=True,
+                )
+                if proc_result.returncode != 0:
+                    raise RuntimeError('Non-zero exit-code from krun.')
 
-            if proc_result.returncode != 0:
-                raise RuntimeError('Non-zero exit-code from krun.')
+                parser = KoreParser(proc_result.stdout)
+                final_pattern = parser.pattern()
+                assert parser.eof
 
-            parser = KoreParser(proc_result.stdout)
-            final_pattern = parser.pattern()
-            assert parser.eof
-
-            return final_pattern, proc_result.stderr
+                return final_pattern, proc_result.stderr
+            # if _krun has thtown a RuntimeError, rerun with --output pretty to see the final state quicker
+            except RuntimeError:
+                _krun(
+                    input_file=Path(tmp_scenario_file.name),
+                    definition_dir=self.definition_dir,
+                    output=KRunOutput.PRETTY,
+                    depth=depth,
+                    no_expand_macros=False,
+                    profile=profile,
+                    check=check,
+                    cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
+                    pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
+                    pipe_stderr=True,
+                )
 
     def kast(
         self,

@@ -144,11 +144,11 @@ class KAVMScenario:
     def dictify(self) -> Dict[str, Any]:
         return {"stages": self._stages}
 
-    def to_json(self) -> str:
+    def to_json(self, indent: int = 0) -> str:
         """
         Serialize the scenario to JSON with sorted keys
         """
-        return json.dumps(self.dictify(), sort_keys=True)
+        return json.dumps(self.dictify(), sort_keys=True, indent=indent)
 
     @staticmethod
     def from_json(

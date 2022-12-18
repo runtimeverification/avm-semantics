@@ -1,20 +1,34 @@
+from datetime import timedelta
 import logging
 from pathlib import Path
 from typing import Dict, Final, List, Optional, Tuple, Set, Any, Callable
+from hypothesis.control import assume
+from kavm.scenario import KAVMScenario
 from pyk.utils import dequote_str
 import pytest
+import json
 import importlib
+from hypothesis import Phase, given, settings, HealthCheck
+import hypothesis.strategies as st
 
 from algosdk.abi.contract import Contract
 from algosdk.abi.method import Method
 from algosdk.encoding import checksum, decode_address, encode_address
-from algosdk.future.transaction import ApplicationCallTxn, AssetTransferTxn, PaymentTxn, StateSchema
+from algosdk.future.transaction import ApplicationCallTxn, AssetTransferTxn, PaymentTxn, StateSchema, Transaction
 
 import pyteal
 from pyteal.ir import Op
 
 from pyk.kast.inner import KApply, KInner, KLabel, KRewrite, KSort, KToken, KVariable, Subst, build_assoc
-from pyk.kast.manip import inline_cell_maps, push_down_rewrites, set_cell
+from pyk.kast.manip import (
+    inline_cell_maps,
+    minimize_term,
+    push_down_rewrites,
+    set_cell,
+    get_cell,
+    split_config_and_constraints,
+    split_config_from,
+)
 from pyk.kast.outer import KClaim, read_kast_definition
 from pyk.ktool.kprint import build_symbol_table, paren, pretty_print_kast
 from pyk.ktool.kprove import KProve
@@ -22,7 +36,7 @@ from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
 from pyk.prelude.bytes import bytesToken
 
-from kavm.adaptors.algod_transaction import transaction_k_term
+from kavm.adaptors.algod_transaction import KAVMTransaction, transaction_k_term
 from kavm.adaptors.algod_account import sdk_account_created_app_ids, sdk_account_created_asset_ids
 from kavm.algod import KAVMClient
 from kavm.kavm import KAVM
@@ -76,6 +90,19 @@ pyteal_op_to_k_op = {
     Op.minus: '_-Int_',
 }
 
+pyteal_op_to_python_op = {
+    Op.eq: '==',
+    Op.neq: '!=',
+    Op.ge: '>=',
+    Op.gt: '>',
+    Op.le: '<=',
+    Op.lt: '<',
+    Op.div: '/',
+    Op.mul: '*',
+    Op.add: '+',
+    Op.minus: '-',
+}
+
 
 def pyteal_expr_to_kast(expr: pyteal.Expr) -> KInner:
     if isinstance(expr, SymbolicInt):
@@ -104,6 +131,20 @@ def pyteal_expr_to_kast(expr: pyteal.Expr) -> KInner:
     #     raise ValueError(f'Unsupported PyTeal expression: {expr}. Must be an "lhs ==,!=,>,>=,<,<= rhs"')
 
 
+def pyteal_expr_to_python_src(expr: pyteal.Expr) -> str:
+    if isinstance(expr, SymbolicInt):
+        return expr.var_name.upper()
+    if isinstance(expr, pyteal.Int):
+        # strategy_env[expr.var_name.upper()] = st.just(expr.value)
+        return str(expr.value)
+    if isinstance(expr, pyteal.BinaryExpr) and expr.op in pyteal_op_to_k_op.keys():
+        return f'{pyteal_expr_to_python_src(expr.argLeft)} {pyteal_op_to_python_op[expr.op]} {pyteal_expr_to_python_src(expr.argRight)}'
+    if isinstance(expr, pyteal.NaryExpr) and len(expr.args) == 2 and expr.op in pyteal_op_to_k_op.keys():
+        return f'{pyteal_expr_to_python_src(expr.args[0])} {pyteal_op_to_python_op[expr.op]} {pyteal_expr_to_python_src(expr.args[1])}'
+    else:
+        raise ValueError(f'Unsupported PyTeal expression: {expr} of type {type(expr)}')
+
+
 class SymbolicInt(pyteal.Int):
     """An expression that represents a symbolic uint64."""
 
@@ -125,7 +166,9 @@ class HoareMethod(Method):
     def __init__(self, *args, **kwargs) -> None:
         Method.__init__(self, *args, **kwargs)
         self._preconditions = []
+        self._python_src_preconditions = []
         self._postconditions = []
+        self._python_src_postconditions = []
 
     @staticmethod
     def from_plain_method(m: Method):
@@ -177,6 +220,7 @@ def router_precondition(
             if m.name == func.method_spec().name and isinstance(m, HoareMethod):
                 try:
                     m._preconditions.append(pyteal_expr_to_kast(spec))
+                    m._python_src_preconditions.append(pyteal_expr_to_python_src(spec))
                 except AttributeError:
                     _LOGGER.error(
                         'Skipping precondition to method "{m.name}" as its not market with @router.hoare_method'
@@ -227,6 +271,7 @@ def router_postcondition(
             if m.name == func.method_spec().name:
                 try:
                     m._postconditions.append(last_log_item_eq(pyteal_expr_to_kast(spec.argRight)))
+                    m._python_src_postconditions.append(pyteal_expr_to_python_src(spec.argRight))
                 except AttributeError:
                     _LOGGER.error(
                         'Skipping precondition to method "{m.name}" as its not market with @router.hoare_method'
@@ -299,12 +344,14 @@ class SymbolicAccount:
     def __init__(
         self,
         address: str,
+        sdk_account_dict: Dict,
         acc_cell: KInner,
         apps: Optional[Dict[int, SymbolicApplication]],
         assets: Optional[Dict[int, SymbolicAsset]],
     ):
         self._address = address
         self._acc_cell = acc_cell
+        self._sdk_account_dict = sdk_account_dict
         self._apps = apps if apps else {}
         self._assets = assets if assets else {}
 
@@ -326,6 +373,7 @@ class SymbolicAccount:
             assets = {}
         return SymbolicAccount(
             address=sdk_account_dict['address'],
+            sdk_account_dict=sdk_account_dict,
             acc_cell=term_factory.account_cell(sdk_account_dict),
             apps=apps,
             assets=assets,
@@ -339,20 +387,23 @@ class KAVMProof:
         self._use_directory = use_directory
         self._claim_name = claim_name
 
+        self._sdk_txns: List[Transaction] = []
         self._txns: List[KInner] = []
         self._txn_ids: List[int] = []
         self._txns_post: List[KInner] = []
         self._accounts: List[SymbolicAccount] = []
         self._preconditions: List[KInner] = []
         self._postconditions: List[KInner] = []
+        self._python_src_preconditions: List[str] = []
+        self._python_src_postconditions: List[str] = []
 
-    def add_txn(self, txn_pre: KInner, txn_post: KInner) -> None:
+    def add_txn(self, sdk_txn: Transaction, txn_pre: KInner, txn_post: KInner) -> None:
+        self._sdk_txns.append(sdk_txn)
         self._txns.append(txn_pre)
         self._txns_post.append(txn_post)
 
     def add_acct(self, acct: SymbolicAccount) -> None:
         self._accounts.append(acct)
-        # self._accounts.append(acct)
 
     def add_precondition(self, precondition: KInner) -> None:
         self._preconditions.append(precondition)
@@ -404,16 +455,67 @@ class KAVMProof:
             [KApply("SetItem", stringToken(str(i))) for i in range(0, len(self._txns))],
         )
 
+    def generate_scenario(self) -> KAVMScenario:
+        accounts = [acc._sdk_account_dict for acc in self._accounts]
+        stages = [
+            {"stage-type": "setup-network", "data": {"accounts": accounts}},
+            {
+                "stage-type": "submit-transactions",
+                "data": {
+                    "transactions": KAVMScenario.sanitize_transactions(
+                        [KAVMTransaction.sanitize_byte_fields(txn.dictify()) for txn in self._sdk_txns]
+                    )
+                },
+                "expected-returncode": 0,
+            },
+        ]
+        with open(self._use_directory / 'approval.teal') as f:
+            approval_src = f.read()
+        with open(self._use_directory / 'clear.teal') as f:
+            clear_src = f.read()
+        return KAVMScenario(stages=stages, teal_programs={'approval.teal': approval_src, 'clear.teal': clear_src})
+
+    def simulate(self, variables: Optional[Dict] = None) -> None:
+        pre = ' and '.join(self._python_src_preconditions)
+
+        scenario_json = self.generate_scenario().to_json()
+        scenario = KAVMScenario.from_json(scenario_json_str=scenario_json, teal_sources_dir=self._use_directory)
+
+        @settings(
+            deadline=timedelta(seconds=1),
+            max_examples=25,
+            phases=[Phase.generate],
+            suppress_health_check=[HealthCheck.filter_too_much],
+        )
+        @given(st.data())
+        def with_hypothesis(data):
+            x = data.draw(st.integers())
+            expr_env = {'PAYMENT_AMOUNT': x}
+            assume(eval(pre, expr_env))
+            run(x)
+
+        def run(x):
+            scenario._stages[1]['data']['transactions'][0]['amt'] = x
+            try:
+                self.kavm.run_avm_json(scenario=scenario)
+            except RuntimeError as err:
+                msg, stdout, stderr = err.args
+                _LOGGER.critical(stdout)
+                _LOGGER.critical(msg)
+                _LOGGER.critical(stderr)
+                raise RuntimeError
+
+        with_hypothesis()
+        # run(10001)
+
     def prove(self) -> None:
 
         lhs = KApply(
             "<kavm>",
             [
                 KApply("<k>", KApply("#evalTxGroup")),
-                KApply("<panicstatus>", stringToken("")),
-                KApply("<paniccode>", intToken(0)),
-                KApply("<returnstatus>", stringToken("Failure - AVM is stuck")),
                 KApply("<returncode>", intToken(4)),
+                KApply("<returnstatus>", stringToken('""')),
                 KApply("<transactions>", [self.build_transactions(self._txns)]),
                 KApply(
                     "<avmExecution>",
@@ -471,7 +573,7 @@ class KAVMProof:
                     [
                         KApply("<accountsMap>", self.build_accounts()),
                         KApply("<appCreator>", self.build_app_creator_map()),
-                        KApply("<assetCreator>", KToken(".Map", "Map")),
+                        KApply("<assetCreator>", self.build_asset_creator_map()),
                         KApply("<blocks>", KToken(".Map", "Map")),
                         KApply("<blockheight>", intToken(0)),
                         KApply("<nextTxnID>", intToken(100)),
@@ -489,10 +591,9 @@ class KAVMProof:
             "<kavm>",
             [
                 KApply("<k>", KToken(".K", "KItem ")),
-                KApply("<panicstatus>", KToken("\"\"", "String")),
-                KApply("<paniccode>", intToken(0)),
-                KApply("<returnstatus>", KToken("\"Success - transaction group accepted\"", "String")),
+                # KApply("<returnstatus>", KToken("\"Success - transaction group accepted\"", "String")),
                 KApply("<returncode>", intToken(0)),
+                KApply("<returnstatus>", KVariable('?_')),
                 KApply("<transactions>", [self.build_transactions(self._txns_post + [KVariable('?_')])]),
                 KApply(
                     "<avmExecution>",
@@ -587,10 +688,25 @@ class KAVMProof:
         if type(result) is KApply and result.label.name == "#Top":
             print(f"Proved {self._claim_name}")
         else:
-            print(f"Failed to prove {self._claim_name}")
-            print("counterexample:")
+            print(f"Failed to prove {self._claim_name}:")
+            self.report_failure(result, symbol_table)
 
-            print(pretty_print_kast(inline_cell_maps(result), symbol_table=symbol_table))
+    def report_failure(self, final_term: KInner, symbol_table: Dict):
+        final_config_filename = self._use_directory / f'{self._claim_name}_final_configuration.txt'
+        scenario_filename = self._use_directory / f'{self._claim_name}_simulation.json'
+        with open(final_config_filename, 'w') as file:
+            file.write(pretty_print_kast(minimize_term(inline_cell_maps(final_term)), symbol_table=symbol_table))
+        config, constraints = split_config_and_constraints(final_term)
+        symbolic_config, subst = split_config_from(config)
+        print(pretty_print_kast(subst['RETURNSTATUS_CELL'], symbol_table=symbol_table))
+        print('Constraints: ')
+        print(pretty_print_kast(constraints, symbol_table=symbol_table))
+        # print(pretty_print_kast(get_cell(final_term, 'TEAL_CELL'), symbol_table=symbol_table))
+        _LOGGER.info(f'Pretty printed final configuration to {final_config_filename}')
+        scenario = self.generate_scenario()
+        _LOGGER.info(f'Writing concrete simulation scenario to {scenario_filename}')
+        with open(scenario_filename, 'w') as file:
+            file.write(scenario.to_json(indent=4))
 
 
 def write_to_file(program: str, path: Path):
@@ -622,6 +738,9 @@ class AutoProver:
     def prove(self, method_name: str) -> None:
         self._proofs[method_name].prove()
 
+    def simulate(self, method_name: str) -> None:
+        self._proofs[method_name].simulate()
+
     def __init__(
         self,
         definition_dir: Path,
@@ -629,7 +748,15 @@ class AutoProver:
         app_id: int,
         sdk_app_creator_account_dict: Dict,
         sdk_app_account_dict: Dict,
+        use_directory: Optional[Path] = None,
     ):
+
+        if use_directory:
+            self._use_directory = use_directory
+        else:
+            self._use_directory = Path('.kavm')
+        _LOGGER.info(f'Will keep artefacts of AutoProver in directory {self._use_directory.resolve()}')
+        self._use_directory.mkdir(parents=True, exist_ok=True)
 
         # monkey path the pyteal.Router class with pre-/post-conditions decorators
         with pytest.MonkeyPatch.context() as monkeypatch:
@@ -654,8 +781,8 @@ class AutoProver:
             pyteal_module = importlib.import_module(pyteal_module_name)
             approval_pgm, clear_pgm, contract = pyteal_module.router.compile_program(version=8)
 
-        approval_pgm_path = Path('approval.teal')
-        clear_pgm_path = Path('clear.teal')
+        approval_pgm_path = self._use_directory / 'approval.teal'
+        clear_pgm_path = self._use_directory / 'clear.teal'
         write_to_file(approval_pgm, approval_pgm_path)
         write_to_file(clear_pgm, clear_pgm_path)
 
@@ -704,7 +831,7 @@ class AutoProver:
                 continue
             proof = KAVMProof(
                 kavm=self.algod.kavm,
-                use_directory=Path("proofs"),
+                use_directory=self._use_directory,
                 claim_name=f'{contract.name}-{method.name}',
             )
             proof.add_acct(creator_account)
@@ -723,7 +850,10 @@ class AutoProver:
                     )
                     method._preconditions.append(arg_pre)
                 elif str(arg.type) == 'pay':
-                    sdk_txn = PaymentTxn(sender=creator_account._address, receiver=app_account._address, sp=sp, amt=0)
+                    concrete_amount = 1000  # will be overriden by symbolic value
+                    sdk_txn = PaymentTxn(
+                        sender=creator_account._address, receiver=app_account._address, sp=sp, amt=concrete_amount
+                    )
                     amount_k_var = KVariable(str(arg.name + '_AMOUNT').upper(), sort=KSort("Int"))
                     txn_pre = transaction_k_term(
                         kavm=self.algod.kavm,
@@ -757,7 +887,7 @@ class AutoProver:
                         f'Adding precondiotion on argument {arg.name}: {self.algod.kavm.pretty_print(amount_pre)}'
                     )
                     method._preconditions.append(amount_pre)
-                    proof.add_txn(txn_pre, txn_post)
+                    proof.add_txn(sdk_txn, txn_pre, txn_post)
                 elif str(arg.type) == 'axfer':
                     _LOGGER.info(f'Skipping {method.name}')
                     sdk_txn = AssetTransferTxn(
@@ -796,7 +926,7 @@ class AutoProver:
                         f'Adding precondiotion on argument {arg.name}: {self.algod.kavm.pretty_print(amount_pre)}'
                     )
                     method._preconditions.append(amount_pre)
-                    proof.add_txn(txn_pre, txn_post)
+                    proof.add_txn(sdk_txn, txn_pre, txn_post)
                 else:
                     _LOGGER.critical(f"Not yet supported: method argument of type {arg.type}")
                     exit(1)
@@ -806,8 +936,19 @@ class AutoProver:
             for post in method._postconditions:
                 proof.add_postcondition(post)
 
+            for pre in method._python_src_preconditions:
+                proof._python_src_preconditions.append(pre)
+            for post in method._python_src_postconditions:
+                proof._python_src_postconditions.append(post)
+
             # for method_txn in method.txn_calls:
-            sdk_txn = ApplicationCallTxn(sender=creator_account._address, index=app_id, on_complete=0, sp=sp)
+            sdk_txn = ApplicationCallTxn(
+                sender=creator_account._address,
+                index=app_id,
+                on_complete=0,
+                sp=sp,
+                app_args=[method.get_selector()],
+            )
             txn_pre = transaction_k_term(
                 kavm=self.algod.kavm,
                 txn=sdk_txn,
@@ -836,7 +977,7 @@ class AutoProver:
                     }
                 ),
             )
-            proof.add_txn(txn_pre, txn_post)
+            proof.add_txn(sdk_txn, txn_pre, txn_post)
             proof._preconditions = proof._preconditions + labels_are_deduped
             self._proofs[method.name] = proof
 

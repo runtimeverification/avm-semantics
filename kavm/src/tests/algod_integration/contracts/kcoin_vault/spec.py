@@ -24,13 +24,13 @@ sdk_app_creator_account_dict = {
     "amount-without-pending-rewards": None,
     "apps-local-state": None,
     "apps-total-schema": None,
-    "assets": [{"amount": 500000, "asset-id": 1, "is-frozen": 0}],
+    "assets": [{"amount": 500000, "asset-id": 1, "is-frozen": False}],
     "created-apps": [
         {
             "id": 1,
             "params": {
                 "creator": "DJPACABYNRWAEXBYKT4WMGJO5CL7EYRENXCUSG2IOJNO44A4PWFAGLOLIA",
-                "approval-program": "approve.teal",
+                "approval-program": "approval.teal",
                 "clear-state-program": "clear.teal",
                 "local-state-schema": {"nbs": 0, "nui": 0},
                 "global-state-schema": {"nbs": 0, "nui": 2},
@@ -58,7 +58,7 @@ sdk_app_account_dict = {
     "amount-without-pending-rewards": None,
     "apps-local-state": None,
     "apps-total-schema": None,
-    "assets": [{"amount": 500000, "asset-id": 1, "is-frozen": 0}],
+    "assets": [{"amount": 500000, "asset-id": 1, "is-frozen": False}],
     "created-apps": [],
     "created-assets": [
         {
@@ -67,7 +67,7 @@ sdk_app_account_dict = {
                 "clawback": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
                 "creator": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
                 "decimals": 3,
-                "default-frozen": 0,
+                "default-frozen": False,
                 "freeze": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
                 "manager": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
                 "metadata-hash": "",
@@ -96,12 +96,6 @@ if __name__ == "__main__":
 
     kavm = KAVM(definition_dir=Path('./tests/specs/verification-kompiled'))
 
-    # # read initial state from files
-    # with open('app-creator-account.json', 'r') as file:
-    #     sdk_app_creator_account_dict = json.load(file)
-    # with open('app-account.json', 'r') as file:
-    #     sdk_app_account_dict = json.load(file)
-
     prover = AutoProver(
         definition_dir=Path('./tests/specs/verification-kompiled'),
         pyteal_module_name='kcoin_vault_pyteal',
@@ -109,7 +103,8 @@ if __name__ == "__main__":
         sdk_app_creator_account_dict=sdk_app_creator_account_dict,
         sdk_app_account_dict=sdk_app_account_dict,
     )
-    prover.prove('mint')
+    # prover.simulate('mint')
+    # prover.prove('mint')
     prover.prove('burn')
 
 # Need to kompile verification like this:

@@ -304,6 +304,7 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fields_s
                     label=KLabel(name='int__TEAL-OPCODES_PseudoOpCode_PseudoTUInt64', params=()),
                     args=[KToken(token='1', sort=KSort(name='Int'))],
                 ),
+                # 'APPLICATIONARGS_CELL': tvalue_list(txn.app_args if txn.app_args else []),
                 'APPLICATIONARGS_CELL': tvalue_list(txn.app_args if txn.app_args else []),
                 'FOREIGNAPPS_CELL': tvalue_list(txn.foreign_apps if txn.foreign_apps else []),
                 'FOREIGNASSETS_CELL': tvalue_list(txn.foreign_assets)

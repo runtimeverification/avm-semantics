@@ -45,11 +45,11 @@ def tvalue(value: Union[str, int, bytes]) -> KInner:
         raise TypeError()
 
 
-def tvalue_list(value: List[Union[str, int, bytes]]) -> KInner:
-    if len(value) == 0:
+def tvalue_list(values: List[Union[str, int, bytes]]) -> KInner:
+    if len(values) == 0:
         return KApply('.TValueList')
     else:
-        raise NotImplementedError()
+        return generate_tvalue_list([maybe_tvalue(v) for v in values])
 
 
 def map_bytes_bytes(d: Dict[str, str]) -> KInner:

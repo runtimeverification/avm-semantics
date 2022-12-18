@@ -12,8 +12,9 @@ from typing import Any, Callable, Dict, Final, Iterable, List, Optional, TypeVar
 
 from pyk.cli_utils import dir_path, file_path
 from pyk.kast.inner import KApply
-from pyk.kast.manip import minimize_term
+from pyk.kast.manip import inline_cell_maps, minimize_term
 from pyk.kore import syntax as kore
+from pyk.kore.parser import KoreParser
 from pyk.ktool.kprove import KoreExecLogFormat
 
 from kavm.kavm import KAVM
@@ -234,10 +235,11 @@ def exec_run(
         else:
             print(f'Unrecognized input file extension: {input_file.suffix}')
             exit(1)
-    except CalledProcessError as err:
-        if not output == 'none':
-            print(err.stdout)
-        exit(err.returncode)
+    except RuntimeError as err:
+        msg, stdout, stderr = err.args
+        _LOGGER.critical(stdout)
+        _LOGGER.critical(msg)
+        _LOGGER.critical(stderr)
 
 
 def exec_env(

@@ -812,7 +812,7 @@ TODO: if an account contains an app, the state specification must also contain t
 ### Invalid input
 
 ```k
-    rule <k> #addTxnJSON(_INPUT:JSON) => #panic(INVALID_JSON) ... </k> [owise]
+//    rule <k> #addTxnJSON(_INPUT:JSON) => #panic(INVALID_JSON) ... </k> [owise]
 ```
 
 
