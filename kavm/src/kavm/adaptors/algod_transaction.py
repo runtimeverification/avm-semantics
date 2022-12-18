@@ -18,7 +18,7 @@ from pyk.prelude.bytes import bytesToken
 from pyk.prelude.string import stringToken
 from pyk.prelude.kint import intToken
 
-from kavm.pyk_utils import maybe_tvalue, tvalue_list
+from kavm.pyk_utils import algorand_address_to_k_bytes, maybe_tvalue, tvalue_list
 from kavm.constants import ZERO_ADDRESS
 
 
@@ -212,7 +212,6 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fields_s
         )
 
     symbolic_fields_subst = symbolic_fields_subst if symbolic_fields_subst else Subst({})
-
     header_subst = Subst(
         {
             'FEE_CELL': maybe_tvalue(txn.fee),
@@ -252,7 +251,7 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fields_s
             {
                 'RECEIVER_CELL': bytesToken(txn.receiver),
                 'AMOUNT_CELL': maybe_tvalue(txn.amt),
-                'CLOSEREMAINDERTO_CELL': algorand_addres_to_k_bytes(ZERO_ADDRESS),
+                'CLOSEREMAINDERTO_CELL': algorand_address_to_k_bytes(ZERO_ADDRESS),
             }
         )
         type_specific_fields_cell = [
@@ -270,8 +269,8 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fields_s
                 'XFERASSET_CELL': intToken(txn.index),
                 'ASSETRECEIVER_CELL': bytesToken(txn.receiver),
                 'ASSETAMOUNT_CELL': maybe_tvalue(txn.amount),
-                'ASSETCLOSETO_CELL': algorand_addres_to_k_bytes(ZERO_ADDRESS),
-                'ASSETASENDER_CELL': algorand_addres_to_k_bytes(ZERO_ADDRESS),
+                'ASSETCLOSETO_CELL': algorand_address_to_k_bytes(ZERO_ADDRESS),
+                'ASSETASENDER_CELL': algorand_address_to_k_bytes(ZERO_ADDRESS),
             }
         )
         type_specific_fields_cell = [

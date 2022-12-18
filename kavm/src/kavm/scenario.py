@@ -33,6 +33,8 @@ class KAVMScenario:
         for acc_dict in accounts_data:
             acc_dict_translated = {KAVMAccount.inverted_attribute_map[k]: v for k, v in acc_dict.items()}
             acc = KAVMAccount(**acc_dict_translated).dictify()
+            if not acc['auth-addr']:
+                acc['auth-addr'] = acc['address']
             if not acc['created-apps']:
                 acc['created-apps'] = []
             else:

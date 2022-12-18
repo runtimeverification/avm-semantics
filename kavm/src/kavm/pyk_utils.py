@@ -5,8 +5,10 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from algosdk.encoding import decode_address
 from algosdk.future.transaction import OnComplete
 from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, build_assoc, top_down
+from pyk.prelude.bytes import bytesToken
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
+from pyk.utils import dequote_str
 
 
 def maybe_tvalue(value: Optional[Union[str, int, bytes]]) -> KInner:
@@ -151,9 +153,9 @@ def generate_tvalue_list(tvlist: List[KInner]) -> KInner:
 
 def algorand_address_to_k_bytes(addr: str) -> KToken:
     """Serialize an Algorand address string to K Bytes token"""
-    return KToken("b\"" + str(decode_address(addr))[2:-1] + "\"", "Bytes")
+    return bytesToken(dequote_str(str(decode_address(addr)))[2:-1])
 
 
 def method_selector_to_k_bytes(method_selector: bytes) -> KToken:
     """Serialize an Algorand address string to K Bytes token"""
-    return KToken("b\"" + str(method_selector)[2:-1] + "\"", "Bytes")
+    return bytesToken(dequote_str(str(method_selector))[2:-1])

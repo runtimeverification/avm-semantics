@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 from typing import Dict, Final, List, Optional, Tuple, Set, Any, Callable
+from pyk.utils import dequote_str
 import pytest
 import importlib
 
@@ -40,7 +41,7 @@ def last_log_item_eq(int_term: KInner):
             KApply(
                 '_+Bytes_',
                 [
-                    bytesToken("\\x15\\x1f|u"),
+                    bytesToken(dequote_str(str(b'\x15\x1f|u')[2:-1])),
                     KApply(
                         'padLeftBytes',
                         [
@@ -257,10 +258,6 @@ def preprocess_teal_program(term: KInner) -> Tuple[List[KInner], KInner]:
             return string
 
         if type(term) is KApply:
-            if term.label.name == "method__TEAL-OPCODES_PseudoOpCode_TBytesLiteral":
-                if type(term.args[0]) is KToken:
-                    selector = str(Method.from_signature(term.args[0].token[1:-1]).get_selector())[2:-1]
-                    return KApply("byte__TEAL-OPCODES_PseudoOpCode_TBytesLiteral", stringToken(selector))
             if len(term.args) == 0:
                 return term
             else:
@@ -273,7 +270,7 @@ def preprocess_teal_program(term: KInner) -> Tuple[List[KInner], KInner]:
                     labels.append(var)
                     return var
                 elif term.sort == KSort(name="HexToken"):
-                    return stringToken(hex_token_to_k_string(term.token[2:]))
+                    return stringToken(dequote_str(hex_token_to_k_string(term.token[2:])))
 
                 else:
                     return term
@@ -421,7 +418,7 @@ class KAVMProof:
                 KApply(
                     "<avmExecution>",
                     [
-                        KApply("<currentTx>", KToken("\"\"", "String")),
+                        KApply("<currentTx>", stringToken('')),
                         KApply(
                             "<txnDeque>",
                             [
@@ -439,8 +436,8 @@ class KAVMProof:
                                         KApply("<globalRound>", intToken(0)),
                                         KApply("<latestTimestamp>", intToken(0)),
                                         KApply("<currentApplicationID>", intToken(0)),
-                                        KApply("<currentApplicationAddress>", KToken(".Bytes", "Bytes")),
-                                        KApply("<creatorAddress>", KToken(".Bytes", "Bytes")),
+                                        KApply("<currentApplicationAddress>", bytesToken('')),
+                                        KApply("<creatorAddress>", bytesToken('')),
                                     ],
                                 ),
                                 KApply(
@@ -694,10 +691,12 @@ class AutoProver:
         labels = remove_duplicates(approval_labels + clear_labels)
         labels_are_deduped = []
         for i in range(len(labels)):
-            for j in range(len(labels)):
-                if i == j:
-                    continue
-                labels_are_deduped.append(KApply("_=/=K_", [labels[i], labels[j]]))
+            labels_are_deduped.append(
+                KApply(
+                    "_==Int_",
+                    [labels[i], intToken(i)],
+                )
+            )
 
         for method in contract.methods:
             if not isinstance(method, HoareMethod):
@@ -747,12 +746,8 @@ class AutoProver:
                             {
                                 'AMOUNT_CELL': amount_k_var,
                                 'GROUPIDX_CELL': intToken(0),
-                                'SENDER_CELL': KToken(
-                                    "b\"" + str(decode_address(sdk_txn.sender))[2:-1] + "\"", "Bytes"
-                                ),
-                                'RECEIVER_CELL': KToken(
-                                    "b\"" + str(decode_address(sdk_txn.receiver))[2:-1] + "\"", "Bytes"
-                                ),
+                                'SENDER_CELL': algorand_address_to_k_bytes(sdk_txn.sender),
+                                'RECEIVER_CELL': algorand_address_to_k_bytes(sdk_txn.receiver),
                                 'RESUME_CELL': KVariable('?_'),
                             }
                         ),
@@ -821,7 +816,7 @@ class AutoProver:
                     {
                         'APPLICATIONARGS_CELL': generate_tvalue_list(app_args),
                         'GROUPIDX_CELL': intToken(1),
-                        'SENDER_CELL': KToken("b\"" + str(decode_address(sdk_txn.sender))[2:-1] + "\"", "Bytes"),
+                        'SENDER_CELL': algorand_address_to_k_bytes(sdk_txn.sender),
                     }
                 ),
             )
@@ -831,7 +826,7 @@ class AutoProver:
                 txid='1',
                 symbolic_fields_subst=Subst(
                     {
-                        'SENDER_CELL': KToken("b\"" + str(decode_address(sdk_txn.sender))[2:-1] + "\"", "Bytes"),
+                        'SENDER_CELL': algorand_address_to_k_bytes(sdk_txn.sender),
                         'APPLICATIONARGS_CELL': generate_tvalue_list(app_args),
                         'GROUPIDX_CELL': intToken(1),
                         'TXSCRATCH_CELL': KVariable('?_'),
