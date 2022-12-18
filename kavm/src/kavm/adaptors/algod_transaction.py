@@ -18,7 +18,7 @@ from pyk.prelude.bytes import bytesToken
 from pyk.prelude.string import stringToken
 from pyk.prelude.kint import intToken
 
-from kavm.pyk_utils import algorand_addres_to_k_bytes, maybe_tvalue, tvalue_list
+from kavm.pyk_utils import maybe_tvalue, tvalue_list
 from kavm.constants import ZERO_ADDRESS
 
 

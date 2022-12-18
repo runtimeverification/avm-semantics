@@ -149,7 +149,7 @@ def generate_tvalue_list(tvlist: List[KInner]) -> KInner:
         )
 
 
-def algorand_addres_to_k_bytes(addr: str) -> KToken:
+def algorand_address_to_k_bytes(addr: str) -> KToken:
     """Serialize an Algorand address string to K Bytes token"""
     return KToken("b\"" + str(decode_address(addr))[2:-1] + "\"", "Bytes")
 

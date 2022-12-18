@@ -25,7 +25,7 @@ from kavm.adaptors.algod_transaction import transaction_k_term
 from kavm.adaptors.algod_account import sdk_account_created_app_ids, sdk_account_created_asset_ids
 from kavm.algod import KAVMClient
 from kavm.kavm import KAVM
-from kavm.pyk_utils import algorand_addres_to_k_bytes, generate_tvalue_list, int_2_bytes, method_selector_to_k_bytes
+from kavm.pyk_utils import algorand_address_to_k_bytes, generate_tvalue_list, int_2_bytes, method_selector_to_k_bytes
 from kavm.kast.factory import KAVMTermFactory
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -368,7 +368,7 @@ class KAVMProof:
         creator_map = []
         for acct in self._accounts:
             for app_id in acct._apps.keys():
-                creator_map.append(KApply("_|->_", [intToken(app_id), algorand_addres_to_k_bytes(acct._address)]))
+                creator_map.append(KApply("_|->_", [intToken(app_id), algorand_address_to_k_bytes(acct._address)]))
         return build_assoc(KApply(".Map"), KLabel("_Map_"), creator_map)
 
     def build_asset_creator_map(self) -> KInner:
@@ -376,7 +376,7 @@ class KAVMProof:
         creator_map = []
         for acct in self._accounts:
             for asset_id in acct._assets.keys():
-                creator_map.append(KApply("_|->_", [intToken(asset_id), algorand_addres_to_k_bytes(acct._address)]))
+                creator_map.append(KApply("_|->_", [intToken(asset_id), algorand_address_to_k_bytes(acct._address)]))
         return build_assoc(KApply(".Map"), KLabel("_Map_"), creator_map)
 
     def build_transactions(self, txns: List[KInner]) -> KInner:
@@ -734,8 +734,8 @@ class AutoProver:
                             {
                                 'AMOUNT_CELL': amount_k_var,
                                 'GROUPIDX_CELL': intToken(0),
-                                'SENDER_CELL': algorand_addres_to_k_bytes(sdk_txn.sender),
-                                'RECEIVER_CELL': algorand_addres_to_k_bytes(sdk_txn.receiver),
+                                'SENDER_CELL': algorand_address_to_k_bytes(sdk_txn.sender),
+                                'RECEIVER_CELL': algorand_address_to_k_bytes(sdk_txn.receiver),
                             }
                         ),
                     )
@@ -777,8 +777,8 @@ class AutoProver:
                             {
                                 'ASSETAMOUNT_CELL': amount_k_var,
                                 'GROUPIDX_CELL': intToken(0),
-                                'SENDER_CELL': algorand_addres_to_k_bytes(sdk_txn.sender),
-                                'ASSETRECEIVER_CELL': algorand_addres_to_k_bytes(sdk_txn.receiver),
+                                'SENDER_CELL': algorand_address_to_k_bytes(sdk_txn.sender),
+                                'ASSETRECEIVER_CELL': algorand_address_to_k_bytes(sdk_txn.receiver),
                             }
                         ),
                     )
@@ -790,8 +790,8 @@ class AutoProver:
                             {
                                 'ASSETAMOUNT_CELL': amount_k_var,
                                 'GROUPIDX_CELL': intToken(0),
-                                'SENDER_CELL': algorand_addres_to_k_bytes(sdk_txn.sender),
-                                'ASSETRECEIVER_CELL': algorand_addres_to_k_bytes(sdk_txn.receiver),
+                                'SENDER_CELL': algorand_address_to_k_bytes(sdk_txn.sender),
+                                'ASSETRECEIVER_CELL': algorand_address_to_k_bytes(sdk_txn.receiver),
                                 'RESUME_CELL': KVariable('?_'),
                             }
                         ),
