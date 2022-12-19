@@ -2,10 +2,13 @@ import typing
 from base64 import b64encode
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+from algosdk.encoding import decode_address
 from algosdk.future.transaction import OnComplete
 from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, build_assoc, top_down
+from pyk.prelude.bytes import bytesToken
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
+from pyk.utils import dequote_str
 
 
 def maybe_tvalue(value: Optional[Union[str, int, bytes]]) -> KInner:
@@ -42,11 +45,11 @@ def tvalue(value: Union[str, int, bytes]) -> KInner:
         raise TypeError()
 
 
-def tvalue_list(value: List[Union[str, int, bytes]]) -> KInner:
-    if len(value) == 0:
+def tvalue_list(values: List[Union[str, int, bytes]]) -> KInner:
+    if len(values) == 0:
         return KApply('.TValueList')
     else:
-        raise NotImplementedError()
+        return generate_tvalue_list([maybe_tvalue(v) for v in values])
 
 
 def map_bytes_bytes(d: Dict[str, str]) -> KInner:
@@ -122,3 +125,37 @@ def carefully_split_config_from(configuration: KInner, ignore_cells: Optional[Se
 
     symbolic_config = top_down(_replace_with_var, configuration)
     return (symbolic_config, initial_substitution)
+
+
+def int_2_bytes(term: KInner) -> KInner:
+    return KApply(
+        "Int2Bytes",
+        [
+            term,
+            KToken("BE", "Endianness"),
+            KToken("Unsigned", "Signedness"),
+        ],
+    )
+
+
+def generate_tvalue_list(tvlist: List[KInner]) -> KInner:
+    if len(tvlist) == 1:
+        return tvlist[0]
+    else:
+        return KApply(
+            "___TEAL-TYPES-SYNTAX_TValueNeList_TValue_TValueNeList",
+            [
+                tvlist[0],
+                generate_tvalue_list(tvlist[1:]),
+            ],
+        )
+
+
+def algorand_address_to_k_bytes(addr: str) -> KToken:
+    """Serialize an Algorand address string to K Bytes token"""
+    return bytesToken(dequote_str(str(decode_address(addr)))[2:-1])
+
+
+def method_selector_to_k_bytes(method_selector: bytes) -> KToken:
+    """Serialize an Algorand address string to K Bytes token"""
+    return bytesToken(dequote_str(str(method_selector))[2:-1])

@@ -1,9 +1,13 @@
+import logging
 import subprocess
 from pathlib import Path
 from subprocess import CalledProcessError, CompletedProcess
-from typing import List, Optional
+from typing import Final, List, Optional
 
 from kavm.kavm import KAVM
+
+_LOGGER: Final = logging.getLogger(__name__)
+_LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
 
 
 def kompile(
@@ -20,6 +24,7 @@ def kompile(
     hook_clang_flags: Optional[List[str]] = None,
     coverage: bool = False,
     gen_bison_parser: bool = False,
+    emit_json: bool = True,
 ) -> KAVM:
     if backend == 'llvm':
         generate_interpreter(
@@ -46,6 +51,7 @@ def kompile(
             hook_namespaces=hook_namespaces,
             backend=backend,
             verbose=verbose,
+            emit_json=emit_json,
         )
     return KAVM(definition_dir)
 
@@ -60,6 +66,7 @@ def kompile_haskell(
     hook_namespaces: Optional[List[str]] = None,
     backend: Optional[str] = 'llvm',
     verbose: bool = True,
+    emit_json: bool = True,
 ) -> CompletedProcess:
     command = [
         'kompile',
@@ -69,7 +76,7 @@ def kompile_haskell(
     ]
 
     command += ['--verbose'] if verbose else []
-    command += ['--emit-json']
+    command += ['--emit-json'] if emit_json else []
     command += ['--backend', backend] if backend else []
     command += ['--main-module', main_module_name] if main_module_name else []
     command += ['--syntax-module', syntax_module_name] if syntax_module_name else []
@@ -77,6 +84,8 @@ def kompile_haskell(
     command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
     command += ['--concrete-rules', ','.join(KAVM.concrete_rules())]
     command += [str(arg) for include in includes for arg in ['-I', include]] if includes else []
+
+    _LOGGER.info(' '.join(command))
 
     return subprocess.run(command, check=True, text=True)
 

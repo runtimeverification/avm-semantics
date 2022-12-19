@@ -11,6 +11,7 @@ claim
     <k> #evalTxGroup() => . </k>
 
     <returncode>   4                        => 0                                      </returncode>
+    <returnstatus> _                        => ?_                                     </returnstatus>
 
     <transactions>
       <transaction>
@@ -134,7 +135,7 @@ claim
           <boxes> .Bag </boxes>
         </account>
       </accountsMap>
-      <appCreator> _ => ?_ </appCreator>
+      <appCreator> .Map [APP_ID <- CREATOR_ADDRESS] </appCreator>
       <assetCreator> _ => ?_ </assetCreator>
       <blocks> _ => ?_ </blocks>
       <blockheight> _ => ?_ </blockheight>

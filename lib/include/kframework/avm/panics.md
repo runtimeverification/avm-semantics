@@ -135,6 +135,8 @@ return code to 3 (see return codes below).
                | "ASSET_NO_PERMISSION" [macro]
                | "TXN_DEQUE_ERROR" [macro]
                | "ASSET_NOT_FOUND" [macro]
+               | "MISSING_APP_CREATOR" [macro]
+               | "APP_ALREADY_ACTIVE" [macro]
 
   syntax String ::= returnDesc(Int) [function]
   //----------------------------------------------------
@@ -188,6 +190,8 @@ return code to 3 (see return codes below).
   rule returnDesc(ASSET_NO_PERMISSION)        => "sender does not have permission to modify asset"
   rule returnDesc(TXN_DEQUE_ERROR)            => "txn deque error"
   rule returnDesc(ASSET_NOT_FOUND)            => "tried to modify an asset which hasn't been created"
+  rule returnDesc(MISSING_APP_CREATOR)        => "Found app that is missing for <appCreator>"
+  rule returnDesc(APP_ALREADY_ACTIVE)         => "attempt to #initApp that already is in <activeApps>"
 
   //------------------------------------
   rule SUCCESS                    => 0
@@ -246,12 +250,15 @@ return code to 3 (see return codes below).
   rule UNKNOWN_ADDRESS            => 52
   rule ASSET_NO_PERMISSION        => 53
   rule ASSET_NOT_FOUND            => 54
+  rule MISSING_APP_CREATOR        => 55
+  rule APP_ALREADY_ACTIVE         => 56
 
   syntax KItem ::= #panic(Int)
   syntax KItem ::= #stopIfError()
 
   rule <k> #panic(S) => #stopIfError() ... </k>
        <returncode> _ => S </returncode>
+       <returnstatus> _ => returnDesc(S) </returnstatus>
 
   // Leave the testing commands on the K cell
   rule <k> #stopIfError() ~> X:TestingCommand => X:TestingCommand ~> #stopIfError() ... </k>
@@ -268,6 +275,7 @@ return code to 3 (see return codes below).
 
   rule <k> #stopIfError() => . ... </k>
        <returncode> RETURN_CODE </returncode>
+       <returnstatus> _ => "Success" </returnstatus>
     requires RETURN_CODE ==Int 0
 
 endmodule

@@ -7,6 +7,7 @@ from kavm.adaptors.algod_transaction import KAVMTransaction, transaction_k_term
 from kavm.kavm import KAVM
 
 
+@pytest.mark.skip(reason="outdated")
 def test_payment_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
     """Converting a transaction to the KAVM representation and back yeilds the same transaction"""
     _, sender = account.generate_account()
@@ -84,6 +85,7 @@ def test_application_call_txn_encode_decode(kavm: KAVM, suggested_params: Sugges
     raise AssertionError()
 
 
+@pytest.mark.skip(reason="outdated")
 # @pytest.mark.skip(reason="ApplicationCreateTxn is not yet supported")
 def test_application_create_txn_encode_decode(kavm: KAVM, suggested_params: SuggestedParams) -> None:
     _, creator = account.generate_account()
