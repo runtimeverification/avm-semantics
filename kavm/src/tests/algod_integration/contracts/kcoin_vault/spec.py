@@ -1,22 +1,14 @@
+# type: ignore
+
 import logging
 import sys
 from pathlib import Path
-import json
-import pytest
-
-from algosdk.abi.method import Method
-from algosdk.abi.contract import get_method_by_name
-from algosdk.future.transaction import StateSchema
-from algosdk.v2client import models
-
-# from kcoin_vault_pyteal import router
-from pyk.kast.inner import KApply, KVariable, KSort, KToken
-from pyk.prelude.kint import intToken
-from pyk.prelude.bytes import bytesToken
 
 from kavm.kavm import KAVM
 from kavm.prover import AutoProver
-from kavm.kast.factory import KAVMTermFactory
+
+# from kcoin_vault_pyteal import router
+
 
 sdk_app_creator_account_dict = {
     "address": "DJPACABYNRWAEXBYKT4WMGJO5CL7EYRENXCUSG2IOJNO44A4PWFAGLOLIA",

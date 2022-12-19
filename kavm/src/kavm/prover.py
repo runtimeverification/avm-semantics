@@ -1,53 +1,48 @@
-from datetime import timedelta
-import logging
-from pathlib import Path
-from typing import Dict, Final, List, Optional, Tuple, Set, Any, Callable
-from hypothesis.control import assume
-from kavm.scenario import KAVMScenario
-from pyk.utils import dequote_str
-import pytest
-import json
+# type: ignore
+
 import importlib
-from hypothesis import Phase, given, settings, HealthCheck
+import logging
+from datetime import timedelta
+from pathlib import Path
+from typing import Any, Dict, Final, List, Optional, Tuple
+
 import hypothesis.strategies as st
-
-from algosdk.abi.contract import Contract
-from algosdk.abi.method import Method
-from algosdk.encoding import checksum, decode_address, encode_address
-from algosdk.future.transaction import ApplicationCallTxn, AssetTransferTxn, PaymentTxn, StateSchema, Transaction
-
 import pyteal
-from pyteal.ir import Op
-
+import pytest
+from algosdk.abi.method import Method
+from algosdk.future.transaction import ApplicationCallTxn, AssetTransferTxn, PaymentTxn, Transaction
+from hypothesis import HealthCheck, Phase, given, settings
+from hypothesis.control import assume
 from pyk.kast.inner import KApply, KInner, KLabel, KRewrite, KSort, KToken, KVariable, Subst, build_assoc
 from pyk.kast.manip import (
     inline_cell_maps,
     minimize_term,
     push_down_rewrites,
     set_cell,
-    get_cell,
     split_config_and_constraints,
     split_config_from,
 )
 from pyk.kast.outer import KClaim, read_kast_definition
 from pyk.ktool.kprint import build_symbol_table, paren, pretty_print_kast
 from pyk.ktool.kprove import KProve
+from pyk.prelude.bytes import bytesToken
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
-from pyk.prelude.bytes import bytesToken
+from pyk.utils import dequote_str
+from pyteal.ir import Op
 
 from kavm.adaptors.algod_transaction import KAVMTransaction, transaction_k_term
-from kavm.adaptors.algod_account import sdk_account_created_app_ids, sdk_account_created_asset_ids
 from kavm.algod import KAVMClient
+from kavm.kast.factory import KAVMTermFactory
 from kavm.kavm import KAVM
 from kavm.pyk_utils import algorand_address_to_k_bytes, generate_tvalue_list, int_2_bytes, method_selector_to_k_bytes
-from kavm.kast.factory import KAVMTermFactory
+from kavm.scenario import KAVMScenario
 
 _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
 
 
-def last_log_item_eq(int_term: KInner):
+def last_log_item_eq(int_term: KInner) -> KInner:
     return KApply(  # ?FINAL_LOGDATA ==K b"\x15\x1f|u" +Bytes  padLeftBytes(Int2Bytes(int_term, BE, Unsigned), 8, 0)
         "_==K_",
         [
@@ -157,7 +152,7 @@ class SymbolicInt(pyteal.Int):
         super().__init__(0)
         self.var_name = var_name
 
-    def amount(self):
+    def amount(self) -> 'SymbolicInt':
         self.var_name = self.var_name + '_amount'
         return self
 
@@ -171,7 +166,7 @@ class HoareMethod(Method):
         self._python_src_postconditions = []
 
     @staticmethod
-    def from_plain_method(m: Method):
+    def from_plain_method(m: Method) -> 'HoareMethod':
         return HoareMethod(name=m.name, args=m.args, returns=m.returns, desc=m.desc)
 
 
@@ -205,13 +200,13 @@ def router_precondition(
             monkeypatch.setattr(
                 target=pyteal.abi.PaymentTransaction,
                 name='get',
-                value=lambda txn: SymbolicInt(var_name=f'payment'),
+                value=lambda txn: SymbolicInt(var_name='payment'),
                 raising=False,
             )
             monkeypatch.setattr(
                 target=pyteal.abi.AssetTransferTransaction,
                 name='get',
-                value=lambda txn: SymbolicInt(var_name=f'asset_transfer'),
+                value=lambda txn: SymbolicInt(var_name='asset_transfer'),
                 raising=False,
             )
             spec = eval(expr, expr_env)
@@ -250,19 +245,19 @@ def router_postcondition(
             monkeypatch.setattr(
                 target=pyteal.abi.PaymentTransaction,
                 name='get',
-                value=lambda txn: SymbolicInt(var_name=f'payment'),
+                value=lambda txn: SymbolicInt(var_name='payment'),
                 raising=False,
             )
             monkeypatch.setattr(
                 target=pyteal.abi.AssetTransferTransaction,
                 name='get',
-                value=lambda txn: SymbolicInt(var_name=f'asset_transfer'),
+                value=lambda txn: SymbolicInt(var_name='asset_transfer'),
                 raising=False,
             )
             monkeypatch.setattr(
                 target=pyteal.abi.Uint,
                 name='get',
-                value=lambda txn: SymbolicInt(var_name=f'output'),
+                value=lambda txn: SymbolicInt(var_name='output'),
                 raising=False,
             )
             spec = eval(expr, expr_env)
@@ -327,14 +322,14 @@ def preprocess_teal_program(term: KInner) -> Tuple[List[KInner], KInner]:
     return labels, pgm
 
 
-class SymbolicApplication:
+class SymbolicApplication:  # noqa: B903
     def __init__(self, app_id: int, app_cell: KInner, labels: List[KInner]):
         self._app_id = app_id
         self._app_cell = app_cell
         self._labels = labels
 
 
-class SymbolicAsset:
+class SymbolicAsset:  # noqa: B903
     def __init__(self, asset_id: int, asset_cell: KInner):
         self._asset_id = asset_id
         self._asset_cell = asset_cell
@@ -503,7 +498,7 @@ class KAVMProof:
                 _LOGGER.critical(stdout)
                 _LOGGER.critical(msg)
                 _LOGGER.critical(stderr)
-                raise RuntimeError
+                raise RuntimeError from None
 
         with_hypothesis()
         # run(10001)

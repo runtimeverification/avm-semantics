@@ -1,6 +1,8 @@
-from typing import Tuple, Optional
+# type: ignore
 
-from algosdk.abi import Contract, Method
+from typing import Tuple
+
+from algosdk.abi import Contract
 from pyteal import (
     App,
     Approve,
@@ -25,7 +27,6 @@ from pyteal import (
     abi,
 )
 from pyteal.compiler.optimizer import optimizer
-import pyteal
 
 ASSET_TOTAL = 1000000
 ASSET_DECIMALS = 3

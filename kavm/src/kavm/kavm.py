@@ -138,6 +138,7 @@ class KAVM(KRun, KProve):
                     pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
                     pipe_stderr=True,
                 )
+                raise RuntimeError from None
 
     def kast(
         self,

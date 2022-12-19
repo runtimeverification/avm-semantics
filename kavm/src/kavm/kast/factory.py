@@ -1,21 +1,19 @@
 from typing import Dict, Optional
-from kavm.constants import MIN_BALANCE
 
-from kavm.kavm import KAVM
-from kavm.pyk_utils import algorand_address_to_k_bytes, map_bytes_bytes, map_bytes_ints
-from kavm.adaptors.teal_key_value import raw_list_state_to_dict_bytes_bytes, raw_list_state_to_dict_bytes_ints
-from kavm.scenario import KAVMScenario
-
-from pyk.kast.inner import KInner, KSort, Subst, KApply, KLabel, KToken, build_assoc
+from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, Subst, build_assoc
+from pyk.kast.manip import split_config_from
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
-from pyk.kast.manip import split_config_from
+
+from kavm.adaptors.teal_key_value import raw_list_state_to_dict_bytes_bytes, raw_list_state_to_dict_bytes_ints
+from kavm.constants import MIN_BALANCE
+from kavm.kavm import KAVM
+from kavm.pyk_utils import algorand_address_to_k_bytes, map_bytes_bytes, map_bytes_ints
 
 
 class KAVMTermFactory:
     def __init__(self, kavm: KAVM):
         self._kavm = kavm
-        pass
 
     def asset_cell(self, sdk_asset_dict: Dict, symbolic_fields_subst: Optional[Subst] = None) -> KInner:
         symbolic_fields_subst = symbolic_fields_subst if symbolic_fields_subst else Subst({})
@@ -43,7 +41,7 @@ class KAVMTermFactory:
 
         return asset_cell
 
-    def opt_in_asset_cell(self, sdk_asset_holding: Dict, symbolic_fields_subst: Optional[Subst] = None):
+    def opt_in_asset_cell(self, sdk_asset_holding: Dict, symbolic_fields_subst: Optional[Subst] = None) -> KInner:
         symbolic_fields_subst = symbolic_fields_subst if symbolic_fields_subst else Subst({})
 
         symbolic_opt_in_asset_cell, _ = split_config_from(self._kavm.definition.init_config(KSort('OptInAssetCellMap')))
@@ -183,7 +181,7 @@ class KAVMTermFactory:
 
         return app_cell
 
-    def opt_in_app_cell(self, sdk_app_local_state: Dict, symbolic_fields_subst: Optional[Subst] = None):
+    def opt_in_app_cell(self, sdk_app_local_state: Dict, symbolic_fields_subst: Optional[Subst] = None) -> KInner:
         raise NotImplementedError()
 
         symbolic_fields_subst = symbolic_fields_subst if symbolic_fields_subst else Subst({})

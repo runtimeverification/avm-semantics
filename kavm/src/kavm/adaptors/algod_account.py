@@ -1,4 +1,4 @@
-from typing import Iterable, cast, Any, List, Dict
+from typing import Any, Dict, Iterable, List, cast
 
 from algosdk.v2client import models
 from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, build_cons

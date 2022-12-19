@@ -12,9 +12,8 @@ from typing import Any, Callable, Dict, Final, Iterable, List, Optional, TypeVar
 
 from pyk.cli_utils import dir_path, file_path
 from pyk.kast.inner import KApply
-from pyk.kast.manip import inline_cell_maps, minimize_term
+from pyk.kast.manip import minimize_term
 from pyk.kore import syntax as kore
-from pyk.kore.parser import KoreParser
 from pyk.ktool.kprove import KoreExecLogFormat
 
 from kavm.kavm import KAVM
@@ -167,7 +166,7 @@ def exec_kast(
 
 
 def top_down_kore(f: Callable[[kore.Pattern], kore.Pattern], pattern: kore.Pattern) -> kore.Pattern:
-    return f(pattern).map_pattern(lambda _kpattern: top_down_kore(f, _kpattern))
+    return f(pattern).map_pattern(lambda _kpattern: top_down_kore(f, _kpattern))  # type: ignore
 
 
 def get_state_dumps_kore(input: kore.Pattern) -> Optional[kore.Pattern]:

@@ -15,11 +15,11 @@ from algosdk.future.transaction import (
 from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, Subst
 from pyk.kast.manip import split_config_from
 from pyk.prelude.bytes import bytesToken
-from pyk.prelude.string import stringToken
 from pyk.prelude.kint import intToken
+from pyk.prelude.string import stringToken
 
-from kavm.pyk_utils import algorand_address_to_k_bytes, maybe_tvalue, tvalue_list
 from kavm.constants import ZERO_ADDRESS
+from kavm.pyk_utils import algorand_address_to_k_bytes, maybe_tvalue, tvalue_list
 
 
 class KAVMApplyData:
