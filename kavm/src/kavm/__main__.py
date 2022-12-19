@@ -212,10 +212,14 @@ def exec_run(
     try:
         if input_file.suffix == '.json':
             scenario = KAVMScenario.from_json(input_file.read_text(), teal_sources_dir)
-            final_state, kavm_stderr = kavm.run_avm_json(scenario=scenario, profile=profile, depth=depth)
+            final_state, kavm_stderr, returncode = kavm.run_avm_json(
+                scenario=scenario,
+                profile=profile,
+                depth=depth,
+                check=False,
+            )
             if output == 'kore':
                 print(final_state)
-                exit(0)
             if output == 'pretty':
                 final_state_kast = kavm.kore_to_kast(final_state)
                 print(kavm.pretty_print(final_state_kast))
@@ -230,7 +234,7 @@ def exec_run(
                 print(json.dumps(json.loads(state_dump_str), indent=4))
             if output == 'stderr-json':
                 print(json.dumps(json.loads(kavm_stderr), indent=4))
-            exit(0)
+            exit(returncode)
         else:
             print(f'Unrecognized input file extension: {input_file.suffix}')
             exit(1)

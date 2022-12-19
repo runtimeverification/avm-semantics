@@ -255,7 +255,7 @@ class KAVMClient(algod.AlgodClient):
         self._last_scenario = scenario
 
         try:
-            final_state, kavm_stderr = self.kavm.run_avm_json(
+            final_state, kavm_stderr, _ = self.kavm.run_avm_json(
                 scenario=scenario,
                 existing_decompiled_teal_dir=self._decompiled_teal_dir_path,
             )
