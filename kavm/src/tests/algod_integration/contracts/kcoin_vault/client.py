@@ -7,7 +7,7 @@ from algosdk.v2client.algod import AlgodClient
 
 from kavm.algod import KAVMAtomicTransactionComposer
 
-from ..kcoin_vault.kcoin_vault_pyteal import compile_to_teal
+from ..kcoin_vault.kcoin_vault_pyteal import compile_to_teal  # type: ignore
 
 
 def compile_teal(client: AlgodClient, source_code: str) -> bytes:

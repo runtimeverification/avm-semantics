@@ -166,7 +166,7 @@ def exec_kast(
 
 
 def top_down_kore(f: Callable[[kore.Pattern], kore.Pattern], pattern: kore.Pattern) -> kore.Pattern:
-    return f(pattern).map_pattern(lambda _kpattern: top_down_kore(f, _kpattern))
+    return f(pattern).map_pattern(lambda _kpattern: top_down_kore(f, _kpattern))  # type: ignore
 
 
 def get_state_dumps_kore(input: kore.Pattern) -> Optional[kore.Pattern]:
@@ -234,10 +234,11 @@ def exec_run(
         else:
             print(f'Unrecognized input file extension: {input_file.suffix}')
             exit(1)
-    except CalledProcessError as err:
-        if not output == 'none':
-            print(err.stdout)
-        exit(err.returncode)
+    except RuntimeError as err:
+        msg, stdout, stderr = err.args
+        _LOGGER.critical(stdout)
+        _LOGGER.critical(msg)
+        _LOGGER.critical(stderr)
 
 
 def exec_env(
@@ -312,6 +313,7 @@ def create_argument_parser() -> ArgumentParser:
     kompile_subparser.add_argument('--backend', type=str)
     kompile_subparser.add_argument('--coverage', default=False, action='store_true')
     kompile_subparser.add_argument('--gen-bison-parser', default=False, action='store_true')
+    kompile_subparser.add_argument('--emit-json', default=False, action='store_true')
     kompile_subparser.add_argument(
         '-I',
         type=dir_path,

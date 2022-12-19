@@ -82,7 +82,7 @@ cells of the configuration.
   rule <k> INPUT:JSON => #readScenario(INPUT) ... </k>
     requires isValidScenario(INPUT)
 
-  rule <k> INPUT:JSON => #panic(INVALID_JSON) ... </k> [owise]
+  rule <k> _INPUT:JSON => #panic(INVALID_JSON) ... </k> [owise]
 
   syntax TestingCommand ::= #readScenario(JSON)
   //-------------------------------------------

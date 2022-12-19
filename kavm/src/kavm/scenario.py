@@ -33,6 +33,8 @@ class KAVMScenario:
         for acc_dict in accounts_data:
             acc_dict_translated = {KAVMAccount.inverted_attribute_map[k]: v for k, v in acc_dict.items()}
             acc = KAVMAccount(**acc_dict_translated).dictify()
+            if not acc['auth-addr']:
+                acc['auth-addr'] = acc['address']
             if not acc['created-apps']:
                 acc['created-apps'] = []
             else:
@@ -142,11 +144,11 @@ class KAVMScenario:
     def dictify(self) -> Dict[str, Any]:
         return {"stages": self._stages}
 
-    def to_json(self) -> str:
+    def to_json(self, indent: int = 0) -> str:
         """
         Serialize the scenario to JSON with sorted keys
         """
-        return json.dumps(self.dictify(), sort_keys=True)
+        return json.dumps(self.dictify(), sort_keys=True, indent=indent)
 
     @staticmethod
     def from_json(

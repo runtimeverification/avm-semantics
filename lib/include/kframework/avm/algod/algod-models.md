@@ -68,20 +68,20 @@ TODO: if an account contains an app, the state specification must also contain t
     //------------------------------------
     rule <k> #addAccountJSON({"address": ADDR:String,
                               "amount": BALANCE:Int,
-                              "amount-without-pending-rewards": null,
+                              "amount-without-pending-rewards": _AMOUNT_WITHOUT_PENDING_REWARDS,
                               "apps-local-state": [LOCAL_STATE:JSONs],
-                              "apps-total-schema": null,
+                              "apps-total-schema": _APPS_TOTAL_SCHEMA,
                               "assets": [OPTIN_ASSETS:JSONs],
-                              "auth-addr": null,
+                              "auth-addr": _AUTH_ADDR:String,
                               "created-apps": [APPS:JSONs],
                               "created-assets": [ASSETS:JSONs],
-                              "participation": null,
-                              "pending-rewards": null,
-                              "reward-base": null,
-                              "rewards": null,
-                              "round": null,
-                              "sig-type": null,
-                              "status": null
+                              "participation": _PARTICIPATION,
+                              "pending-rewards": _PENDING_REWARDS,
+                              "reward-base": _REWARDS_BASE,
+                              "rewards": _REWARDS,
+                              "round": _ROUND,
+                              "sig-type": _SIG_TYPE,
+                              "status": _STATUS
                              })
             => #setupApplications([APPS])
             ~> #loadLocalState(DecodeAddressString(ADDR), [LOCAL_STATE])
@@ -103,7 +103,7 @@ TODO: if an account contains an app, the state specification must also contain t
            </account>)
            ...
          </accountsMap>
-    rule <k> #addAccountJSON(INPUT:JSON) => #panic(INVALID_JSON) ... </k> [owise]
+    rule <k> #addAccountJSON(_INPUT:JSON) => #panic(INVALID_JSON) ... </k> [owise]
 
     syntax JSONs ::= #dumpAccounts(AccountsMapCell)            [function]
                    | #dumpAccountsImpl(JSONs, AccountsMapCell) [function]
@@ -423,7 +423,7 @@ TODO: if an account contains an app, the state specification must also contain t
            <tealPrograms> TEAL_PROGRAMS </tealPrograms>
            <appCreator> (.Map => (APP_ID |-> DecodeAddressString(CREATOR_ADDR_STR))) ... </appCreator>
        requires DecodeAddressString(CREATOR_ADDR_STR) ==K CREATOR_ADDR
-    rule <k> #addApplicationJSON(INPUT:JSON) => #panic(INVALID_JSON) ... </k> [owise]
+    rule <k> #addApplicationJSON(_INPUT:JSON) => #panic(INVALID_JSON) ... </k> [owise]
 
     syntax JSONs ::= #dumpApps(String, AppsCreatedCell)            [function]
                    | #dumpAppsImpl(String, JSONs, AppsCreatedCell) [function]
@@ -812,7 +812,7 @@ TODO: if an account contains an app, the state specification must also contain t
 ### Invalid input
 
 ```k
-    rule <k> #addTxnJSON(INPUT:JSON) => #panic(INVALID_JSON) ... </k> [owise]
+//    rule <k> #addTxnJSON(_INPUT:JSON) => #panic(INVALID_JSON) ... </k> [owise]
 ```
 
 

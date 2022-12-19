@@ -1,4 +1,4 @@
-from typing import Iterable, cast
+from typing import Any, Dict, Iterable, List, cast
 
 from algosdk.v2client import models
 from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, build_cons
@@ -7,6 +7,26 @@ from pyk.prelude.kint import intToken
 
 from kavm.adaptors.algod_application import KAVMApplication
 from kavm.constants import MIN_BALANCE
+
+
+def sdk_account_created_app_ids(sdk_account_dict: Dict[str, Any]) -> List[int]:
+    '''
+    Get a list of applications ids created by this account
+    '''
+    try:
+        return list(sdk_account_dict['created-apps'].keys())
+    except KeyError:
+        return []
+
+
+def sdk_account_created_asset_ids(sdk_account_dict: Dict[str, Any]) -> List[int]:
+    '''
+    Get a list of asset ids created by this account
+    '''
+    try:
+        return list(sdk_account_dict['created-assets'].keys())
+    except KeyError:
+        return []
 
 
 class KAVMAccount(models.Account):

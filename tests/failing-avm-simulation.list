@@ -1,2 +1,3 @@
 tests/json-scenarios/opcode-budget-test.json
 tests/json-scenarios/txnas-stacksize.json
+tests/json-scenarios/stack-too-deep.json
