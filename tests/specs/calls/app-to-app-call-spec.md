@@ -610,8 +610,8 @@ retsub
   // Input values are in the correct range according to their size
    andBool ARG1 <=Int MAX_UINT64
    andBool ARG2 <=Int MAX_UINT64
-   andBool ARG1 >=Int 0
-   andBool ARG2 >=Int 0
+   andBool ARG1 >Int 0
+   andBool ARG2 >Int 0
 
   // Label uniqueness
    andBool 0 ==K ADD_0
