@@ -258,6 +258,7 @@ return code to 3 (see return codes below).
 
   rule <k> #panic(S) => #stopIfError() ... </k>
        <returncode> _ => S </returncode>
+       <returnstatus> _ => returnDesc(S) </returnstatus>
 
   // Leave the testing commands on the K cell
   rule <k> #stopIfError() ~> X:TestingCommand => X:TestingCommand ~> #stopIfError() ... </k>
@@ -274,6 +275,7 @@ return code to 3 (see return codes below).
 
   rule <k> #stopIfError() => . ... </k>
        <returncode> RETURN_CODE </returncode>
+       <returnstatus> _ => "Success" </returnstatus>
     requires RETURN_CODE ==Int 0
 
 endmodule
