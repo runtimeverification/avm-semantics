@@ -449,7 +449,10 @@ tests/specs/verification-kompiled/timestamp: tests/specs/verification.k $(avm_in
 	mkdir -p tests/specs/verification-kompiled
 	$(POETRY_RUN)                                                                           \
 	$(KAVM) kompile $< --backend haskell --definition-dir tests/specs/verification-kompiled \
+                           --emit-json --hook-namespaces KRYPTO                                 \
                            -I "${KAVM_INCLUDE}/kframework" -I "${plugin_include}/kframework"
+
+# kompile --output-definition tests/specs/verification-kompiled tests/specs/verification.k --verbose --emit-json --backend haskell --hook-namespaces KRYPTO -I .build/usr/lib/kavm/include/kframework -I /home/geo2a/Workspace/RV/avm-semantics/.build/usr/lib/kavm/blockchain-k-plugin/include/kframework
 
 clean-verification:
 	rm -rf tests/specs/verification-kompiled

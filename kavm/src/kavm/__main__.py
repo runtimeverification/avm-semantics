@@ -313,6 +313,7 @@ def create_argument_parser() -> ArgumentParser:
     kompile_subparser.add_argument('--backend', type=str)
     kompile_subparser.add_argument('--coverage', default=False, action='store_true')
     kompile_subparser.add_argument('--gen-bison-parser', default=False, action='store_true')
+    kompile_subparser.add_argument('--emit-json', default=False, action='store_true')
     kompile_subparser.add_argument(
         '-I',
         type=dir_path,
