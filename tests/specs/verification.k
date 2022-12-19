@@ -5,6 +5,9 @@ module VERIFICATION
   imports AVM-EXECUTION
   imports TEAL-TYPES
 
+  syntax KItem ::= tealLogExpr(Bytes)
+// ------------------------------------
+
   syntax StepSort ::= MaybeTValue
 // ------------------------------------------------
 
@@ -164,7 +167,15 @@ module VERIFICATION
   rule I1:Int +Int I2:Int >=Int I3:Int => I1 >=Int I3 -Int I2 [simplification, concrete(I2, I3), symbolic(I1)]
   rule I1:Int +Int I2:Int  >Int I3:Int => I1  >Int I3 -Int I2 [simplification, concrete(I2, I3), symbolic(I1)]
 
+  rule I1:Int +Int I2:Int >Int I3 => I1 >Int I3 -Int I2 [simplification, concrete(I2, I3), symbolic(I1)]
+  rule I1:Int >=Int I2:Int +Int I3:Int => I1 -Int I3 >=Int I2 [simplification, concrete(I1, I3), symbolic(I2)]
+
   rule N:Int /Int N:Int => 1 requires N =/=Int 0 [simplification]
+
+  rule #Ceil ( log2Int ( X:Int ) ) => #Top requires X >Int 0 [simplification]
+  rule N:Int >=Int log2Int(X:Int) => 2 ^Int N >=Int X [simplification]
+  rule N:Int >=Int X /Int Y => N *Int Y >=Int X [simplification]
+  rule N:Int >=Int X +Int Y => N -Int Y >=Int X [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Comparisons
@@ -217,6 +228,9 @@ module VERIFICATION
 
   rule .Bytes +Bytes B:Bytes => B [simplification]
   rule B:Bytes +Bytes .Bytes => B [simplification]
+
+  // For Int2Bytes, if length is given explicitely, use that
+  rule lengthBytes(Int2Bytes(LENGTH:Int, _I:Int, _BYTE_ORDER)) => LENGTH [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Address hooks

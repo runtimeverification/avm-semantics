@@ -11,6 +11,7 @@ claim
     <k> #evalTxGroup() => . </k>
 
     <returncode>   4                        => 0                                      </returncode>
+    <returnstatus> _                        => ?_                                     </returnstatus>
 
     <transactions>
       <transaction>

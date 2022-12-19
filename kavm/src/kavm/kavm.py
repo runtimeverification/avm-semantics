@@ -8,9 +8,9 @@ from subprocess import CompletedProcess
 from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union
 
 from pyk.cli_utils import run_process
-from pyk.kast.inner import KInner, KSort
+from pyk.kast.inner import KSort
+from pyk.kore import syntax as kore
 from pyk.kore.parser import KoreParser
-from pyk.kore.syntax import Pattern
 from pyk.ktool.kprint import paren
 from pyk.ktool.kprove import KoreExecLogFormat, KProve, KProveOutput, _get_rule_log, _kprove
 from pyk.ktool.krun import KRun, KRunOutput, _krun
@@ -48,78 +48,22 @@ class KAVM(KRun, KProve):
         self._scenario_parser = (
             scenario_parser if scenario_parser else definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
         )
+        self._verification_definition = definition
 
-    def prove(
-        self,
-        spec_file: Path,
-        spec_module_name: Optional[str] = None,
-        args: Iterable[str] = (),
-        haskell_args: Iterable[str] = (),
-        haskell_log_entries: Iterable[str] = (),
-        log_axioms_file: Optional[Path] = None,
-        allow_zero_step: bool = False,
-        dry_run: bool = False,
-        depth: Optional[int] = None,
-        haskell_log_format: KoreExecLogFormat = KoreExecLogFormat.ONELINE,
-        haskell_log_debug_transition: bool = True,
-    ) -> KInner:
-        log_file = spec_file.with_suffix('.debug-log') if log_axioms_file is None else log_axioms_file
-        if log_file.exists():
-            log_file.unlink()
-        haskell_log_entries = unique(
-            list(haskell_log_entries) + (['DebugTransition'] if haskell_log_debug_transition else [])
-        )
-        haskell_log_args = [
-            '--log',
-            str(log_file),
-            '--log-format',
-            haskell_log_format.value,
-            '--log-entries',
-            ','.join(haskell_log_entries),
-        ]
+    def parse_teal(self, file: Optional[Path]) -> kore.Pattern:
+        '''Parse a TEAL program with the fast Bison parser'''
+        if not (file):
+            # return an error program
+            return KoreParser(
+                "inj{SortPseudoOpCode{}, SortTealInputPgm{}}(Lblint'UndsUnds'TEAL-OPCODES'Unds'PseudoOpCode'Unds'PseudoTUInt64{}(inj{SortInt{}, SortPseudoTUInt64{}}(\\dv{SortInt{}}(\"1\"))))"
+            ).pattern()
 
-        kore_exec_opts = ' '.join(list(haskell_args) + haskell_log_args)
-        _LOGGER.debug(f'export KORE_EXEC_OPTS="{kore_exec_opts}"')
-        env = os.environ.copy()
-        env['KORE_EXEC_OPTS'] = kore_exec_opts
+        command = [str(self._teal_parser)] + [str(file)]
+        result = subprocess.run(command, stdout=subprocess.PIPE, check=True, text=True)
+        return KoreParser(result.stdout).pattern()
 
-        proc_result = _kprove(
-            spec_file=spec_file,
-            command=self.prover,
-            kompiled_dir=self.definition_dir,
-            spec_module_name=spec_module_name,
-            output=KProveOutput.JSON,
-            dry_run=dry_run,
-            args=self.prover_args + list(args),
-            env=env,
-            check=False,
-            profile=self._profile,
-            depth=depth,
-        )
-
-        print(proc_result)
-        final_state = KInner.from_dict(json.loads(proc_result.stdout)['term'])
-        print(self.pretty_print(final_state) + '\n')
-
-        if proc_result.returncode not in (0, 1):
-            raise RuntimeError('kprove failed!')
-
-        if dry_run:
-            return mlBottom()
-
-        debug_log = _get_rule_log(log_file)
-        if is_top(final_state) and len(debug_log) == 0 and not allow_zero_step:
-            raise ValueError(f'Proof took zero steps, likely the LHS is invalid: {spec_file}')
-        return final_state
-
-    def parse_teals(self, teal_paths: Iterable[str], teal_sources_dir: Path) -> Pattern:
-        """Extract TEAL programs filenames and source code from a test scenario"""
-
-        def run_process_on_bison_parser(path: Path) -> str:
-            command = [self._teal_parser] + [str(path)]
-            res = subprocess.run(command, stdout=subprocess.PIPE, check=True, text=True)
-
-            return res.stdout
+    def parse_teals(self, teal_paths: Iterable[str], teal_sources_dir: Path) -> kore.Pattern:
+        """Parse several TEAL progams and combine them into a single Kore pattern"""
 
         map_union_op = "Lbl'Unds'Map'Unds'{}"
         map_item_op = "Lbl'UndsPipe'-'-GT-Unds'{}"
@@ -128,7 +72,7 @@ class KAVM(KRun, KProve):
         for teal_path in teal_paths:
             teal_path_parsed = 'inj{SortString{},SortKItem{}}(\\dv{SortString{}}("' + str(teal_path) + '"))'
             teal_parsed = (
-                'inj{SortTealInputPgm{},SortKItem{}}(' + run_process_on_bison_parser(teal_sources_dir / teal_path) + ')'
+                'inj{SortTealInputPgm{},SortKItem{}}(' + self.parse_teal(teal_sources_dir / teal_path).text + ')'
             )
             teal_kore_map_item = map_item_op + '(' + teal_path_parsed + ',' + teal_parsed + ')'
             current_teal_pgms_map = map_union_op + "(" + current_teal_pgms_map + "," + teal_kore_map_item + ")"
@@ -142,7 +86,7 @@ class KAVM(KRun, KProve):
         profile: bool = False,
         check: bool = True,
         existing_decompiled_teal_dir: Optional[Path] = None,
-    ) -> Tuple[Pattern, str, int]:
+    ) -> Tuple[kore.Pattern, str]:
         """Run an AVM simulaion scenario with krun"""
 
         with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_scenario_file, (
@@ -156,30 +100,48 @@ class KAVM(KRun, KProve):
             tmp_teals_file.write(parsed_teal.text)
             tmp_teals_file.flush()
 
-            _LOGGER.info('Parsing PGM')
+            _LOGGER.info(f'Writing scenario JSON to {tmp_scenario_file.name}')
             tmp_scenario_file.write(scenario.to_json())
             tmp_scenario_file.flush()
             _LOGGER.info('Running KAVM')
             os.environ['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
 
-            proc_result = _krun(
-                input_file=Path(tmp_scenario_file.name),
-                definition_dir=self.definition_dir,
-                output=KRunOutput.KORE,
-                depth=depth,
-                no_expand_macros=False,
-                profile=profile,
-                check=check,
-                cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
-                pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
-                pipe_stderr=True,
-            )
+            try:
+                proc_result = _krun(
+                    input_file=Path(tmp_scenario_file.name),
+                    definition_dir=self.definition_dir,
+                    output=KRunOutput.KORE,
+                    depth=depth,
+                    no_expand_macros=False,
+                    profile=profile,
+                    check=check,
+                    cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
+                    pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
+                    pipe_stderr=True,
+                )
+                if proc_result.returncode != 0:
+                    raise RuntimeError('Non-zero exit-code from krun.')
 
-            parser = KoreParser(proc_result.stdout)
-            final_pattern = parser.pattern()
-            assert parser.eof
+                parser = KoreParser(proc_result.stdout)
+                final_pattern = parser.pattern()
+                assert parser.eof
 
-            return final_pattern, proc_result.stderr, proc_result.returncode
+                return final_pattern, proc_result.stderr
+            # if _krun has thtown a RuntimeError, rerun with --output pretty to see the final state quicker
+            except RuntimeError:
+                _krun(
+                    input_file=Path(tmp_scenario_file.name),
+                    definition_dir=self.definition_dir,
+                    output=KRunOutput.PRETTY,
+                    depth=depth,
+                    no_expand_macros=False,
+                    profile=profile,
+                    check=check,
+                    cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
+                    pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
+                    pipe_stderr=True,
+                )
+                raise RuntimeError from None
 
     def kast(
         self,
@@ -220,6 +182,7 @@ class KAVM(KRun, KProve):
     @staticmethod
     def _patch_symbol_table(symbol_table: Dict[str, Callable[..., str]]) -> None:
         symbol_table['_+Int_'] = paren(symbol_table['_+Int_'])
+        symbol_table['_+Bytes_'] = paren(lambda a1, a2: a1 + '+Bytes' + a2)
 
     @staticmethod
     def concrete_rules() -> List[str]:

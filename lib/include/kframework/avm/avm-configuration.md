@@ -24,6 +24,7 @@ module AVM-CONFIGURATION
     <kavm>
       <k> $PGM:JSON </k>
       <returncode exit=""> 4 </returncode> // the simulator exit code
+      <returnstatus> "":String </returnstatus> // the exit status message
 
       // The transaction group as submitted
       <transactions/>

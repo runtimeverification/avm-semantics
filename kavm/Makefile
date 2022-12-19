@@ -45,10 +45,10 @@ test-bison-parsers: poetry-install
 test-integration: test-integration-algod test-integration-kalgod
 
 test-integration-algod: poetry-install
-	$(POETRY_RUN) python -m pytest $(PYTEST_ARGS) --backend=algod src/tests/algod_integration
+	$(POETRY_RUN) python -m pytest $(PYTEST_ARGS) --ignore=src/tests/algod_integration/contracts/kcoin_vault --backend=algod src/tests/algod_integration
 
 test-integration-kalgod:
-	$(POETRY_RUN) python -m pytest $(PYTEST_ARGS) --backend=kalgod src/tests/algod_integration
+	$(POETRY_RUN) python -m pytest $(PYTEST_ARGS) --ignore=src/tests/algod_integration/contracts/kcoin_vault --backend=kalgod src/tests/algod_integration
 
 # Profiling
 
