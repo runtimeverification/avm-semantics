@@ -1,7 +1,7 @@
 from datetime import timedelta
 from typing import Any
-import pytest
 
+import pytest
 from hypothesis import Phase, given, settings
 from hypothesis import strategies as st
 
