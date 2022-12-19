@@ -570,8 +570,8 @@ retsub
       </accountsMap>
       <appCreator> .Map [CALCULATOR_APP_ID <- CREATOR_ADDRESS] [CALL_CALCULATOR_APP_ID <- CREATOR_ADDRESS] </appCreator>
       <txnIndexMap> .Bag => ?_ </txnIndexMap>
-      <nextTxnID> NEXT_TXN_ID => ?_ </nextTxnID>
-      <nextGroupID> NEXT_GROUP_ID => ?_ </nextGroupID>
+      <nextTxnID> 1 => ?_ </nextTxnID>
+      <nextGroupID> 1 => ?_ </nextGroupID>
       ...
     </blockchain>
 
@@ -579,8 +579,8 @@ retsub
 
   </kavm>
 
-  requires CALCULATOR_APP_ID >Int 0
-   andBool CALL_CALCULATOR_APP_ID >Int 0
+  requires CALCULATOR_APP_ID ==Int 1
+   andBool CALL_CALCULATOR_APP_ID ==Int 2
 
 
    andBool CALCULATOR_APP_ADDRESS ==K getAppAddressBytes(CALCULATOR_APP_ID)
@@ -589,12 +589,8 @@ retsub
    andBool APP_BALANCE >=Int APP_MIN_BALANCE
 
   // Addresses are unique
-   andBool CREATOR_ADDRESS =/=K CALCULATOR_APP_ADDRESS
-   andBool CREATOR_ADDRESS =/=K CALL_CALCULATOR_APP_ADDRESS
-   andBool CREATOR_ADDRESS =/=K SENDER_ADDRESS
-   andBool SENDER_ADDRESS =/=K CALCULATOR_APP_ADDRESS
-   andBool SENDER_ADDRESS =/=K CALL_CALCULATOR_APP_ADDRESS
-   andBool CALL_CALCULATOR_APP_ADDRESS =/=K CALCULATOR_APP_ADDRESS
+   andBool CREATOR_ADDRESS ==K padLeftBytes(b"1", 32, 0)
+   andBool SENDER_ADDRESS ==K padLeftBytes(b"2", 32, 0)
 
    andBool SENDER_BALANCE >=Int SENDER_MIN_BALANCE
 
@@ -605,8 +601,8 @@ retsub
 
    andBool METHOD_SIG ==K substrBytes(String2Bytes(Sha512_256raw("add(uint64,uint64)uint64")), 0, 4)
 
-   andBool Int2String(NEXT_TXN_ID) =/=String APPL_TX_ID
-   andBool Int2String(NEXT_GROUP_ID +Int 1) =/=String GROUP_ID
+   andBool APPL_TX_ID ==String "0"
+   andBool GROUP_ID ==String "0"
 
    andBool ARG1 +Int ARG2 <=Int MAX_UINT64
    
