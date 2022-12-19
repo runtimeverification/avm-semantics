@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import subprocess
@@ -12,11 +11,9 @@ from pyk.kast.inner import KSort
 from pyk.kore import syntax as kore
 from pyk.kore.parser import KoreParser
 from pyk.ktool.kprint import paren
-from pyk.ktool.kprove import KoreExecLogFormat, KProve, KProveOutput, _get_rule_log, _kprove
+from pyk.ktool.kprove import KProve
 from pyk.ktool.krun import KRun, KRunOutput, _krun
 from pyk.prelude.k import K
-from pyk.prelude.ml import is_top, mlBottom
-from pyk.utils import unique
 
 from kavm.scenario import KAVMScenario
 
