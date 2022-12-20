@@ -23,8 +23,10 @@ KAVM_SCRIPTS     := $(KAVM_LIB)/scripts
 KAVM_K_BIN       := $(KAVM_LIB)/kframework/bin
 KAVM             := kavm
 KAVM_DEFINITION_DIR=$(abspath $(KAVM_LIB)/avm-llvm/avm-testing-kompiled/)
+KAVM_VERIFICATION_DEFINITION_DIR=$(abspath $(KAVM_LIB)/avm-haskell/verification-kompiled/)
 export KAVM_LIB
 export KAVM_DEFINITION_DIR
+export KAVM_VERIFICATION_DEFINITION_DIR
 
 K_SUBMODULE := $(DEPS_DIR)/k
 K_BIN       := $(INSTALL_LIB)/kframework/bin
@@ -55,7 +57,7 @@ export K_OPTS
 
 .PHONY: all clean distclean install uninstall                                         \
         deps k-deps libsecp256k1 libff plugin-deps hook-deps                          \
-        build build-avm build-kavm                                                    \
+        build build-avm build-avm-verification build-kavm                             \
         test test-avm-semantics test-avm-semantics-prove                              \
         test-kavm test-kavm-bison-parsers                                             \
         test-kavm-hooks build-kavm-hooks-tests                                        \
@@ -160,7 +162,7 @@ $(plugin_include)/kframework/%: $(PLUGIN_SUBMODULE)/plugin/%
 plugin-deps: libsecp256k1 libff libcryptopp $(plugin_includes) $(plugin_c_includes)
 # --------
 
-build: build-kavm build-avm
+build: build-kavm build-avm build-avm-verification
 
 $(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
 	@mkdir -p $(dir $@)
@@ -330,6 +332,15 @@ generate-parsers:
 	echo 'cat $$(cat $$1)' > $(KAVM_DEFINITION_DIR)/catcat
 	@chmod +x $(KAVM_DEFINITION_DIR)/catcat
 
+build-avm-verification: $(KAVM_LIB)/$(avm_verification_kompiled)/timestamp
+
+$(KAVM_LIB)/$(avm_verification_kompiled)/timestamp: tests/specs/verification.k $(avm_includes)
+	mkdir -p $(KAVM_VERIFICATION_DEFINITION_DIR)
+	$(POETRY_RUN)                                                                             \
+	$(KAVM) kompile $< --backend haskell --definition-dir $(KAVM_VERIFICATION_DEFINITION_DIR) \
+                           --emit-json --hook-namespaces KRYPTO KAVM                              \
+                           -I "${KAVM_INCLUDE}/kframework" -I "${plugin_include}/kframework"
+
 # Installation
 # ------------
 
@@ -437,22 +448,13 @@ test-avm-semantics-opcode-prove: $(avm_prove_opcode_specs:=.prove)
 test-avm-semantics-simple-prove: $(avm_prove_simple_specs:=.prove)
 test-avm-semantics-calls-prove: $(avm_prove_call_specs:=.prove)
 
-tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
+tests/specs/%-spec.k.prove: build-avm-verification $(KAVM_LIB)/version
 	$(POETRY_RUN) \
-	$(KAVM) prove tests/specs/$*-spec.k --definition tests/specs/verification-kompiled
+	$(KAVM) prove tests/specs/$*-spec.k --definition $(KAVM_VERIFICATION_DEFINITION_DIR)
 
-tests/specs/%-spec.md.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
+tests/specs/%-spec.md.prove: build-avm-verification $(KAVM_LIB)/version
 	$(POETRY_RUN) \
-	$(KAVM) prove tests/specs/$*-spec.md --definition tests/specs/verification-kompiled
-
-tests/specs/verification-kompiled/timestamp: tests/specs/verification.k $(avm_includes)
-	mkdir -p tests/specs/verification-kompiled
-	$(POETRY_RUN)                                                                           \
-	$(KAVM) kompile $< --backend haskell --definition-dir tests/specs/verification-kompiled \
-                           --emit-json --hook-namespaces KRYPTO                                 \
-                           -I "${KAVM_INCLUDE}/kframework" -I "${plugin_include}/kframework"
-
-# kompile --output-definition tests/specs/verification-kompiled tests/specs/verification.k --verbose --emit-json --backend haskell --hook-namespaces KRYPTO -I .build/usr/lib/kavm/include/kframework -I /home/geo2a/Workspace/RV/avm-semantics/.build/usr/lib/kavm/blockchain-k-plugin/include/kframework
+	$(KAVM) prove tests/specs/$*-spec.md --definition $(KAVM_VERIFICATION_DEFINITION_DIR)
 
 clean-verification:
 	rm -rf tests/specs/verification-kompiled
