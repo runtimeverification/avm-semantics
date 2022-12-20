@@ -122,8 +122,6 @@ def pyteal_expr_to_kast(expr: pyteal.Expr) -> KInner:
         )
     else:
         raise ValueError(f'Unsupported PyTeal expression: {expr} of type {type(expr)}')
-    # if not (isinstance(expr, pyteal.BinaryExpr) and expr.op in pyteal_op_to_k_op.keys()):
-    #     raise ValueError(f'Unsupported PyTeal expression: {expr}. Must be an "lhs ==,!=,>,>=,<,<= rhs"')
 
 
 def pyteal_expr_to_python_src(expr: pyteal.Expr) -> str:
@@ -899,7 +897,6 @@ class AutoProver:
                     method._preconditions.append(amount_pre)
                     proof.add_txn(sdk_txn, txn_pre, txn_post)
                 elif str(arg.type) == 'axfer':
-                    _LOGGER.info(f'Skipping {method.name}')
                     sdk_txn = AssetTransferTxn(
                         sender=creator_account._address, receiver=app_account._address, sp=sp, index=asset_id, amt=0
                     )
