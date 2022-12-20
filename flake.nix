@@ -137,7 +137,8 @@
             buildInputs = oldAttrs.buildInputs or [] ++ [ prev.makeWrapper prev.python311.pkgs.pip ];
             postInstall = oldAttrs.postInstall or "" + ''
               wrapProgram $out/bin/kavm \
-                --set KAVM_DEFINITION_DIR ${(toString final.avm-semantics) + "/lib/kavm/avm-llvm/avm-testing-kompiled"}
+                --set KAVM_DEFINITION_DIR ${(toString final.avm-semantics) + "/lib/kavm/avm-llvm/avm-testing-kompiled"} \
+                --set KAVM_VERIFICATION_DEFINITION_DIR ${(toString final.avm-semantics) + "/lib/kavm/avm-haskell/verification-kompiled"}
             '';
           });
         };

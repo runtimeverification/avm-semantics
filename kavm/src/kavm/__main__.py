@@ -248,6 +248,7 @@ def exec_env(
     Report KAVM's environment variables or attempt to establish their vaules
     """
     print(f"KAVM_DEFINITION_DIR={os.environ.get('KAVM_DEFINITION_DIR')}")
+    print(f"KAVM_VERIFICATION_DEFINITION_DIR={os.environ.get('KAVM_VERIFICATION_DEFINITION_DIR')}")
 
 
 def main() -> None:
