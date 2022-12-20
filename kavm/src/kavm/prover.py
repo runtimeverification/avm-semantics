@@ -33,7 +33,6 @@ from pyk.utils import dequote_str
 from pyteal.ir import Op
 
 from kavm.adaptors.algod_transaction import KAVMTransaction, transaction_k_term
-from kavm.algod import KAVMClient
 from kavm.kast.factory import KAVMTermFactory
 from kavm.kavm import KAVM
 from kavm.pyk_utils import algorand_address_to_k_bytes, generate_tvalue_list, int_2_bytes, method_selector_to_k_bytes

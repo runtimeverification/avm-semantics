@@ -2,9 +2,7 @@
 
 import logging
 import sys
-from pathlib import Path
 
-from kavm.kavm import KAVM
 from kavm.prover import AutoProver
 
 # from kcoin_vault_pyteal import router
