@@ -547,7 +547,7 @@ retsub
           ...
         </account>
         <account>
-          <address> CALCULATOR_APP_ADDRESS:Bytes </address>
+          <address> CALCULATOR_APP_ADDRESS </address>
           <balance> APP_BALANCE:Int => ?_ </balance>
           <minBalance> APP_MIN_BALANCE:Int </minBalance>
           <appsCreated> .Bag </appsCreated>
@@ -558,7 +558,7 @@ retsub
           ...
         </account>
         <account>
-          <address> CALL_CALCULATOR_APP_ADDRESS:Bytes </address>
+          <address> CALL_CALCULATOR_APP_ADDRESS </address>
           <balance> APP_BALANCE:Int => ?_ </balance>
           <minBalance> APP_MIN_BALANCE:Int </minBalance>
           <appsCreated> .Bag </appsCreated>
@@ -594,8 +594,6 @@ retsub
    andBool SENDER_ADDRESS ==K padLeftBytes(b"2", 32, 0)
 
    andBool SENDER_BALANCE >=Int SENDER_MIN_BALANCE
-
-   andBool CALCULATOR_APP_ID =/=K CALL_CALCULATOR_APP_ID
 
    andBool SENDER_MIN_BALANCE >=Int 0
    andBool APP_MIN_BALANCE    >=Int 0

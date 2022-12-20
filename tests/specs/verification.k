@@ -177,6 +177,7 @@ module VERIFICATION
   rule N:Int >=Int log2Int(X:Int) => 2 ^Int N >=Int X [simplification, concrete(N)]
 
   rule log2Int(X:Int)  >Int N:Int => X  >Int 2 ^Int N [simplification, concrete(N)]
+  rule log2Int(X:Int)  >=Int N:Int => X  >=Int 2 ^Int N [simplification, concrete(N)]
 
   rule N:Int >Int X /Int Y => N *Int Y >Int X
     requires Y >Int 0 [simplification, concrete(N, Y)]
@@ -190,7 +191,7 @@ module VERIFICATION
   rule X /Int Y >=Int N => X >=Int N *Int Y
     requires Y >Int 0 [simplification, concrete(N, Y)]
 
-  rule N:Int >=Int X +Int Y => N -Int Y >=Int X [simplification]
+  rule N:Int >=Int X +Int Y => N -Int Y >=Int X [simplification, concrete(N, Y)]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Comparisons
@@ -247,10 +248,6 @@ module VERIFICATION
  
    rule substrBytes(padLeftBytes(B, LEN:Int, PADDING:Int), 0, LEN) => padLeftBytes(B, LEN, PADDING)
      requires lengthBytes(B) <=Int LEN [simplification]
-// 
-// substrBytes ( padLeftBytes ( Int2Bytes ( ( log2Int ( ARG1:Int +Int ARG2:Int ) +Int 8 ) /Int 8 , ARG1:Int +Int ARG2:Int , BE ) , 8 , 0 ) , 0 , 8 )
-//    ( log2Int ( ARG1:Int +Int ARG2:Int ) +Int 8 ) /Int 8 <=Int 8
-
  
    rule String2Bytes(Bytes2String(B)) => B  [simplification]
  
@@ -258,7 +255,8 @@ module VERIFICATION
    rule B:Bytes +Bytes .Bytes => B [simplification]
  
    // For Int2Bytes, if length is given explicitely, use that
-  rule lengthBytes(Int2Bytes(LENGTH:Int, _I:Int, _BYTE_ORDER)) => LENGTH [simplification]
+  rule lengthBytes(Int2Bytes(LENGTH:Int, I:Int, _BYTE_ORDER)) => LENGTH -Int 1
+    requires I >=Int 0 [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Address hooks
@@ -272,7 +270,7 @@ module VERIFICATION
   // The following lemma does the jon of the commented-out lemma for getAppAddressBytes, which
   // does not apply because the rule for getAppAddressBytes applies first
 
-  rule Sha512_256raw(S:String) => Bytes2String(padLeftBytes(String2Bytes(S), 58, 0)) [simplification]
+//  rule Sha512_256raw(S:String) => Bytes2String(padLeftBytes(String2Bytes(S), 58, 0)) [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Cryptographic function hooks 

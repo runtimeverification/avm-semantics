@@ -2713,7 +2713,7 @@ Stateful TEAL Operations
            <txHeader>
              // TODO Fee is calculated dynamically
              <fee>         0                                         </fee>
-             <sender>      getAppAddressBytes({getGlobalField(CurrentApplicationID)}:>Int) </sender>
+             <sender>      getGlobalField(CurrentApplicationAddress) </sender>
              <firstValid>  getTxnField(getCurrentTxn(), FirstValid)  </firstValid>
              <lastValid>   getTxnField(getCurrentTxn(), LastValid)  </lastValid>
              <genesisHash> .Bytes                                    </genesisHash>
@@ -2752,7 +2752,7 @@ Stateful TEAL Operations
            <txHeader>
              // TODO Fee is calculated dynamically
              <fee>         0                                         </fee>
-             <sender>      getAppAddressBytes({getGlobalField(CurrentApplicationID)}:>Int) </sender>
+             <sender>      getGlobalField(CurrentApplicationAddress) </sender>
              <firstValid>  getTxnField(getCurrentTxn(), FirstValid)  </firstValid>
              <lastValid>   getTxnField(getCurrentTxn(), LastValid)   </lastValid>
              <genesisHash> .Bytes                                    </genesisHash>
