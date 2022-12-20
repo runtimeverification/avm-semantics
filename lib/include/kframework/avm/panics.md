@@ -137,6 +137,7 @@ return code to 3 (see return codes below).
                | "ASSET_NOT_FOUND" [macro]
                | "MISSING_APP_CREATOR" [macro]
                | "APP_ALREADY_ACTIVE" [macro]
+               | "INSUFFICIENT_ASSET_BALANCE" [macro]
 
   syntax String ::= returnDesc(Int) [function]
   //----------------------------------------------------
@@ -192,6 +193,7 @@ return code to 3 (see return codes below).
   rule returnDesc(ASSET_NOT_FOUND)            => "tried to modify an asset which hasn't been created"
   rule returnDesc(MISSING_APP_CREATOR)        => "Found app that is missing for <appCreator>"
   rule returnDesc(APP_ALREADY_ACTIVE)         => "attempt to #initApp that already is in <activeApps>"
+  rule returnDesc(INSUFFICIENT_ASSET_BALANCE) => "tried to transfer more of an asset than owned"
 
   //------------------------------------
   rule SUCCESS                    => 0
@@ -252,6 +254,7 @@ return code to 3 (see return codes below).
   rule ASSET_NOT_FOUND            => 54
   rule MISSING_APP_CREATOR        => 55
   rule APP_ALREADY_ACTIVE         => 56
+  rule INSUFFICIENT_ASSET_BALANCE => 57
 
   syntax KItem ::= #panic(Int)
   syntax KItem ::= #stopIfError()
