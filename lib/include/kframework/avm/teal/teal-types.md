@@ -215,7 +215,7 @@ We expose several functions for working with lists.
   rule getTValueAt(0, V _) => V
   rule getTValueAt(0, V  ) => V
 
-  syntax Int ::= size(TValueList) [function, smtlib(tvlistsize)]
+  syntax Int ::= size(TValueList) [function, total, smtlib(tvlistsize)]
   // ---------------------------------------
   rule size(_ VL:TValueNeList) => 1 +Int size(VL)
   rule size(_:TValue       ) => 1

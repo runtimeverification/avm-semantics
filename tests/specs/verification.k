@@ -173,8 +173,23 @@ module VERIFICATION
   rule N:Int /Int N:Int => 1 requires N =/=Int 0 [simplification]
 
   rule #Ceil ( log2Int ( X:Int ) ) => #Top requires X >Int 0 [simplification]
-  rule N:Int >=Int log2Int(X:Int) => 2 ^Int N >=Int X [simplification]
-  rule N:Int >=Int X /Int Y => N *Int Y >=Int X [simplification]
+
+  rule N:Int >=Int log2Int(X:Int) => 2 ^Int N >=Int X [simplification, concrete(N)]
+
+  rule log2Int(X:Int)  >Int N:Int => X  >Int 2 ^Int N [simplification, concrete(N)]
+
+  rule N:Int >Int X /Int Y => N *Int Y >Int X
+    requires Y >Int 0 [simplification, concrete(N, Y)]
+
+  rule N:Int >=Int X /Int Y => N *Int Y >=Int X
+    requires Y >Int 0 [simplification, concrete(N, Y)]
+
+  rule X /Int Y >Int N => X >Int N *Int Y
+    requires Y >Int 0 [simplification, concrete(N, Y)]
+
+  rule X /Int Y >=Int N => X >=Int N *Int Y
+    requires Y >Int 0 [simplification, concrete(N, Y)]
+
   rule N:Int >=Int X +Int Y => N -Int Y >=Int X [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -195,41 +210,54 @@ module VERIFICATION
   rule lengthBytes(B1) +Int lengthBytes(B2) => lengthBytes(B1 +Bytes B2)  [simplification, concrete(B1, B2)]
   rule lengthBytes(B1 +Bytes B2) => lengthBytes(B1) +Int lengthBytes(B2) [simplification, symbolic(B1)]
   rule lengthBytes(B1 +Bytes B2) => lengthBytes(B1) +Int lengthBytes(B2) [simplification, symbolic(B2)]
+ 
+   // Simplify lengthBytes comparison by magnitude bound on length
+   rule lengthBytes(Int2Bytes(I:Int, BE, Unsigned)) >Int N => false
+     requires 0 <=Int I andBool I <Int (2 ^Int (N *Int 8)) [simplification]
+   rule N >=Int lengthBytes(Int2Bytes(I:Int, BE, Unsigned)) => true
+     requires 0 <=Int I andBool I <Int (2 ^Int (N *Int 8)) [simplification]
+   
+   // Simplify lengthBytes comparison for padLeftBytes terms
+   rule N >=Int lengthBytes(padLeftBytes(B:Bytes, PAD_LEN:Int, _:Int)) => N >=Int lengthBytes(B)
+     requires N >=Int PAD_LEN [simplification]
+   rule lengthBytes(padLeftBytes(B:Bytes, PAD_LEN:Int, _:Int)) >Int N:Int =>  lengthBytes(B) >Int N
+     requires PAD_LEN <=Int N [simplification]
+   rule lengthBytes(padLeftBytes(_:Bytes, PAD_LEN:Int, _:Int)) >=Int N => true
+     requires PAD_LEN >=Int N [simplification]
+   rule N:Int >Int lengthBytes(padLeftBytes(_:Bytes, PAD_LEN:Int, _:Int)) => false
+     requires PAD_LEN >=Int N [simplification]
 
-  // Simplify lengthBytes comparison by magnitude bound on length
-  rule lengthBytes(Int2Bytes(I:Int, BE, Unsigned)) >Int N => false
-    requires 0 <=Int I andBool I <Int (2 ^Int (N *Int 8)) [simplification]
-  rule N >=Int lengthBytes(Int2Bytes(I:Int, BE, Unsigned)) => true
-    requires 0 <=Int I andBool I <Int (2 ^Int (N *Int 8)) [simplification]
-  
-  // Simplify lengthBytes comparison for padLeftBytes terms
-  rule N >=Int lengthBytes(padLeftBytes(B:Bytes, PAD_LEN:Int, _:Int)) => N >=Int lengthBytes(B)
-    requires N >=Int PAD_LEN [simplification]
-  rule lengthBytes(padLeftBytes(B:Bytes, PAD_LEN:Int, _:Int)) >Int N:Int =>  lengthBytes(B) >Int N
-    requires PAD_LEN <=Int N [simplification]
-  rule lengthBytes(padLeftBytes(_:Bytes, PAD_LEN:Int, _:Int)) >=Int N => true
-    requires PAD_LEN >=Int N [simplification]
-  rule N:Int >Int lengthBytes(padLeftBytes(_:Bytes, PAD_LEN:Int, _:Int)) => false
-    requires PAD_LEN >=Int N [simplification]
+   rule lengthBytes (substrBytes(_:Bytes, _:Int, LEN:Int)) >Int N => false
+    requires LEN <=Int N [simplification]
 
-  // Left padding an Int with 0 bytes can't affect the value
-  rule Bytes2Int(padLeftBytes(Int2Bytes(I:Int, BE, Unsigned), _:Int, 0), BE, Unsigned) => I
-    requires I >=Int 0 [simplification]
+   rule N >=Int lengthBytes (substrBytes(_:Bytes, _:Int, LEN:Int)) => true
+    requires LEN <=Int N [simplification]
+ 
+   // Left padding an Int with 0 bytes can't affect the value
+   rule Bytes2Int(padLeftBytes(Int2Bytes(I:Int, BE, Unsigned), _:Int, 0), BE, Unsigned) => I
+     requires I >=Int 0 [simplification]
+ 
+   rule Bytes2Int(padLeftBytes(Int2Bytes(_:Int, I:Int, BE), _:Int, 0), BE, Unsigned) => I
+     requires I >=Int 0 [simplification]
+ 
+   // Simplify concrete portions of substrBytes
+   rule substrBytes(B1:Bytes +Bytes B2:Bytes, START:Int, END:Int) => 
+        substrBytes(B1, START, lengthBytes(B1)) +Bytes substrBytes(B2, 0, END -Int lengthBytes(B1))
+        [concrete(B1), symbolic(B2), simplification]
+ 
+   rule substrBytes(padLeftBytes(B, LEN:Int, PADDING:Int), 0, LEN) => padLeftBytes(B, LEN, PADDING)
+     requires lengthBytes(B) <=Int LEN [simplification]
+// 
+// substrBytes ( padLeftBytes ( Int2Bytes ( ( log2Int ( ARG1:Int +Int ARG2:Int ) +Int 8 ) /Int 8 , ARG1:Int +Int ARG2:Int , BE ) , 8 , 0 ) , 0 , 8 )
+//    ( log2Int ( ARG1:Int +Int ARG2:Int ) +Int 8 ) /Int 8 <=Int 8
 
-  // Simplify concrete portions of substrBytes
-  rule substrBytes(B1:Bytes +Bytes B2:Bytes, START:Int, END:Int) => 
-       substrBytes(B1, START, lengthBytes(B1)) +Bytes substrBytes(B2, 0, END -Int lengthBytes(B1))
-       [concrete(B1), symbolic(B2), simplification]
-
-  rule substrBytes(padLeftBytes(B, LEN:Int, PADDING:Int), 0, LEN) => padLeftBytes(B, LEN, PADDING)
-    requires lengthBytes(B) <=Int LEN [simplification]
-
-  rule String2Bytes(Bytes2String(B)) => B  [simplification]
-
-  rule .Bytes +Bytes B:Bytes => B [simplification]
-  rule B:Bytes +Bytes .Bytes => B [simplification]
-
-  // For Int2Bytes, if length is given explicitely, use that
+ 
+   rule String2Bytes(Bytes2String(B)) => B  [simplification]
+ 
+   rule .Bytes +Bytes B:Bytes => B [simplification]
+   rule B:Bytes +Bytes .Bytes => B [simplification]
+ 
+   // For Int2Bytes, if length is given explicitely, use that
   rule lengthBytes(Int2Bytes(LENGTH:Int, _I:Int, _BYTE_ORDER)) => LENGTH [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -244,7 +272,7 @@ module VERIFICATION
   // The following lemma does the jon of the commented-out lemma for getAppAddressBytes, which
   // does not apply because the rule for getAppAddressBytes applies first
 
- rule Sha512_256raw(S:String) => Bytes2String(padLeftBytes(String2Bytes(S), 58, 0)) [simplification]
+  rule Sha512_256raw(S:String) => Bytes2String(padLeftBytes(String2Bytes(S), 58, 0)) [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Cryptographic function hooks 

@@ -600,7 +600,7 @@ retsub
    andBool SENDER_MIN_BALANCE >=Int 0
    andBool APP_MIN_BALANCE    >=Int 0
 
-   andBool METHOD_SIG ==K substrBytes(String2Bytes(Sha512_256raw("add(uint64,uint64)uint64")), 0, 4)
+   andBool METHOD_SIG ==K methodSelector("add(application,uint64,uint64)uint64")
 
    andBool APPL_TX_ID ==String "0"
    andBool GROUP_ID ==String "0"

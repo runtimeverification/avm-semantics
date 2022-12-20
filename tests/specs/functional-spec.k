@@ -17,4 +17,12 @@ module FUNCTIONAL-SPEC
         </stack>
     requires 0 <=Int I1 andBool I1 <=Int MAX_UINT64
 
+  claim <k> concat => . </k>
+        <stack> 
+          padLeftBytes ( Int2Bytes ( ( log2Int ( ARG1:Int +Int ARG2:Int ) +Int 8 ) /Int 8 , ARG1:Int +Int ARG2:Int , BE ) , 8 , 0 ) : b"\x15\x1f|u" : .TStack
+          => b"\x15\x1f|u" +Bytes padLeftBytes ( Int2Bytes ( ( log2Int ( ARG1:Int +Int ARG2:Int ) +Int 8 ) /Int 8 , ARG1:Int +Int ARG2:Int , BE ) , 8 , 0 ) : .TStack
+        </stack>
+        <stacksize> 2 => 1 </stacksize>
+    requires ARG1 +Int ARG2 <=Int MAX_UINT64
+
 endmodule
