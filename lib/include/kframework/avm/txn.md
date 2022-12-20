@@ -482,7 +482,6 @@ module ALGO-TXN
     requires #isValidForTxnType(OnCompletion, TYPE)
 
   rule [[ getTxnField(I, ApplicationArgs, J) => normalize(getTValueAt(J, X)) ]]
-//  rule [[ getTxnField(I, ApplicationArgs, J) => size(X) ]]
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
