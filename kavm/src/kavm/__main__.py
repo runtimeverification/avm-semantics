@@ -94,12 +94,12 @@ def exec_prove(
             haskell_log_format=KoreExecLogFormat(haskell_log_format),
             haskell_log_debug_transition=haskell_log_debug_transition,
         )
-        if not (type(final_state) is KApply and final_state.label.name == '#Top'):
-            _LOGGER.error(f'Proof failed! See log file: {spec_file.resolve().name}.debug-log')
-            sys.exit(1)
         if minimize:
             final_state = minimize_term(final_state)
         print(kavm.pretty_print(final_state) + '\n')
+        if not (type(final_state) is KApply and final_state.label.name == '#Top'):
+            _LOGGER.error(f'Proof failed! See log file: {spec_file.resolve().name}.debug-log')
+            sys.exit(1)
     except RuntimeError as e:
         error_msg = f'Proof failed! See log file: {spec_file.resolve().name}.debug-log'
         _LOGGER.error(error_msg)
