@@ -29,7 +29,7 @@ phase2:
 //**********************
 // Called from inside app 2
 
-txn Applications 0
+txn Applications 1
 byte "test_key"
 app_global_get_ex
 assert
@@ -38,7 +38,7 @@ byte "test_val"
 ==
 assert
 
-txn Applications 0
+txn Applications 1
 byte "unset_key"
 app_global_get_ex
 !
