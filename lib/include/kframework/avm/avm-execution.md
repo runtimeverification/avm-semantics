@@ -305,6 +305,18 @@ Add asset to account
          ...
        </account>
        requires (BALANCE +Int AMOUNT) >=Int 0
+
+  rule <k> #giveAsset(ASSET_ID, ACCOUNT, AMOUNT) => #panic(INSUFFICIENT_ASSET_BALANCE) ...</k>
+       <account>
+         <address> ACCOUNT </address>
+         <optInAsset>
+           <optInAssetID> ASSET_ID </optInAssetID>
+           <optInAssetBalance> BALANCE </optInAssetBalance>
+           <optInAssetFrozen> 0 </optInAssetFrozen>
+         </optInAsset>
+         ...
+       </account>
+       requires (BALANCE +Int AMOUNT) <Int 0
 ```
 
 ```k

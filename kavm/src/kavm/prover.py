@@ -2,6 +2,7 @@
 
 import importlib
 import logging
+import os
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, Dict, Final, List, Optional, Tuple
@@ -10,7 +11,7 @@ import hypothesis.strategies as st
 import pyteal
 import pytest
 from algosdk.abi.method import Method
-from algosdk.future.transaction import ApplicationCallTxn, AssetTransferTxn, PaymentTxn, Transaction
+from algosdk.future.transaction import ApplicationCallTxn, AssetTransferTxn, PaymentTxn, SuggestedParams, Transaction
 from hypothesis import HealthCheck, Phase, given, settings
 from hypothesis.control import assume
 from pyk.kast.inner import KApply, KInner, KLabel, KRewrite, KSort, KToken, KVariable, Subst, build_assoc
@@ -32,7 +33,6 @@ from pyk.utils import dequote_str
 from pyteal.ir import Op
 
 from kavm.adaptors.algod_transaction import KAVMTransaction, transaction_k_term
-from kavm.algod import KAVMClient
 from kavm.kast.factory import KAVMTermFactory
 from kavm.kavm import KAVM
 from kavm.pyk_utils import algorand_address_to_k_bytes, generate_tvalue_list, int_2_bytes, method_selector_to_k_bytes
@@ -122,8 +122,6 @@ def pyteal_expr_to_kast(expr: pyteal.Expr) -> KInner:
         )
     else:
         raise ValueError(f'Unsupported PyTeal expression: {expr} of type {type(expr)}')
-    # if not (isinstance(expr, pyteal.BinaryExpr) and expr.op in pyteal_op_to_k_op.keys()):
-    #     raise ValueError(f'Unsupported PyTeal expression: {expr}. Must be an "lhs ==,!=,>,>=,<,<= rhs"')
 
 
 def pyteal_expr_to_python_src(expr: pyteal.Expr) -> str:
@@ -738,20 +736,42 @@ class AutoProver:
 
     def __init__(
         self,
-        definition_dir: Path,
         pyteal_module_name: str,
         app_id: int,
         sdk_app_creator_account_dict: Dict,
         sdk_app_account_dict: Dict,
         use_directory: Optional[Path] = None,
+        definition_dir: Optional[Path] = None,
+        verification_definition_dir: Optional[Path] = None,
     ):
 
         if use_directory:
             self._use_directory = use_directory
         else:
             self._use_directory = Path('.kavm')
-        _LOGGER.info(f'Will keep artefacts of AutoProver in directory {self._use_directory.resolve()}')
         self._use_directory.mkdir(parents=True, exist_ok=True)
+        _LOGGER.info(f'KAVM AutoProver will store its artefacts in directory {self._use_directory.resolve()}')
+
+        if not definition_dir:
+            definition_dir = os.environ.get('KAVM_DEFINITION_DIR')
+            if not definition_dir:
+                msg = 'Cannot initialize AutoProver: neither definition_dir is provided nor KAVM_DEFINITION_DIR env variable is set'
+                _LOGGER.critical(msg)
+                raise RuntimeError(msg)
+            definition_dir = Path(definition_dir)
+        if not verification_definition_dir:
+            verification_definition_dir = os.environ.get('KAVM_VERIFICATION_DEFINITION_DIR')
+            if not verification_definition_dir:
+                msg = 'Cannot initialize AutoProver: neither verification_definition_dir is provided nor KAVM_VERIFICATION_DEFINITION_DIR env variable is set'
+                _LOGGER.critical(msg)
+                raise RuntimeError(msg)
+            verification_definition_dir = Path(verification_definition_dir)
+
+        self.kavm = KAVM(
+            definition_dir=definition_dir,
+            use_directory=use_directory,
+            verification_definition_dir=verification_definition_dir,
+        )
 
         # monkey path the pyteal.Router class with pre-/post-conditions decorators
         with pytest.MonkeyPatch.context() as monkeypatch:
@@ -783,22 +803,19 @@ class AutoProver:
 
         self._proofs: Dict[str, KAVMProof] = {}
 
-        _, faucet_addr = AutoProver._faucet_account()
-        self.algod = KAVMClient(faucet_address=str(faucet_addr))
-        self.algod.kavm._verification_definition = definition_dir
-        sp = self.algod.suggested_params()
-        sp.flat_fee = True
-        sp.fee = 1000
+        sp = SuggestedParams(
+            fee=1000, first=0, last=1, gh='KAVMKAVMKAVMKAVMKAVMKAVMKAVMKAVMKAVMKAVMKAVM', flat_fee=True
+        )
 
-        term_factory = KAVMTermFactory(self.algod.kavm)
+        term_factory = KAVMTermFactory(self.kavm)
 
         _LOGGER.info(f'Initializing proofs for contract {contract.name}')
 
         approval_labels, parsed_approval_pgm = preprocess_teal_program(
-            self.algod.kavm.kore_to_kast(self.algod.kavm.parse_teal(approval_pgm_path))
+            self.kavm.kore_to_kast(self.kavm.parse_teal(approval_pgm_path))
         )
         clear_labels, parsed_clear_pgm = preprocess_teal_program(
-            self.algod.kavm.kore_to_kast(self.algod.kavm.parse_teal(clear_pgm_path))
+            self.kavm.kore_to_kast(self.kavm.parse_teal(clear_pgm_path))
         )
 
         app_account = SymbolicAccount.from_sdk_account(term_factory, sdk_app_account_dict)
@@ -825,7 +842,7 @@ class AutoProver:
                 _LOGGER.info(f'Skipping method {method.name} as it is not marked with @router.hoare_method')
                 continue
             proof = KAVMProof(
-                kavm=self.algod.kavm,
+                kavm=self.kavm,
                 use_directory=self._use_directory,
                 claim_name=f'{contract.name}-{method.name}',
             )
@@ -840,9 +857,7 @@ class AutoProver:
                     arg_k_var = KVariable(str(arg.name).upper(), sort=KSort("Int"))
                     app_args.append(int_2_bytes(arg_k_var))
                     arg_pre = AutoProver._in_bounds_uint64(arg_k_var)
-                    _LOGGER.info(
-                        f'Adding precondiotion on argument {arg.name}: {self.algod.kavm.pretty_print(arg_pre)}'
-                    )
+                    _LOGGER.info(f'Adding precondiotion on argument {arg.name}: {self.kavm.pretty_print(arg_pre)}')
                     method._preconditions.append(arg_pre)
                 elif str(arg.type) == 'pay':
                     concrete_amount = 1000  # will be overriden by symbolic value
@@ -851,7 +866,7 @@ class AutoProver:
                     )
                     amount_k_var = KVariable(str(arg.name + '_AMOUNT').upper(), sort=KSort("Int"))
                     txn_pre = transaction_k_term(
-                        kavm=self.algod.kavm,
+                        kavm=self.kavm,
                         txn=sdk_txn,
                         txid='0',
                         symbolic_fields_subst=Subst(
@@ -864,7 +879,7 @@ class AutoProver:
                         ),
                     )
                     txn_post = transaction_k_term(
-                        kavm=self.algod.kavm,
+                        kavm=self.kavm,
                         txn=sdk_txn,
                         txid='0',
                         symbolic_fields_subst=Subst(
@@ -878,19 +893,16 @@ class AutoProver:
                         ),
                     )
                     amount_pre = AutoProver._in_bounds_uint64(amount_k_var)
-                    _LOGGER.info(
-                        f'Adding precondiotion on argument {arg.name}: {self.algod.kavm.pretty_print(amount_pre)}'
-                    )
+                    _LOGGER.info(f'Adding precondiotion on argument {arg.name}: {self.kavm.pretty_print(amount_pre)}')
                     method._preconditions.append(amount_pre)
                     proof.add_txn(sdk_txn, txn_pre, txn_post)
                 elif str(arg.type) == 'axfer':
-                    _LOGGER.info(f'Skipping {method.name}')
                     sdk_txn = AssetTransferTxn(
                         sender=creator_account._address, receiver=app_account._address, sp=sp, index=asset_id, amt=0
                     )
                     amount_k_var = KVariable(str(arg.name + '_AMOUNT').upper(), sort=KSort("Int"))
                     txn_pre = transaction_k_term(
-                        kavm=self.algod.kavm,
+                        kavm=self.kavm,
                         txn=sdk_txn,
                         txid='0',
                         symbolic_fields_subst=Subst(
@@ -903,7 +915,7 @@ class AutoProver:
                         ),
                     )
                     txn_post = transaction_k_term(
-                        kavm=self.algod.kavm,
+                        kavm=self.kavm,
                         txn=sdk_txn,
                         txid='0',
                         symbolic_fields_subst=Subst(
@@ -917,9 +929,7 @@ class AutoProver:
                         ),
                     )
                     amount_pre = AutoProver._in_bounds_uint64(amount_k_var)
-                    _LOGGER.info(
-                        f'Adding precondiotion on argument {arg.name}: {self.algod.kavm.pretty_print(amount_pre)}'
-                    )
+                    _LOGGER.info(f'Adding precondiotion on argument {arg.name}: {self.kavm.pretty_print(amount_pre)}')
                     method._preconditions.append(amount_pre)
                     proof.add_txn(sdk_txn, txn_pre, txn_post)
                 else:
@@ -945,7 +955,7 @@ class AutoProver:
                 app_args=[method.get_selector()],
             )
             txn_pre = transaction_k_term(
-                kavm=self.algod.kavm,
+                kavm=self.kavm,
                 txn=sdk_txn,
                 txid='1',
                 symbolic_fields_subst=Subst(
@@ -957,7 +967,7 @@ class AutoProver:
                 ),
             )
             txn_post = transaction_k_term(
-                kavm=self.algod.kavm,
+                kavm=self.kavm,
                 txn=sdk_txn,
                 txid='1',
                 symbolic_fields_subst=Subst(

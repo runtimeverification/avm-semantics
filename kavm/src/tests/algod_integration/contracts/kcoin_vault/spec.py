@@ -2,9 +2,7 @@
 
 import logging
 import sys
-from pathlib import Path
 
-from kavm.kavm import KAVM
 from kavm.prover import AutoProver
 
 # from kcoin_vault_pyteal import router
@@ -86,18 +84,11 @@ if __name__ == "__main__":
     sys.setrecursionlimit(15000000)
     logging.basicConfig(level=logging.INFO)
 
-    kavm = KAVM(definition_dir=Path('./tests/specs/verification-kompiled'))
-
     prover = AutoProver(
-        definition_dir=Path('./tests/specs/verification-kompiled'),
         pyteal_module_name='kcoin_vault_pyteal',
         app_id=1,
         sdk_app_creator_account_dict=sdk_app_creator_account_dict,
         sdk_app_account_dict=sdk_app_account_dict,
     )
-    # prover.simulate('mint')
-    # prover.prove('mint')
+    prover.prove('mint')
     prover.prove('burn')
-
-# Need to kompile verification like this:
-# kompile --output-definition tests/specs/verification-kompiled tests/specs/verification.k --verbose --emit-json --backend haskell --hook-namespaces KRYPTO -I .build/usr/lib/kavm/include/kframework -I /home/geo2a/Workspace/RV/avm-semantics/.build/usr/lib/kavm/blockchain-k-plugin/include/kframework
