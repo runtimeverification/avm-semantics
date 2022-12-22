@@ -32,7 +32,7 @@ module OPCODES-V2-SPEC
 <summary>K claims</summary>
 
 ```k
-  claim <k> txna Applications 1 => . </k>
+  claim <k> txna Applications 2 => . </k>
         <stack> XS => APPL : XS </stack>
         <stacksize> S => S +Int 1 </stacksize>
         <currentTx> TX_ID </currentTx>
@@ -46,7 +46,7 @@ module OPCODES-V2-SPEC
         </transaction>
         <txnIndexMapGroup>
           <txnIndexMapGroupKey> "0" </txnIndexMapGroupKey>
-          <txnIndexMapGroupValues> (0 |-> TX_ID) ... </txnIndexMapGroupValues>
+          <txnIndexMapGroupValues> (0 |-> TX_ID) </txnIndexMapGroupValues>
         </txnIndexMapGroup>
     requires S <Int 1000
 ```
@@ -101,7 +101,7 @@ module OPCODES-V2-SPEC
         <stack> b"def" : b"abc" : XS => b"abcdef" : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> concat => panic(BYTES_OVERFLOW) </k>
+  claim <k> concat => #panic(BYTES_OVERFLOW) </k>
         <stack> B2 : B1 : _ </stack>
     requires lengthBytes(B1) +Int lengthBytes(B2) >Int 4096
 ```
@@ -316,17 +316,19 @@ module OPCODES-V2-SPEC
         </transaction>
         <currentApplicationID> APP_ID </currentApplicationID>
         <account>
-          <address> _ </address>
+          <address> ADDR:Bytes </address>
           <appsCreated>
             <app>
               <appID> APP_ID </appID>
-              <globalInts> A |-> 123 </globalInts>
+              <globalInts> .Map [ A <- 123 ] </globalInts>
+              <globalBytes> .Map </globalBytes>
               ...
             </app>
             ...
           </appsCreated>
           ...
         </account>
+        <appCreator> .Map [ APP_ID <- ADDR ] </appCreator>
 ```
 </details>
 </td></tr>
@@ -348,17 +350,19 @@ module OPCODES-V2-SPEC
           ...
         </transaction>
         <account>
-          <address> _ </address>
+          <address> ADDR:Bytes </address>
           <appsCreated>
             <app>
               <appID> A </appID>
-              <globalInts> B |-> 123 </globalInts>
+              <globalInts> .Map [ B <- 123 ] </globalInts>
+              <globalBytes> .Map </globalBytes>
               ...
             </app>
             ...
           </appsCreated>
           ...
         </account>
+        <appCreator> .Map [ A <- ADDR ] </appCreator>
 ```
 </details>
 </td></tr>
@@ -578,10 +582,17 @@ module OPCODES-V2-SPEC
   claim <k> return ~> #incrementPC() ~> #fetchOpcode() => . </k>
         <stack> (1 : 2 : .TStack) => (1 : .TStack) </stack>
         <stacksize> 2 => 1 </stacksize>
+        <currentTx> TX_ID </currentTx>
+        (<transactions>
+          <transaction>
+            <txID> TX_ID </txID>
+            <typeEnum> @ appl </typeEnum> 
+            <txType> "appl" </txType>
+            ...
+          </transaction>
+        </transactions> => <transactions> ?_ </transactions>)
         <currentApplicationID> APP_ID:Int </currentApplicationID>
         <activeApps> (SetItem(APP_ID) .Set) => .Set </activeApps>
-        <returncode> 4 => 0 </returncode>
-        <returnstatus> _ => "Success - positive-valued singleton stack" </returnstatus>
 
 ```
 </details>

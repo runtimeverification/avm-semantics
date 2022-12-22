@@ -1,4 +1,4 @@
-addAccount <address> b"1" </address> <balance> 100000000 </balance>;
+addAccount <address> "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE" </address> <balance> 100000000 </balance>;
 
 declareTealSource "multi-app1.teal";
 declareTealSource "multi-app2.teal";
@@ -7,13 +7,14 @@ declareTealSource "clear-basic.teal";
 #initTxGroup();
 
 // create app 1
-addAppCallTx <sender>            b"1"        </sender>
+addAppCallTx <sender>            "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
+             <boxReferences>     .TValuePairList </boxReferences>
              <globalNui>         0           </globalNui>
              <globalNbs>         0           </globalNbs>
              <localNui>          0           </localNui>
@@ -23,13 +24,14 @@ addAppCallTx <sender>            b"1"        </sender>
              <clearStatePgmIdx>  2           </clearStatePgmIdx>;
 
 // create app 2
-addAppCallTx <sender>            b"1"        </sender>
+addAppCallTx <sender>            "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
+             <boxReferences>     .TValuePairList </boxReferences>
              <globalNui>         0           </globalNui>
              <globalNbs>         0           </globalNbs>
              <localNui>          0           </localNui>
@@ -39,18 +41,19 @@ addAppCallTx <sender>            b"1"        </sender>
              <clearStatePgmIdx>  2           </clearStatePgmIdx>;
 
 // fund app 2
-addPaymentTx <sender>   b"1"  </sender>
-             <receiver> b"application2"  </receiver>
+addPaymentTx <sender>   "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"  </sender>
+             <receiver> "FHQPLJVRO7FVHYKCA2SGR3I7ZHHKHAQS4AGOAVGGGJQJYTTBVEJUGHN5JQ"  </receiver>
              <amount>   300000 </amount>;
 
 // call app 2
-addAppCallTx <sender>            b"1"        </sender>
+addAppCallTx <sender>            "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"        </sender>
              <applicationID>     2           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
+             <boxReferences>     .TValuePairList </boxReferences>
              <globalNui>         0           </globalNui>
              <globalNbs>         0           </globalNbs>
              <localNui>          0           </localNui>

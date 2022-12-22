@@ -3,20 +3,20 @@ requires "avm/txn.md"
 requires "avm/avm-configuration.md"
 requires "avm/avm-txn-deque.md"
 requires "avm/avm-execution.md"
-requires "avm/avm-initialization.md"
 requires "avm/teal/teal-types.md"
 requires "avm/teal/teal-fields.md"
 requires "avm/teal/teal-execution.md"
+requires "avm/avm-initialization.md"
 
 module ALGO-ITXN
   imports ALGO-TXN
   imports AVM-CONFIGURATION
-  imports AVM-INITIALIZATION
   imports AVM-TXN-DEQUE
   imports TEAL-TYPES
   imports TEAL-FIELDS
   imports TEAL-EXECUTION
   imports MAP
+  imports AVM-INITIALIZATION
 
   syntax KItem ::= #setItxnField(TxnFieldTop, TValue)
 
@@ -167,10 +167,10 @@ module ALGO-ITXN
                <configAssetName>     .Bytes                      </configAssetName>
                <configAssetURL>      .Bytes                      </configAssetURL>
                <configMetaDataHash>  .Bytes                      </configMetaDataHash>
-               <configManagerAddr>   getGlobalField(ZeroAddress) </configManagerAddr>
-               <configReserveAddr>   getGlobalField(ZeroAddress) </configReserveAddr>
-               <configFreezeAddr>    getGlobalField(ZeroAddress) </configFreezeAddr>
-               <configClawbackAddr>  getGlobalField(ZeroAddress) </configClawbackAddr>
+               <configManagerAddr>   PARAM_ZERO_ADDR             </configManagerAddr>
+               <configReserveAddr>   PARAM_ZERO_ADDR             </configReserveAddr>
+               <configFreezeAddr>    PARAM_ZERO_ADDR             </configFreezeAddr>
+               <configClawbackAddr>  PARAM_ZERO_ADDR             </configClawbackAddr>
              </assetParams>
            </assetConfigTxFields>
            ...
@@ -258,9 +258,9 @@ module ALGO-ITXN
            <assetTransferTxFields>
              <xferAsset>     0                           </xferAsset>
              <assetAmount>   0                           </assetAmount>
-             <assetReceiver> getGlobalField(ZeroAddress) </assetReceiver>
-             <assetASender>  getGlobalField(ZeroAddress) </assetASender>
-             <assetCloseTo>  getGlobalField(ZeroAddress) </assetCloseTo>
+             <assetReceiver> {getGlobalField(ZeroAddress)}:>Bytes </assetReceiver>
+             <assetASender>  {getGlobalField(ZeroAddress)}:>Bytes </assetASender>
+             <assetCloseTo>  {getGlobalField(ZeroAddress)}:>Bytes </assetCloseTo>
            </assetTransferTxFields>
            ...
          </transaction>)
@@ -303,7 +303,7 @@ module ALGO-ITXN
          <transaction>
            .AssetFreezeTxFieldsCell =>
            <assetFreezeTxFields>
-             <freezeAccount> getGlobalField(ZeroAddress) </freezeAccount>
+             <freezeAccount> {getGlobalField(ZeroAddress)}:>Bytes </freezeAccount>
              <freezeAsset>   0                           </freezeAsset>
              <assetFrozen>   0                           </assetFrozen>
            </assetFreezeTxFields>
@@ -346,6 +346,7 @@ module ALGO-ITXN
              <applicationArgs>      .TValueList          </applicationArgs>
              <foreignApps>          .TValueList          </foreignApps>
              <foreignAssets>        .TValueList          </foreignAssets>
+             <boxReferences>         .TValuePairList     </boxReferences>
              <globalStateSchema>
                <globalNui> 0 </globalNui>
                <globalNbs> 0 </globalNbs>
@@ -443,7 +444,7 @@ module ALGO-ITXN
                  </appCallTxFields>
                </txnTypeSpecificFields>
                ...
-             </transaction>) => panic(ITXN_REENTRY)
+             </transaction>) => #panic(ITXN_REENTRY)
              ...
        </k>
        <activeApps> AA </activeApps>
@@ -511,7 +512,7 @@ module ALGO-ITXN
          </transaction>) => . ... 
        </k>
 
-  rule <k> #checkItxnFieldsCoherent(<transaction> _T </transaction>) => panic(TXN_INVALID) ...</k> [owise]
+  rule <k> #checkItxnFieldsCoherent(<transaction> _T </transaction>) => #panic(TXN_INVALID) ...</k> [owise]
 
   syntax KItem ::= #checkItxns(List)
 

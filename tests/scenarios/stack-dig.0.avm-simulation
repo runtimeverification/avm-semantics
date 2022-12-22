@@ -1,18 +1,19 @@
 declareTealSource "stack-dig.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 200000 </balance>;
+addAccount <address> "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE" </address> <balance> 200000 </balance>;
 
 #initTxGroup();
 
 // Add app
-addAppCallTx <sender>            b"1"        </sender>
+addAppCallTx <sender>            "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
+             <boxReferences>     .TValuePairList </boxReferences>
              <globalNui>         0           </globalNui>
              <globalNbs>         0           </globalNbs>
              <localNui>          0           </localNui>

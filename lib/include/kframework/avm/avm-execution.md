@@ -6,8 +6,9 @@ requires "avm/itxn.md"
 requires "avm/teal/teal-syntax.md"
 requires "avm/teal/teal-driver.md"
 requires "avm/avm-configuration.md"
-requires "avm/avm-initialization.md"
+requires "avm/algod/algod-models.md"
 requires "avm/avm-txn-deque.md"
+requires "avm/avm-initialization.md"
 
 module AVM-EXECUTION-SYNTAX
   imports INT
@@ -17,10 +18,9 @@ module AVM-EXECUTION-SYNTAX
   imports ALGO-BLOCKCHAIN
   imports ALGO-TXN
   imports ALGO-ITXN
-  imports AVM-CONFIGURATION
-  imports AVM-INITIALIZATION
   imports TEAL-SYNTAX
   imports TEAL-DRIVER
+  imports AVM-INITIALIZATION
 ```
 
 Top-level model control rules
@@ -30,15 +30,6 @@ The model has a number of top-level rules that will control the configuration in
 A sequence of `AlgorandCommand`s will be supplied as `$PGM` to `krun`.
 
 ```k
-  syntax AVMSimulation ::= ".AS"
-                         | AlgorandCommand ";" AVMSimulation
-  // -------------------------------------------------------
-
-  rule <k> .AS                  => .        ... </k>
-  rule <k> AC; .AS              => AC       ... </k>
-  rule <k> AC; AS:AVMSimulation => AC ~> AS ... </k>
-    requires AS =/=K .AS
-
   syntax AlgorandCommand
 
 endmodule
@@ -64,27 +55,30 @@ If one of the transactions is denied (including the inner ones), the group evalu
 and the current configuration is frozen for examination.
 
 ```k
-  syntax AlgorandCommand ::= #setMode(TealMode)
-  //-------------------------------------------
-  rule <k> #setMode(MODE) => . ...</k>
-       <mode> _ => MODE </mode>
-  
   // #evalTxGroup
   //---------------------------------------
-  rule <k> #evalTxGroup() => #initTxGroup() ~> #initTxnIndexMap() ~> #evalNextTx() ...</k>
+  rule <k> #evalTxGroup() => #initTxnIndexMap() ~> #evalFirstTx() ...</k>
 
-  syntax AlgorandCommand ::= #evalNextTx()
+  syntax AlgorandCommand ::= #evalFirstTx()
+                           | #evalNextTx()
 
-  rule <k> (#evalNextTx() ~> _) => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalNextTx() </k>
+  rule <k> #evalFirstTx() => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalNextTx() ... </k>
        <deque> TXN_DEQUE </deque>
     requires TXN_DEQUE =/=K .List
 
+  rule <k> #evalNextTx() => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalNextTx() ... </k>
+       <deque> TXN_DEQUE </deque>
+    requires TXN_DEQUE =/=K .List andBool (getTxnGroupID(getNextTxnID()) ==K getTxnGroupID(getCurrentTxn()))
+
+  // Finish executing inner transaction group and resume next outer layer
+  rule <k> #evalNextTx() => #getNextTxn() ~> #evalTx() ... </k>
+       <deque> TXN_DEQUE </deque>
+    requires TXN_DEQUE =/=K .List andBool (getTxnGroupID(getNextTxnID()) =/=K getTxnGroupID(getCurrentTxn()))
+
   // Minimum balances are only checked at the conclusion of the outer-level group.
   rule <k> #evalNextTx() => #checkSufficientBalance() ... </k>
-      <returncode> _ => 0 </returncode>
-      <returnstatus> _ => "Success - transaction group accepted"
-      </returnstatus>
-      <deque> .List </deque>
+       <returncode> _ => 0 </returncode>
+       <deque> .List </deque>
 ```
 
 ### Executing next transaction
@@ -117,7 +111,7 @@ the attached stateless TEAL if the transaction is logicsig-signed.
          <sender> SENDER_ADDR </sender>
          ...
        </transaction>
-       <touchedAccounts> .Set => SetItem(SENDER_ADDR) ...</touchedAccounts>
+       <touchedAccounts> TA => addToListNoDup(SENDER_ADDR, TA) </touchedAccounts>
 
   rule <k> #evalTx() => #restoreContext() ~> #evalTeal() ... </k>
        <currentTx> TXN_ID </currentTx>
@@ -128,7 +122,7 @@ the attached stateless TEAL if the transaction is logicsig-signed.
          <sender> SENDER_ADDR </sender>
          ...
        </transaction>
-       <touchedAccounts> .Set => SetItem(SENDER_ADDR) ...</touchedAccounts>
+       <touchedAccounts> TA => addToListNoDup(SENDER_ADDR, TA) </touchedAccounts>
 
 ```
 
@@ -262,6 +256,7 @@ Delete application
          </minBalance>
          ...
        </account>
+       <appCreator> (APP_ID |-> _) => .Map ... </appCreator>
 ```
 
 Close asset account to
@@ -274,10 +269,10 @@ Close asset account to
          <address> FROM </address>
          <assetsOptedIn>
            (<optInAsset>
-             <optInAssetID> ASSET_ID </optInAssetID>
-             <optInAssetBalance> BALANCE </optInAssetBalance>
-             ...
-           </optInAsset>) => .Bag
+             <optInAssetID>      ASSET_ID </optInAssetID>
+             <optInAssetBalance> BALANCE  </optInAssetBalance>
+             <optInAssetFrozen>  _        </optInAssetFrozen>
+           </optInAsset> => .Bag)
            ...
          </assetsOptedIn>
          <minBalance> MIN_BALANCE => MIN_BALANCE -Int PARAM_MIN_BALANCE </minBalance>
@@ -310,16 +305,28 @@ Add asset to account
          ...
        </account>
        requires (BALANCE +Int AMOUNT) >=Int 0
+
+  rule <k> #giveAsset(ASSET_ID, ACCOUNT, AMOUNT) => #panic(INSUFFICIENT_ASSET_BALANCE) ...</k>
+       <account>
+         <address> ACCOUNT </address>
+         <optInAsset>
+           <optInAssetID> ASSET_ID </optInAssetID>
+           <optInAssetBalance> BALANCE </optInAssetBalance>
+           <optInAssetFrozen> 0 </optInAssetFrozen>
+         </optInAsset>
+         ...
+       </account>
+       requires (BALANCE +Int AMOUNT) <Int 0
 ```
 
 ```k
   syntax AlgorandCommand ::= #checkSufficientBalance()
   //--------------------------------------------------
   rule <k> #checkSufficientBalance() => (#checkSufficientBalance(ADDR) ~> #checkSufficientBalance()) ...</k>
-       <touchedAccounts> (SetItem(ADDR) => .Set) ...</touchedAccounts>
+       <touchedAccounts> (ListItem(ADDR) => .List) ...</touchedAccounts>
 
   rule <k> #checkSufficientBalance() => . ...</k>
-       <touchedAccounts> .Set </touchedAccounts>
+       <touchedAccounts> .List </touchedAccounts>
   
   syntax AlgorandCommand ::= #checkSufficientBalance(Bytes)
   //-------------------------------------------------------
@@ -332,8 +339,7 @@ Add asset to account
        </account>
     requires BALANCE >=Int MIN_BALANCE
 
-  rule <k> #checkSufficientBalance(ADDR) => #avmPanic(TX_ID, MIN_BALANCE_VIOLATION) ...</k>
-       <currentTx> TX_ID </currentTx>
+  rule <k> #checkSufficientBalance(ADDR) => #panic(MIN_BALANCE_VIOLATION) ...</k>
        <account>
          <address> ADDR </address>
          <balance> BALANCE </balance>
@@ -359,9 +365,7 @@ TODO: address contact creation.
 ```k
   syntax AlgorandCommand ::= #evalTeal()
 
-  rule <k> #evalTeal() => #startExecution() ~> #saveScratch() ... </k>
-       <returncode>           _ => 4                           </returncode>   // (re-)initialize the code
-       <returnstatus>         _ =>"Failure - program is stuck" </returnstatus> // and status with "in-progress" values
+  rule <k> #evalTeal() => #startExecution() ... </k>
 
   syntax AlgorandCommand ::= #loadInputPgm( TealInputPgm )
 
@@ -404,9 +408,13 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
          <balance> RECEIVER_BALANCE => RECEIVER_BALANCE +Int AMOUNT </balance>
          ...
        </account>
-       <touchedAccounts> (.Set => SetItem(RECEIVER)) ...</touchedAccounts>
+       <touchedAccounts> TA => addToListNoDup(RECEIVER, TA) </touchedAccounts>
 
-  rule <k> #executeTxn(@pay) => panic(INSUFFICIENT_FUNDS) ... </k>
+  syntax List ::= addToListNoDup(Bytes, List) [function, total]
+  rule addToListNoDup(X, L) => ListItem(X) L requires notBool(X in L)
+  rule addToListNoDup(X, L) => L requires X in L
+
+  rule <k> #executeTxn(@pay) => #panic(INSUFFICIENT_FUNDS) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>     TXN_ID   </txID>
@@ -421,7 +429,7 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
        </account>
     requires SENDER_BALANCE -Int AMOUNT <Int 0
 
-  rule <k> #executeTxn(@pay) => #avmPanic(TXN_ID, UNKNOWN_ADDRESS) ... </k>
+  rule <k> #executeTxn(@pay) => #panic(UNKNOWN_ADDRESS) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>     TXN_ID   </txID>
@@ -442,8 +450,7 @@ Overflow on subtraction is impossible because the minimum balance is at least 0.
 Not supported.
 
 ```k
-  rule <k> #executeTxn(@keyreg) => #avmPanic(TXN_ID, UNSUPPORTED_TXN_TYPE) ... </k>
-       <currentTx> TXN_ID </currentTx>
+  rule <k> #executeTxn(@keyreg) => #panic(UNSUPPORTED_TXN_TYPE) ... </k>
 ```
 
 * **Asset Configuration**
@@ -531,10 +538,10 @@ Modify asset
          <assetClawbackAddr>  _ => CLAWB_ADDR        </assetClawbackAddr>
          ...
        </asset>
-    requires isTValue(MANAGER_ADDR) 
-      orBool isTValue(RESERVE_ADDR) 
-      orBool isTValue(FREEZE_ADDR) 
-      orBool isTValue(CLAWB_ADDR)
+    requires MANAGER_ADDR =/=K getGlobalField(ZeroAddress)
+      orBool RESERVE_ADDR =/=K getGlobalField(ZeroAddress)
+      orBool FREEZE_ADDR  =/=K getGlobalField(ZeroAddress)
+      orBool CLAWB_ADDR   =/=K getGlobalField(ZeroAddress)
 ```
 
 Destroy asset
@@ -554,10 +561,10 @@ transaction by the lack of any asset parameters.""
          <txID>                TXN_ID          </txID>
          <sender>              SENDER          </sender>
          <configAsset>         ASSET_ID:TValue </configAsset>
-         <configManagerAddr>   NoTValue        </configManagerAddr>
-         <configReserveAddr>   NoTValue        </configReserveAddr>
-         <configFreezeAddr>    NoTValue        </configFreezeAddr>
-         <configClawbackAddr>  NoTValue        </configClawbackAddr>
+         <configManagerAddr>   MANAGER_ADDR    </configManagerAddr>
+         <configReserveAddr>   RESERVE_ADDR    </configReserveAddr>
+         <configFreezeAddr>    FREEZE_ADDR     </configFreezeAddr>
+         <configClawbackAddr>  CLAWB_ADDR      </configClawbackAddr>
          ...
        </transaction>
        <account>
@@ -583,6 +590,10 @@ transaction by the lack of any asset parameters.""
          ...
        </account>
        <assetCreator> (ASSET_ID |-> CREATOR) => .Map ...</assetCreator>
+    requires MANAGER_ADDR ==K getGlobalField(ZeroAddress)
+     andBool RESERVE_ADDR ==K getGlobalField(ZeroAddress)
+     andBool FREEZE_ADDR  ==K getGlobalField(ZeroAddress)
+     andBool CLAWB_ADDR   ==K getGlobalField(ZeroAddress)
 ```
 
 Modify/delete asset no permission case
@@ -594,8 +605,7 @@ TODO split into other cases?
   - Maybe more?
 
 ```k
-  rule <k> #executeTxn(@acfg) => #avmPanic(TXN_ID, ASSET_NO_PERMISSION) ...</k>
-       <currentTx> TXN_ID </currentTx> [owise]
+  rule <k> #executeTxn(@acfg) => #panic(ASSET_NO_PERMISSION) ...</k> [owise]
 ```
 
 * **Asset Transfer**
@@ -619,10 +629,15 @@ Asset transfer goes through if:
          <xferAsset>     ASSET_ID </xferAsset>
          <assetReceiver> RECEIVER </assetReceiver>
          <assetAmount>   AMOUNT   </assetAmount>
-         <assetCloseTo>  NoTValue </assetCloseTo>
+         <assetCloseTo>  CLOSE_TO </assetCloseTo>
          ...
        </transaction>
-    requires hasOptedInAsset(ASSET_ID, SENDER)
+    requires assetCreated(ASSET_ID)
+     andBool hasOptedInAsset(ASSET_ID, SENDER)
+     andBool hasOptedInAsset(ASSET_ID, RECEIVER)
+     andBool CLOSE_TO ==K getGlobalField(ZeroAddress)
+     andBool (getOptInAssetField(AssetFrozen, RECEIVER, ASSET_ID) ==K 0)
+     andBool (getOptInAssetField(AssetFrozen, SENDER,   ASSET_ID) ==K 0)
 ```
 
 Asset transfer with a non-zero amount fails if:
@@ -630,13 +645,15 @@ Asset transfer with a non-zero amount fails if:
 - sender's holdings are frozen
 
 ```k
-  rule <k> #executeTxn(@axfer) => #avmPanic(TXN_ID, ASSET_NOT_OPT_IN) ... </k>
+  rule <k> #executeTxn(@axfer) => #panic(ASSET_NOT_OPT_IN) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID   </txID>
          <sender>        SENDER   </sender>
          <xferAsset>     ASSET_ID </xferAsset>
-         <assetCloseTo>  NoTValue </assetCloseTo>
+         <assetReceiver> RECEIVER </assetReceiver>
+         <assetCloseTo>  CLOSE_TO </assetCloseTo>
+         <assetAmount>   AMOUNT   </assetAmount>
          ...
        </transaction>
        <account>
@@ -647,28 +664,39 @@ Asset transfer with a non-zero amount fails if:
          <address> RECEIVER </address>
          ...
        </account>
-    requires SENDER =/=K RECEIVER
-      andBool (notBool hasOptedInAsset(ASSET_ID, SENDER)
-        orBool notBool hasOptedInAsset(ASSET_ID, RECEIVER))
+    requires assetCreated(ASSET_ID)
+     andBool SENDER =/=K RECEIVER
+     andBool CLOSE_TO ==K getGlobalField(ZeroAddress)
+     andBool AMOUNT >Int 0
+     andBool (notBool hasOptedInAsset(ASSET_ID, SENDER)
+      orBool notBool hasOptedInAsset(ASSET_ID, RECEIVER))
 
-  rule <k> #executeTxn(@axfer) => #avmPanic(TXN_ID, ASSET_FROZEN_FOR_SENDER) ... </k>
+  rule <k> #executeTxn(@axfer) => #panic(ASSET_NOT_FOUND) ... </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>          TXN_ID   </txID>
+         <xferAsset>     ASSET_ID </xferAsset>
+         ...
+       </transaction>
+    requires notBool(assetCreated(ASSET_ID))
+
+  rule <k> #executeTxn(@axfer) => #panic(ASSET_FROZEN) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>          TXN_ID   </txID>
          <sender>        SENDER   </sender>
+         <assetReceiver> RECEIVER </assetReceiver>
          <xferAsset>     ASSET_ID </xferAsset>
+         <assetAmount>   AMOUNT   </assetAmount>
          ...
        </transaction>
-       <account>
-         <address> SENDER </address>
-         <optInAsset>
-           <optInAssetID>      ASSET_ID       </optInAssetID>
-           ...
-         </optInAsset>
-         ...
-       </account>
-    requires hasOptedInAsset(ASSET_ID, SENDER)
-     andBool (getOptInAssetField(AssetFrozen, SENDER, ASSET_ID) ==K 1)
+    requires assetCreated(ASSET_ID)
+     andBool ((AMOUNT >Int 0
+     andBool (hasOptedInAsset(ASSET_ID, SENDER)
+              andBool hasOptedInAsset(ASSET_ID, RECEIVER)))
+     andThenBool
+            ((getOptInAssetField(AssetFrozen, SENDER, ASSET_ID) ==K 1)
+     orBool  (getOptInAssetField(AssetFrozen, RECEIVER, ASSET_ID) ==K 1)))
 ```
 
 **Asset opt-in** is a special case of asset transfer: a transfer of zero to self.
@@ -688,7 +716,7 @@ Asset opt-in goes through if:
          <xferAsset>     ASSET_ID </xferAsset>
          <assetReceiver> SENDER   </assetReceiver>
          <assetAmount>   0        </assetAmount>
-         <assetCloseTo>  NoTValue </assetCloseTo>
+         <assetCloseTo>  CLOSE_TO </assetCloseTo>
          ...
        </transaction>
        <account>
@@ -708,6 +736,7 @@ Asset opt-in goes through if:
          ...
        </account>
     requires assetCreated(ASSET_ID)
+     andBool CLOSE_TO ==K getGlobalField(ZeroAddress)
      andBool notBool hasOptedInAsset(ASSET_ID, SENDER)
 ```
 
@@ -727,9 +756,11 @@ Asset opt-in goes through if:
          <xferAsset>     ASSET_ID        </xferAsset>
          <assetReceiver> RECEIVER        </assetReceiver>
          <assetAmount>   AMOUNT          </assetAmount>
-         <assetCloseTo>  CLOSE_TO:TValue </assetCloseTo>
+         <assetCloseTo>  CLOSE_TO        </assetCloseTo>
          ...
        </transaction>
+    requires assetCreated(ASSET_ID)
+     andBool CLOSE_TO =/=K getGlobalField(ZeroAddress)
 ```
 
 * **Asset Freeze**
@@ -737,8 +768,26 @@ Asset opt-in goes through if:
 Not supported.
 
 ```k
-  rule <k> #executeTxn(@afrz) => #avmPanic(TXN_ID, UNSUPPORTED_TXN_TYPE) ... </k>
+  rule <k> #executeTxn(@afrz) => . ... </k>
        <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID>                 TXN_ID              </txID>
+         <sender>               SENDER              </sender>
+         <freezeAccount>        FREEZE_ACCOUNT      </freezeAccount>
+         <freezeAsset>          ASSET_ID            </freezeAsset>
+         <assetFrozen>          FREEZE              </assetFrozen>
+         ...
+       </transaction>
+       <account>
+         <address> FREEZE_ACCOUNT </address>
+         <optInAsset>
+           <optInAssetID>      ASSET_ID       </optInAssetID>
+           <optInAssetFrozen>  _ => FREEZE    </optInAssetFrozen>
+           ...
+         </optInAsset>
+         ...
+       </account>
+    requires getAssetParamsField(AssetFreeze, ASSET_ID) ==K SENDER
 ```
 
 * **Application Call**
@@ -795,7 +844,7 @@ App create
          </account>
          (.Bag =>
          (<account>
-           <address> getAppAddress(APP_ID) </address>
+           <address> getAppAddressBytes(APP_ID) </address>
            ...
          </account>))
          ...
@@ -935,54 +984,6 @@ OptIn
        </account>
      requires notBool hasOptedInApp(APP_ID, SENDER)
 
-// Case 3: needed because of bug?
-
-  rule <k> #executeAppl(APP_ID) => 
-               #initApp(APP_ID) 
-            ~> #loadInputPgm(APPROVAL_PGM) 
-            ~> #evalTeal()
-            ...
-       </k>
-       <currentTx> TXN_ID </currentTx>
-       <transaction>
-         <txID>          TXN_ID  </txID>
-         <sender>        SENDER  </sender>
-         <onCompletion>  @ OptIn </onCompletion>
-         ...
-       </transaction>
-         <accountsMap>
-         <account>
-           <address> SENDER </address>
-           <appsCreated>
-             <app>
-               <appID>          APP_ID       </appID>
-               <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
-               <localNumInts>      LOCAL_INTS   </localNumInts>
-               <localNumBytes>     LOCAL_BYTES  </localNumBytes>
-               ...
-             </app>
-             ...
-           </appsCreated>
-           <appsOptedIn>
-             OPTED_IN_APPS =>
-             <optInApp>
-               <optInAppID>   APP_ID </optInAppID>
-               <localInts> .Map   </localInts>
-               <localBytes> .Map   </localBytes>
-             </optInApp>
-             OPTED_IN_APPS
-           </appsOptedIn>
-           <minBalance> MIN_BALANCE => MIN_BALANCE 
-                                  +Int PARAM_APP_OPTIN_FLAT 
-                                  +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_UINT_MIN_BALANCE) 
-                                    *Int LOCAL_INTS)
-                                  +Int ((PARAM_MIN_BALANCE_PER_ENTRY +Int PARAM_BYTES_MIN_BALANCE) 
-                                    *Int LOCAL_BYTES)
-           </minBalance>
-           ...
-         </account>
-       </accountsMap>
-     requires notBool hasOptedInApp(APP_ID, SENDER)
 
 ```
 
@@ -1087,7 +1088,6 @@ DeleteApplication
          <approvalPgmSrc> APPROVAL_PGM </approvalPgmSrc>
          ...
        </app>
-       <appCreator> (APP_ID |-> _) => .Map ... </appCreator>
 ```
 
 * **Layer-2 transactions**
@@ -1096,18 +1096,12 @@ Not supported.
 TODO: determine if we need to support them an all.
 
 ```k
-  rule <k> #executeTxn(@ccfg) => #avmPanic(TXN_ID, UNSUPPORTED_TXN_TYPE) ... </k>
-       <currentTx> TXN_ID </currentTx>
+  rule <k> #executeTxn(@ccfg) => #panic(UNSUPPORTED_TXN_TYPE) ... </k>
 
-  rule <k> #executeTxn(@ccall) => #avmPanic(TXN_ID, UNSUPPORTED_TXN_TYPE) ... </k>
-       <currentTx> TXN_ID </currentTx>
+  rule <k> #executeTxn(@ccall) => #panic(UNSUPPORTED_TXN_TYPE) ... </k>
 
-  rule <k> #executeTxn(@cfx) => #avmPanic(TXN_ID, UNSUPPORTED_TXN_TYPE) ... </k>
-       <currentTx> TXN_ID </currentTx>
+  rule <k> #executeTxn(@cfx) => #panic(UNSUPPORTED_TXN_TYPE) ... </k>
 ```
-
-* **Future transaction types**
-
 
 ```k
 endmodule

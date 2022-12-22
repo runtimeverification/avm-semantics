@@ -1,0 +1,6 @@
+#pragma version 8
+
+txn ApplicationArgs 0
+btoi
+int 2
+==

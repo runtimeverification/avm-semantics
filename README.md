@@ -134,3 +134,15 @@ We use [`direnv`](https://direnv.net/) to manage the environment variables such 
 After installing `direnv`, run `direnv allow` to activate the settings for the project's directory.
 
 Feel free to ignore `direnv` if you prefer your global installation of K.
+
+### Rule Coverage
+
+This project contains facilities to generate coverage metrics for K rewrite rules that were executed by `kavm run`. This is helpful in ensuring that the test suite contains input programs that exercise all rewrite rules in the semantics.
+
+To generate the coverage report for the AVM simulation scenarious squite ([`tests/scenarios/`](tests/scenarios/)), run the following command:
+
+```bash
+  make clean-coverage && make test-kavm-avm-simulation && make coverage
+```
+
+This command generates a `.build/coverage.xml` file. This file contains information about the K rewrite rules that have been exercised for all tests in the ([`tests/scenarios/`](tests/scenarios/)) directory.

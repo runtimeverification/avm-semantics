@@ -1,0 +1,40 @@
+#pragma version 8
+
+int 1
+txn ApplicationArgs 0
+btoi
+==
+bnz lbl1
+
+int 2
+txn ApplicationArgs 0
+btoi
+==
+bnz lbl2
+
+err
+
+lbl1:
+
+txn Assets 0
+asset_params_get AssetReserve
+assert
+global ZeroAddress
+==
+assert
+
+b end
+
+lbl2:
+
+txn Assets 0
+asset_params_get AssetReserve
+assert
+txn Accounts 1
+==
+assert
+
+end:
+
+int 1
+return

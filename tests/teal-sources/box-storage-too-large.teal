@@ -1,0 +1,8 @@
+#pragma version 8
+
+byte "box1"
+int 32769
+box_create
+
+int 1
+return

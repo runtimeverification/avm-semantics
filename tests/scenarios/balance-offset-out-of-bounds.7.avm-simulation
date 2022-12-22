@@ -1,25 +1,26 @@
 declareTealSource "balance-offset-out-of-bounds.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 654321 </balance>;
-addAccount <address> b"2" </address> <balance> 654321 </balance>;
-addAccount <address> b"3" </address> <balance> 654321 </balance>;
-addAccount <address> b"4" </address> <balance> 654321 </balance>;
+addAccount <address> "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE" </address> <balance> 654321 </balance>;
+addAccount <address> "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA" </address> <balance> 654321 </balance>;
+addAccount <address> "X6VC6C2ZKFUNRN3AHUXGSS4QJO72YA667BI7GX6FMRSFHR26B3DUPDC5KE" </address> <balance> 654321 </balance>;
+addAccount <address> "2OOWA5X7MZZLUS62UFUDPH6VYDBZ5MI57TUK3TSXEMGMXM6WPVQG5ZOIOQ" </address> <balance> 654321 </balance>;
 
 #initTxGroup();
 
-// Add app and opt in b"1"
-addAppCallTx <sender>            b"1"        </sender>
+// Add app and opt in "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"
+addAppCallTx <sender>            "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
-             <accounts>        
-                b"2"     
-                b"3"     
-                b"4"     
+             <accounts>
+                "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"
+                "Y76M3MSY6DKBRHBL7C3NNDXGS5IIMQVQVUAB6MP4XEMMGVF2QWNPL226CA"
+                "737777777777777777777777777777777777777777777777777UFEJ2CI"
              </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
+             <boxReferences>     .TValuePairList </boxReferences>
              <globalNui>         0           </globalNui>
              <globalNbs>         0           </globalNbs>
              <localNui>          0           </localNui>

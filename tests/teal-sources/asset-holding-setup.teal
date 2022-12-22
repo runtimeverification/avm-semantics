@@ -1,0 +1,12 @@
+#pragma version 8
+
+txn Accounts 1
+txn Assets 0
+asset_holding_get AssetBalance
+assert
+int 12345
+==
+assert
+
+int 1
+return

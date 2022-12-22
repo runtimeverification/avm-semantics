@@ -1,13 +1,13 @@
 declareTealSource "min-balance-asset-destroy.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 200000 </balance>;
-addAccount <address> b"2" </address> <balance> 300000 </balance>;
+addAccount <address> "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE" </address> <balance> 200000 </balance>;
+addAccount <address> "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA" </address> <balance> 300000 </balance>;
 
 #initTxGroup();
 
 // Add asset
-addAssetConfigTx <sender>              b"1"        </sender>
+addAssetConfigTx <sender>              "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"        </sender>
                  <configAsset>         0           </configAsset>
                  <configTotal>         500         </configTotal>
                  <configDecimals>      0           </configDecimals>
@@ -16,13 +16,13 @@ addAssetConfigTx <sender>              b"1"        </sender>
                  <configAssetName>     "testcoin"  </configAssetName>
                  <configAssetURL>      NoTValue    </configAssetURL>
                  <configMetaDataHash>  NoTValue    </configMetaDataHash>
-                 <configManagerAddr>   b"1"        </configManagerAddr>
-                 <configReserveAddr>   NoTValue    </configReserveAddr>
-                 <configFreezeAddr>    NoTValue    </configFreezeAddr>
-                 <configClawbackAddr>  NoTValue    </configClawbackAddr>;
+                 <configManagerAddr>   "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE" </configManagerAddr>
+                 <configReserveAddr>   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" </configReserveAddr>
+                 <configFreezeAddr>    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" </configFreezeAddr>
+                 <configClawbackAddr>  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" </configClawbackAddr>;
 
 // Destroy asset
-addAssetConfigTx <sender>              b"1"     </sender>
+addAssetConfigTx <sender>              "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"     </sender>
                  <configAsset>         1        </configAsset>
                  <configTotal>         NoTValue </configTotal>
                  <configDecimals>      NoTValue </configDecimals>
@@ -31,19 +31,20 @@ addAssetConfigTx <sender>              b"1"     </sender>
                  <configAssetName>     NoTValue </configAssetName>
                  <configAssetURL>      NoTValue </configAssetURL>
                  <configMetaDataHash>  NoTValue </configMetaDataHash>
-                 <configManagerAddr>   NoTValue </configManagerAddr>
-                 <configReserveAddr>   NoTValue </configReserveAddr>
-                 <configFreezeAddr>    NoTValue </configFreezeAddr>
-                 <configClawbackAddr>  NoTValue </configClawbackAddr>;
+                 <configManagerAddr>   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" </configManagerAddr>
+                 <configReserveAddr>   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" </configReserveAddr>
+                 <configFreezeAddr>    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" </configFreezeAddr>
+                 <configClawbackAddr>  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" </configClawbackAddr>;
 
 // Create app 1
-addAppCallTx <sender>            b"2"        </sender>
+addAppCallTx <sender>            "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
+             <boxReferences>     .TValuePairList </boxReferences>
              <globalNui>         0           </globalNui>
              <globalNbs>         0           </globalNbs>
              <localNui>          0           </localNui>
@@ -53,13 +54,14 @@ addAppCallTx <sender>            b"2"        </sender>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
 // Call test code
-addAppCallTx <sender>            b"1"        </sender>
+addAppCallTx <sender>            "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"        </sender>
              <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
+             <boxReferences>     .TValuePairList </boxReferences>
              <globalNui>         0           </globalNui>
              <globalNbs>         0           </globalNbs>
              <localNui>          0           </localNui>

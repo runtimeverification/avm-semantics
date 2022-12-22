@@ -81,7 +81,7 @@ def algod_faucet(algod: AlgodClient, kmd: KMDClient) -> Dict[str, Optional[Any]]
 
 
 @pytest.fixture
-def kalgod_faucet() -> Dict[str, Optional[Any]]:
+def kalgod_faucet() -> Dict[str, Any]:
     """
     Faucet address and private key of the active KAVM
     """
@@ -91,12 +91,12 @@ def kalgod_faucet() -> Dict[str, Optional[Any]]:
 
 
 @pytest.fixture
-def kalgod(kalgod_faucet: Dict[str, Optional[Any]]) -> KAVMClient:
+def kalgod(kalgod_faucet: Dict[str, Any]) -> KAVMClient:
     """Dummy KAVMAlgodClient"""
     algod_token = 'ktealktealktealkteal'
     algod_address = 'http://kteal:8080'
 
-    return KAVMClient(algod_token, algod_address, kalgod_faucet['address'])
+    return KAVMClient(faucet_address=kalgod_faucet['address'], algod_token=algod_token, algod_address=algod_address)
 
 
 @pytest.fixture

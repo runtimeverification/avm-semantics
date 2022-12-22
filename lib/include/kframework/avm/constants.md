@@ -5,6 +5,7 @@ These are taken from [here](https://developer.algorand.org/docs/get-details/para
 ```k
 module AVM-CONSTANTS
   imports INT
+  imports BYTES
 
   syntax Int ::= "PARAM_MIN_BALANCE"            [macro]
                | "PARAM_APP_PAGE_FLAT"          [macro]
@@ -21,6 +22,9 @@ module AVM-CONSTANTS
                | "PARAM_MAX_KEY_SIZE"           [macro]
                | "PARAM_MAX_BYTE_VALUE_SIZE"    [macro]
                | "PARAM_MAX_SUM_KEY_VALUE_SIZE" [macro]
+               | "PARAM_MAX_BOX_SIZE"           [macro]
+
+  syntax Bytes ::= "PARAM_ZERO_ADDR"            [macro]
 ```
 
 Amount the min balance is set to by default, and amount it is increased by when creating or opting into
@@ -114,6 +118,18 @@ Maximum size of the sum of the key length plus value length for one storage slot
 
 ```k
   rule PARAM_MAX_SUM_KEY_VALUE_SIZE => 128
+```
+
+Maximum size of a box storage box
+
+```k
+  rule PARAM_MAX_BOX_SIZE => 32768
+```
+
+Zero Address
+
+```k
+  rule PARAM_ZERO_ADDR => b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 ```
 
 ```k

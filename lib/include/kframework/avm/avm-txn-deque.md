@@ -6,6 +6,7 @@ module AVM-TXN-DEQUE
   imports LIST
   imports SET
   imports AVM-CONFIGURATION
+  imports AVM-PANIC
 ```
 
 The semantics maintains a deque that tracks the order in which the transactions will be executed.
@@ -44,11 +45,11 @@ scheduled for evaluation.
        requires notBool (TXN_ID in INDICES)
         andBool TXN_ID in_txns(<transactions> TS </transactions>)
 
-  rule <k> #pushTxnBack(<txID> TXN_ID </txID>) => #internalPanic(TXN_DEQUE_ERROR) ... </k>
+  rule <k> #pushTxnBack(<txID> TXN_ID </txID>) => #panic(TXN_DEQUE_ERROR) ... </k>
        <dequeIndexSet> INDICES </dequeIndexSet>
        requires TXN_ID in INDICES
 
-  rule <k> #pushTxnBack(<txID> TXN_ID </txID>) => #internalPanic(TXN_DEQUE_ERROR) ... </k>
+  rule <k> #pushTxnBack(<txID> TXN_ID </txID>) => #panic(TXN_DEQUE_ERROR) ... </k>
        <transactions> TS </transactions>
     requires notBool (TXN_ID in_txns(<transactions> TS </transactions>))
 ```
@@ -71,11 +72,11 @@ scheduled for evaluation.
        requires notBool (TXN_ID in INDICES)
         andBool TXN_ID in_txns(<transactions> TS </transactions>)
 
-  rule <k> #pushTxnFront(<txID> TXN_ID </txID>) => #internalPanic(TXN_DEQUE_ERROR) ... </k>
+  rule <k> #pushTxnFront(<txID> TXN_ID </txID>) => #panic(TXN_DEQUE_ERROR) ... </k>
        <dequeIndexSet> INDICES </dequeIndexSet>
        requires TXN_ID in INDICES
 
-  rule <k> #pushTxnFront(<txID> TXN_ID </txID>) => #internalPanic(TXN_DEQUE_ERROR) ... </k>
+  rule <k> #pushTxnFront(<txID> TXN_ID </txID>) => #panic(TXN_DEQUE_ERROR) ... </k>
        <transactions> TS </transactions>
     requires notBool (TXN_ID in_txns(<transactions> TS </transactions>))
 ```
@@ -101,16 +102,21 @@ we will know immediately, since `#pushTxnFront()`/`#pushTxnBack()` would panic.
        <currentTx> _ => TXN_ID </currentTx>
 
 
-  rule <k> #getNextTxn() => #internalPanic(TXN_DEQUE_ERROR) ... </k>
+  rule <k> #getNextTxn() => #panic(TXN_DEQUE_ERROR) ... </k>
        <deque> .List </deque>
 
   syntax TxnDequeCommand ::= #popTxnFront()
-  //-----------------------------------------------
+  //---------------------------------------
   rule <k> #popTxnFront() => .K ... </k>
        <deque> ListItem(_TXN_ID) TXNS => TXNS </deque>
 
-  rule <k> #popTxnFront() => #internalPanic(TXN_DEQUE_ERROR) ... </k>
+  rule <k> #popTxnFront() => .K ... </k>
        <deque> .List </deque>
+
+  syntax String ::= getNextTxnID() [function]
+  //-----------------------------------------
+  rule [[ getNextTxnID() => TXN_ID ]]
+       <deque> ListItem(TXN_ID) _ </deque>
 
 endmodule
 ```

@@ -1,0 +1,79 @@
+{
+    "stages": [
+        {
+            "stage-type": "setup-network",
+            "data": {
+                "accounts": [
+                    {
+                        "address": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "amount": 200000,
+                        "created-apps": [
+                            {
+                                "id": 1,
+                                "params": { 
+                                    "creator": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                                    "approval-program": "local-storage-setup.teal",
+                                    "clear-state-program": "clear-basic.teal",
+                                    "local-state-schema": { 
+                                        "nui": 2,
+                                        "nbs": 1
+                                    }, 
+                                    "global-state-schema": { 
+                                        "nui": 0,
+                                        "nbs": 0
+                                    },
+                                    "global-state": []
+                                }
+                            }
+                        ],
+                        "created-assets": [],
+                        "apps-local-state": [
+                            {
+                                "id": 1,
+                                "schema": {
+                                    "num-uint": 2,
+                                    "num-byte-slice": 1
+                                },
+                                "key-value": [
+                                      { "key": "a2V5MQ==", "value": {"type": 2, "bytes": "", "uint": 1 }},
+                                      { "key": "a2V5Mg==", "value": {"type": 1, "bytes": "dHdv", "uint": 0 }},
+                                      { "key": "a2V5Mw==", "value": {"type": 2, "bytes": "", "uint": 3 }}
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "stage-type": "submit-transactions",
+            "data": {
+                "transactions": [
+                    {
+                        "snd": "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE",
+                        "type": "appl",
+                        "apid": 1,
+                        "apan": 0,
+                        "apat": [],
+                        "apaa": [],
+                        "apfa": [],
+                        "apas": [],
+                        "apbx": [],
+                        "apgs": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apls": {
+                            "nui": 0,
+                            "nbs": 0
+                        },
+                        "apep": 0,
+                        "apap": "local-storage-setup.teal",
+                        "apsu": "clear-basic.teal"
+                    }
+                ]
+            },
+            "expected-returncode": 0
+        }
+    ]
+}

@@ -4,6 +4,7 @@ Algorand Transaction Representation
 ```k
 require "avm/teal/teal-fields.md"
 require "avm/teal/teal-types.md"
+require "avm/teal/teal-syntax.md"
 ```
 
 Transaction State Representation
@@ -14,6 +15,7 @@ module TXN-FIELDS
   imports TEAL-FIELDS
   imports TEAL-SYNTAX
   imports BYTES
+  imports AVM-CONSTANTS
 ```
 
 *Pseudo fields*
@@ -73,6 +75,7 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
         <applicationArgs>      .TValueList </applicationArgs> // maximum size is 2KB, and all args are internally byte strings
         <foreignApps>          .TValueList </foreignApps>
         <foreignAssets>        .TValueList </foreignAssets>
+        <boxReferences>        .TValuePairList </boxReferences>
         <globalStateSchema>
           <globalNui> NoTValue </globalNui>
           <globalNbs> NoTValue </globalNbs>
@@ -109,17 +112,17 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
     <assetConfigTxFields multiplicity="?">
       <configAsset> NoTValue </configAsset>           // the asset ID
       <assetParams>
-        <configTotal>         NoTValue </configTotal>
-        <configDecimals>      NoTValue </configDecimals>
-        <configDefaultFrozen> NoTValue </configDefaultFrozen>
-        <configUnitName>      NoTValue </configUnitName>
-        <configAssetName>     NoTValue </configAssetName>
-        <configAssetURL>      NoTValue </configAssetURL>
-        <configMetaDataHash>  NoTValue </configMetaDataHash>
-        <configManagerAddr>   NoTValue </configManagerAddr>
-        <configReserveAddr>   NoTValue </configReserveAddr>
-        <configFreezeAddr>    NoTValue </configFreezeAddr>
-        <configClawbackAddr>  NoTValue </configClawbackAddr>
+        <configTotal>         0        </configTotal>
+        <configDecimals>      0        </configDecimals>
+        <configDefaultFrozen> 0        </configDefaultFrozen>
+        <configUnitName>      .Bytes   </configUnitName>
+        <configAssetName>     .Bytes   </configAssetName>
+        <configAssetURL>      .Bytes   </configAssetURL>
+        <configMetaDataHash>  .Bytes   </configMetaDataHash>
+        <configManagerAddr>   PARAM_ZERO_ADDR </configManagerAddr>
+        <configReserveAddr>   PARAM_ZERO_ADDR </configReserveAddr>
+        <configFreezeAddr>    PARAM_ZERO_ADDR </configFreezeAddr>
+        <configClawbackAddr>  PARAM_ZERO_ADDR </configClawbackAddr>
       </assetParams>
     </assetConfigTxFields>
 ```
@@ -132,11 +135,11 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
   //                   3. Revoke an asset (having an asset asender, from which asset will be revoked)
   configuration
     <assetTransferTxFields multiplicity="?">
-      <xferAsset>     NoTValue </xferAsset>
-      <assetAmount>   NoTValue </assetAmount>
-      <assetReceiver> NoTValue </assetReceiver>
-      <assetASender>  NoTValue </assetASender>
-      <assetCloseTo>  NoTValue </assetCloseTo>
+      <xferAsset>     0 </xferAsset>
+      <assetAmount>   0 </assetAmount>
+      <assetReceiver> .Bytes </assetReceiver>
+      <assetASender>  .Bytes </assetASender>
+      <assetCloseTo>  .Bytes </assetCloseTo>
     </assetTransferTxFields>
 ```
 
@@ -145,9 +148,9 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
 ```k
  configuration
    <assetFreezeTxFields multiplicity="?">
-     <freezeAccount> NoTValue </freezeAccount>
-     <freezeAsset>   NoTValue </freezeAsset>
-     <assetFrozen>   NoTValue </assetFrozen>
+     <freezeAccount> PARAM_ZERO_ADDR </freezeAccount>
+     <freezeAsset>   0 </freezeAsset>
+     <assetFrozen>   0 </assetFrozen>
    </assetFreezeTxFields>
 
 endmodule
@@ -162,6 +165,8 @@ module ALGO-TXN
   imports TEAL-TYPES
   imports SET
   imports LIST
+  imports BYTES-HOOKED
+  imports GLOBALS
 ```
 
 *Transaction Group Configuration*
@@ -206,7 +211,7 @@ module ALGO-TXN
 *Transaction ID Getter*
 
 ```k
-  syntax String ::= getTxID(TransactionCell) [function, functional]
+  syntax String ::= getTxID(TransactionCell) [function, total]
   //---------------------------------------------------------------
   rule getTxID(<transaction> <txID> ID </txID> ... </transaction>) => ID
 ```
@@ -232,9 +237,9 @@ module ALGO-TXN
          ...
        </transaction>
 
-  syntax MaybeTValue ::= getTxnField(String, TxnField)                 [function]
-  syntax MaybeTValue ::= getTxnField(String, TxnaField, Int)           [function]
-  syntax TValueList  ::= getTxnField(String, TxnaField)                [function]
+  syntax MaybeTValue ::= getTxnField(String, TxnField)                 [function, total]
+  syntax MaybeTValue ::= getTxnField(String, TxnaField, Int)           [function, total]
+  syntax TValueList  ::= getTxnField(String, TxnaField)                [function, total]
   //-----------------------------------------------------------------------------
 
   rule [[ getTxnField(I, TxID) => normalize(I) ]]
@@ -695,7 +700,16 @@ module ALGO-TXN
        </transaction>
     requires #isValidForTxnType(FreezeAssetFrozen, TYPE)
 
-  rule [[ getTxnField(I, Applications, J) => normalize(getTValueAt(J, X)) ]]
+  rule [[ getTxnField(I, Applications, 0) => normalize(A) ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         ...
+       </transaction>
+       <currentApplicationID> A </currentApplicationID>
+    requires #isValidForTxnType(Applications, TYPE)
+
+  rule [[ getTxnField(I, Applications, J) => normalize(getTValueAt(J -Int 1, X)) ]]
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
@@ -703,15 +717,16 @@ module ALGO-TXN
          ...
        </transaction>
     requires #isValidForTxnType(Applications, TYPE)
-     andBool 0 <=Int J andBool J <Int size(X)
+     andBool 0 <=Int J andBool J <=Int size(X)
 
-  rule [[ getTxnField(I, Applications) => X ]]
+  rule [[ getTxnField(I, Applications) => (A X) ]]
        <transaction>
          <txID> I </txID>
          <typeEnum> TYPE  </typeEnum>
          <foreignApps> X </foreignApps>
          ...
        </transaction>
+       <currentApplicationID> A </currentApplicationID>
     requires #isValidForTxnType(Applications, TYPE)
 
   rule [[ getTxnField(I, Assets, J) => normalize(getTValueAt(J, X)) ]]
@@ -732,6 +747,15 @@ module ALGO-TXN
          ...
        </transaction>
     requires #isValidForTxnType(Assets, TYPE)
+
+  rule [[ getTxnField(I, NumAssets) => size(X) ]]
+       <transaction>
+         <txID> I </txID>
+         <typeEnum> TYPE  </typeEnum>
+         <foreignAssets> X </foreignAssets>
+         ...
+       </transaction>
+    requires #isValidForTxnType(NumAssets, TYPE)
 
   rule [[ getTxnField(I, LastLog) => MSG ]]
        <transaction>
@@ -838,12 +862,6 @@ module ALGO-TXN
 ```
 
 ```k
-  syntax Bytes ::= getAppAddress(Int) [function, functional]
-  //---------------------------------------------------------
-  rule getAppAddress(APP_ID) => b"application" +Bytes String2Bytes(Int2String(APP_ID))
-```
-
-```k
   syntax Int ::= groupSize(String, TransactionsCell) [function]
   //------------------------------------------------
   rule groupSize( GROUP_ID,
@@ -892,8 +910,8 @@ module ALGO-TXN
   rule _ in_txns( <transactions> .Bag </transactions> ) => false
 
 
-  syntax Bool ::= #isValidForTxnType(TxnField,     Int) [function, functional]
-  syntax Bool ::= #isValidForTxnType(TxnaField,    Int) [function, functional]
+  syntax Bool ::= #isValidForTxnType(TxnField,     Int) [function, total]
+  syntax Bool ::= #isValidForTxnType(TxnaField,    Int) [function, total]
   // -------------------------------------------------------------
   // all transaction types
   rule #isValidForTxnType(_:TxnHeaderField  , I)    => 1 <=Int I andBool I <=Int 6

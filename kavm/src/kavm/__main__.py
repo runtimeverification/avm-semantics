@@ -1,18 +1,26 @@
 """Command-line interface for KAVM"""
 
+import json
 import logging
 import os
+import subprocess
 import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from subprocess import CalledProcessError
-from typing import Any, Final, List, Optional
+from typing import Any, Callable, Dict, Final, Iterable, List, Optional, TypeVar
 
 from pyk.cli_utils import dir_path, file_path
+from pyk.kast.inner import KApply
+from pyk.kast.manip import minimize_term
+from pyk.kore import syntax as kore
+from pyk.ktool.kprove import KoreExecLogFormat
 
+from kavm.kavm import KAVM
 from kavm.kompile import kompile
+from kavm.scenario import KAVMScenario
 
-from .kavm import KAVM
+T = TypeVar('T')
 
 _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
@@ -29,6 +37,8 @@ def exec_kompile(
     hook_namespaces: List[str],
     hook_cpp_files: List[Path],
     hook_clang_flags: List[str],
+    coverage: bool,
+    gen_bison_parser: bool = False,
     **kwargs: Any,
 ) -> None:
     kompile(
@@ -42,23 +52,86 @@ def exec_kompile(
         hook_namespaces=hook_namespaces,
         hook_cpp_files=hook_cpp_files,
         hook_clang_flags=hook_clang_flags,
+        coverage=coverage,
+        gen_bison_parser=gen_bison_parser,
     )
 
 
 def exec_prove(
+    definition_dir: Path,
+    spec_file: Path,
+    bug_report: bool = False,
+    depth: Optional[int] = None,
+    debug_equations: Iterable[str] = (),
+    claims: Iterable[str] = (),
+    exclude_claims: Iterable[str] = (),
+    profile: bool = False,
+    minimize: bool = True,
+    haskell_log_format: str = KoreExecLogFormat.ONELINE.value,
+    haskell_log_debug_transition: bool = True,
+    haskell_log_entries: Iterable[str] = (),
+    **kwargs: Any,
+) -> None:
+    kavm = KAVM(definition_dir=definition_dir, profile=profile)
+    prove_args = []
+    haskell_args = []
+    for de in debug_equations:
+        haskell_args += ['--debug-equation', de]
+    if bug_report:
+        haskell_args += ['--bug-report', str(spec_file.with_suffix(''))]
+    if depth is not None:
+        prove_args += ['--depth', str(depth)]
+    if claims:
+        prove_args += ['--claims', ','.join(claims)]
+    if exclude_claims:
+        prove_args += ['--exclude', ','.join(exclude_claims)]
+    try:
+        final_state = kavm.prove(
+            spec_file=spec_file,
+            args=prove_args,
+            haskell_args=haskell_args,
+            haskell_log_entries=haskell_log_entries if haskell_log_entries else [],
+            haskell_log_format=KoreExecLogFormat(haskell_log_format),
+            haskell_log_debug_transition=haskell_log_debug_transition,
+        )
+        if minimize:
+            final_state = minimize_term(final_state)
+        print(kavm.pretty_print(final_state) + '\n')
+        if not (type(final_state) is KApply and final_state.label.name == '#Top'):
+            _LOGGER.error(f'Proof failed! See log file: {spec_file.resolve().name}.debug-log')
+            sys.exit(1)
+    except RuntimeError as e:
+        error_msg = f'Proof failed! See log file: {spec_file.resolve().name}.debug-log'
+        _LOGGER.error(error_msg)
+        raise RuntimeError(error_msg) from e
+
+
+def exec_kore_repl(
     definition: Path,
-    main_file: Path,
+    spec_file: Path,
     debugger: bool,
     debug_script: Path,
     **kwargs: Any,
 ) -> None:
-    proc_result = KAVM.prove(
-        definition,
-        main_file,
-        debugger,
-        debug_script,
-    )
-    exit(proc_result.returncode)
+    command = [
+        'kprove',
+        '--definition',
+        str(definition),
+        str(spec_file),
+    ]
+
+    command += ['--debugger'] if debugger else []
+    command += ['--debug-script', str(debug_script)] if debug_script else []
+
+    _LOGGER.info(f"Executing command: {' '.join(command)}")
+
+    try:
+        proc_result = subprocess.run(command, check=True, text=True)
+        print(proc_result.stdout)
+    except CalledProcessError as err:
+        raise RuntimeError(
+            f'Command kprove exited with code {err.returncode} for: {spec_file}', err.stdout, err.stderr
+        ) from err
 
 
 def exec_kast(
@@ -92,12 +165,39 @@ def exec_kast(
         exit(err.returncode)
 
 
+def top_down_kore(f: Callable[[kore.Pattern], kore.Pattern], pattern: kore.Pattern) -> kore.Pattern:
+    return f(pattern).map_pattern(lambda _kpattern: top_down_kore(f, _kpattern))  # type: ignore
+
+
+def get_state_dumps_kore(input: kore.Pattern) -> Optional[kore.Pattern]:
+    state_dumps_cell_symbol = "Lbl'-LT-'state-dumps'-GT-'"
+
+    result = None
+
+    def get_it(input: kore.Pattern) -> kore.Pattern:
+        nonlocal result
+        if isinstance(input, kore.App) and input.symbol == state_dumps_cell_symbol:
+            result = input
+        return input
+
+    top_down_kore(get_it, input)
+    if isinstance(result, kore.App):
+        return result.patterns[0].app.patterns[0].patterns[0]  # type: ignore
+    else:
+        return None
+
+
+def kore_json_to_dict(input: kore.Pattern) -> Dict[str, Any]:
+    return {}
+
+
 def exec_run(
     definition_dir: Path,
     input_file: Path,
     teal_sources_dir: Path,
-    teal_programs_parser: Path,
+    teal_parser: Path,
     avm_simulation_parser: Path,
+    avm_json_parser: Path,
     output: str,
     profile: bool,
     depth: Optional[int],
@@ -105,31 +205,50 @@ def exec_run(
 ) -> None:
     kavm = KAVM(definition_dir=definition_dir)
 
-    if not os.environ.get('KAVM_LIB'):
-        raise RuntimeError('Cannot access KAVM_LIB environment variable. Is it set?')
-    kavm_lib_dir = Path(str(os.environ.get('KAVM_LIB')))
-
-    if not teal_programs_parser:
-        teal_programs_parser = kavm_lib_dir / 'scripts/parse-teal-programs.sh'
-    if not avm_simulation_parser:
-        avm_simulation_parser = kavm_lib_dir / 'scripts/parse-avm-simulation.sh'
+    if not teal_parser:
+        teal_parser = definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
+    if not avm_json_parser:
+        avm_json_parser = definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
     try:
-        proc_result = kavm.run_avm_simulation(
-            input_file=input_file,
-            output=output,
-            profile=profile,
-            teal_sources_dir=teal_sources_dir,
-            teal_programs_parser=teal_programs_parser,
-            avm_simulation_parser=avm_simulation_parser,
-            depth=depth,
-        )
-        if not output == 'none':
-            print(proc_result.stdout)
-        exit(proc_result.returncode)
-    except CalledProcessError as err:
-        if not output == 'none':
-            print(err.stdout)
-        exit(err.returncode)
+        if input_file.suffix == '.json':
+            scenario = KAVMScenario.from_json(input_file.read_text(), teal_sources_dir)
+            final_state, kavm_stderr = kavm.run_avm_json(scenario=scenario, profile=profile, depth=depth)
+            if output == 'kore':
+                print(final_state)
+                exit(0)
+            if output == 'pretty':
+                final_state_kast = kavm.kore_to_kast(final_state)
+                print(kavm.pretty_print(final_state_kast))
+            if output == 'final-state-json':
+                _LOGGER.info('Extracting <state_dumps> cell from KORE output')
+                state_dumps_kore = get_state_dumps_kore(final_state)
+                assert state_dumps_kore
+                _LOGGER.info('Converting KORE => Kast')
+                state_dumps = kavm.kore_to_kast(state_dumps_kore)
+                _LOGGER.info('Pretty-printing <state_dumps> JSON')
+                state_dump_str = kavm.pretty_print(state_dumps).replace(', .JSONs', '').replace('.JSONs', '')
+                print(json.dumps(json.loads(state_dump_str), indent=4))
+            if output == 'stderr-json':
+                print(json.dumps(json.loads(kavm_stderr), indent=4))
+            exit(0)
+        else:
+            print(f'Unrecognized input file extension: {input_file.suffix}')
+            exit(1)
+    except RuntimeError as err:
+        msg, stdout, stderr = err.args
+        _LOGGER.critical(stdout)
+        _LOGGER.critical(msg)
+        _LOGGER.critical(stderr)
+
+
+def exec_env(
+    **kwargs: Any,
+) -> None:
+    """
+    Report KAVM's environment variables or attempt to establish their vaules
+    """
+    print(f"KAVM_DEFINITION_DIR={os.environ.get('KAVM_DEFINITION_DIR')}")
+    print(f"KAVM_VERIFICATION_DEFINITION_DIR={os.environ.get('KAVM_VERIFICATION_DEFINITION_DIR')}")
 
 
 def main() -> None:
@@ -143,7 +262,9 @@ def main() -> None:
         if env_definition_dir:
             args.definition_dir = Path(env_definition_dir)
         else:
-            raise RuntimeError('Cannot find KAVM definition, plese specify either --definition or KAVM_DEFINITION_DIR')
+            raise RuntimeError(
+                'Cannot find KAVM definition, plese specify either --definition-dir or KAVM_DEFINITION_DIR'
+            )
 
     executor_name = 'exec_' + args.command.lower().replace('-', '_')
     if executor_name not in globals():
@@ -154,6 +275,12 @@ def main() -> None:
 
 
 def create_argument_parser() -> ArgumentParser:
+    def list_of(elem_type: Callable[[str], T], delim: str = ';') -> Callable[[str], List[T]]:
+        def parse(s: str) -> List[T]:
+            return [elem_type(elem) for elem in s.split(delim)]
+
+        return parse
+
     parser = ArgumentParser(prog='kavm')
 
     shared_args = ArgumentParser(add_help=False)
@@ -162,6 +289,14 @@ def create_argument_parser() -> ArgumentParser:
     shared_args.add_argument('--profile', default=False, action='store_true', help='Coarse process-level profiling.')
 
     command_parser = parser.add_subparsers(dest='command', required=True, help='Command to execute')
+
+    # env
+    command_parser.add_parser(
+        'env',
+        help='Show KAVM environment variables',
+        parents=[shared_args],
+        allow_abbrev=False,
+    )
 
     # kompile
     kompile_subparser = command_parser.add_parser(
@@ -177,6 +312,9 @@ def create_argument_parser() -> ArgumentParser:
     kompile_subparser.add_argument('--main-module', type=str)
     kompile_subparser.add_argument('--syntax-module', type=str)
     kompile_subparser.add_argument('--backend', type=str)
+    kompile_subparser.add_argument('--coverage', default=False, action='store_true')
+    kompile_subparser.add_argument('--gen-bison-parser', default=False, action='store_true')
+    kompile_subparser.add_argument('--emit-json', default=False, action='store_true')
     kompile_subparser.add_argument(
         '-I',
         type=dir_path,
@@ -212,15 +350,38 @@ def create_argument_parser() -> ArgumentParser:
 
     # prove
     prove_subparser = command_parser.add_parser('prove', help='Prove claims', parents=[shared_args])
-    prove_subparser.add_argument('main_file', type=file_path, help='Path to the main file')
-    prove_subparser.add_argument('--definition', type=dir_path)
+    prove_subparser.add_argument('spec_file', type=file_path, help='Path to the K spec file')
+    prove_subparser.add_argument('--definition-dir', dest='definition_dir', type=dir_path)
     prove_subparser.add_argument('--debugger', default=False, action='store_true')
     prove_subparser.add_argument('--debug-script', type=file_path)
+    prove_subparser.add_argument(
+        '--haskell-log-format',
+        type=str,
+        choices=[f.value for f in KoreExecLogFormat],
+        default=KoreExecLogFormat.ONELINE.value,
+    )
+    prove_subparser.add_argument(
+        '--debug-equations', type=list_of(str, delim=','), default=[], help='Comma-separate list of equations to debug.'
+    )
+    prove_subparser.add_argument(
+        '--haskell-log-entries',
+        type=list_of(str, delim=','),
+        default=[],
+    )
+
+    # kore-repl
+    kore_repl_subparser = command_parser.add_parser(
+        'kore-repl', help='Prove claims interactively', parents=[shared_args]
+    )
+    kore_repl_subparser.add_argument('spec_file', type=file_path, help='Path to the spec file')
+    kore_repl_subparser.add_argument('--definition', type=dir_path)
+    kore_repl_subparser.add_argument('--debugger', default=False, action='store_true')
+    kore_repl_subparser.add_argument('--debug-script', type=file_path)
 
     # kast
     kast_subparser = command_parser.add_parser('kast', help='Kast a term', parents=[shared_args])
     kast_subparser.add_argument(
-        '--definition',
+        '--definition-dir',
         dest='definition_dir',
         type=dir_path,
         help='Path to definition to use.',
@@ -242,7 +403,7 @@ def create_argument_parser() -> ArgumentParser:
     # run
     run_subparser = command_parser.add_parser('run', help='Run KAVM simulation', parents=[shared_args])
     run_subparser.add_argument(
-        '--definition',
+        '--definition-dir',
         dest='definition_dir',
         type=dir_path,
         help='Path to definition to use',
@@ -260,10 +421,10 @@ def create_argument_parser() -> ArgumentParser:
         required=True,
     )
     run_subparser.add_argument(
-        '--teal-programs-parser',
-        dest='teal_programs_parser',
+        '--teal-parser',
+        dest='teal_parser',
         type=file_path,
-        help='Path to the executable to parse .teals files containing TealPrograms terms',
+        help='Path to the executable to parse .teal files containing TealPrograms terms',
     )
     run_subparser.add_argument(
         '--avm-simulation-parser',
@@ -272,11 +433,17 @@ def create_argument_parser() -> ArgumentParser:
         help='Path to the executable to parse .avm-simulation files containing AVMSimulation terms',
     )
     run_subparser.add_argument(
+        '--avm-json-parser',
+        dest='avm_json_parser',
+        type=file_path,
+        help='Path to the executable to parse .json files containing JSON-encoded AVM state',
+    )
+    run_subparser.add_argument(
         '--output',
         dest='output',
         type=str,
         help='Output mode',
-        choices=['pretty', 'json', 'kore', 'kast', 'none'],
+        choices=['pretty', 'json', 'kore', 'kast', 'none', 'final-state-json', 'stderr-json'],
         required=True,
     )
     run_subparser.add_argument(
@@ -290,11 +457,11 @@ def create_argument_parser() -> ArgumentParser:
 
 
 def _loglevel(args: Namespace) -> int:
-    if args.verbose or args.profile:
-        return logging.INFO
-
     if args.debug:
         return logging.DEBUG
+
+    if args.verbose or args.profile:
+        return logging.INFO
 
     return logging.WARNING
 

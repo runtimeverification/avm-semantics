@@ -1,19 +1,20 @@
 declareTealSource "appAccountsParams.teal";
 declareTealSource "clear-basic.teal";
 
-addAccount <address> b"1" </address> <balance> 1500000 </balance>;
-addAccount <address> b"2" </address> <balance> 3000000 </balance>;
+addAccount <address> "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE" </address> <balance> 1500000 </balance>;
+addAccount <address> "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA" </address> <balance> 3000000 </balance>;
 
 #initTxGroup();
 
-// Add app 1 and opt in b"1"
-addAppCallTx <sender>            b"1"        </sender>
+// Add app 1 and opt in "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"
+addAppCallTx <sender>            "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"        </sender>
              <applicationID>     0           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
+             <boxReferences>     .TValuePairList </boxReferences>
              <globalNui>         0           </globalNui>
              <globalNbs>         0           </globalNbs>
              <localNui>          1           </localNui>
@@ -22,14 +23,15 @@ addAppCallTx <sender>            b"1"        </sender>
              <approvalPgmIdx>    0           </approvalPgmIdx>
              <clearStatePgmIdx>  1           </clearStatePgmIdx>;
 
-// Opt in b"2"
-addAppCallTx <sender>            b"2"        </sender>
+// Opt in "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"
+addAppCallTx <sender>            "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"        </sender>
              <applicationID>     1           </applicationID>
              <onCompletion>      @ OptIn     </onCompletion>
              <accounts>          .TValueList </accounts>
              <applicationArgs>   .TValueList </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
+             <boxReferences>     .TValuePairList </boxReferences>
              <globalNui>         NoTValue    </globalNui>
              <globalNbs>         NoTValue    </globalNbs>
              <localNui>          NoTValue    </localNui>
@@ -38,18 +40,18 @@ addAppCallTx <sender>            b"2"        </sender>
              <approvalPgmIdx>    0           </approvalPgmIdx>
              <clearStatePgmIdx>  0           </clearStatePgmIdx>;
 
-addPaymentTx <sender>   b"1"  </sender>
-             <receiver> b"2"  </receiver>
+addPaymentTx <sender>   "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"  </sender>
+             <receiver> "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"  </receiver>
              <amount>   50000 </amount>;
 
-addPaymentTx <sender>   b"2"    </sender>
-             <receiver> b"1"    </receiver>
+addPaymentTx <sender>   "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"    </sender>
+             <receiver> "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"    </receiver>
              <amount>   50005   </amount>;
 
-addAppCallTx <sender>            b"1"        </sender>
+addAppCallTx <sender>            "LVMR75YJKH4ATBQ6UFI6IUM2FMU7NNLDQRBKIMG6Q2QAAAXWLIIKWMZRPE"        </sender>
              <applicationID>     1           </applicationID>
              <onCompletion>      @ NoOp      </onCompletion>
-             <accounts>          b"2"        </accounts>
+             <accounts>          "VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA"        </accounts>
              <applicationArgs>
                  Int2Bytes(39, BE, Unsigned)
                  Int2Bytes(100, BE, Unsigned)
@@ -62,6 +64,7 @@ addAppCallTx <sender>            b"1"        </sender>
              </applicationArgs>
              <foreignApps>       .TValueList </foreignApps>
              <foreignAssets>     .TValueList </foreignAssets>
+             <boxReferences>     .TValuePairList </boxReferences>
              <globalNui>         NoTValue    </globalNui>
              <globalNbs>         NoTValue    </globalNbs>
              <localNui>          NoTValue    </localNui>

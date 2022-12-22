@@ -307,10 +307,10 @@ module OPCODES-V4-SPEC
         <stack> 5 : 3 : XS => 243 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> exp => panic(INVALID_ARGUMENT) </k>
+  claim <k> exp => #panic(INVALID_ARGUMENT) </k>
         <stack> 0 : 0 : _ </stack>
 
-  claim <k> exp => panic(INT_OVERFLOW) </k>
+  claim <k> exp => #panic(INT_OVERFLOW) </k>
         <stack> 100 : 2 : _ </stack>
 ```
 </details>
@@ -329,10 +329,10 @@ module OPCODES-V4-SPEC
   claim <k> expw => . </k>
         <stack> 64 : 2 : XS => 0 : 1 : XS </stack>
 
-  claim <k> expw => panic(INVALID_ARGUMENT) </k>
+  claim <k> expw => #panic(INVALID_ARGUMENT) </k>
         <stack> 0 : 0 : _ </stack>
 
-  claim <k> expw => panic(INT_OVERFLOW) </k>
+  claim <k> expw => #panic(INT_OVERFLOW) </k>
         <stack> 150 : 2 : _ </stack>
 ```
 </details>
@@ -356,7 +356,7 @@ module OPCODES-V4-SPEC
         </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> b+ => panic(ILL_TYPED_STACK) </k>
+  claim <k> b+ => #panic(ILL_TYPED_STACK) </k>
         <stack> b"1" : 123 : _ </stack>
 ```
 </details>
@@ -373,10 +373,10 @@ module OPCODES-V4-SPEC
         <stack> b"\x03" : b"\x04" : XS => b"\x01" : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> b- => panic(INT_UNDERFLOW) </k>
+  claim <k> b- => #panic(INT_UNDERFLOW) </k>
         <stack> b"\x07" : b"\x04" : _ </stack>
 
-  claim <k> b- => panic(ILL_TYPED_STACK) </k>
+  claim <k> b- => #panic(ILL_TYPED_STACK) </k>
         <stack> b"1" : 123 : _ </stack>
 ```
 </details>
@@ -393,10 +393,10 @@ module OPCODES-V4-SPEC
         <stack> b"\x02" : b"\x08" : XS => b"\x04" : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> b/ => panic(DIV_BY_ZERO) </k>
+  claim <k> b/ => #panic(DIV_BY_ZERO) </k>
         <stack> b"\x00" : b"\x04" : _ </stack>
 
-  claim <k> b/ => panic(ILL_TYPED_STACK) </k>
+  claim <k> b/ => #panic(ILL_TYPED_STACK) </k>
         <stack> b"1" : 123 : _ </stack>
 ```
 </details>
@@ -420,7 +420,7 @@ module OPCODES-V4-SPEC
         </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> b* => panic(ILL_TYPED_STACK) </k>
+  claim <k> b* => #panic(ILL_TYPED_STACK) </k>
         <stack> b"1" : 123 : _ </stack>
 ```
 </details>
@@ -445,7 +445,7 @@ module OPCODES-V4-SPEC
         <stack> b"\x10\x01" : b"\x10\x01" : XS => 0 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> b< => panic(ILL_TYPED_STACK) </k>
+  claim <k> b< => #panic(ILL_TYPED_STACK) </k>
         <stack> b"1" : 123 : _ </stack>
 ```
 </details>
@@ -470,7 +470,7 @@ module OPCODES-V4-SPEC
         <stack> b"\x10\x01" : b"\x10\x01" : XS => 0 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> b> => panic(ILL_TYPED_STACK) </k>
+  claim <k> b> => #panic(ILL_TYPED_STACK) </k>
         <stack> b"1" : 123 : _ </stack>
 ```
 </details>
@@ -495,7 +495,7 @@ module OPCODES-V4-SPEC
         <stack> b"\x10\x01" : b"\x10\x01" : XS => 1 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> b<= => panic(ILL_TYPED_STACK) </k>
+  claim <k> b<= => #panic(ILL_TYPED_STACK) </k>
         <stack> b"1" : 123 : _ </stack>
 ```
 </details>
@@ -520,7 +520,7 @@ module OPCODES-V4-SPEC
         <stack> b"\x10\x01" : b"\x10\x01" : XS => 1 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> b>= => panic(ILL_TYPED_STACK) </k>
+  claim <k> b>= => #panic(ILL_TYPED_STACK) </k>
         <stack> b"1" : 123 : _ </stack>
 ```
 </details>
@@ -541,7 +541,7 @@ module OPCODES-V4-SPEC
         <stack> b"abcd" : b"abcde" : XS => 0 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> b== => panic(ILL_TYPED_STACK) </k>
+  claim <k> b== => #panic(ILL_TYPED_STACK) </k>
         <stack> b"1" : 123 : _ </stack>
 ```
 </details>
@@ -562,7 +562,7 @@ module OPCODES-V4-SPEC
         <stack> b"abcd" : b"abcde" : XS => 1 : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> b!= => panic(ILL_TYPED_STACK) </k>
+  claim <k> b!= => #panic(ILL_TYPED_STACK) </k>
         <stack> b"1" : 123 : _ </stack>
 ```
 </details>
@@ -579,10 +579,10 @@ module OPCODES-V4-SPEC
         <stack> b"\x02" : b"\x09" : XS => b"\x01" : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> b% => panic(DIV_BY_ZERO) </k>
+  claim <k> b% => #panic(DIV_BY_ZERO) </k>
         <stack> b"\x00" : b"\x09" : _ </stack>
 
-  claim <k> b% => panic(ILL_TYPED_STACK) </k>
+  claim <k> b% => #panic(ILL_TYPED_STACK) </k>
         <stack> b"1" : 123 : _ </stack>
 ```
 </details>
@@ -599,7 +599,7 @@ module OPCODES-V4-SPEC
         <stack> b"\x01\x01" : b"\x12" : XS => b"\x01\x13" : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> b| => panic(ILL_TYPED_STACK) </k>
+  claim <k> b| => #panic(ILL_TYPED_STACK) </k>
         <stack> b"1" : 123 : _ </stack>
 ```
 </details>
@@ -616,7 +616,7 @@ module OPCODES-V4-SPEC
         <stack> b"\x01\x01" : b"\x13" : XS => b"\x00\x01" : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> b& => panic(ILL_TYPED_STACK) </k>
+  claim <k> b& => #panic(ILL_TYPED_STACK) </k>
         <stack> b"1" : 123 : _ </stack>
 ```
 </details>
@@ -633,7 +633,7 @@ module OPCODES-V4-SPEC
         <stack> b"\x01\x01" : b"\x10\x01" : XS => b"\x11\x00" : XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
 
-  claim <k> b^ => panic(ILL_TYPED_STACK) </k>
+  claim <k> b^ => #panic(ILL_TYPED_STACK) </k>
         <stack> b"1" : 123 : _ </stack>
 ```
 </details>
@@ -649,7 +649,7 @@ module OPCODES-V4-SPEC
   claim <k> b~ => . </k>
         <stack> b"\x01\x01" : XS => b"\xfe\xfe" : XS </stack>
 
-  claim <k> b~ => panic(ILL_TYPED_STACK) </k>
+  claim <k> b~ => #panic(ILL_TYPED_STACK) </k>
         <stack> 123 : _ </stack>
 ```
 </details>

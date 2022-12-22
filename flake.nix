@@ -7,11 +7,10 @@
     flake-utils.follows = "k-framework/flake-utils";
     rv-utils.url = "github:runtimeverification/rv-nix-tools";
     poetry2nix.follows = "pyk/poetry2nix";
-    blockchain-k-plugin.url =
-      "github:runtimeverification/blockchain-k-plugin/8fdc74e3caf254aa3952393dbb0368d2c98c321a";
+    blockchain-k-plugin.url = "github:runtimeverification/blockchain-k-plugin/df271ba0f0d7fb3b361ef5f0e80c461cb474d699";
     blockchain-k-plugin.inputs.flake-utils.follows = "k-framework/flake-utils";
     blockchain-k-plugin.inputs.nixpkgs.follows = "k-framework/nixpkgs";
-    pyk.url = "github:runtimeverification/pyk/v0.1.35";
+    pyk.url = "github:runtimeverification/pyk/v0.1.91";
     pyk.inputs.flake-utils.follows = "k-framework/flake-utils";
     pyk.inputs.nixpkgs.follows = "k-framework/nixpkgs";
 
@@ -57,7 +56,7 @@
               make \
                 APPLE_SILICON=${if prev.stdenv.isAarch64 && prev.stdenv.isDarwin then "true" else "false"} \
                 SHELL=$SHELL \
-                plugin-deps
+                plugin-deps -j$(nproc)
             '';
 
             enableParallelBuilding = true;
@@ -68,28 +67,30 @@
             '';
           };
 
-          kavm-bin = prev.poetry2nix.mkPoetryApplication {
+          kavm = prev.poetry2nix.mkPoetryApplication {
+            # buildInputs = [ prev.python311Packages.pip ];
             python = prev.python310;
             projectDir = ./kavm;
-            overrides = prev.poetry2nix.overrides.withDefaults
+            overrides = prev.poetry2nix.overrides.withoutDefaults
               (finalPython: prevPython: { pyk = prev.python310Packages.pyk; });
-            groups = [ ];
+            preferWheels = true;
             # We remove `"dev"` from `checkGroups`, so that poetry2nix does not try to resolve dev dependencies.
             checkGroups = [ ];
             propagatedBuildInputs = [ k prev.llvm-backend ];
           };
         in {
-          kavm = prev.stdenv.mkDerivation {
-            pname = "kavm";
+          avm-semantics = prev.stdenv.mkDerivation {
+            pname = "avm-semantics";
             version = self.rev or "dirty";
             buildInputs = with prev; [
-              kavm-bin
+              kavm
               cryptopp.dev
               curl.dev
               secp256k1
               msgpack
               openssl.dev
               procps
+              poetry
             ];
             nativeBuildInputs = [ prev.makeWrapper ];
 
@@ -118,7 +119,7 @@
               cp -r ${kavm-deps}/* .build/usr/
               chmod -R u+w .build/
               make \
-                SHELL=$SHELL VENV_ACTIVATE=true \
+                SKIP_POETRY_RUN=1 SHELL=$SHELL VENV_ACTIVATE=true \
                 ${if prev.stdenv.isDarwin then "UNAME_S=" else ""} \
                 build
             '';
@@ -127,13 +128,19 @@
               mkdir -p $out
               mv .build/usr/* $out/
               ln -s ${k} $out/lib/kavm/kframework
-              mkdir $out/bin
-              makeWrapper ${kavm-bin}/bin/kavm $out/bin/kavm \
-                --set KAVM_DEFINITION_DIR $out/lib/kavm/avm-llvm/avm-execution-kompiled \
-                --set KAVM_LIB $out/lib/kavm
             '';
           };
+          kavm-deps = kavm-deps;
 
+          # rebuild the kavm executable, giving it the newly determined path to the K definition
+          kavm = kavm.overrideAttrs (oldAttrs: {
+            buildInputs = oldAttrs.buildInputs or [] ++ [ prev.makeWrapper prev.python311.pkgs.pip ];
+            postInstall = oldAttrs.postInstall or "" + ''
+              wrapProgram $out/bin/kavm \
+                --set KAVM_DEFINITION_DIR ${(toString final.avm-semantics) + "/lib/kavm/avm-llvm/avm-testing-kompiled"} \
+                --set KAVM_VERIFICATION_DEFINITION_DIR ${(toString final.avm-semantics) + "/lib/kavm/avm-haskell/verification-kompiled"}
+            '';
+          });
         };
     in flake-utils.lib.eachSystem [
       "x86_64-linux"
@@ -154,9 +161,9 @@
           ];
         };
       in {
-        packages.default = pkgs.kavm;
+        packages.default = pkgs.avm-semantics;
         packages = {
-          inherit (pkgs) kavm kavm-deps;
+          inherit (pkgs) kavm-deps avm-semantics kavm;
 
           check-submodules = rv-utils.lib.check-submodules pkgs {
             inherit k-framework blockchain-k-plugin;
@@ -168,6 +175,13 @@
               blockchain-k-plugin.submodule = "deps/plugin";
             };
         };
+        devShell = pkgs.kavm.dependencyEnv.overrideAttrs(old: {
+          shellHook = ''
+            echo "Welcome to KAVM!"
+            export KAVM_DEFINITION_DIR=${(toString pkgs.avm-semantics) + "/lib/kavm/avm-llvm/avm-testing-kompiled"}
+            echo KAVM definition is at $KAVM_DEFINITION_DIR
+          '';
+          });
       }) // {
         overlays.default = nixpkgs.lib.composeManyExtensions [
           k-framework.overlay

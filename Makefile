@@ -22,9 +22,11 @@ KAVM_INCLUDE     := $(KAVM_LIB)/include
 KAVM_SCRIPTS     := $(KAVM_LIB)/scripts
 KAVM_K_BIN       := $(KAVM_LIB)/kframework/bin
 KAVM             := kavm
-KAVM_DEFINITION_DIR=$(abspath $(KAVM_LIB)/avm-llvm/avm-execution-kompiled/)
+KAVM_DEFINITION_DIR=$(abspath $(KAVM_LIB)/avm-llvm/avm-testing-kompiled/)
+KAVM_VERIFICATION_DEFINITION_DIR=$(abspath $(KAVM_LIB)/avm-haskell/verification-kompiled/)
 export KAVM_LIB
 export KAVM_DEFINITION_DIR
+export KAVM_VERIFICATION_DEFINITION_DIR
 
 K_SUBMODULE := $(DEPS_DIR)/k
 K_BIN       := $(INSTALL_LIB)/kframework/bin
@@ -55,13 +57,12 @@ export K_OPTS
 
 .PHONY: all clean distclean install uninstall                                         \
         deps k-deps libsecp256k1 libff plugin-deps hook-deps                          \
-        build build-avm build-kavm                                                    \
+        build build-avm build-avm-verification build-kavm                             \
         test test-avm-semantics test-avm-semantics-prove                              \
-        test-kavm test-kavm-kast test-kavm-kast-avm-scenario test-kavm-kast-teal      \
+        test-kavm test-kavm-bison-parsers                                             \
         test-kavm-hooks build-kavm-hooks-tests                                        \
         clean-avm clean-kavm                                                          \
-        module-imports-graph module-imports-graph-dot                                 \
-        venv venv-clean
+        module-imports-graph module-imports-graph-dot
 
 .SECONDARY:
 
@@ -161,7 +162,7 @@ $(plugin_include)/kframework/%: $(PLUGIN_SUBMODULE)/plugin/%
 plugin-deps: libsecp256k1 libff libcryptopp $(plugin_includes) $(plugin_c_includes)
 # --------
 
-build: build-kavm build-avm
+build: build-kavm build-avm build-avm-verification
 
 $(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
 	@mkdir -p $(dir $@)
@@ -180,10 +181,11 @@ $(hook_include)/%: $(CURDIR)/hooks/%
 	@mkdir -p $(dir $@)
 	install $< $@
 
-HOOK_CC_OPTS      := " -g" " -std=c++14"                                     \
-                     " -L$(CURDIR)/$(KAVM_LIB)/libff/lib"                 \
-                     " -I$(CURDIR)/$(KAVM_LIB)/libff/include"             \
-                     " -I$(plugin_include)/c"                             \
+HOOK_CC_OPTS      := " -g" " -std=c++14"                      \
+                     " -L$(CURDIR)/$(KAVM_LIB)/libff/lib"     \
+                     " -I$(CURDIR)/$(KAVM_LIB)/libff/include" \
+                     " -I$(plugin_include)/c"                 \
+                     " -I/usr/include"                        \
                      " -lcryptopp" " -lsecp256k1" " -lff" " -lcurl" " -lssl" " -lcrypto"
 
 ifeq ($(UNAME_S),Darwin)
@@ -206,20 +208,13 @@ HOOK_KOMPILE_OPTS := --hook-namespaces "$(HOOK_NAMESPACES)"  \
 ## * kavm --- Python library and CLI app
 
 PY_KAVM_DIR := ./kavm
-VENV_DIR       := $(BUILD_DIR)/venv
-VENV_ACTIVATE  := . $(VENV_DIR)/bin/activate
 
-$(VENV_DIR)/pyvenv.cfg:
-	   python -m venv $(VENV_DIR) \
-           && $(VENV_ACTIVATE)        \
-           && pip install --editable $(PY_KAVM_DIR)
+ifeq ($(SKIP_POETRY_RUN),)
+  POETRY_RUN  := poetry run -C $(PY_KAVM_DIR)
+else
+  POETRY_RUN  :=
+endif
 
-venv: $(VENV_DIR)/pyvenv.cfg
-	@echo $(VENV_ACTIVATE)
-
-venv-clean:
-	rm -rf $(VENV_DIR)
-	$(MAKE) clean -C $(PY_KAVM_DIR)
 
 check-kavm-codestyle:
 	$(MAKE) check -C $(PY_KAVM_DIR)
@@ -231,10 +226,10 @@ kavm_scripts := $(patsubst %, $(KAVM_SCRIPTS)/%, parse-avm-simulation.sh  parse-
 kavm_lib_files := version
 kavm_libs      := $(patsubst %, $(KAVM_LIB)/%, $(kavm_lib_files))
 
-build-kavm: venv $(KAVM_LIB)/version $(KAVM_DEFINITION_DIR)
+build-kavm: $(KAVM_LIB)/version $(KAVM_DEFINITION_DIR)
 
 # this target packages the Python-based kavm CLI
-$(KAVM_LIB)/version: $(includes) $(kavm_scripts) $(VENV_DIR)/pyvenv.cfg
+$(KAVM_LIB)/version: $(includes) $(kavm_scripts)
 	@mkdir -p $(dir $@)
 	echo '== KAVM Version'    > $@
 	echo $(KAVM_RELEASE_TAG) >> $@
@@ -253,7 +248,7 @@ $(KAVM_INCLUDE)/kframework/modules/%:
 	@mkdir -p $(dir $@)
 	install $< $@
 
-clean-kavm: venv-clean
+clean-kavm:
 	rm -f $(KAVM_LIB)/version
 
 # * avm-semantics --- the K semantics of AVM
@@ -276,7 +271,10 @@ avm_files    :=                            \
                 avm/teal/teal-fields.md    \
                 avm/teal/teal-stack.md     \
                 avm/teal/teal-syntax.md    \
-                avm/teal/teal-types.md
+                avm/teal/teal-types.md     \
+                avm/algod/algod-models.md  \
+                avm/avm-testing.md         \
+                avm/panics.md
 
 avm_includes := $(patsubst %, $(KAVM_INCLUDE)/kframework/%, $(avm_files))
 
@@ -287,10 +285,14 @@ ifeq ($(K_BACKEND),)
   K_BACKEND := llvm
 endif
 
+ifneq ($(BUILD_WITH_COVERAGE),)
+  BUILD_WITH_COVERAGE := --coverage
+endif
+
 avm_dir           := avm-llvm
-avm_main_module   := AVM-EXECUTION
-avm_syntax_module := TEAL-PARSER-SYNTAX
-avm_main_file     := avm/avm-execution.md
+avm_main_module   := AVM-TESTING
+avm_syntax_module := AVM-TESTING-SYNTAX
+avm_main_file     := avm/avm-testing.md
 avm_main_filename := $(basename $(notdir $(avm_main_file)))
 avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled/
 
@@ -300,8 +302,8 @@ $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM
 	@mkdir -p $(KAVM_DEFINITION_DIR)
 	@rm -f $(KAVM_DEFINITION_DIR)/interpreter.o # make sure the llvm interpreter gets rebuilt
 	@rm -f $(KAVM_DEFINITION_DIR)/interpreter
-	$(VENV_ACTIVATE) && $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file) \
-		                        --backend llvm                                              \
+	$(POETRY_RUN) $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file)       \
+                            --backend llvm                                              \
                             -I "${KAVM_INCLUDE}/kframework"                             \
                             -I "${plugin_include}/kframework"                           \
                             --definition-dir "${KAVM_LIB}/${avm_kompiled}"              \
@@ -309,13 +311,35 @@ $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM
                             --syntax-module $(avm_syntax_module)                        \
                             --hook-namespaces KRYPTO KAVM                               \
                             --hook-cpp-files $(HOOK_KAVM_FILES) $(PLUGIN_CPP_FILES)     \
-                            --hook-clang-flags $(HOOK_CC_OPTS)
-
+                            --hook-clang-flags $(HOOK_CC_OPTS)                          \
+                            $(BUILD_WITH_COVERAGE)
+	@make generate-parsers
 
 
 clean-avm:
 	rm -rf $(KAVM_LIB)/$(avm_kompiled)
 	rm -rf $(KAVM_INCLUDE)
+
+generate-parsers:
+	kast --definition $(KAVM_DEFINITION_DIR) --gen-parser \
+             --module AVM-TESTING-SYNTAX                      \
+             --sort JSON                                      \
+             $(KAVM_DEFINITION_DIR)/parser_JSON_AVM-TESTING-SYNTAX
+	kast --definition $(KAVM_DEFINITION_DIR) --gen-parser \
+             --module TEAL-PARSER-SYNTAX                      \
+             --sort TealInputPgm                              \
+             $(KAVM_DEFINITION_DIR)/parser_TealInputPgm_TEAL-PARSER-SYNTAX
+	echo 'cat $$(cat $$1)' > $(KAVM_DEFINITION_DIR)/catcat
+	@chmod +x $(KAVM_DEFINITION_DIR)/catcat
+
+build-avm-verification: $(KAVM_LIB)/$(avm_verification_kompiled)/timestamp
+
+$(KAVM_LIB)/$(avm_verification_kompiled)/timestamp: tests/specs/verification.k $(avm_includes)
+	mkdir -p $(KAVM_VERIFICATION_DEFINITION_DIR)
+	$(POETRY_RUN)                                                                             \
+	$(KAVM) kompile $< --backend haskell --definition-dir $(KAVM_VERIFICATION_DEFINITION_DIR) \
+                           --emit-json --hook-namespaces KRYPTO KAVM                              \
+                           -I "${KAVM_INCLUDE}/kframework" -I "${plugin_include}/kframework"
 
 # Installation
 # ------------
@@ -342,12 +366,38 @@ uninstall:
 	rm -rf $(DESTDIR)$(INSTALL_BIN)/kavm
 	rm -rf $(DESTDIR)$(INSTALL_LIB)/kavm
 
+# Coverage Processing
+# -------------------
+
+KCOVR:=$(KAVM_K_BIN)/kcovr
+
+$(BUILD_DIR)/coverage.xml: test-kavm-avm-simulation
+	$(POETRY_RUN) $(KCOVR) $(KAVM_DEFINITION_DIR)       \
+        -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
+	$(KAVM_SCRIPTS)/post-process-coverage $(BUILD_DIR)/coverage.xml
+
+transient-coverage:
+	$(POETRY_RUN) $(KCOVR) $(KAVM_DEFINITION_DIR)       \
+        -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
+	$(KAVM_SCRIPTS)/post-process-coverage $(BUILD_DIR)/coverage.xml
+
+$(BUILD_DIR)/coverage.html: $(BUILD_DIR)/coverage.xml
+	$(POETRY_RUN) pycobertura show --format html $(BUILD_DIR)/coverage.xml > $(BUILD_DIR)/coverage.html
+
+coverage-html: $(BUILD_DIR)/coverage.html
+
+# remove coverage execution logs from the kompiled directory
+clean-coverage:
+	rm -f $(KAVM_DEFINITION_DIR)/*_coverage.txt
+	rm -f $(BUILD_DIR)/coverage.xml
+	rm -f $(BUILD_DIR)/coverage.html
+
 # Tests
 # -----
 
 KAVM_OPTIONS :=
 
-test: test-kavm-hooks test-kavm test-kavm-algod test-avm-semantics-prove
+test: test-kavm-hooks test-kavm test-kavm-avm-simulation test-kavm-algod test-avm-semantics-prove
 
 ##########################################
 ## Standalone AVM LLVM Backend hooks tests
@@ -365,32 +415,24 @@ build-kavm-hooks-tests: $(hook_includes) plugin-deps
 check-codestyle-kavm:
 	$(MAKE) check -C $(PY_KAVM_DIR)
 
-## * kavm CLI tests
-test-kavm: test-kavm-kast module-imports-graph
-
-test-kavm-kast: test-kavm-kast-avm-scenario test-kavm-kast-teal
-
-test-kavm-kast-avm-scenario: $(avm_simulation_sources:=.kavm-kast.unit)
-
-tests/scenarios/%.avm-simulation.kavm-kast.unit: tests/scenarios/%.avm-simulation
-	$(VENV_ACTIVATE) && $(KAVM) kast $< --output none
-
-test-kavm-kast-teal: $(teal_sources:=.kavm-kast.unit)
-
-tests/teal-sources/%.teal.kavm-kast.unit: tests/teal-sources/%.teal
-	$(VENV_ACTIVATE) && $(KAVM) kast $< --output none
-
 ## * kavm.algod Python library tests
 test-kavm-algod:
 	$(MAKE) test-unit -C $(PY_KAVM_DIR)
 	$(MAKE) test-integration-kalgod -C $(PY_KAVM_DIR)
+
+
+###########################
+## Generated Bison parsers tests
+###########################
+
+test-kavm-bison-parsers:
+	$(MAKE) test-bison-parsers -C $(PY_KAVM_DIR)
 
 ###########################
 ## AVM Simulation Scenarios
 ###########################
 test-kavm-avm-simulation:
 	$(MAKE) test-scenarios -C $(PY_KAVM_DIR)
-
 
 ###########################
 ## AVM Symbolic Proof Tests
@@ -399,24 +441,20 @@ avm_prove_specs_failing := $(shell cat tests/failing-symbolic.list)
 avm_prove_internal_specs := $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/internal/*-spec.k))
 avm_prove_simple_specs := $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/simple/*-spec.k))
 avm_prove_opcode_specs :=  $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/opcodes/*-spec.md))
+avm_prove_call_specs :=  $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/calls/*-spec.md))
 
 test-avm-semantics-internal-prove: $(avm_prove_internal_specs:=.prove)
 test-avm-semantics-opcode-prove: $(avm_prove_opcode_specs:=.prove)
 test-avm-semantics-simple-prove: $(avm_prove_simple_specs:=.prove)
+test-avm-semantics-calls-prove: $(avm_prove_call_specs:=.prove)
 
-tests/specs/%-spec.k.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
-	$(VENV_ACTIVATE) && \
-	$(KAVM) prove tests/specs/$*-spec.k --definition tests/specs/verification-kompiled
+tests/specs/%-spec.k.prove: build-avm-verification $(KAVM_LIB)/version
+	$(POETRY_RUN) \
+	$(KAVM) prove tests/specs/$*-spec.k --definition $(KAVM_VERIFICATION_DEFINITION_DIR)
 
-tests/specs/%-spec.md.prove: tests/specs/verification-kompiled/timestamp $(KAVM_LIB)/version
-	$(VENV_ACTIVATE) && \
-	$(KAVM) prove tests/specs/$*-spec.md --definition tests/specs/verification-kompiled
-
-tests/specs/verification-kompiled/timestamp: tests/specs/verification.k $(VENV_DIR)/pyvenv.cfg $(avm_includes)
-	mkdir -p tests/specs/verification-kompiled
-	$(VENV_ACTIVATE) &&                                                                     \
-	$(KAVM) kompile $< --backend haskell --definition-dir tests/specs/verification-kompiled \
-                           -I "${KAVM_INCLUDE}/kframework" -I "${plugin_include}/kframework"
+tests/specs/%-spec.md.prove: build-avm-verification $(KAVM_LIB)/version
+	$(POETRY_RUN) \
+	$(KAVM) prove tests/specs/$*-spec.md --definition $(KAVM_VERIFICATION_DEFINITION_DIR)
 
 clean-verification:
 	rm -rf tests/specs/verification-kompiled
@@ -429,10 +467,10 @@ clean-verification:
 module-imports-graph: module-imports-graph-dot
 	dot -Tsvg $(KAVM_LIB)/$(avm_kompiled)/import-graph -o module-imports-graph.svg
 
-module-imports-graph-dot: venv
-	$(VENV_ACTIVATE) && pyk graph-imports $(KAVM_LIB)/$(avm_kompiled)
+module-imports-graph-dot:
+	$(POETRY_RUN) && pyk graph-imports $(KAVM_LIB)/$(avm_kompiled)
 
-clean: clean-avm clean-kavm venv-clean clean-verification
+clean: clean-avm clean-kavm clean-verification
 
 distclean: clean
 	rm -rf $(BUILD_DIR)

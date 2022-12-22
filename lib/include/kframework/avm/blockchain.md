@@ -4,6 +4,7 @@ Algorand Blockchain Model
 ```k
 requires "avm/teal/teal-constants.md"
 requires "avm/teal/teal-fields.md"
+requires "avm/teal/teal-syntax.md"
 requires "avm/additional-fields.md"
 requires "avm/txn.md"
 requires "constants.md"
@@ -16,7 +17,7 @@ Global Field State Representation
 module GLOBALS
   imports TEAL-CONSTANTS
   imports TEAL-FIELDS
-  imports ALGO-TXN
+  imports TEAL-TYPES
   imports AVM-CONSTANTS
 ```
 
@@ -42,6 +43,7 @@ module GLOBALS
       <latestTimestamp>           0 </latestTimestamp>
       <currentApplicationID>      0 </currentApplicationID>
       <currentApplicationAddress> .Bytes </currentApplicationAddress>
+      <creatorAddress>            .Bytes </creatorAddress>
     </globals>
 ```
 
@@ -77,6 +79,12 @@ module GLOBALS
          <currentApplicationAddress> V </currentApplicationAddress>
          ...
        </globals>
+
+  rule [[ getGlobalField(CreatorAddress) => V ]]
+       <globals>
+         <creatorAddress> V </creatorAddress>
+         ...
+       </globals>
 ```
 
 ```k
@@ -100,22 +108,22 @@ module APPLICATIONS
   configuration
     <appsCreated>
       <app multiplicity="*" type="Map">
-        <appID>           NoTValue  </appID>
-        <approvalPgmSrc>     (int 0):TealInputPgm </approvalPgmSrc>
-        <clearStatePgmSrc>   (int 1):TealInputPgm </clearStatePgmSrc>
-        <approvalPgm>     NoTValue </approvalPgm>
-        <clearStatePgm>   NoTValue </clearStatePgm>
+        <appID>             NoTValue             </appID>
+        <approvalPgmSrc>    (int 0):TealInputPgm </approvalPgmSrc>
+        <clearStatePgmSrc>  (int 1):TealInputPgm </clearStatePgmSrc>
+        <approvalPgm>       NoTValue             </approvalPgm>
+        <clearStatePgm>     NoTValue             </clearStatePgm>
         <globalState>
-          <globalNumInts>     NoTValue </globalNumInts>
-          <globalNumBytes>    NoTValue </globalNumBytes>
-          <globalBytes>  .Map     </globalBytes>
-          <globalInts>  .Map     </globalInts>
+          <globalNumInts>   NoTValue             </globalNumInts>
+          <globalNumBytes>  NoTValue             </globalNumBytes>
+          <globalBytes>     .Map                 </globalBytes>
+          <globalInts>      .Map                 </globalInts>
         </globalState>
         <localState>
-          <localNumInts>      NoTValue </localNumInts>
-          <localNumBytes>     NoTValue </localNumBytes>
+          <localNumInts>    NoTValue             </localNumInts>
+          <localNumBytes>   NoTValue             </localNumBytes>
         </localState>
-        <extraPages>       NoTValue </extraPages>
+        <extraPages>        NoTValue             </extraPages>
       </app>
     </appsCreated>
 ```
@@ -195,7 +203,6 @@ module ALGO-BLOCKCHAIN
   imports APPLICATIONS
   imports ASSETS
   imports ADDITIONAL-FIELDS
-  imports TEAL-SYNTAX
   imports TEAL-TYPES-SYNTAX
   imports MAP
 
@@ -222,6 +229,12 @@ module ALGO-BLOCKCHAIN
           <appsOptedIn/>
           <assetsCreated/>
           <assetsOptedIn/>
+          <boxes>
+            <box multiplicity="*" type="Map">
+              <boxName> .Bytes </boxName>
+              <boxData> .Bytes </boxData>
+            </box>
+          </boxes>
         </account>
       </accountsMap>
       <appCreator>   .Map </appCreator>   // AppID |-> Creator's address
@@ -251,7 +264,7 @@ Accessor functions
 ### Account State Accessors
 
 ```k
-  syntax MaybeTValue ::= getAccountParamsField(AccountParamsField, TValue)  [function, functional]
+  syntax MaybeTValue ::= getAccountParamsField(AccountParamsField, TValue)  [function, total]
   //----------------------------------------------------------------------------------------------
   rule [[ getAccountParamsField(AcctBalance, ADDR) => BAL ]]
        <account>
@@ -276,7 +289,7 @@ Accessor functions
 
   rule getAccountParamsField(_, _) => NoTValue  [owise]
 
-  syntax MaybeTValue ::= getAppParamsField(AppParamsField, Int) [function, functional]
+  syntax MaybeTValue ::= getAppParamsField(AppParamsField, Int) [function, total]
   //----------------------------------------------------------------------------------
   rule [[ getAppParamsField(AppApprovalProgram, APP) => X ]]
        <app>
@@ -341,7 +354,7 @@ Accessor functions
          ...
        </account>
 
-  rule [[ getAppParamsField(AppAddress, APP) => getAppAddress(APP) ]]
+  rule [[ getAppParamsField(AppAddress, APP) => getAppAddressBytes(APP) ]]
        <accountsMap> AM </accountsMap>
     requires APP in_apps(<accountsMap> AM </accountsMap>)
 
@@ -390,7 +403,7 @@ Accessor functions
 ### Asset State Accessors
 
 ```k
-  syntax Bool ::= hasOptedInAsset(TValue, TValue) [function, functional]
+  syntax Bool ::= hasOptedInAsset(TValue, TValue) [function, total]
   // -----------------------------------------------------
   rule [[ hasOptedInAsset(ASSET, ADDR) => true ]]
        <account>
@@ -443,11 +456,12 @@ Accessor functions
   syntax Bool ::= assetCreated(TValue) [function]
   // -------------------------------------------
   rule [[ assetCreated(ASSET) => true ]]
-       <assetCreator> ASSET |-> _ ... </assetCreator>
+       <assetCreator> AC </assetCreator>
+    requires ASSET in_keys(AC)
 
   rule [[ assetCreated(ASSET) => false ]]
-       <assetCreator> AMap </assetCreator>
-    requires notBool (ASSET in_keys(AMap))
+       <assetCreator> AC </assetCreator>
+    requires notBool (ASSET in_keys(AC))
 
  syntax TValue ::= getAssetInfo(AssetField, TValue) [function]
   // -----------------------------------------------------------
@@ -578,7 +592,7 @@ Accessor functions
     requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
 
 
-  syntax MaybeTValue ::= getAppLocal(TValue, TValue, TValue) [function, functional]
+  syntax MaybeTValue ::= getAppLocal(TValue, TValue, TValue) [function, total]
   // ---------------------------------------------------------
   rule [[ getAppLocal(ADDR, APP, KEY) => V ]]
        <account>
@@ -622,54 +636,35 @@ Accessor functions
   // if the account exists but is not opted in, or does not exist, return NoTValue
   rule getAppLocal(_, _, _) => NoTValue [owise]
 
-  syntax TValue ::= getAppGlobal(TValue, TValue) [function]
+  syntax TValue ::= getAppGlobal(AppCell, TValue) [function, total]
   // ---------------------------------------------------
-  rule [[ getAppGlobal(APP, KEY) => V ]]
-       <appsCreated>
-         <app>
-           <appID> APP </appID>
-           <globalState>
-             <globalInts> KEY |-> V ... </globalInts>
-             ...
-           </globalState>
-           ...
-         </app>
-         ...
-       </appsCreated>
-  rule [[ getAppGlobal(APP, KEY) => V ]]
-       <appsCreated>
-         <app>
-           <appID> APP </appID>
-           <globalState>
-             <globalBytes> KEY |-> V ... </globalBytes>
-             ...
-           </globalState>
-           ...
-         </app>
-         ...
-       </appsCreated>
 
-  // if the key doesn't exist, return -1
-  rule [[ getAppGlobal(APP, KEY) => -1 ]]
-       <appsCreated>
-         <app>
-           <appID> APP </appID>
-           <globalState>
-             <globalInts> MI </globalInts>
-             <globalBytes> MB </globalBytes>
-             ...
-           </globalState>
-           ...
-         </app>
-         ...
-       </appsCreated>
-    requires notBool ((KEY in_keys (MI)) orBool (KEY in_keys(MB)))
+  rule getAppGlobal(<app>
+                      <globalState>
+                        <globalInts> GI:Map </globalInts>
+                        <globalBytes> GB:Map </globalBytes>
+                        ...
+                      </globalState>
+                      ...
+                    </app>, KEY) =>
+          {GI[KEY]}:>Int
+    requires ((KEY in_keys(GI)) andThenBool (isInt(GI[KEY])))
+     andBool notBool (KEY in_keys(GB)) 
 
-  // if the app doesn't exist, return -1
-  rule [[ getAppGlobal(APP, _) => -1 ]]
-       <accountsMap> AMAP  </accountsMap>
-    requires notBool (APP in_apps(<accountsMap> AMAP </accountsMap>))
+  rule getAppGlobal(<app>
+                      <globalState>
+                        <globalInts> GI:Map </globalInts>
+                        <globalBytes> GB:Map </globalBytes>
+                        ...
+                      </globalState>
+                      ...
+                    </app>, KEY) =>
+          {GB[KEY]}:>Bytes
+    requires ((KEY in_keys(GB)) andThenBool (isBytes(GB[KEY])))
+     andBool notBool (KEY in_keys(GI)) 
 
+  // if the app or key doesn't exist, return -1
+  rule getAppGlobal(_, _) => -1 [owise]
 
   syntax Bool ::= appCreated(TValue) [function]
   // -----------------------------------------
@@ -704,6 +699,31 @@ Accessor functions
     requires ADDR =/=K ADDR'
 
   rule _ in_accounts( <accountsMap> .Bag </accountsMap> ) => false
+
+  syntax Bool ::= Bytes "in_boxes" "(" BoxesCell ")" [function]
+  //-----------------------------------------------------------
+  rule NAME in_boxes(
+              <boxes>
+                <box>
+                  <boxName> NAME </boxName>
+                  ...
+                </box>
+                ...
+              </boxes>
+            ) => true
+
+  rule NAME in_boxes(
+              <boxes>
+                <box>
+                  <boxName> NAME' </boxName>
+                  ...
+                </box>
+                REST
+              </boxes>
+            ) => NAME in_boxes(<boxes> REST </boxes>)
+    requires NAME =/=K NAME'
+
+  rule _ in_boxes(<boxes> .Bag </boxes>) => false
 
 
   syntax Bool ::= TValue "in_optedInApps" "(" AppsOptedInCell ")" [function]
@@ -773,7 +793,7 @@ Accessor functions
 
   rule _ in_assets(<assetsCreated> .Bag </assetsCreated>) => false
 
-  syntax Bool ::= TValue "in_apps" "(" AccountsMapCell ")" [function, functional]
+  syntax Bool ::= TValue "in_apps" "(" AccountsMapCell ")" [function, total]
   // ----------------------------------------------------------------------------
   rule APP in_apps(<accountsMap>
                      <account>
@@ -785,7 +805,7 @@ Accessor functions
 
   rule _ in_apps( <accountsMap> .Bag </accountsMap> ) => false
 
-  syntax Bool ::= TValue "in_apps" "(" AppsCreatedCell ")" [function, functional]
+  syntax Bool ::= TValue "in_apps" "(" AppsCreatedCell ")" [function, total]
   // ----------------------------------------------------------------------------
   rule APP in_apps(<appsCreated>
                      <app>
@@ -812,18 +832,18 @@ The purpose of `accountReference()`, `appReference()`, and `asaReference()` is t
 references and also to check that a resource is available.
 
 ```k
-  syntax MaybeTValue ::= accountReference(TValue) [function, functional]
+  syntax MaybeTValue ::= accountReference(TValue) [function, total]
   //--------------------------------------------------------------------
   rule accountReference(A:TBytes ) => A requires accountAvailable(A)
   rule accountReference(I:Int    ) => getTxnField(getCurrentTxn(), Accounts, I)
   rule accountReference(_        ) => NoTValue  [owise]
 
-  syntax MaybeTValue ::= appReference(TUInt64)  [function, functional]
+  syntax MaybeTValue ::= appReference(TUInt64)  [function, total]
   //-----------------------------------------------------------------
   rule appReference(I) => I requires applicationAvailable(I)
   rule appReference(I) => getTxnField(getCurrentTxn(), Applications, I)  [owise]
 
-  syntax MaybeTValue ::= asaReference(TUInt64)  [function, functional]
+  syntax MaybeTValue ::= asaReference(TUInt64)  [function, total]
   //------------------------------------------------------------------
   rule asaReference(I) => I requires assetAvailable(I)
   rule asaReference(I) => getTxnField(getCurrentTxn(), Assets, I)  [owise]
@@ -835,7 +855,7 @@ references and also to check that a resource is available.
 // TODO the associated account of a contract that was created earlier in the group should be available (v 6)
 // TODO the associated account of a contract present in the txn.ForeignApplications field should be available (v7)
 
-  syntax Bool ::= accountAvailable(TBytes) [function, functional]
+  syntax Bool ::= accountAvailable(TBytes) [function, total]
   //---------------------------------------------------------------
 
   rule accountAvailable(A) => true
@@ -852,7 +872,7 @@ references and also to check that a resource is available.
   
 // TODO any contract that was created earlier in the same transaction group should be available (v6)
 
-  syntax Bool ::= applicationAvailable(TUInt64) [function, functional]
+  syntax Bool ::= applicationAvailable(TUInt64) [function, total]
   //------------------------------------------------------------------
 
   rule applicationAvailable(A) => true
@@ -866,13 +886,63 @@ references and also to check that a resource is available.
 
 // TODO any asset that was created earlier in the same transaction group should be available (v6)
 
-  syntax Bool ::= assetAvailable(TUInt64) [function, functional]
+  syntax Bool ::= assetAvailable(TUInt64) [function, total]
   //------------------------------------------------------------
 
   rule assetAvailable(A) => true
     requires contains(getTxnField(getCurrentTxn(), Assets), A)
 
   rule assetAvailable(_) => false [owise]
+
+  syntax Map ::= TValuePairList2Map(TValuePairList, TValueList, Bytes) [function, total]
+  //----------------------------------------------------------------------
+  rule TValuePairList2Map((A, B):TValuePair REST, APPS, DEFAULT) => ((A |-> getAppAddressBytes({getTValueAt(B -Int 1, APPS)}:>Int)) TValuePairList2Map(REST, APPS, DEFAULT))
+    requires B >=Int 1
+  rule TValuePairList2Map((A, B):TValuePair, APPS, _) => (A |-> getAppAddressBytes({getTValueAt(B -Int 1, APPS)}:>Int))
+    requires B >=Int 1
+  rule TValuePairList2Map((A, 0):TValuePair REST, APPS, DEFAULT) => ((A |-> DEFAULT) TValuePairList2Map(REST, APPS, DEFAULT))
+  rule TValuePairList2Map((A, 0):TValuePair, _, DEFAULT) => (A |-> DEFAULT)
+  rule TValuePairList2Map(.TValuePairList, _, _) => .Map
+
+  syntax Map ::= getBoxRefs(String) [function, total]
+  syntax Map ::= getGroupBoxRefs(String) [function, total]
+  syntax Map ::= getGroupBoxRefs(Map) [function, total]
+  //--------------------------------------------------------
+
+  rule [[ getGroupBoxRefs(GROUP_ID) => getGroupBoxRefs(VALS) ]]
+       <txnIndexMapGroup>
+         <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
+         <txnIndexMapGroupValues> VALS </txnIndexMapGroupValues>
+       </txnIndexMapGroup>
+
+  rule getGroupBoxRefs( (_ |-> TXN_ID) REST) => getGroupBoxRefs(REST) getBoxRefs(TXN_ID)
+  rule getGroupBoxRefs( .Map) => .Map
+
+  rule [[ getBoxRefs(TXN_ID) => TValuePairList2Map(REFS, FA, getAppAddressBytes({getGlobalField(CurrentApplicationID)}:>Int)) ]]
+       <transaction>
+         <txID> TXN_ID </txID>
+         <foreignApps> FA </foreignApps>
+         <boxReferences> REFS </boxReferences>
+         ...
+       </transaction>
+
+  rule [[ getBoxRefs(TXN_ID) => .Map ]]
+       <transaction>
+         <txID> TXN_ID </txID>
+         <txnTypeSpecificFields>
+           .AppCallTxFieldsCell
+           ...
+         </txnTypeSpecificFields>
+         ...
+       </transaction>
+
+  syntax MaybeTValue ::= boxAcct(Bytes) [function, total]
+  //--------------------------------------------------------------------
+  rule boxAcct(NAME) => {getGroupBoxRefs(getTxnGroupID(getCurrentTxn()))[NAME]}:>Bytes
+    requires NAME in_keys(getGroupBoxRefs(getTxnGroupID(getCurrentTxn())))
+
+  rule boxAcct(_) => NoTValue [owise]
+
 
 ```
 
@@ -885,16 +955,16 @@ The transaction index connects a transaction groups ID to the transaction IDs co
   syntax MaybeTValue ::= getGroupFieldByIdx(String, Int, TxnField) [function]
   syntax MaybeTValue ::= getGroupFieldByIdx(String, Int, TxnaField, Int) [function]
 
-  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD) => getTxnField(TXN_ID, FIELD) ]]
+  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD) => getTxnField({MV[GROUP_INDEX]}:>String, FIELD) ]]
         <txnIndexMapGroup>
           <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
-          <txnIndexMapGroupValues> GROUP_INDEX |-> TXN_ID ... </txnIndexMapGroupValues>
+          <txnIndexMapGroupValues> MV </txnIndexMapGroupValues>
         </txnIndexMapGroup>
 
-  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD, FIELD_INDEX) => getTxnField(TXN_ID, FIELD, FIELD_INDEX) ]]
+  rule [[ getGroupFieldByIdx(GROUP_ID, GROUP_INDEX, FIELD, FIELD_INDEX) => getTxnField( {MV[GROUP_INDEX]}:>String, FIELD, FIELD_INDEX) ]]
         <txnIndexMapGroup>
           <txnIndexMapGroupKey> GROUP_ID </txnIndexMapGroupKey>
-          <txnIndexMapGroupValues> GROUP_INDEX |-> TXN_ID ... </txnIndexMapGroupValues>
+          <txnIndexMapGroupValues> MV </txnIndexMapGroupValues>
         </txnIndexMapGroup>
 
   rule getGroupFieldByIdx(_, _, _) => NoTValue [owise]

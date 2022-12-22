@@ -67,7 +67,7 @@ claim <k> cover 3 => . </k>
       <stacksize> S </stacksize>
   requires S >=Int 4
 
-claim <k> cover 3 => panic(STACK_UNDERFLOW) </k>
+claim <k> cover 3 => #panic(STACK_UNDERFLOW) </k>
       <stack> 123 : 0 : 0 : .TStack </stack>
       <stacksize> 3 </stacksize>
 ```
@@ -86,7 +86,7 @@ claim <k> uncover 3 => . </k>
       <stacksize> S </stacksize>
   requires S >=Int 4
 
-claim <k> uncover 3 => panic(STACK_UNDERFLOW) </k>
+claim <k> uncover 3 => #panic(STACK_UNDERFLOW) </k>
       <stack> 123 : 0 : 0 : .TStack </stack>
       <stacksize> 3 </stacksize>
 ```
@@ -332,27 +332,44 @@ claim <k> log => . </k>
 <summary>K claims</summary>
 
 ```k
-  claim <k> itxn_submit => . </k>
+  claim <k> itxn_submit ~> #incrementPC() ~> #fetchOpcode() => #evalNextTx() </k>
         <currentTxnExecution>
-          <pc> 0 </pc>
-          <program> .Map </program>
-          <jumped> true => false </jumped>
-          <currentApplicationID> 1 </currentApplicationID>
-          <stack> 1 : .TStack </stack>
-          <stacksize> 1 </stacksize>
-          <lastTxnGroupID> "1" </lastTxnGroupID>
+          <globals>
+            <groupSize> _ => ?_ </groupSize>
+            <globalRound> _ => ?_ </globalRound>
+            <latestTimestamp> _ => ?_ </latestTimestamp>
+            <currentApplicationID> 1 => ?_ </currentApplicationID>
+            <currentApplicationAddress> _ => ?_ </currentApplicationAddress>
+            <creatorAddress> _ => ?_ </creatorAddress>
+          </globals>
+          <teal>
+            <pc> 0 => ?_ </pc>
+            <program> .Map => ?_ </program>
+            <mode> _ => ?_ </mode>
+            <version> _ => ?_ </version>
+            <stack> 1 : .TStack => ?_ </stack>
+            <stacksize> 1 => ?_ </stacksize>
+            <jumped> true => ?_ </jumped>
+            <labels> _ => ?_ </labels>
+            <callStack> _ => ?_ </callStack>
+            <scratch> _ => ?_ </scratch>
+            <intcblock> _ => ?_ </intcblock>
+            <bytecblock> _ => ?_ </bytecblock>
+          </teal>
+          <lastTxnGroupID> "1" => ?_ </lastTxnGroupID>
           ...
         </currentTxnExecution>
-        <returncode> 4 => 0 </returncode>
-        <returnstatus> _ => "Success - transaction group accepted" </returnstatus>
-        <activeApps> SetItem(1) => .Set </activeApps>
-        <touchedAccounts> .Set </touchedAccounts>
-        <currentTx> "1" </currentTx>
+        <returncode> 0 </returncode>
+        <activeApps> SetItem(1) => ?_ </activeApps>
+        <touchedAccounts> .List => ?_ </touchedAccounts>
+        <currentTx> "1" => "5" </currentTx>
         <transactions>
           <transaction>
             <txID> "1" </txID>
             <groupID> "1" </groupID>
             <sender> b"3" </sender>
+            <typeEnum> @ appl </typeEnum>
+            <txType> "appl" </txType>
             <resume> true </resume>
             ...
           </transaction>
@@ -383,7 +400,7 @@ claim <k> log => . </k>
         </innerTransactions>
         <nextTxnID> 5 => 6 </nextTxnID>
         <nextGroupID> 1 </nextGroupID>
-        <deque> ListItem("1") => .List </deque>
+        <deque> ListItem("1") </deque>
         <dequeIndexSet> SetItem("1") => (SetItem("1") SetItem("5")) </dequeIndexSet>
         <txnIndexMap> .Bag => ?_ </txnIndexMap>
         <accountsMap>
@@ -464,7 +481,7 @@ claim <k> log => . </k>
 
 ```k
   claim <k> txnas Applications => . </k>
-        <stack> 1 : XS => APPL : XS </stack>
+        <stack> 2 : XS => APPL : XS </stack>
         <stacksize> S </stacksize>
         <currentTx> TX_ID </currentTx>
         <transaction>
@@ -477,7 +494,7 @@ claim <k> log => . </k>
         </transaction>
         <txnIndexMapGroup>
           <txnIndexMapGroupKey> "0" </txnIndexMapGroupKey>
-          <txnIndexMapGroupValues> (0 |-> TX_ID) ... </txnIndexMapGroupValues>
+          <txnIndexMapGroupValues> (0 |-> TX_ID) </txnIndexMapGroupValues>
         </txnIndexMapGroup>
     requires S <Int 1000
 ```

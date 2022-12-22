@@ -38,7 +38,7 @@ module OPCODES-V3-SPEC
         </transaction>
         <txnIndexMapGroup>
           <txnIndexMapGroupKey> "0" </txnIndexMapGroupKey>
-          <txnIndexMapGroupValues> (0 |-> "1") (1 |-> "2") ... </txnIndexMapGroupValues>
+          <txnIndexMapGroupValues> .Map [0 <- "1"] [1 <- "2"] </txnIndexMapGroupValues>
         </txnIndexMapGroup>
     requires S <Int 1000
 ```
@@ -72,7 +72,7 @@ module OPCODES-V3-SPEC
         </transaction>
         <txnIndexMapGroup>
           <txnIndexMapGroupKey> "0" </txnIndexMapGroupKey>
-          <txnIndexMapGroupValues> (0 |-> "1") (1 |-> "2") ... </txnIndexMapGroupValues>
+          <txnIndexMapGroupValues> (0 |-> "1") (1 |-> "2") </txnIndexMapGroupValues>
         </txnIndexMapGroup>
     requires S <Int 1000
 ```
@@ -86,17 +86,12 @@ module OPCODES-V3-SPEC
 <summary>K claims</summary>
 
 ```k
-  claim <k> assert => . </k>
+  claim <k> assert => #panic(ASSERTION_VIOLATION) </k>
         <stack> 0 : _ </stack>
-        <returncode> _ => 3 </returncode>
-        <returnstatus> _ => "Failure - panic: assertion violation" </returnstatus>
-        <paniccode> _ => 24 </paniccode>
 
   claim <k> assert => . </k>
         <stack> N : XS => XS </stack>
         <stacksize> S => S -Int 1 </stacksize>
-        <returncode> _ </returncode>
-        <returnstatus> _ </returnstatus>
     requires N >=Int 1
 ```
 </details>

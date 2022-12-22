@@ -10,6 +10,7 @@ requires "avm/itxn.md"
 requires "avm/teal/teal-syntax.md"
 requires "avm/teal/teal-stack.md"
 requires "avm/teal/teal-execution.md"
+requires "avm/panics.md"
 ```
 
 TEAL Interpreter
@@ -26,6 +27,7 @@ module TEAL-DRIVER
   imports TEAL-STACK
   imports KRYPTO
   imports JSON
+  imports AVM-PANIC
 ```
 
 This module describes the semantics of TEAL opcodes.
@@ -48,7 +50,7 @@ Opcode Semantics
 
 *The `err` Opcode*
 ```k
-  rule <k> err => panic(ERR_OPCODE) ... </k>
+  rule <k> err => #panic(ERR_OPCODE) ... </k>
 ```
 
 ### Cryptographic Operations
@@ -73,7 +75,7 @@ Opcode Semantics
        <stacksize> S => S -Int 1 </stacksize>
     requires I1 +Int I2 <=Int MAX_UINT64
 
-  rule <k> + => panic(INT_OVERFLOW) ... </k>
+  rule <k> + => #panic(INT_OVERFLOW) ... </k>
        <stack> I2 : I1 : _ </stack>
     requires I1 +Int I2 >Int MAX_UINT64
 ```
@@ -85,7 +87,7 @@ Opcode Semantics
        <stacksize> S => S -Int 1 </stacksize>
     requires I1 >=Int I2
 
-  rule <k> - => panic(INT_UNDERFLOW) ... </k>
+  rule <k> - => #panic(INT_UNDERFLOW) ... </k>
        <stack> I2 : I1 : _ </stack>
     requires I1 <Int I2
 ```
@@ -97,7 +99,7 @@ Opcode Semantics
        <stacksize> S => S -Int 1 </stacksize>
     requires I1 *Int I2 <=Int MAX_UINT64
 
-  rule <k> * => panic(INT_OVERFLOW) ... </k>
+  rule <k> * => #panic(INT_OVERFLOW) ... </k>
        <stack> I2 : I1 : _ </stack>
     requires I1 *Int I2 >Int MAX_UINT64
 ```
@@ -109,7 +111,7 @@ Opcode Semantics
        <stacksize> S => S -Int 1 </stacksize>
     requires I2 >Int 0
 
-  rule <k> / => panic(DIV_BY_ZERO) ... </k>
+  rule <k> / => #panic(DIV_BY_ZERO) ... </k>
        <stack> I2 : (_:TValue) : _ </stack>
     requires I2 <=Int 0
 ```
@@ -121,7 +123,7 @@ Opcode Semantics
        <stacksize> S => S -Int 1 </stacksize>
     requires I2 >Int 0
 
-  rule <k> % => panic(DIV_BY_ZERO) ... </k>
+  rule <k> % => #panic(DIV_BY_ZERO) ... </k>
        <stack> I2 : (_:TValue) : _ </stack>
     requires I2 <=Int 0
 ```
@@ -134,11 +136,11 @@ Opcode Semantics
     requires I1 ^Int I2 <=Int MAX_UINT64
      andBool notBool (I1 ==Int 0 andBool I2 ==Int 0)
 
-  rule <k> exp => panic(INVALID_ARGUMENT) ... </k>
+  rule <k> exp => #panic(INVALID_ARGUMENT) ... </k>
        <stack> I2 : I1 : _ </stack>
     requires I1 ==Int 0 andBool I2 ==Int 0
 
-  rule <k> exp => panic(INT_OVERFLOW) ... </k>
+  rule <k> exp => #panic(INT_OVERFLOW) ... </k>
        <stack> I2 : I1 : _ </stack>
     requires I1 ^Int I2 >Int MAX_UINT64
 ```
@@ -160,7 +162,7 @@ Opcode Semantics
        </stack>
     requires notBool (I4 ==Int 0 andBool I3 ==Int 0)
 
-  rule <k> divmodw => panic(DIV_BY_ZERO) ... </k>
+  rule <k> divmodw => #panic(DIV_BY_ZERO) ... </k>
        <stack> I4 : I3 : _ : _ : _ </stack>
     requires I4 ==Int 0 andBool I3 ==Int 0
 
@@ -178,20 +180,20 @@ Opcode Semantics
     requires I3 =/=Int 0
      andBool (asUInt128(I1, I2) /Int I3) <=Int MAX_UINT64
 
-  rule <k> divw => panic(INT_OVERFLOW) ... </k>
+  rule <k> divw => #panic(INT_OVERFLOW) ... </k>
        <stack> I3 : I2 : I1 : _ </stack>
     requires I3 =/=Int 0
      andBool (asUInt128(I1, I2) /Int I3) >Int MAX_UINT64
 
-  rule <k> divw => panic(DIV_BY_ZERO) ... </k>
+  rule <k> divw => #panic(DIV_BY_ZERO) ... </k>
        <stack> 0 : _ : _ : _ </stack>
 
-  rule <k> divw => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> divw => #panic(ILL_TYPED_STACK) ... </k>
        <stack> I3 : I2 : I1 : _ </stack>
     requires isBytes(I1) orBool isBytes(I2) orBool isBytes(I3)
 
   // Auxilary funtion that interprets two `UInt64` as one Int, big-endian
-  syntax Int ::= asUInt128(TUInt64, TUInt64) [function, functional]
+  syntax Int ::= asUInt128(TUInt64, TUInt64) [function, total]
   // --------------------------------------------------------------
   rule asUInt128(I1, I2) => (I1 <<Int 64) +Int I2
 
@@ -216,11 +218,11 @@ Opcode Semantics
     requires I1 ^Int I2 <=Int MAX_UINT128
      andBool notBool (I1 ==Int 0 andBool I2 ==Int 0)
 
-  rule <k> expw => panic(INVALID_ARGUMENT) ... </k>
+  rule <k> expw => #panic(INVALID_ARGUMENT) ... </k>
        <stack> I2 : I1 : _ </stack>
     requires I1 ==Int 0 andBool I2 ==Int 0
 
-  rule <k> expw => panic(INT_OVERFLOW) ... </k>
+  rule <k> expw => #panic(INT_OVERFLOW) ... </k>
        <stack> I2 : I1 : _ </stack>
     requires I1 ^Int I2 >Int MAX_UINT128
 ```
@@ -234,7 +236,7 @@ The largest integer B such that B^2 <= X
        <stack> X : XS => sqrtTUInt64(X) : XS </stack>
     requires X >=Int 0 andBool X <=Int MAX_UINT64
 
-  rule <k> sqrt => panic(INVALID_ARGUMENT) ... </k>
+  rule <k> sqrt => #panic(INVALID_ARGUMENT) ... </k>
        <stack> X : _ </stack>
     requires notBool( X >=Int 0 andBool X <=Int MAX_UINT64)
 ```
@@ -362,7 +364,7 @@ Note that we need to perform the left shift modulo `MAX_UINT64 + 1`, otherwise t
        <stacksize> S => S -Int 1 </stacksize>
     requires I2 >=Int 0 andBool I2 <Int 64
 
-  rule <k> shl => panic(INVALID_ARGUMENT) ... </k>
+  rule <k> shl => #panic(INVALID_ARGUMENT) ... </k>
        <stack> I2 : _ : _ </stack>
     requires notBool (I2 >=Int 0 andBool I2 <Int 64)
 
@@ -371,14 +373,14 @@ Note that we need to perform the left shift modulo `MAX_UINT64 + 1`, otherwise t
        <stacksize> S => S -Int 1 </stacksize>
     requires I2 >=Int 0 andBool I2 <Int 64
 
-  rule <k> shr => panic(INVALID_ARGUMENT) ... </k>
+  rule <k> shr => #panic(INVALID_ARGUMENT) ... </k>
        <stack> I2 : _ : _ </stack>
     requires notBool (I2 >=Int 0 andBool I2 <Int 64)
 
   rule <k> ~ => .K ... </k>
        <stack> I : XS => (~Int I) : XS </stack>
 
-  rule <k> ~ => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> ~ => #panic(ILL_TYPED_STACK) ... </k>
        <stack> _:Bytes : _ </stack>
 ```
 
@@ -394,7 +396,7 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
        <stack> (I:Int) : XS => log2Int(I) +Int 1 : XS </stack>
     requires 0 <Int I andBool I <=Int MAX_UINT64
 
-//  rule <k> bitlen => panic(INVALID_ARGUMENT) ... </k>
+//  rule <k> bitlen => #panic(INVALID_ARGUMENT) ... </k>
 //       <stack> (I:Int) : _ </stack>
 //    requires notBool (0 <=Int I andBool I <=Int MAX_UINT64)
 
@@ -421,7 +423,7 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
 *Int-to-bytes conversion*
 ```k
   rule <k> itob => .K ... </k>
-       <stack> I : XS => Int2Bytes(I, BE, Unsigned) : XS </stack>
+       <stack> I : XS => padLeftBytes(Int2Bytes(I, BE, Unsigned), 8, 0) : XS </stack>
 ```
 
 *Bytes-to-int conversion*
@@ -437,7 +439,7 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(B1 +Bytes B2) <=Int MAX_BYTEARRAY_LEN
 
-  rule <k> concat => panic(BYTES_OVERFLOW) ... </k>
+  rule <k> concat => #panic(BYTES_OVERFLOW) ... </k>
        <stack> B2 : B1 : _ </stack>
     requires lengthBytes(B1 +Bytes B2) >Int MAX_BYTEARRAY_LEN
 ```
@@ -448,7 +450,7 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
        <stack> B : XS => substrBytes(B, START, END) : XS </stack>
     requires 0 <=Int START andBool START <=Int END andBool END <=Int lengthBytes(B)
 
-  rule <k> substring START END => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+  rule <k> substring START END => #panic(INDEX_OUT_OF_BOUNDS) ... </k>
        <stack> (B:Bytes) : _ </stack>
     requires 0 >Int START orBool START >Int END orBool END >Int lengthBytes(B)
 
@@ -458,7 +460,7 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
        <stacksize> S => S -Int 2 </stacksize>
     requires 0 <=Int START andBool START <=Int END andBool END <=Int lengthBytes(B)
 
-  rule <k> substring3 => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+  rule <k> substring3 => #panic(INDEX_OUT_OF_BOUNDS) ... </k>
        <stack> (B:Bytes) : START : END : _ </stack>
     requires 0 >Int START orBool START >Int END orBool END >Int lengthBytes(B)
 ```
@@ -469,36 +471,9 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
        <stack> X : XS => padLeftBytes(.Bytes, X, 0) : XS </stack>
     requires X <=Int MAX_BYTEARRAY_LEN
 
-  rule <k> bzero => panic(INVALID_ARGUMENT) ... </k>
+  rule <k> bzero => #panic(INVALID_ARGUMENT) ... </k>
        <stack> X : _ </stack>
     requires X >Int MAX_BYTEARRAY_LEN
-```
-
-*Byte-array access and modification*
-
-```k
-  rule <k> getbyte => .K ... </k>
-       <stack> ARRAY : B : XS => ARRAY[B] : XS </stack>
-       <stacksize> S => S -Int 1 </stacksize>
-    requires 0 <=Int B andBool B <Int lengthBytes(ARRAY)
-
-  rule <k> getbyte => panic(INDEX_OUT_OF_BOUNDS) ... </k>
-       <stack> ARRAY : B : _ </stack>
-    requires 0 >Int B orBool B >=Int lengthBytes(ARRAY)
-
-  rule <k> setbyte => .K ... </k>
-       <stack> ARRAY : B : C : XS => ARRAY[B <- C] : XS </stack>
-       <stacksize> S => S -Int 2 </stacksize>
-    requires 0 <=Int B andBool B <Int lengthBytes(ARRAY)
-             andBool 0 <=Int C andBool C <=Int MAX_UINT8
-
-  rule <k> setbyte => panic(INDEX_OUT_OF_BOUNDS) ... </k>
-       <stack> ARRAY : B : _ </stack>
-    requires 0 >Int B orBool B >=Int lengthBytes(ARRAY)
-
-  rule <k> setbyte => panic(ILL_TYPED_STACK) ... </k>
-       <stack> _ : _ : C : _ </stack>
-    requires 0 >Int C orBool C >Int MAX_UINT8
 ```
 
 *Byte-array sub-array extraction*
@@ -518,12 +493,12 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
      andBool 0 ==Int L
      andBool S <=Int lengthBytes(ARRAY)
 
-  rule <k> extract S L => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+  rule <k> extract S L => #panic(INDEX_OUT_OF_BOUNDS) ... </k>
        <stack> ARRAY : _ </stack>
       requires S >Int lengthBytes(ARRAY)
         orBool S +Int L >Int lengthBytes(ARRAY)
 
-  rule <k> extract S L => panic(INVALID_ARGUMENT) ... </k>
+  rule <k> extract S L => #panic(INVALID_ARGUMENT) ... </k>
       requires 0 >Int S orBool S >Int MAX_UINT8
        orBool  0 >Int L orBool L >Int MAX_UINT8
 ```
@@ -535,7 +510,7 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
     requires B <=Int lengthBytes(ARRAY)
      andBool B +Int C <=Int lengthBytes(ARRAY)
 
-  rule <k> extract3 => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+  rule <k> extract3 => #panic(INDEX_OUT_OF_BOUNDS) ... </k>
        <stack> C : B : ARRAY : _ </stack>
       requires B >Int lengthBytes(ARRAY)
         orBool B +Int C >Int lengthBytes(ARRAY)
@@ -552,7 +527,7 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
     requires B <=Int lengthBytes(ARRAY)
      andBool B +Int 2 <=Int lengthBytes(ARRAY)
 
-  rule <k> extract_uint16 => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+  rule <k> extract_uint16 => #panic(INDEX_OUT_OF_BOUNDS) ... </k>
        <stack> B : ARRAY : _ </stack>
       requires B >Int lengthBytes(ARRAY)
         orBool B +Int 2 >Int lengthBytes(ARRAY)
@@ -567,7 +542,7 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
     requires B <=Int lengthBytes(ARRAY)
      andBool B +Int 4 <=Int lengthBytes(ARRAY)
 
-  rule <k> extract_uint32 => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+  rule <k> extract_uint32 => #panic(INDEX_OUT_OF_BOUNDS) ... </k>
        <stack> B : ARRAY : _ </stack>
       requires B >Int lengthBytes(ARRAY)
         orBool B +Int 4 >Int lengthBytes(ARRAY)
@@ -582,11 +557,36 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
     requires B <=Int lengthBytes(ARRAY)
      andBool B +Int 8 <=Int lengthBytes(ARRAY)
 
-  rule <k> extract_uint64 => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+  rule <k> extract_uint64 => #panic(INDEX_OUT_OF_BOUNDS) ... </k>
        <stack> B : ARRAY : _ </stack>
       requires B >Int lengthBytes(ARRAY)
         orBool B +Int 8 >Int lengthBytes(ARRAY)
 ```
+
+*bytes replacement*
+
+```k
+  rule <k> replace2 START:Int => . ... </k>
+       <stack> B:Bytes : A:Bytes : XS => replaceAtBytes(A, START, B) : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires START +Int lengthBytes(B) <=Int lengthBytes(A)
+
+  rule <k> replace2 START:Int => #panic(BYTES_OVERFLOW) ... </k>
+       <stack> B:Bytes : A:Bytes : _ </stack>
+       <stacksize> _ </stacksize>
+    requires START +Int lengthBytes(B) >Int lengthBytes(A)
+
+  rule <k> replace3 => . ... </k>
+       <stack> B:Bytes : START:Int : A:Bytes : XS => replaceAtBytes(A, START, B) : XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+    requires START +Int lengthBytes(B) <=Int lengthBytes(A)
+
+  rule <k> replace3 => #panic(BYTES_OVERFLOW) ... </k>
+       <stack> B:Bytes : START:Int : A:Bytes : _ </stack>
+       <stacksize> _ </stacksize>
+    requires START +Int lengthBytes(B) >Int lengthBytes(A)
+```
+
 
 #### Byte-arrays as big-endian unsigned integers
 
@@ -594,14 +594,14 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
 The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no restriction on the length of the result.
 
 ```k
-  rule <k> OP:MathByteOpCode => panic(MATH_BYTES_ARG_TOO_LONG) ... </k>
+  rule <k> OP:MathByteOpCode => #panic(MATH_BYTES_ARG_TOO_LONG) ... </k>
        <stack> B:Bytes : A:Bytes : _ </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires (lengthBytes(A) >Int MAX_BYTE_MATH_SIZE
       orBool lengthBytes(B) >Int MAX_BYTE_MATH_SIZE)
      andBool notBool(isUnaryLogicalMathByteOpCode(OP))
 
-  rule <k> _OP:UnaryLogicalMathByteOpCode => panic(MATH_BYTES_ARG_TOO_LONG) ... </k>
+  rule <k> _OP:UnaryLogicalMathByteOpCode => #panic(MATH_BYTES_ARG_TOO_LONG) ... </k>
        <stack> A:Bytes : _ </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) >Int MAX_BYTE_MATH_SIZE
@@ -633,7 +633,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
      andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
      andBool Bytes2Int(A, BE, Unsigned) -Int Bytes2Int(B, BE, Unsigned) >=Int 0
 
-  rule <k> b- => panic(INT_UNDERFLOW) ... </k>
+  rule <k> b- => #panic(INT_UNDERFLOW) ... </k>
        <stack> B:Bytes : A:Bytes : _ </stack>
     requires Bytes2Int(A, BE, Unsigned) -Int Bytes2Int(B, BE, Unsigned) <Int 0
 ```
@@ -649,7 +649,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
      andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
      andBool lengthBytes(B) >Int 0
 
-  rule <k> b/ => panic(DIV_BY_ZERO) ... </k>
+  rule <k> b/ => #panic(DIV_BY_ZERO) ... </k>
        <stack> B:Bytes : _:Bytes : _  </stack>
     requires Bytes2Int(B, BE, Unsigned) ==Int 0
 ```
@@ -665,7 +665,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
      andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
      andBool lengthBytes(B) >Int 0
 
-  rule <k> b% => panic(DIV_BY_ZERO) ... </k>
+  rule <k> b% => #panic(DIV_BY_ZERO) ... </k>
        <stack> B:Bytes : _:Bytes : _  </stack>
     requires Bytes2Int(B, BE, Unsigned) ==Int 0
 ```
@@ -778,7 +778,7 @@ We implement the bit-wise complement as the exclusive or of the argument with a 
        <stacksize> S => S -Int 1 </stacksize>
     requires 0 <=Int B andBool B <Int lengthBytes(ARRAY)
 
-  rule <k> getbyte => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+  rule <k> getbyte => #panic(INDEX_OUT_OF_BOUNDS) ... </k>
        <stack> B : ARRAY : _ </stack>
     requires 0 >Int B orBool B >=Int lengthBytes(ARRAY)
 
@@ -788,11 +788,11 @@ We implement the bit-wise complement as the exclusive or of the argument with a 
     requires 0 <=Int B andBool B <Int lengthBytes(ARRAY)
              andBool 0 <=Int C andBool C <=Int MAX_UINT8
 
-  rule <k> setbyte => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+  rule <k> setbyte => #panic(INDEX_OUT_OF_BOUNDS) ... </k>
        <stack> B : ARRAY : _ </stack>
     requires 0 >Int B orBool B >=Int lengthBytes(ARRAY)
 
-  rule <k> setbyte => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> setbyte => #panic(ILL_TYPED_STACK) ... </k>
        <stack> C : _ : _ : _ </stack>
     requires 0 >Int C orBool C >Int MAX_UINT8
 ```
@@ -812,11 +812,11 @@ We recite the [specification](https://developer.algorand.org/docs/get-details/da
    requires 0 <=Int B andBool B <Int lengthBytes(ARRAY) *Int 8
     andBool 0 <=Int C andBool C <Int 2
 
- rule <k> setbit => panic(ILL_TYPED_STACK) ... </k>
+ rule <k> setbit => #panic(ILL_TYPED_STACK) ... </k>
       <stack> C : _ : _:Bytes : _ </stack>
    requires notBool (0 <=Int C andBool C <Int 2)
 
- rule <k> setbit => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+ rule <k> setbit => #panic(INDEX_OUT_OF_BOUNDS) ... </k>
       <stack> _ : B : ARRAY:Bytes : _ </stack>
    requires notBool (0 <=Int B andBool B <Int lengthBytes(ARRAY) *Int 8)
 
@@ -865,11 +865,11 @@ We recite the [specification](https://developer.algorand.org/docs/get-details/da
      andBool 0 <=Int B andBool B <Int 64
      andBool 0 <=Int C andBool C <Int 2
 
-  rule <k> setbit => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> setbit => #panic(ILL_TYPED_STACK) ... </k>
        <stack> C : _ : _:Int : _ </stack>
     requires notBool (0 <=Int C andBool C <Int 2)
 
-  rule <k> setbit => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+  rule <k> setbit => #panic(INDEX_OUT_OF_BOUNDS) ... </k>
        <stack> _ : B : _:Int : _ </stack>
     requires notBool (0 <=Int B andBool B <Int 64)
 ```
@@ -882,7 +882,7 @@ We recite the [specification](https://developer.algorand.org/docs/get-details/da
       <stacksize> S => S -Int 1 </stacksize>
     requires 0 <=Int B andBool B <Int lengthBytes(ARRAY) *Int 8
 
- rule <k> getbit => panic(INDEX_OUT_OF_BOUNDS) </k>
+ rule <k> getbit => #panic(INDEX_OUT_OF_BOUNDS) </k>
       <stack> B : ARRAY:Bytes : _ </stack>
     requires notBool (0 <=Int B andBool B <Int lengthBytes(ARRAY) *Int 8)
 
@@ -901,7 +901,7 @@ We recite the [specification](https://developer.algorand.org/docs/get-details/da
     requires 0 <=Int I andBool I <=Int MAX_UINT64 andBool
              0 <=Int B andBool B <Int 64
 
-  rule <k> getbit => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+  rule <k> getbit => #panic(INDEX_OUT_OF_BOUNDS) ... </k>
        <stack> B : _:Int : _  </stack>
     requires notBool (0 <=Int B andBool B <Int 64)
 ```
@@ -978,7 +978,12 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
 
-  rule <k> _:PseudoOpCode => panic(STACK_OVERFLOW) ... </k>
+  rule <k> method METHOD => .K ... </k>
+       <stack> XS => methodSelector(METHOD) : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires S <Int MAX_STACK_DEPTH
+
+  rule <k> _:PseudoOpCode => #panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 ```
@@ -1004,6 +1009,14 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
     requires N >Int 1
 
   rule genBytecBlockMap(1, I, (_, V)) => I |-> V
+```
+
+Extract method selector from an API method description, see [the documentation](https://developer.algorand.org/docs/get-details/dapps/smart-contracts/ABI/?from_query=method#methods), and the [reference implementation](https://github.com/algorand/go-algorand/blob/0cb9a2e4f7470cbcb88039886d6e0f586102b545/data/transactions/logic/assembler.go#L804)
+
+```k
+  syntax TBytes ::= methodSelector(TBytes) [function, total]
+  //------------------------------------------------------
+  rule methodSelector(METHOD) => substrBytes(String2Bytes(Sha512_256raw(METHOD)), 0, 4)
 ```
 
 ### Flow Control
@@ -1038,18 +1051,18 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
         <stack> (I:Int) : _XS => I : .TStack </stack>
         <stacksize> _ => 1 </stacksize>
 
-  rule <k> _: => .K ... </k>
+  rule <k> (_ :):LabelCode => .K ... </k>
 
   rule <k> assert => .K ... </k>
        <stack> (X:Int) : XS => XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires X >Int 0
 
-  rule <k> assert => panic(ASSERTION_VIOLATION) ... </k>
+  rule <k> assert => #panic(ASSERTION_VIOLATION) ... </k>
        <stack> (X:Int) : _ </stack>
     requires X ==Int 0
 
-  rule <k> assert => panic(IMPOSSIBLE_NEGATIVE_NUMBER) ... </k>
+  rule <k> assert => #panic(IMPOSSIBLE_NEGATIVE_NUMBER) ... </k>
        <stack> (X:Int) : _ </stack>
     requires X <Int 0
 ```
@@ -1065,7 +1078,7 @@ In our spec, `pushbytes` and `pushint` are equivalent to `byte` and `int`.
        <labels> LL </labels>
     requires L in_labels LL
 
-  rule <k> jump(L) => panic(ILLEGAL_JUMP) ... </k>
+  rule <k> jump(L) => #panic(ILLEGAL_JUMP) ... </k>
        <labels> LL </labels>
     requires notBool (L in_labels LL)
 ```
@@ -1107,11 +1120,11 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
     requires  (TARGET in_labels LL)
       andBool (size(XS) <Int MAX_CALLSTACK_DEPTH)
 
-  rule <k> callSubroutine(_TARGET) => panic(CALLSTACK_OVERFLOW) ... </k>
+  rule <k> callSubroutine(_TARGET) => #panic(CALLSTACK_OVERFLOW) ... </k>
        <callStack> XS </callStack>
     requires size(XS) >=Int MAX_CALLSTACK_DEPTH
 
-  rule <k> callSubroutine(TARGET) => panic(ILLEGAL_JUMP) ... </k>
+  rule <k> callSubroutine(TARGET) => #panic(ILLEGAL_JUMP) ... </k>
        <labels> LL </labels>
     requires notBool(TARGET in_labels LL)
 
@@ -1131,7 +1144,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <jumped> _ => true </jumped>
        <callStack> ListItem(frame(RETURN_PC, _)) XS => XS </callStack>
 
-  rule <k> returnSubroutine() => panic(CALLSTACK_UNDERFLOW) ... </k>
+  rule <k> returnSubroutine() => #panic(CALLSTACK_UNDERFLOW) ... </k>
        <pc> _ </pc>
        <callStack> .List </callStack>
 
@@ -1142,14 +1155,6 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
   rule <k> proto ARGS RETS => . ... </k>
        <callStack> ListItem(frame(RETURN_PC, STACK_PTR) => frame(RETURN_PC, STACK_PTR, ARGS, RETS)) ... </callStack>
     requires (ARGS >=Int 0) andBool (RETS >=Int 0)
-
-  rule <k> dupn N => dupn (N -Int 1) ... </k>
-       <stack> X : XS => X : X : XS </stack>
-       <stacksize> S => S +Int 1 </stacksize>
-    requires N >Int 0
-     andBool S <Int MAX_STACK_DEPTH
-
-  rule <k> dupn 0 => . ... </k>
 
   rule <k> frame_dig N => . ... </k>
        <stack> XS => XS{getStackPtr() +Int N} : XS </stack>
@@ -1173,7 +1178,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
 
-  rule <k> dup => panic(STACK_OVERFLOW) ... </k>
+  rule <k> dup => #panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 
@@ -1182,7 +1187,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <stacksize> S => S +Int 2 </stacksize>
     requires S +Int 1 <Int MAX_STACK_DEPTH
 
-  rule <k> dup2 => panic(STACK_OVERFLOW) ... </k>
+  rule <k> dup2 => #panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S +Int 1 >=Int MAX_STACK_DEPTH
 
@@ -1192,12 +1197,12 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
     requires S <Int MAX_STACK_DEPTH andBool
              0 <=Int N andBool N <Int S
 
-  rule <k> dig _ => panic(STACK_OVERFLOW) ... </k>
+  rule <k> dig _ => #panic(STACK_OVERFLOW) ... </k>
        <stack> _ </stack>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 
-  rule <k> dig N => panic(STACK_UNDERFLOW) ... </k>
+  rule <k> dig N => #panic(STACK_UNDERFLOW) ... </k>
        <stack> _ </stack>
        <stacksize> S </stacksize>
     requires notBool (0 <=Int N andBool N <Int S)
@@ -1207,7 +1212,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <stacksize> S </stacksize>
     requires 0 <=Int N andBool N <Int S
 
-  rule <k> cover N => panic(STACK_UNDERFLOW) ... </k>
+  rule <k> cover N => #panic(STACK_UNDERFLOW) ... </k>
        <stack> _ </stack>
        <stacksize> S </stacksize>
     requires notBool (0 <=Int N andBool N <Int S)
@@ -1217,7 +1222,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <stacksize> S </stacksize>
     requires 0 <=Int N andBool N <Int S
 
-  rule <k> uncover N => panic(STACK_UNDERFLOW) ... </k>
+  rule <k> uncover N => #panic(STACK_UNDERFLOW) ... </k>
        <stack> _ </stack>
        <stacksize> S </stacksize>
     requires notBool (0 <=Int N andBool N <Int S)
@@ -1225,7 +1230,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
   rule <k> swap => .K ... </k>
        <stack> X : Y : XS => Y : X : XS </stack>
 
-  rule <k> swap => panic(STACK_UNDERFLOW) ... </k>
+  rule <k> swap => #panic(STACK_UNDERFLOW) ... </k>
        <stack> _:.TStack </stack>
 
   rule <k> select => .K ... </k>
@@ -1241,6 +1246,36 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        </stack>
        <stacksize> S => S -Int 2 </stacksize>
     requires notBool (int2Bool(A))
+
+  rule <k> bury N:Int => . ... </k>
+       <stack> A:TValue : STACK => (#take(N -Int 1, STACK) A : #drop(N, STACK)) </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires 0 <Int N andBool N <Int S
+
+  rule <k> bury N:Int => #panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires notBool(0 <Int N andBool N <Int S)
+
+  rule <k> popn N:Int => . ... </k>
+       <stack> STACK => #drop(N, STACK) </stack>
+       <stacksize> S => S -Int N </stacksize>
+    requires N <=Int S
+
+  rule <k> popn N:Int => #panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires N >Int S
+
+  rule <k> dupn N => dupn (N -Int 1) ... </k>
+       <stack> X : XS => X : X : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+    requires N >Int 0
+     andBool S <Int MAX_STACK_DEPTH
+
+  rule <k> dupn 0 => . ... </k>
+
+  rule <k> dupn N => #panic(STACK_OVERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S +Int N >Int MAX_STACK_DEPTH
 ```
 
 ### Blockchain State Accessors
@@ -1279,7 +1314,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
 
-  rule <k> _:BlockchainOpCode => panic(STACK_OVERFLOW) ... </k>
+  rule <k> _:BlockchainOpCode => #panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 
@@ -1287,7 +1322,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
   //-------------------------------------------
   rule <k> loadFromGroup(GROUP_IDX, FIELD) => . ... </k>
        <stacksize> S => S +Int 1 </stacksize>
-       <stack> XS => {getGroupFieldByIdx(GROUP_ID, GROUP_IDX, FIELD)}:>TValue : XS </stack>
+       <stack> XS => fromMaybeTVal(getGroupFieldByIdx(GROUP_ID, GROUP_IDX, FIELD)) : XS </stack>
        <currentTx> CURRENT_TX_ID </currentTx>
        <transaction>
          <txID> CURRENT_TX_ID </txID>
@@ -1300,7 +1335,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
     andBool    (notBool(isTxnDynamicField(FIELD))
     orElseBool GROUP_IDX <Int (CURRENT_GROUP_IDX))
 
-  rule <k> loadFromGroup(GROUP_IDX, _:TxnDynamicField) => panic(FUTURE_TXN) ...</k>
+  rule <k> loadFromGroup(GROUP_IDX, _:TxnDynamicField) => #panic(FUTURE_TXN) ...</k>
        <currentTx> CURRENT_TX_ID </currentTx>
        <transaction>
          <txID> CURRENT_TX_ID </txID>
@@ -1309,11 +1344,11 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        </transaction>
     requires GROUP_IDX >=Int CURRENT_GROUP_IDX
 
-  rule <k> loadFromGroup(_, _) => panic(STACK_OVERFLOW) ...</k>
+  rule <k> loadFromGroup(_, _) => #panic(STACK_OVERFLOW) ...</k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 
-  rule <k> loadFromGroup(GROUP_IDX, FIELD) => panic(TXN_ACCESS_FAILED) ...</k>
+  rule <k> loadFromGroup(GROUP_IDX, FIELD) => #panic(TXN_ACCESS_FAILED) ...</k>
        <currentTx> CURRENT_TX_ID </currentTx>
        <transaction>
          <txID> CURRENT_TX_ID </txID>
@@ -1322,10 +1357,14 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        </transaction>
     requires notBool(isTValue(getGroupFieldByIdx(GROUP_ID, GROUP_IDX, FIELD)))
 
+  syntax TValue ::= fromMaybeTVal(MaybeTValue) [function]
+
+  rule fromMaybeTVal(V:TValue) => V
+
   syntax KItem ::= loadFromGroup(Int, TxnaField, Int)
   //-------------------------------------------------
   rule <k> loadFromGroup(GROUP_IDX, FIELD, IDX) => . ...</k>
-       <stack> XS => {getGroupFieldByIdx(GROUP_ID, GROUP_IDX, FIELD, IDX)}:>TValue : XS </stack>
+       <stack> XS => fromMaybeTVal(getGroupFieldByIdx(GROUP_ID, GROUP_IDX, FIELD, IDX)) : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
        <currentTx> CURRENT_TX_ID </currentTx>
        <transaction>
@@ -1339,7 +1378,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
     andBool    (notBool(isTxnaDynamicField(FIELD))
     orElseBool GROUP_IDX <Int CURRENT_GROUP_IDX)
 
-  rule <k> loadFromGroup(GROUP_IDX, _:TxnaDynamicField, _) => panic(FUTURE_TXN) ...</k>
+  rule <k> loadFromGroup(GROUP_IDX, _:TxnaDynamicField, _) => #panic(FUTURE_TXN) ...</k>
        <currentTx> CURRENT_TX_ID </currentTx>
        <transaction>
          <txID> CURRENT_TX_ID </txID>
@@ -1348,11 +1387,11 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        </transaction>
     requires GROUP_IDX >=Int CURRENT_GROUP_IDX
 
-  rule <k> loadFromGroup(_, _, _) => panic(STACK_OVERFLOW) ...</k>
+  rule <k> loadFromGroup(_, _, _) => #panic(STACK_OVERFLOW) ...</k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 
-  rule <k> loadFromGroup(GROUP_IDX, FIELD, IDX) => panic(TXN_ACCESS_FAILED) ...</k>
+  rule <k> loadFromGroup(GROUP_IDX, FIELD, IDX) => #panic(TXN_ACCESS_FAILED) ...</k>
        <currentTx> CURRENT_TX_ID </currentTx>
        <transaction>
          <txID> CURRENT_TX_ID </txID>
@@ -1385,14 +1424,14 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <scratch> M => M[I <- V] </scratch>
     requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
 
-  rule <k> load I => panic(INVALID_SCRATCH_LOC) ... </k>
+  rule <k> load I => #panic(INVALID_SCRATCH_LOC) ... </k>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
-  rule <k> load _ => panic(STACK_OVERFLOW) ... </k>
+  rule <k> load _ => #panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 
-  rule <k> store I => panic(INVALID_SCRATCH_LOC) ... </k>
+  rule <k> store I => #panic(INVALID_SCRATCH_LOC) ... </k>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
   rule <k> loads => .K ... </k>
@@ -1407,7 +1446,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
     requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
      andBool notBool(I in_keys(M))
 
-  rule <k> loads => panic(INVALID_SCRATCH_LOC) ... </k>
+  rule <k> loads => #panic(INVALID_SCRATCH_LOC) ... </k>
        <stack> I : _ </stack>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
@@ -1417,7 +1456,7 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
        <scratch> M => M[I <- V] </scratch>
     requires 0 <=Int I andBool I <Int MAX_SCRATCH_SIZE
 
-  rule <k> stores => panic(INVALID_SCRATCH_LOC) ... </k>
+  rule <k> stores => #panic(INVALID_SCRATCH_LOC) ... </k>
        <stack> _ : I : _ </stack>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
@@ -1439,12 +1478,12 @@ Stateless TEAL Operations
 //       <stack> I : XS => ({getArgument(I)}:>TValue) : XS </stack>
 //    requires isTValue(getArgument(I))
 //
-//  rule <k> arg I => panic(INDEX_OUT_OF_BOUNDS) ... </k>
+//  rule <k> arg I => #panic(INDEX_OUT_OF_BOUNDS) ... </k>
 //       <stacksize> S </stacksize>
 //    requires S <Int MAX_STACK_DEPTH
 //     andBool notBool (isTValue(getArgument(I)))
 //
-//  rule <k> arg _ => panic(STACK_OVERFLOW) ... </k>
+//  rule <k> arg _ => #panic(STACK_OVERFLOW) ... </k>
 //       <stacksize> S </stacksize>
 //    requires S >=Int MAX_STACK_DEPTH
 //
@@ -1466,7 +1505,7 @@ Stateful TEAL Operations
        <stack> (A:TValue) : _ </stack>
     requires isTValue(accountReference(A))
 
-  rule <k> balance => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> balance => #panic(TXN_ACCESS_FAILED) ... </k>
        <stack> (A:TValue) : _ </stack>
     requires notBool isTValue(accountReference(A))
 
@@ -1475,7 +1514,7 @@ Stateful TEAL Operations
   rule <k> #balance BAL:TUInt64 => . ...</k>
        <stack> _ : XS => BAL : XS </stack>
       
-  rule <k> #balance _ => panic(TXN_ACCESS_FAILED) </k>  [owise]
+  rule <k> #balance _ => #panic(TXN_ACCESS_FAILED) </k>  [owise]
 ```
 
 *min_balance*
@@ -1485,7 +1524,7 @@ Stateful TEAL Operations
        <stack> (A:TValue) : _ </stack>
     requires isTValue(accountReference(A))
 
-  rule <k> min_balance => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> min_balance => #panic(TXN_ACCESS_FAILED) ... </k>
        <stack> (A:TValue) : _ </stack>
     requires notBool isTValue(accountReference(A))
 
@@ -1494,7 +1533,7 @@ Stateful TEAL Operations
   rule <k> #min_balance MIN_BAL:TUInt64 => . ...</k>
        <stack> _ : XS => MIN_BAL : XS </stack>
       
-  rule <k> #min_balance _ => panic(TXN_ACCESS_FAILED) </k>  [owise]
+  rule <k> #min_balance _ => #panic(TXN_ACCESS_FAILED) </k>  [owise]
 ```
 
 *log*
@@ -1512,10 +1551,10 @@ Stateful TEAL Operations
        </transaction>
     requires size(LOG) <Int PARAM_MAX_LOG_CALLS
 
-   rule <k> log => panic(ILL_TYPED_STACK) ...</k>
+   rule <k> log => #panic(ILL_TYPED_STACK) ...</k>
         <stack> _:TUInt64 : _ </stack>
 
-   rule <k> log => panic(LOG_CALLS_EXCEEDED) ...</k>
+   rule <k> log => #panic(LOG_CALLS_EXCEEDED) ...</k>
        <currentTx> TX_ID </currentTx>
        <transaction>
          <txID> TX_ID </txID>
@@ -1524,7 +1563,7 @@ Stateful TEAL Operations
        </transaction>
     requires size(LOG) >=Int PARAM_MAX_LOG_CALLS
 
-   rule <k> log => panic(LOG_SIZE_EXCEEDED) ...</k>
+   rule <k> log => #panic(LOG_SIZE_EXCEEDED) ...</k>
        <currentTx> TX_ID </currentTx>
        <transaction>
          <txID> TX_ID </txID>
@@ -1542,11 +1581,11 @@ Stateful TEAL Operations
        <stack> (APP:Int) : (A:TValue) : _ </stack>
     requires isTValue(appReference(APP)) andBool isTValue(accountReference(A))
 
-  rule <k> app_opted_in  => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> app_opted_in  => #panic(TXN_ACCESS_FAILED) ... </k>
        <stack> APP:Int : A:TValue : _:TStack </stack>
     requires notBool (isTValue(appReference(APP)) andBool isTValue(accountReference(A)))
 
-  rule <k> app_opted_in => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> app_opted_in => #panic(ILL_TYPED_STACK) ... </k>
        <stack> _:TBytes : _:TValue : _:TStack </stack>
 
   syntax KItem ::= "#app_opted_in" Bool
@@ -1565,11 +1604,11 @@ Stateful TEAL Operations
        <stack> (KEY:Bytes) : (A:TValue) : _ </stack>
     requires isTValue(accountReference(A))
 
-  rule <k> app_local_get => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> app_local_get => #panic(TXN_ACCESS_FAILED) ... </k>
        <stack> (_:Bytes) : (A:TValue) : _ </stack>
     requires notBool isTValue(accountReference(A))
 
-  rule <k> app_local_get => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> app_local_get => #panic(ILL_TYPED_STACK) ... </k>
        <stack> _:TUInt64 : _ : _ </stack>
 
   syntax KItem ::= "#app_local_get" MaybeTValue
@@ -1586,7 +1625,7 @@ Stateful TEAL Operations
        <stacksize> S => S -Int 1 </stacksize>
     requires isInt(V) andThenBool {V}:>Int <Int 0
 
-  rule <k> #app_local_get NoTValue => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> #app_local_get NoTValue => #panic(TXN_ACCESS_FAILED) ... </k>
 ```
 
 *app_local_get_ex*
@@ -1597,11 +1636,11 @@ Stateful TEAL Operations
        <stack> (KEY:Bytes) : (APP:TUInt64) : (A:TValue) : _ </stack>
     requires isTValue(accountReference(A)) andBool isTValue(appReference(APP))
 
-  rule <k> app_local_get_ex => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> app_local_get_ex => #panic(TXN_ACCESS_FAILED) ... </k>
        <stack> (_:Bytes) : (APP:TUInt64) : (A:TValue) : _ </stack>
     requires notBool (isTValue(accountReference(A)) andBool isTValue(appReference(APP)))
 
-  rule <k> app_local_get_ex => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> app_local_get_ex => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (KEY:TValue) : (APP:TValue) : (_:TValue) : _ </stack>
     requires isInt(KEY) orBool isBytes(APP)
 
@@ -1617,7 +1656,7 @@ Stateful TEAL Operations
        <stacksize> S => S -Int 1 </stacksize>
     requires isInt(V) andThenBool {V}:>Int <Int 0
 
-  rule <k> #app_local_get_ex NoTValue => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> #app_local_get_ex NoTValue => #panic(TXN_ACCESS_FAILED) ... </k>
 ```
 
 *app_local_put*
@@ -1644,11 +1683,11 @@ Stateful TEAL Operations
        <stack> (_:TValue) : (_:Bytes) : (A:TValue) : _ </stack>
     requires isTValue(accountReference(A))
 
-  rule <k> app_local_put => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> app_local_put => #panic(TXN_ACCESS_FAILED) ... </k>
        <stack> (_:TValue) : (_:Bytes) : (A:TValue) : _ </stack>
     requires notBool isTValue(accountReference(A))
 
-  rule <k> app_local_put => panic(ILL_TYPED_STACK) ...  </k>
+  rule <k> app_local_put => #panic(ILL_TYPED_STACK) ...  </k>
        <stack> _:TValue : _:TUInt64 : _:TValue : _ </stack>
 
   syntax KItem ::= "#app_local_put" TValue TValue
@@ -1690,19 +1729,19 @@ Stateful TEAL Operations
      andBool lengthBytes(KEY) +Int sizeInBytes(NEWVAL) <=Int PARAM_MAX_SUM_KEY_VALUE_SIZE
      andBool lengthBytes(NEWVAL) <=Int PARAM_MAX_BYTE_VALUE_SIZE
 
-  rule <k> #app_local_put _ _ => panic(KEY_TOO_LARGE) ... </k>
+  rule <k> #app_local_put _ _ => #panic(KEY_TOO_LARGE) ... </k>
        <stack> _ : (KEY:Bytes) : _ : _ </stack>
     requires lengthBytes(KEY) >Int PARAM_MAX_KEY_SIZE
 
-  rule <k> #app_local_put _ _ => panic(KEY_VALUE_TOO_LARGE) ... </k>
+  rule <k> #app_local_put _ _ => #panic(KEY_VALUE_TOO_LARGE) ... </k>
        <stack> (NEWVAL:TValue) : (KEY:Bytes) : _ : _ </stack>
     requires lengthBytes(KEY) +Int sizeInBytes(NEWVAL) >Int PARAM_MAX_SUM_KEY_VALUE_SIZE
 
-  rule <k> #app_local_put _ _ => panic(BYTE_VALUE_TOO_LARGE) ... </k>
+  rule <k> #app_local_put _ _ => #panic(BYTE_VALUE_TOO_LARGE) ... </k>
        <stack> (NEWVAL:Bytes) : _ : _ : _ </stack>
     requires lengthBytes(NEWVAL) >Int PARAM_MAX_BYTE_VALUE_SIZE
 
-  rule <k> #app_local_put ADDR APP => panic(LOCAL_INTS_EXCEEDED) ... </k>
+  rule <k> #app_local_put ADDR APP => #panic(LOCAL_INTS_EXCEEDED) ... </k>
        <stack> (NEWVAL:Int) : (KEY:Bytes) : _ : _ </stack>
        <account>
          <address> ADDR </address>
@@ -1716,7 +1755,7 @@ Stateful TEAL Operations
        </account>
     requires size(M[KEY <- NEWVAL]) >Int getLocalIntLimit(APP)
 
-  rule <k> #app_local_put ADDR APP => panic(LOCAL_BYTES_EXCEEDED) ... </k>
+  rule <k> #app_local_put ADDR APP => #panic(LOCAL_BYTES_EXCEEDED) ... </k>
        <stack> (NEWVAL:Bytes) : (KEY:Bytes) : _ : _ </stack>
        <account>
          <address> ADDR </address>
@@ -1731,7 +1770,7 @@ Stateful TEAL Operations
     requires size(M[KEY <- NEWVAL]) >Int getLocalByteLimit(APP)
 
   // if the account exists but is not opted in, panic
-  rule <k> #app_local_put ADDR APP => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> #app_local_put ADDR APP => #panic(TXN_ACCESS_FAILED) ... </k>
        <stack> _ : _ : _ : XS => XS </stack>
        <stacksize> S => S -Int 3 </stacksize>
        <account>
@@ -1741,7 +1780,7 @@ Stateful TEAL Operations
     requires notBool (APP in_optedInApps(<appsOptedIn> OA </appsOptedIn>))
 
   // if the account doesn't exist, panic
-  rule <k> #app_local_put ADDR _ => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> #app_local_put ADDR _ => #panic(TXN_ACCESS_FAILED) ... </k>
        <stack> _ : _ : _ : XS => XS </stack>
        <stacksize> S => S -Int 3 </stacksize>
        <accountsMap> AMAP  </accountsMap>
@@ -1756,11 +1795,11 @@ Stateful TEAL Operations
        <stack> (_:Bytes) : (A:TValue) : _ </stack>
     requires isTValue(accountReference(A))
 
-  rule <k> app_local_del => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> app_local_del => #panic(TXN_ACCESS_FAILED) ... </k>
        <stack> (_:Bytes ) : (A:TValue) : _ </stack>
     requires notBool isTValue(accountReference(A))
 
-  rule <k> app_local_del => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> app_local_del => #panic(ILL_TYPED_STACK) ... </k>
        <stack> _:TUInt64 : _ : _ </stack>
 
 
@@ -1782,7 +1821,7 @@ Stateful TEAL Operations
        </account>
 
   // if the account exists but is not opted in, panic.
-  rule <k> #app_local_del ADDR APP => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> #app_local_del ADDR APP => #panic(TXN_ACCESS_FAILED) ... </k>
        <account>
          <address> ADDR </address>
          <appsOptedIn> OA </appsOptedIn> ...
@@ -1790,7 +1829,7 @@ Stateful TEAL Operations
     requires notBool (APP in_optedInApps(<appsOptedIn> OA </appsOptedIn>))
 
   // if the account doesn't exist, panic.
-  rule <k> #app_local_del ADDR _ => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> #app_local_del ADDR _ => #panic(TXN_ACCESS_FAILED) ... </k>
        <accountsMap> AMAP  </accountsMap>
     requires notBool (ADDR in_accounts(<accountsMap> AMAP </accountsMap>))
 ```
@@ -1799,8 +1838,11 @@ Stateful TEAL Operations
 
 ```k
   rule <k> app_global_get =>
-           #app_global_get getAppGlobal(getGlobalField(CurrentApplicationID), KEY) ... </k>
+           #app_global_get getAppGlobal(getAppCell({AC[{getGlobalField(CurrentApplicationID)}:>Int]}:>Bytes, {getGlobalField(CurrentApplicationID)}:>Int), KEY) ... </k>
        <stack> (KEY:Bytes) : _ </stack>
+       <appCreator>
+         AC
+       </appCreator>
 
   syntax KItem ::= "#app_global_get" TValue
   //---------------------------------------
@@ -1816,16 +1858,38 @@ Stateful TEAL Operations
 *app_global_get_ex*
 
 ```k
+
+  syntax KItem ::= testAbc(Bytes, Int)
+  rule <k> testAbc(CREATOR_ADDR, APP_ID) => getAppCell(CREATOR_ADDR, APP_ID) ... </k>
+
+  syntax AppCell ::= getAppCell(Bytes, Int) [function]
+  rule [[ getAppCell(CREATOR_ADDR, APP_ID) => <app> <appID> APP_ID </appID> APP_DATA </app> ]]
+       <account>
+         <address> CREATOR_ADDR </address>
+         <app>
+           <appID> APP_ID </appID>
+           APP_DATA
+         </app>
+         ...
+       </account>
+
+  rule getAppCell(_, APP_ID) => <app> <appID> APP_ID </appID> ... </app> [owise]
+
+
   rule <k> app_global_get_ex =>
-           #app_global_get_ex getAppGlobal({appReference(APP)}:>TValue, KEY) ... </k>
+           #app_global_get_ex getAppGlobal(getAppCell({AC[{appReference(APP)}:>Int]}:>Bytes, {appReference(APP)}:>Int), KEY) ... </k>
        <stack> (KEY:Bytes) : (APP:TUInt64) : _ </stack>
+       <appCreator>
+         AC
+       </appCreator>
+
     requires isTValue(appReference(APP))
 
-  rule <k> app_global_get_ex => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> app_global_get_ex => #panic(TXN_ACCESS_FAILED) ... </k>
        <stack> (_:Bytes) : (APP:TUInt64) : _ </stack>
     requires notBool isTValue(appReference(APP))
 
-  rule <k> app_global_get_ex => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> app_global_get_ex => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (KEY:TValue) : (I:TValue):_ </stack>
     requires isInt(KEY) orBool isBytes(I)
 
@@ -1883,19 +1947,19 @@ Stateful TEAL Operations
      andBool lengthBytes(KEY) +Int sizeInBytes(NEWVAL) <=Int PARAM_MAX_SUM_KEY_VALUE_SIZE
      andBool lengthBytes(NEWVAL) <=Int PARAM_MAX_BYTE_VALUE_SIZE
 
-  rule <k> #app_global_put _ => panic(KEY_TOO_LARGE) ... </k>
+  rule <k> #app_global_put _ => #panic(KEY_TOO_LARGE) ... </k>
        <stack> _ : (KEY:Bytes) : _ </stack>
     requires lengthBytes(KEY) >Int PARAM_MAX_KEY_SIZE
 
-  rule <k> #app_global_put _ => panic(KEY_VALUE_TOO_LARGE) ... </k>
+  rule <k> #app_global_put _ => #panic(KEY_VALUE_TOO_LARGE) ... </k>
        <stack> (NEWVAL:TValue) : (KEY:Bytes) : _ </stack>
     requires lengthBytes(KEY) +Int sizeInBytes(NEWVAL) >Int PARAM_MAX_SUM_KEY_VALUE_SIZE
 
-  rule <k> #app_global_put _ => panic(BYTE_VALUE_TOO_LARGE) ... </k>
+  rule <k> #app_global_put _ => #panic(BYTE_VALUE_TOO_LARGE) ... </k>
        <stack> (NEWVAL:Bytes) : _ : _ </stack>
     requires lengthBytes(NEWVAL) >Int PARAM_MAX_BYTE_VALUE_SIZE
 
-  rule <k> #app_global_put APP => panic(GLOBAL_INTS_EXCEEDED) ... </k>
+  rule <k> #app_global_put APP => #panic(GLOBAL_INTS_EXCEEDED) ... </k>
        <stack> (NEWVAL:Int) : (KEY:Bytes) : _ </stack>
        <app>
          <appID> APP </appID>
@@ -1909,7 +1973,7 @@ Stateful TEAL Operations
        </app>
     requires size(M[KEY <- NEWVAL]) >Int GLOBAL_INTS
 
-  rule <k> #app_global_put APP => panic(GLOBAL_BYTES_EXCEEDED) ... </k>
+  rule <k> #app_global_put APP => #panic(GLOBAL_BYTES_EXCEEDED) ... </k>
        <stack> (NEWVAL:Bytes) : (KEY:Bytes) : _ </stack>
        <app>
          <appID> APP </appID>
@@ -1976,11 +2040,11 @@ Stateful TEAL Operations
        <stack> (ASSET:TUInt64) : (A:TValue): _ </stack>
     requires isTValue(accountReference(A)) andBool isTValue(asaReference(ASSET))
 
-  rule <k> asset_holding_get _ => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> asset_holding_get _ => #panic(TXN_ACCESS_FAILED) ... </k>
        <stack> (ASSET:TUInt64) : (A:TValue) : _ </stack>
     requires notBool (isTValue(accountReference(A)) andBool isTValue(asaReference(ASSET)))
 
-  rule <k> asset_holding_get _ => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> asset_holding_get _ => #panic(ILL_TYPED_STACK) ... </k>
        <stack> _:TBytes : _ : _ </stack>
 
   syntax KItem ::= "#asset_holding_get" TValue
@@ -2002,34 +2066,34 @@ Stateful TEAL Operations
            #asset_params_get getAssetParamsField(FIELD, {asaReference(A)}:>TValue)
        ...
        </k>
-       <stack> (A:TUInt64) : _ </stack>
+       <stack> (A:TUInt64) : XS => XS </stack>
        <stacksize> S </stacksize>
     requires S <Int MAX_STACK_DEPTH
      andBool isTValue(asaReference(A))
 
-  rule <k> asset_params_get _ => panic(TXN_ACCESS_FAILED) ... </k>
+  rule <k> asset_params_get _ => #panic(TXN_ACCESS_FAILED) ... </k>
        <stack> (A:TUInt64) : _ </stack>
        <stacksize> S </stacksize>
     requires S <Int MAX_STACK_DEPTH
      andBool (notBool isTValue(asaReference(A)))
 
-  rule <k> asset_params_get _ => panic(STACK_OVERFLOW) ... </k>
+  rule <k> asset_params_get _ => #panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 
-  rule <k> asset_params_get _ => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> asset_params_get _ => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Bytes) : _ </stack>
 
   syntax KItem ::= "#asset_params_get" TValue
   // ----------------------------------------
   rule <k> #asset_params_get RET => .K ... </k>
-       <stack> (_:Int) : XS => 1 : RET : XS </stack>
+       <stack> XS => 1 : RET : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
      andBool (notBool (isInt(RET)) orElseBool {RET}:>Int >=Int 0 )
 
   rule <k> #asset_params_get RET => .K ... </k>
-       <stack> (_:Int) : XS => 0 : 0 : XS </stack>
+       <stack> XS => 0 : 0 : XS </stack>
        <stacksize> S => S +Int 1 </stacksize>
     requires S <Int MAX_STACK_DEPTH
      andBool (isInt(RET) andThenBool {RET}:>Int <Int 0)
@@ -2049,15 +2113,15 @@ Stateful TEAL Operations
        <stacksize> S => S +Int 1 </stacksize>
     requires notBool(isTValue(getAppParamsField(FIELD, APP)))
 
-  rule <k> app_params_get _ => panic(STACK_OVERFLOW) ...</k>
+  rule <k> app_params_get _ => #panic(STACK_OVERFLOW) ...</k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 
-  rule <k> app_params_get _ => panic(STACK_UNDERFLOW) ...</k>
+  rule <k> app_params_get _ => #panic(STACK_UNDERFLOW) ...</k>
        <stacksize> S </stacksize>
     requires S <Int 1
 
-  rule <k> app_params_get _ => panic(ILL_TYPED_STACK) ...</k>
+  rule <k> app_params_get _ => #panic(ILL_TYPED_STACK) ...</k>
        <stack> _:Bytes : _ </stack>
 
 ```
@@ -2083,15 +2147,427 @@ Stateful TEAL Operations
  andThenBool {getAccountParamsField(AcctBalance, ACCT)}:>Int <=Int 0)
      andBool S <Int MAX_STACK_DEPTH
 
-  rule <k> acct_params_get _ => panic(TXN_ACCESS_FAILED) ...</k>
+  rule <k> acct_params_get _ => #panic(TXN_ACCESS_FAILED) ...</k>
        <stack> ACCT : _ </stack>
     requires notBool(isTValue(accountReference(ACCT)))
 
-  rule <k> acct_params_get _ => panic(STACK_OVERFLOW) ...</k>
+  rule <k> acct_params_get _ => #panic(STACK_OVERFLOW) ...</k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 
-  rule <k> acct_params_get _ => panic(STACK_UNDERFLOW) ...</k>
+  rule <k> acct_params_get _ => #panic(STACK_UNDERFLOW) ...</k>
+       <stacksize> S </stacksize>
+    requires S <Int 1
+```
+
+### Box storage
+
+*box_create*
+
+```k
+  rule <k> box_create => #createBox(NAME, {boxAcct(NAME)}:>Bytes, SIZE) ... </k>
+       <stack> SIZE:Int : NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  syntax KItem ::= "#createBox" "(" Bytes "," Bytes "," Int ")"
+
+  rule <k> #createBox(NAME, ADDR, SIZE) => . ... </k>
+       <stack> XS => 1 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           (.Bag =>
+           <box>
+             <boxName> NAME </boxName>
+             <boxData> padLeftBytes(.Bytes, SIZE, 0) </boxData>
+           </box>)
+           REST
+         </boxes>
+         <minBalance> MIN_BALANCE => MIN_BALANCE +Int (2500 +Int (400 *Int (lengthBytes(NAME) +Int SIZE))) </minBalance>
+         ...
+       </account>
+    requires SIZE <=Int PARAM_MAX_BOX_SIZE
+     andBool notBool(NAME in_boxes(<boxes> REST </boxes>))
+     andBool ADDR ==K getGlobalField(CurrentApplicationAddress) // Can only create a box in your own application
+
+  rule <k> #createBox(NAME, ADDR, SIZE) => . ... </k>
+       <stack> XS => 0 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           <box>
+             <boxName> NAME </boxName>
+             <boxData> BYTES </boxData>
+           </box>
+           ...
+         </boxes>
+         ...
+       </account>
+    requires SIZE <=Int PARAM_MAX_BOX_SIZE
+     andBool lengthBytes(BYTES) ==Int SIZE
+
+  rule <k> #createBox(NAME, ADDR, SIZE) => #panic(CHANGED_BOX_SIZE) ... </k>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           <box>
+             <boxName> NAME </boxName>
+             <boxData> BYTES </boxData>
+           </box>
+           ...
+         </boxes>
+         ...
+       </account>
+    requires SIZE <=Int PARAM_MAX_BOX_SIZE
+     andBool lengthBytes(BYTES) =/=Int SIZE
+
+  rule <k> #createBox(_, ADDR, _) => #panic(BOX_CREATE_EXTERNAL) ... </k>
+    requires ADDR =/=K getGlobalField(CurrentApplicationAddress)
+
+  rule <k> box_create => #panic(BOX_UNAVAILABLE) ... </k>
+       <stack> _:Int : NAME:Bytes : _</stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_create => #panic(BOX_TOO_LARGE) ... </k>
+       <stack> SIZE:Int : _ : _ </stack>
+    requires SIZE >Int PARAM_MAX_BOX_SIZE
+
+  rule <k> box_create => #panic(ILL_TYPED_STACK) ... </k>
+       <stack> SIZE : NAME : _ </stack>
+    requires isBytes(SIZE) orBool isInt(NAME)
+
+  rule <k> box_create => #panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 2
+```
+
+*box_replace*
+
+```k
+  syntax KItem ::= "#boxReplace" "(" Bytes "," Bytes "," Int "," Bytes ")"
+
+  rule <k> box_replace => #boxReplace(NAME, {boxAcct(NAME)}:>Bytes, OFFSET, VAL) ... </k>
+       <stack> VAL:Bytes : OFFSET:Int : NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 3 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxReplace(NAME, ADDR, OFFSET, VAL) => . ...</k>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES => replaceAtBytes(BYTES, OFFSET, VAL) </boxData>
+         </box>
+         ...
+       </account>
+    requires (lengthBytes(VAL) +Int OFFSET) <Int lengthBytes(BYTES)
+
+  rule <k> #boxReplace(NAME, ADDR, OFFSET, VAL) => #panic(BOX_OUT_OF_BOUNDS) ...</k>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires (lengthBytes(VAL) +Int OFFSET) >=Int lengthBytes(BYTES)
+
+  rule <k> #boxReplace(NAME, ADDR, _, _) => #panic(BOX_NOT_FOUND) ...</k>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_replace => #panic(BOX_UNAVAILABLE) ... </k>
+       <stack> _:Bytes : _:Int : NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_replace => #panic(ILL_TYPED_STACK) ... </k>
+       <stack> VAL : OFFSET : NAME : _ </stack>
+    requires isInt(VAL) orBool isBytes(OFFSET) orBool isInt(NAME)
+
+  rule <k> box_replace => #panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 3
+```
+
+*box_put*
+
+```k
+  syntax KItem ::= "#boxPut" "(" Bytes "," Bytes "," Bytes ")"
+
+  rule <k> box_put => #boxPut(NAME, {boxAcct(NAME)}:>Bytes, VAL) ... </k>
+       <stack> VAL:Bytes : NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 2 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxPut(NAME, ADDR, VAL) => . ...</k>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES => VAL </boxData>
+         </box>
+         ...
+       </account>
+    requires lengthBytes(VAL) ==Int lengthBytes(BYTES)
+
+  rule <k> #boxPut(NAME, ADDR, VAL) => #panic(BOX_WRONG_LENGTH) ...</k>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires lengthBytes(VAL) =/=Int lengthBytes(BYTES)
+
+  rule <k> #boxPut(NAME, ADDR, VAL) => #createBox(NAME, ADDR, lengthBytes(VAL)) ~> #boxPut(NAME, ADDR, VAL) ...</k>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_put => #panic(BOX_UNAVAILABLE) ... </k>
+       <stack> _:Bytes : NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_put => #panic(ILL_TYPED_STACK) ... </k>
+       <stack> VAL : NAME : _ </stack>
+    requires isInt(VAL) orBool isInt(NAME)
+
+  rule <k> box_put => #panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 2
+```
+
+*box_extract*
+
+```k
+  syntax KItem ::= "#boxExtract" "(" Bytes "," Bytes "," Int "," Int ")"
+
+  rule <k> box_extract => #boxExtract(NAME, {boxAcct(NAME)}:>Bytes, OFFSET, LENGTH) ... </k>
+       <stack> LENGTH:Int : OFFSET:Int : NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 3 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxExtract(NAME, ADDR, OFFSET, LENGTH) => . ... </k>
+       <stack> XS => substrBytes(BYTES, OFFSET, OFFSET +Int LENGTH) : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires (LENGTH +Int OFFSET) <Int lengthBytes(BYTES)
+
+  rule <k> #boxExtract(NAME, ADDR, OFFSET, LENGTH) => #panic(BOX_OUT_OF_BOUNDS) ... </k>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires (LENGTH +Int OFFSET) >=Int lengthBytes(BYTES)
+
+  rule <k> #boxExtract(NAME, ADDR, _, _) => #panic(BOX_NOT_FOUND) ... </k>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_extract => #panic(BOX_UNAVAILABLE) ... </k>
+       <stack> _:Int : _:Int : NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_extract => #panic(ILL_TYPED_STACK) ... </k>
+       <stack> LENGTH : OFFSET : NAME : _ </stack>
+    requires isBytes(LENGTH) orBool isBytes(OFFSET) orBool isInt(NAME)
+
+  rule <k> box_extract => #panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 3
+```
+
+*box_get*
+
+```k
+  syntax KItem ::= "#boxGet" "(" Bytes "," Bytes ")"
+
+  rule <k> box_get => #boxGet(NAME, {boxAcct(NAME)}:>Bytes) ... </k>
+       <stack> NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxGet(NAME, ADDR) => . ... </k>
+       <stack> XS => 1 : BYTES : XS </stack>
+       <stacksize> S => S +Int 2 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires lengthBytes(BYTES) <Int MAX_BYTEARRAY_LEN
+
+  rule <k> #boxGet(NAME, ADDR) => . ... </k>
+       <stack> XS => 0 : .Bytes : XS </stack>
+       <stacksize> S => S +Int 2 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> #boxGet(NAME, ADDR) => #panic(BYTES_OVERFLOW) ... </k>
+       <account>
+         <address> ADDR </address>
+         <box>
+           <boxName> NAME </boxName>
+           <boxData> BYTES </boxData>
+         </box>
+         ...
+       </account>
+    requires lengthBytes(BYTES) >=Int MAX_BYTEARRAY_LEN
+
+  rule <k> box_get => #panic(BOX_UNAVAILABLE) ... </k>
+       <stack> NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_get => #panic(ILL_TYPED_STACK) ... </k>
+       <stack> NAME : _ </stack>
+    requires isInt(NAME)
+
+  rule <k> box_get => #panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 1
+```
+
+*box_len*
+
+```k
+  syntax KItem ::= "#boxLen" "(" Bytes "," Bytes ")"
+
+  rule <k> box_len => #boxLen(NAME, {boxAcct(NAME)}:>Bytes) ... </k>
+       <stack> NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxLen(NAME, ADDR) => . ... </k>
+       <stack> XS => 1 : lengthBytes(BYTES) : XS </stack>
+       <stacksize> S => S +Int 2 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           <box>
+             <boxName> NAME </boxName>
+             <boxData> BYTES </boxData>
+           </box>
+           ...
+         </boxes>
+         ...
+       </account>
+
+  rule <k> #boxLen(NAME, ADDR) => . ... </k>
+       <stack> XS => 0 : 0 : XS </stack>
+       <stacksize> S => S +Int 2 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_len => #panic(BOX_UNAVAILABLE) ... </k>
+       <stack> NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_len => #panic(ILL_TYPED_STACK) ... </k>
+       <stack> NAME : _ </stack>
+    requires isInt(NAME)
+
+  rule <k> box_len => #panic(STACK_UNDERFLOW) ... </k>
+       <stacksize> S </stacksize>
+    requires S <Int 1
+```
+
+*box_del*
+
+```k
+  syntax KItem ::= "#boxDel" "(" Bytes "," Bytes ")"
+
+  rule <k> box_del => #boxDel(NAME, {boxAcct(NAME)}:>Bytes) ... </k>
+       <stack> NAME:Bytes : XS => XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires isBytes(boxAcct(NAME))
+
+  rule <k> #boxDel(NAME, ADDR) => . ... </k>
+       <stack> XS => 1 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           ((<box>
+             <boxName> NAME </boxName>
+             <boxData> BYTES </boxData>
+           </box>) => .Bag)
+           ...
+         </boxes>
+         <minBalance> MIN_BALANCE => MIN_BALANCE -Int (2500 +Int (400 *Int (lengthBytes(NAME) +Int
+         lengthBytes(BYTES)))) </minBalance>
+         ...
+       </account>
+
+  rule <k> #boxDel(NAME, ADDR) => . ... </k>
+       <stack> XS => 0 : XS </stack>
+       <stacksize> S => S +Int 1 </stacksize>
+       <account>
+         <address> ADDR </address>
+         <boxes>
+           BOXES
+         </boxes>
+         ...
+       </account>
+    requires notBool(NAME in_boxes(<boxes> BOXES </boxes>))
+
+  rule <k> box_del => #panic(BOX_UNAVAILABLE) ... </k>
+       <stack> NAME:Bytes : _ </stack>
+    requires boxAcct(NAME) ==K NoTValue
+
+  rule <k> box_del => #panic(ILL_TYPED_STACK) ... </k>
+       <stack> NAME : _ </stack>
+    requires isInt(NAME)
+
+  rule <k> box_del => #panic(STACK_UNDERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S <Int 1
 ```
@@ -2108,7 +2584,7 @@ Stateful TEAL Operations
      andBool T <Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
      andBool ({getGroupFieldByIdx(getTxnGroupID(getCurrentTxn()), T, TypeEnum)}:>Int) ==Int (@ appl)
 
-  rule <k> gaid T => panic(FUTURE_TXN) ... </k>
+  rule <k> gaid T => #panic(FUTURE_TXN) ... </k>
      requires T >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
      orBool ({getGroupFieldByIdx(getTxnGroupID(getCurrentTxn()), T, TypeEnum)}:>Int) =/=Int (@ appl)
 ```
@@ -2122,7 +2598,7 @@ Stateful TEAL Operations
     requires T <Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
      andBool ({getGroupFieldByIdx(getTxnGroupID(getCurrentTxn()), T, TypeEnum)}:>Int) ==Int (@ appl)
 
-  rule <k> gaids => panic(FUTURE_TXN) ... </k>
+  rule <k> gaids => #panic(FUTURE_TXN) ... </k>
        <stack> T:Int : _ </stack>
      requires T >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
      orBool ({getGroupFieldByIdx(getTxnGroupID(getCurrentTxn()), T, TypeEnum)}:>Int) =/=Int (@ appl)
@@ -2213,17 +2689,17 @@ Stateful TEAL Operations
      andBool S <Int MAX_STACK_DEPTH
      andBool GROUP_IDX <Int ({getTxnField(getCurrentTxn(), GroupIndex)}:>Int)
 
-  rule <k> loadGroupScratch(_, I) => panic(INVALID_SCRATCH_LOC) ... </k>
+  rule <k> loadGroupScratch(_, I) => #panic(INVALID_SCRATCH_LOC) ... </k>
     requires I <Int 0 orBool I >=Int MAX_SCRATCH_SIZE
 
-  rule <k> loadGroupScratch(GROUP_IDX, _) => panic(TXN_OUT_OF_BOUNDS) ... </k>
+  rule <k> loadGroupScratch(GROUP_IDX, _) => #panic(TXN_OUT_OF_BOUNDS) ... </k>
     requires GROUP_IDX <Int 0 orBool GROUP_IDX >=Int {getGlobalField(GroupSize)}:>Int
 
-  rule <k> loadGroupScratch(GROUP_IDX, _) => panic(FUTURE_TXN) ... </k>
+  rule <k> loadGroupScratch(GROUP_IDX, _) => #panic(FUTURE_TXN) ... </k>
     requires GROUP_IDX >=Int {getTxnField(getCurrentTxn(), GroupIndex)}:>Int
      andBool (GROUP_IDX >=Int 0 andBool GROUP_IDX <Int {getGlobalField(GroupSize)}:>Int)
 
-  rule <k> loadGroupScratch(_, _) => panic(STACK_OVERFLOW) ... </k>
+  rule <k> loadGroupScratch(_, _) => #panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 ```
@@ -2260,7 +2736,7 @@ Stateful TEAL Operations
        </innerTransactions>
        <nextGroupID> GROUP_ID => GROUP_ID +Int 1 </nextGroupID>
 
-  rule <k> itxn_submit => #incrementPC() ~> #checkItxns(T) ~> #executeItxnGroup()...</k>
+  rule <k> (itxn_submit ~> #incrementPC() ~> #fetchOpcode()) => (#incrementPC() ~> #checkItxns(T) ~> #executeItxnGroup()) ...</k>
        <innerTransactions> T </innerTransactions>
        <lastTxnGroupID> _ => Int2String(GROUP_ID) </lastTxnGroupID>
        <nextGroupID> GROUP_ID </nextGroupID>
@@ -2327,7 +2803,7 @@ Panic Behaviors due to Ill-typed Stack Arguments
 ### Arithmetic/relational/logical/Bitwise Opcodes
 
 ```k
-  rule <k> Op:OpCode => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> Op:OpCode => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (V2:TValue) : (V1:TValue) : _ </stack>
     requires (isBinaryArithOpCode(Op)         orBool
               isInequalityOpCode(Op)    orBool
@@ -2335,11 +2811,11 @@ Panic Behaviors due to Ill-typed Stack Arguments
               isBinaryBitOpCode(Op))
      andBool (isBytes(V2) orBool isBytes(V1))
 
-  rule <k> Op:OpCode => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> Op:OpCode => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Bytes) : _ </stack>
     requires isUnaryLogicalOpCode(Op)
 
-  rule <k> _:EqualityOpCode => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> _:EqualityOpCode => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (V2:TValue) : (V1:TValue) : _ </stack>
     requires (isBytes(V1) andBool isInt(V2))
       orBool (isBytes(V2) andBool isInt(V1))
@@ -2347,54 +2823,54 @@ Panic Behaviors due to Ill-typed Stack Arguments
 
 ### Byte Opcodes
 ```k
-  rule <k> OP:OpCode => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> OP:OpCode => #panic(ILL_TYPED_STACK) ... </k>
        <stack> A : B : _ </stack>
     requires (isInt(A) orBool isInt(B))
      andBool (isArithmMathByteOpCode(OP)
      orBool   isRelationalMathByteOpCode(OP)
      orBool   isBinaryLogicalMathByteOpCode(OP))
 
-  rule <k> OP:OpCode => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> OP:OpCode => #panic(ILL_TYPED_STACK) ... </k>
        <stack> _:Int : _ </stack>
     requires isUnaryLogicalMathByteOpCode(OP)
   
-  rule <k> len => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> len => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Int) : _ </stack>
 
-  rule <k> itob => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> itob => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Bytes) : _ </stack>
 
-  rule <k> btoi => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> btoi => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Int) : _ </stack>
 
-  rule <k> concat => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> concat => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (V2:TValue) : (V1:TValue) : _ </stack>
     requires isInt(V2) orBool isInt(V1)
 
-  rule <k> substring _ _ => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> substring _ _ => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Int) : _ </stack>
 
-  rule <k> substring3 => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> substring3 => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (V:TValue) : (START:TValue) : (END:TValue) : _ </stack>
     requires isInt(V) orBool isBytes(START) orBool isBytes(END)
 ```
 
 ### Flow Control Opcodes
 ```k
-  rule <k> Op:OpCode => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> Op:OpCode => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Bytes) : _ </stack>
     requires isCondBranchOpCode(Op) orBool isReturnOpCode(Op)
 ```
 
 ### Application State Opcodes
 ```k
-  rule <k> app_global_get => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> app_global_get => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Int) : _ </stack>
 
-  rule <k> app_global_put => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> app_global_put => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:TValue) : (_:Int):_ </stack>
 
-  rule <k> app_global_del => panic(ILL_TYPED_STACK) ... </k>
+  rule <k> app_global_del => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Int) : _ </stack>
 ```
 
@@ -2441,7 +2917,7 @@ TODO: incorporate Bytes math opcodes
 
 ```k
   // Opcodes requiring at least three stack elements
-  rule <k> Op:OpCode => panic(STACK_UNDERFLOW) ... </k>
+  rule <k> Op:OpCode => #panic(STACK_UNDERFLOW) ... </k>
        <stack> (_:TValue) : (_:TValue) : .TStack </stack>
        <stacksize> 2 </stacksize>
     requires isTernaryStateOpCode(Op)
@@ -2450,7 +2926,7 @@ TODO: incorporate Bytes math opcodes
       orBool isTernaryStackOpCode(Op)
 
   // Opcodes requiring at least two stack elements
-  rule <k> Op:OpCode => panic(STACK_UNDERFLOW) ... </k>
+  rule <k> Op:OpCode => #panic(STACK_UNDERFLOW) ... </k>
        <stack> (_:TValue) : .TStack </stack>
        <stacksize> 1 </stacksize>
     requires isBinaryArithOpCode(Op)
@@ -2465,7 +2941,7 @@ TODO: incorporate Bytes math opcodes
       orBool isTernaryStateOpCode(Op)
 
   // Opcodes requiring at least one stack element
-  rule <k> Op:OpCode => panic(STACK_UNDERFLOW) ... </k>
+  rule <k> Op:OpCode => #panic(STACK_UNDERFLOW) ... </k>
        <stack> .TStack </stack>
        <stacksize> 0 </stacksize>
     requires isCryptoOpCode(Op)

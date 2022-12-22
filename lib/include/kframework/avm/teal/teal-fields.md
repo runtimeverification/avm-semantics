@@ -22,8 +22,10 @@ module TEAL-FIELDS
                        | "Round"
                        | "LatestTimestamp"
                        | "CurrentApplicationID"
+                       | "CreatorAddress"
                        | "CurrentApplicationAddress"
                        | "OpcodeBudget"
+                       | "CreatorAddress"
 ```
 
 ## Asset Fields
@@ -144,6 +146,7 @@ module TEAL-FIELDS
                           | "OnCompletion"
                           | "NumAppArgs"
                           | "NumAccounts"
+                          | "NumAssets"
                           | "ApprovalProgram"
                           | "ClearStateProgram"
 ```

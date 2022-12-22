@@ -30,6 +30,7 @@ module TEAL-OPCODES
                         | BranchingOpCode
                         | StackOpCode
                         | JSONOpCode
+                        | BoxStorageOpCode
   syntax SigOpCode    ::= SigVerOpCode | ArgOpCode           // Opcodes used only by stateless TEAL
   syntax AppOpCode    ::= StateOpCode
                         | TxnGroupStateOpCode
@@ -138,9 +139,11 @@ module TEAL-OPCODES
                              | "extract_uint16"
                              | "extract_uint32"
                              | "extract_uint64"
+                             | "replace2" Int
 
   syntax TernaryByteOpCode ::= "substring3"
                              | "extract3"
+                             | "replace3"
 
   syntax MathByteOpCode ::= ArithmMathByteOpCode
                           | RelationalMathByteOpCode
@@ -196,6 +199,7 @@ module TEAL-OPCODES
   syntax PseudoOpCode ::= "int" PseudoTUInt64
                         | "byte" TBytesLiteral
                         | "addr" TAddressLiteral
+                        | "method" TBytesLiteral
 ```
 
 #### Blockchain State Accessors
@@ -229,7 +233,7 @@ module TEAL-OPCODES
 #### Flow Control Operations
 
 ```k
-  syntax Label [token]
+  syntax Label ::= Int
 
   syntax BranchingOpCode ::= CondBranchOpCode
                            | JumpOpCode
@@ -272,6 +276,8 @@ module TEAL-OPCODES
   syntax NAryStackOpCode    ::= "dig" Int
                               | "cover" Int
                               | "uncover" Int
+                              | "bury" Int
+                              | "popn" Int
 ```
 
 ### Stateless TEAL Operations
@@ -318,6 +324,18 @@ module TEAL-OPCODES
                               | "asset_holding_get" AssetHoldingField
   syntax TernaryStateOpCode ::= "app_local_get_ex"
                               | "app_local_put"
+```
+
+#### Box storage
+
+```k
+  syntax BoxStorageOpCode ::= "box_create"
+                            | "box_extract"
+                            | "box_replace"
+                            | "box_del"
+                            | "box_len"
+                            | "box_get"
+                            | "box_put"
 ```
 
 #### Access to past transactions in the group
@@ -370,6 +388,8 @@ TEAL Program Definition
 module TEAL-SYNTAX
   import TEAL-OPCODES
   import INT
+  import STRING
+  import BOOL
 
   syntax LabelCode ::= Label ":"
 
@@ -388,19 +408,6 @@ module TEAL-SYNTAX
                    | TealOpCodeOrLabel TealPgm
   syntax TealInputPgm ::= TealPragmas TealPgm | TealPgm
 
-  syntax TealPrograms ::= TealInputPgm ";" TealPrograms | ".TealPrograms" [klabel(.TealPrograms), symbol]
-```
-
-We provide a function to extract a teal program by index from the syntactic list of input programs.
-If the requested index is out of bounds, a trivial error program is returned.
-
-```k
-  syntax TealInputPgm ::= getTealByIndex(TealPrograms, Int) [function]
-  //------------------------------------------------------------------
-  rule getTealByIndex(PGM;_, 0) => PGM
-  rule getTealByIndex(_;REST, IDX) => getTealByIndex(REST, IDX -Int 1)
-    requires IDX >Int 0
-  rule getTealByIndex(.TealPrograms, _) => #pragma version 3 err
 endmodule
 ```
 
@@ -532,6 +539,8 @@ module TEAL-UNPARSER
   rule unparseTEAL(extract_uint16)                => "extract_uint16"
   rule unparseTEAL(extract_uint32)                => "extract_uint32"
   rule unparseTEAL(extract_uint64)                => "extract_uint64"
+  rule unparseTEAL(replace2 I:Int)                => "replace2" +&+ Int2String(I)
+  rule unparseTEAL(replace3)                      => "replace3"
   rule unparseTEAL(intcblock Size IntConsts)      => "intcblock" +&+ Int2String(Size:Int) +&+ TValueList2String(IntConsts:TValueNeList)
   rule unparseTEAL(intc Idx)                      => "intc" +&+ Int2String(Idx:Int)
   rule unparseTEAL(intc_0)                        => "intc_0"
@@ -550,6 +559,7 @@ module TEAL-UNPARSER
   rule unparseTEAL(int I:TUInt64Token)            => "int" +&+ IntToken2String(I)
   rule unparseTEAL(byte ByteConst)                => "byte" +&+ TValue2String(ByteConst:TBytesLiteral)
   rule unparseTEAL(addr AddrConst)                => "addr" +&+ TValue2String(AddrConst:TAddressLiteral)
+  rule unparseTEAL(method S:String)               => "method" +&+ S
   rule unparseTEAL(txn FieldName)                 => "txn" +&+ TealField2String(FieldName:TxnField)
   rule unparseTEAL(txn FieldName ArrIdx)          => "txn" +&+ TealField2String(FieldName:TxnaField) +&+ Int2String(ArrIdx:Int)
   rule unparseTEAL(gtxn TxnIdx TxnField)          => "gtxn" +&+ Int2String(TxnIdx:Int) +&+ TealField2String(TxnField:TxnField)
@@ -583,6 +593,8 @@ module TEAL-UNPARSER
   rule unparseTEAL(dig N)                         => "dig" +&+ Int2String(N)
   rule unparseTEAL(cover N)                       => "cover" +&+ Int2String(N)
   rule unparseTEAL(uncover N)                     => "uncover" +&+ Int2String(N)
+  rule unparseTEAL(bury N)                        => "bury" +&+ Int2String(N)
+  rule unparseTEAL(popn N)                        => "popn" +&+ Int2String(N)
   rule unparseTEAL(select)                        => "select"
   rule unparseTEAL(swap)                          => "swap"
   rule unparseTEAL(ed25519verify)                 => "ed25519verify"
@@ -608,6 +620,13 @@ module TEAL-UNPARSER
   rule unparseTEAL(asset_holding_get FieldName)   => "asset_holding_get" +&+ TealField2String(FieldName:AssetHoldingField)
   rule unparseTEAL(app_local_get_ex)              => "app_local_get_ex"
   rule unparseTEAL(app_local_put)                 => "app_local_put"
+  rule unparseTEAL(box_create)                    => "box_create"
+  rule unparseTEAL(box_extract)                   => "box_extract"
+  rule unparseTEAL(box_replace)                   => "box_replace"
+  rule unparseTEAL(box_del)                       => "box_del"
+  rule unparseTEAL(box_len)                       => "box_len"
+  rule unparseTEAL(box_get)                       => "box_get"
+  rule unparseTEAL(box_put)                       => "box_put"
   rule unparseTEAL(gaid N)                        => "gaid" +&+ Int2String(N)
   rule unparseTEAL(gload N M)                     => "gload" +&+ Int2String(N) +&+ Int2String(M)
   rule unparseTEAL(gaids)                         => "gaids"
@@ -649,6 +668,7 @@ module TEAL-UNPARSER
   rule TealField2String(Round)                    => "Round"
   rule TealField2String(LatestTimestamp)          => "LatestTimestamp"
   rule TealField2String(CurrentApplicationID)     => "CurrentApplicationID"
+  rule TealField2String(CreatorAddress)           => "CreatorAddress"
   rule TealField2String(AssetBalance)             => "AssetBalance"
   rule TealField2String(AssetFrozen)              => "AssetFrozen"
   rule TealField2String(AssetTotal)               => "AssetTotal"
@@ -720,6 +740,7 @@ module TEAL-UNPARSER
   rule TealField2String(OnCompletion)             => "OnCompletion"
   rule TealField2String(NumAppArgs)               => "NumAppArgs"
   rule TealField2String(NumAccounts)              => "NumAccounts"
+  rule TealField2String(NumAssets)                => "NumAssets"
   rule TealField2String(ApprovalProgram)          => "ApprovalProgram"
   rule TealField2String(ClearStateProgram)        => "ClearStateProgram"
   rule TealField2String(ApplicationArgs)          => "ApplicationArgs"

@@ -1,4 +1,4 @@
-ARG K_DISTRO=focal
+ARG K_DISTRO=jammy
 ARG K_VERSION
 FROM runtimeverificationinc/kframework-k:ubuntu-${K_DISTRO}-${K_VERSION}
 
@@ -26,7 +26,7 @@ ARG GROUP_ID=1000
 RUN groupadd -g $GROUP_ID user && useradd -m -u $USER_ID -s /bin/sh -g user user
 
 # Install pyenv
-ENV PYTHON_VERSION 3.10.6
+ENV PYTHON_VERSION 3.11.0
 ENV PYENV_ROOT /home/user/.pyenv
 ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
 RUN set -ex \
@@ -35,8 +35,8 @@ RUN set -ex \
     && pyenv global $PYTHON_VERSION  \
     && pyenv rehash
 
-RUN    curl -sSL https://install.python-poetry.org | POETRY_HOME=/usr python3 - \
-    && poetry --version
+RUN curl -sSL https://install.python-poetry.org | POETRY_VERSION=1.3.0 POETRY_HOME=/usr python3 -
+RUN poetry --version
 RUN poetry config virtualenvs.in-project true
 RUN poetry config virtualenvs.prefer-active-python true
 
