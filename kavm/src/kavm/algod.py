@@ -4,7 +4,6 @@ import os
 from base64 import b64encode
 from pathlib import Path
 from pprint import PrettyPrinter
-from subprocess import CalledProcessError
 from typing import Any, Dict, Final, Iterable, List, Optional, cast
 
 import msgpack
@@ -259,13 +258,10 @@ class KAVMClient(algod.AlgodClient):
                 scenario=scenario,
                 existing_decompiled_teal_dir=self._decompiled_teal_dir_path,
             )
-        except CalledProcessError as e:
-            _LOGGER.critical(
-                f'Transaction group evaluation failed, last generated scenario was: {json.dumps(scenario.dictify(), indent=4)}'
-            )
-            raise AlgodHTTPError(
-                msg='KAVM has failed, rerun witn --log-level=ERROR to see the executed JSON scenario'
-            ) from e
+        except RuntimeError as e:
+            _LOGGER.error(f'Transaction group evaluation failed with status: {e.args[0]}')
+            _LOGGER.debug(f'Last generated scenario was: {json.dumps(scenario.dictify(), indent=4)}')
+            raise AlgodHTTPError(msg=f'KAVM has failed with status {e.args[0]}') from None
 
         try:
             # on succeful execution, the final state will be serialized and prineted to stderr

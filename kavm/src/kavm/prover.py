@@ -19,7 +19,6 @@ from pyk.kast.manip import (
     flatten_label,
     inline_cell_maps,
     minimize_term,
-    ml_pred_to_bool,
     push_down_rewrites,
     set_cell,
     split_config_and_constraints,
