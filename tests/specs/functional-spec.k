@@ -24,5 +24,7 @@ module FUNCTIONAL-SPEC
         </stack>
         <stacksize> 2 => 1 </stacksize>
     requires ARG1 +Int ARG2 <=Int MAX_UINT64
+     andBool ARG1 >=Int 0
+     andBool ARG2 >=Int 0
 
 endmodule
