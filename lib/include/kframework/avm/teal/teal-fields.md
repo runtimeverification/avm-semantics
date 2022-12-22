@@ -173,6 +173,14 @@ module TEAL-FIELDS
                               | "AcctAuthAddr"
 ```
 
+### `json_ref` fields
+
+```k
+  syntax JSONRefField ::= "JSONString"
+                        | "JSONUint64"
+                        | "JSONObject"
+```
+
 ```k
 endmodule
 ```

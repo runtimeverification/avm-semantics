@@ -1,5 +1,6 @@
 ```k
 requires "krypto.md"
+requires "json.md"
 
 requires "avm/blockchain.md"
 requires "avm/args.md"
@@ -25,6 +26,7 @@ module TEAL-DRIVER
   imports TEAL-EXECUTION
   imports TEAL-STACK
   imports KRYPTO
+  imports JSON
   imports AVM-PANIC
 ```
 
@@ -2870,6 +2872,40 @@ Panic Behaviors due to Ill-typed Stack Arguments
 
   rule <k> app_global_del => #panic(ILL_TYPED_STACK) ... </k>
        <stack> (_:Int) : _ </stack>
+```
+
+### JSON Opcodes
+```k
+  syntax JSON ::= lookupJSON(JSON, String)  [function]
+  //--------------------------------------------------
+  rule lookupJSON( { KEY : VAL, _    }, KEY  ) => VAL
+  rule lookupJSON( { KEY : _  , REST }, KEY' ) => lookupJSON( { REST }, KEY' )
+    requires KEY =/=K KEY'
+  rule lookupJSON( { .JSONs }, _ ) => null
+
+  rule <k> json_ref JSONString => . ... </k>
+       <stack> KEY:Bytes : JSON:Bytes : XS => String2Bytes(JSON2String(lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)))) : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
+  rule <k> json_ref JSONUint64 => . ... </k>
+       <stack> KEY:Bytes : JSON:Bytes : XS => {lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY))}:>Int : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires isInt(lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)))
+
+  rule <k> json_ref JSONUint64 => . ... </k>
+       <stack> KEY:Bytes : JSON:Bytes : XS => String2Int({lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY))}:>String) : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires isString(lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)))
+
+  rule <k> json_ref JSONUint64 => . ... </k>
+       <stack> KEY:Bytes : JSON:Bytes : XS => bool2Int({lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY))}:>Bool) : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+    requires isBool(lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)))
+
+  rule <k> json_ref JSONObject => . ... </k>
+       <stack> KEY:Bytes : JSON:Bytes : XS => String2Bytes(JSON2String(lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)))) : XS </stack>
+       <stacksize> S => S -Int 1 </stacksize>
+
 ```
 
 ### Signature Verification Opcode

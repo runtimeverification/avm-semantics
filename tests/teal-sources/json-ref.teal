@@ -1,0 +1,25 @@
+#pragma version 6
+
+byte "{\"test\": \"abc\"}"
+byte "test"
+json_ref JSONString
+byte "\"abc\""
+==
+assert
+
+byte "{\"test\": \"abc\", \"test2\": 3}"
+byte "test2"
+json_ref JSONUint64
+int 3
+==
+assert
+
+byte "{\"test\": \"abc\", \"test2\": 3, \"test3\": { \"test4\": 1 } }"
+byte "test3"
+json_ref JSONObject
+byte "{\"test4\":1}"
+==
+assert
+
+int 1
+return

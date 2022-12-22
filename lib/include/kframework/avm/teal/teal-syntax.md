@@ -29,6 +29,7 @@ module TEAL-OPCODES
                         | ScratchOpCode
                         | BranchingOpCode
                         | StackOpCode
+                        | JSONOpCode
                         | BoxStorageOpCode
   syntax SigOpCode    ::= SigVerOpCode | ArgOpCode           // Opcodes used only by stateless TEAL
   syntax AppOpCode    ::= StateOpCode
@@ -369,6 +370,13 @@ module TEAL-OPCODES
                          | "gitxna" Int TxnaField Int
 ```
 
+#### JSON parsing
+
+```k
+  syntax JSONOpCode ::= "json_ref" JSONRefField
+```
+
+
 ```k
 endmodule
 ```
@@ -634,6 +642,7 @@ module TEAL-UNPARSER
   rule unparseTEAL(gitxna T FieldName N)          => "itxna" +&+ Int2String(T) +&+ TealField2String(FieldName:TxnField) +&+ Int2String(N)
   rule unparseTEAL(itxnas FieldName)              => "itxnas" +&+ TealField2String(FieldName:TxnaField)
   rule unparseTEAL(gitxnas T FieldName)           => "gitxnas" +&+ Int2String(T) +&+ TealField2String(FieldName:TxnaField)
+  rule unparseTEAL(json_ref FieldName)            => "json_ref" +&+ TealField2String(FieldName:JSONRefField)
 
   syntax String ::= left:
                     String "+&+" String       [function]
@@ -741,6 +750,9 @@ module TEAL-UNPARSER
   rule TealField2String(AcctBalance)              => "AcctBalance"
   rule TealField2String(AcctMinBalance)           => "AcctMinBalance"
   rule TealField2String(AcctAuthAddr)             => "AcctAuthAddr"
+  rule TealField2String(JSONString)               => "JSONString"
+  rule TealField2String(JSONUint64)               => "JSONUint64"
+  rule TealField2String(JSONObject)               => "JSONObject"
 
 
   syntax String ::= TValue2String(TValue)         [function]
