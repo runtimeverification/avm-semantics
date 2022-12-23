@@ -1,0 +1,8 @@
+#pragma version 6
+
+byte "{\"test\": \"abc\", \"test2\": 3, \"test3\": { \"test4\": 1 } }"
+byte "test5"
+json_ref JSONObject
+
+int 1
+return

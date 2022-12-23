@@ -2884,27 +2884,52 @@ Panic Behaviors due to Ill-typed Stack Arguments
   rule lookupJSON( { .JSONs }, _ ) => null
 
   rule <k> json_ref JSONString => . ... </k>
-       <stack> KEY:Bytes : JSON:Bytes : XS => String2Bytes(JSON2String(lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)))) : XS </stack>
+       <stack> KEY:Bytes : JSON:Bytes : XS => String2Bytes({lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY))}:>String) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
+    requires isString(lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)))
+
+  rule <k> json_ref JSONString => #panic(JSON_KEY_NOT_FOUND) ... </k>
+       <stack> KEY:Bytes : JSON:Bytes : XS </stack>
+    requires lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)) ==K null
+
+  rule <k> json_ref JSONString => #panic(JSON_TYPE_VIOLATION) ... </k>
+       <stack> KEY:Bytes : JSON:Bytes : XS </stack>
+    requires lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)) =/=K null [owise]
 
   rule <k> json_ref JSONUint64 => . ... </k>
        <stack> KEY:Bytes : JSON:Bytes : XS => {lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY))}:>Int : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires isInt(lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)))
+     andBool 0 <=Int {lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY))}:>Int
+     andBool MAX_UINT64 >=Int {lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY))}:>Int
 
-  rule <k> json_ref JSONUint64 => . ... </k>
-       <stack> KEY:Bytes : JSON:Bytes : XS => String2Int({lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY))}:>String) : XS </stack>
-       <stacksize> S => S -Int 1 </stacksize>
-    requires isString(lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)))
+  rule <k> json_ref JSONUint64 => #panic(JSON_UINT_RANGE) ... </k>
+       <stack> KEY:Bytes : JSON:Bytes : XS </stack>
+    requires isInt(lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)))
+     andBool (0 >Int {lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY))}:>Int
+      orBool MAX_UINT64 <Int {lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY))}:>Int)
 
   rule <k> json_ref JSONUint64 => . ... </k>
        <stack> KEY:Bytes : JSON:Bytes : XS => bool2Int({lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY))}:>Bool) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
     requires isBool(lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)))
 
+  rule <k> json_ref JSONUint64 => #panic(JSON_KEY_NOT_FOUND) ... </k>
+       <stack> KEY:Bytes : JSON:Bytes : XS </stack>
+    requires lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)) ==K null
+
+  rule <k> json_ref JSONUint64 => #panic(JSON_TYPE_VIOLATION) ... </k>
+       <stack> KEY:Bytes : JSON:Bytes : XS </stack>
+    requires lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)) =/=K null [owise]
+
   rule <k> json_ref JSONObject => . ... </k>
        <stack> KEY:Bytes : JSON:Bytes : XS => String2Bytes(JSON2String(lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)))) : XS </stack>
        <stacksize> S => S -Int 1 </stacksize>
+    requires lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)) =/=K null
+
+  rule <k> json_ref JSONObject => #panic(JSON_KEY_NOT_FOUND) ... </k>
+       <stack> KEY:Bytes : JSON:Bytes : XS </stack>
+    requires lookupJSON(String2JSON(Bytes2String(JSON)), Bytes2String(KEY)) ==K null
 
 ```
 

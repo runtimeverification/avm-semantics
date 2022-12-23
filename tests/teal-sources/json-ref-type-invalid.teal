@@ -1,0 +1,8 @@
+#pragma version 6
+
+byte "{\"test\": \"abc\", \"test2\": 3.5, \"test3\": { \"test4\": 1 } }"
+byte "test2"
+json_ref JSONUint64
+
+int 1
+return

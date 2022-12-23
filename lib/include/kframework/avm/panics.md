@@ -138,6 +138,9 @@ return code to 3 (see return codes below).
                | "MISSING_APP_CREATOR" [macro]
                | "APP_ALREADY_ACTIVE" [macro]
                | "INSUFFICIENT_ASSET_BALANCE" [macro]
+               | "JSON_KEY_NOT_FOUND" [macro]
+               | "JSON_UINT_RANGE" [macro]
+               | "JSON_TYPE_VIOLATION" [macro]
 
   syntax String ::= returnDesc(Int) [function]
   //----------------------------------------------------
@@ -194,6 +197,9 @@ return code to 3 (see return codes below).
   rule returnDesc(MISSING_APP_CREATOR)        => "Found app that is missing for <appCreator>"
   rule returnDesc(APP_ALREADY_ACTIVE)         => "attempt to #initApp that already is in <activeApps>"
   rule returnDesc(INSUFFICIENT_ASSET_BALANCE) => "tried to transfer more of an asset than owned"
+  rule returnDesc(JSON_KEY_NOT_FOUND)         => "json_ref on non-existing key"
+  rule returnDesc(JSON_UINT_RANGE)            => "loading an integer outside of range 0 ... 2^(64)-1 from json string"
+  rule returnDesc(JSON_TYPE_VIOLATION)        => "json value has type incompatible with the given type"
 
   //------------------------------------
   rule SUCCESS                    => 0
@@ -255,6 +261,9 @@ return code to 3 (see return codes below).
   rule MISSING_APP_CREATOR        => 55
   rule APP_ALREADY_ACTIVE         => 56
   rule INSUFFICIENT_ASSET_BALANCE => 57
+  rule JSON_KEY_NOT_FOUND         => 58
+  rule JSON_UINT_RANGE            => 59
+  rule JSON_TYPE_VIOLATION        => 60
 
   syntax KItem ::= #panic(Int)
   syntax KItem ::= #stopIfError()
