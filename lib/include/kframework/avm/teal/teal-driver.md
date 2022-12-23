@@ -376,7 +376,7 @@ Note that we need to perform the left shift modulo `MAX_UINT64 + 1`, otherwise t
     requires notBool (I2 >=Int 0 andBool I2 <Int 64)
 
   rule <k> ~ => .K ... </k>
-       <stack> I : XS => (~Int I) : XS </stack>
+       <stack> I : XS => (I xorInt MAX_UINT64) : XS </stack>
 
   rule <k> ~ => panic(ILL_TYPED_STACK) ... </k>
        <stack> _:Bytes : _ </stack>
