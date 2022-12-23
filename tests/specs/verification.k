@@ -174,24 +174,29 @@ module VERIFICATION
 
   rule #Ceil ( log2Int ( X:Int ) ) => #Top requires X >Int 0 [simplification]
 
-  rule N:Int >=Int log2Int(X:Int) => 2 ^Int N >=Int X [simplification, concrete(N)]
+  rule log2Int(X:Int)  >Int N:Int => X  >Int (2 ^Int (N +Int 1)) -Int 1 
+    [simplification, concrete(N)]
 
-  rule log2Int(X:Int)  >Int N:Int => X  >Int 2 ^Int N [simplification, concrete(N)]
-  rule log2Int(X:Int)  >=Int N:Int => X  >=Int 2 ^Int N [simplification, concrete(N)]
+  rule N:Int >=Int log2Int(X:Int) => (2 ^Int (N +Int 1)) -Int 1 >=Int X 
+    [simplification, concrete(N)]
 
-  rule N:Int >Int X /Int Y => N *Int Y >Int X
+  rule N:Int  >Int log2Int(X:Int) => 2 ^Int N  >Int X [simplification, concrete(N)]
+
+  rule log2Int(X:Int) >=Int N:Int => X >=Int 2 ^Int N [simplification, concrete(N)]
+
+  rule X /Int Y  >Int N:Int => X  >Int ((N +Int 1) *Int Y) -Int 1
     requires Y >Int 0 [simplification, concrete(N, Y)]
 
-  rule N:Int >=Int X /Int Y => N *Int Y >=Int X
+  rule N:Int >=Int X /Int Y => ((N +Int 1) *Int Y) -Int 1 >=Int X
     requires Y >Int 0 [simplification, concrete(N, Y)]
 
-  rule X /Int Y >Int N => X >Int N *Int Y
+  rule N:Int  >Int X /Int Y => N *Int Y  >Int X
     requires Y >Int 0 [simplification, concrete(N, Y)]
 
-  rule X /Int Y >=Int N => X >=Int N *Int Y
+  rule X /Int Y >=Int N:Int => X >=Int N *Int Y
     requires Y >Int 0 [simplification, concrete(N, Y)]
 
-  rule N:Int >=Int X +Int Y => N -Int Y >=Int X [simplification, concrete(N, Y)]
+//  rule N:Int >=Int X +Int Y => N -Int Y >=Int X [simplification, concrete(N, Y)]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Comparisons
