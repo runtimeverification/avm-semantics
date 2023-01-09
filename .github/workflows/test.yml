@@ -40,12 +40,15 @@ jobs:
             os: ubuntu-latest
           - runner: macos-12
             os: macos-12
+          - runner: MacM1
+            os: self-macos-12
     runs-on: ${{ matrix.runner }}
     needs: version-bump
     steps:
       - name: 'Check out code'
         uses: actions/checkout@v3
       - name: 'Install Nix/Cachix'
+        if: ${{ !startsWith(matrix.os, 'self') }}
         uses: cachix/install-nix-action@v18
         with:
           # Keep nix at <=2.7 https://github.com/NixOS/nix/issues/6572
@@ -54,6 +57,7 @@ jobs:
             substituters = http://cache.nixos.org https://cache.iog.io
             trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ=
       - uses: cachix/cachix-action@v10
+        if: ${{ !startsWith(matrix.os, 'self') }}
         with:
           name: k-framework
           skipPush: true
