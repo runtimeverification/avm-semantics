@@ -271,6 +271,8 @@ for i := 0; i < 32; i++ {
 cx.stack[last].Uint = root >> 1
 ```
 
+`https://en.wikipedia.org/wiki/Integer_square_root#Example_implementation_in_C`
+
 ```k
   syntax Int ::= sqrtUInt(Int)           [function]
   syntax Int ::= sqrtUInt(Int, Int, Int) [function]
