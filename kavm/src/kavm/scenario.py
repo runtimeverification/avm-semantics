@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from kavm.adaptors.algod_account import KAVMAccount
 from kavm.adaptors.algod_application import KAVMApplication, KAVMApplicationParams
+from kavm.constants import ZERO_ADDRESS
 
 
 def _sort_dict(input_dict: Dict[str, Any]) -> Dict[str, Any]:
@@ -34,7 +35,7 @@ class KAVMScenario:
             acc_dict_translated = {KAVMAccount.inverted_attribute_map[k]: v for k, v in acc_dict.items()}
             acc = KAVMAccount(**acc_dict_translated).dictify()
             if not acc['auth-addr']:
-                acc['auth-addr'] = acc['address']
+                acc['auth-addr'] = ZERO_ADDRESS
             if not acc['created-apps']:
                 acc['created-apps'] = []
             else:
@@ -72,6 +73,8 @@ class KAVMScenario:
         """Given a dictionary representing a Transaction, insert missing keys with default values,
         and sort the keys in lexicographic order"""
 
+        print("test")
+
         def _insert_defaults(txn_dict: Dict[str, Any]) -> Dict[str, Any]:
             if not 'fv' in txn_dict:
                 txn_dict['fv'] = 1
@@ -87,6 +90,8 @@ class KAVMScenario:
                 txn_dict['grp'] = 'dummy_grp'
             if not 'note' in txn_dict:
                 txn_dict['note'] = ''
+            if not 'rekey' in txn_dict:
+                txn_dict['rekey'] = ZERO_ADDRESS
             if txn_dict['type'] == 'appl':
                 if not 'apaa' in txn_dict:
                     txn_dict['apaa'] = []

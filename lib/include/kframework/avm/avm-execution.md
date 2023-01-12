@@ -289,6 +289,28 @@ Close asset account to
        </account>
 ```
 
+Add balance ot account
+
+```k
+  syntax AlgorandCommand ::= #giveAlgos(TValue, TValue)
+  //-----------------------------------------------------------
+  rule <k> #giveAlgos(ACCOUNT, AMOUNT) => . ...</k>
+       <account>
+         <address> ACCOUNT </address>
+         <balance> BALANCE => BALANCE +Int AMOUNT </balance>
+         ...
+       </account>
+       requires (BALANCE +Int AMOUNT) >=Int 0
+
+  rule <k> #giveAlgos(ACCOUNT, AMOUNT) => #panic(INSUFFICIENT_FUNDS) ...</k>
+       <account>
+         <address> ACCOUNT </address>
+         <balance> BALANCE </balance>
+         ...
+       </account>
+       requires (BALANCE +Int AMOUNT) <Int 0
+```
+
 Add asset to account
 
 ```k
@@ -389,23 +411,19 @@ and asset transfers can still fail at that point.
 Overflow on subtraction is impossible because the minimum balance is at least 0.1 Algo.
 
 ```k
-  rule <k> #executeTxn(@pay) => .K ... </k>
+  rule <k> #executeTxn(@pay) => #giveAlgos(SENDER, 0 -Int AMOUNT) ~> #giveAlgos(RECEIVER, AMOUNT) ... </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID>     TXN_ID   </txID>
          <sender>   SENDER   </sender>
          <receiver> RECEIVER </receiver>
          <amount>   AMOUNT   </amount>
+         <rekeyTo>  REKEY_TO </rekeyTo>
          ...
        </transaction>
        <account>
          <address> SENDER </address>
-         <balance> SENDER_BALANCE => SENDER_BALANCE -Int AMOUNT </balance>
-         ...
-       </account>
-       <account>
-         <address> RECEIVER </address>
-         <balance> RECEIVER_BALANCE => RECEIVER_BALANCE +Int AMOUNT </balance>
+         <key>     KEY => (#if REKEY_TO ==K getGlobalField(ZeroAddress) #then KEY #else REKEY_TO #fi) </key>
          ...
        </account>
        <touchedAccounts> TA => addToListNoDup(RECEIVER, TA) </touchedAccounts>
