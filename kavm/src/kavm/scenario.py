@@ -85,6 +85,8 @@ class KAVMScenario:
                 txn_dict['fee'] = 1000
             if not 'grp' in txn_dict:
                 txn_dict['grp'] = 'dummy_grp'
+            if not 'note' in txn_dict:
+                txn_dict['note'] = ''
             if txn_dict['type'] == 'appl':
                 if not 'apaa' in txn_dict:
                     txn_dict['apaa'] = []

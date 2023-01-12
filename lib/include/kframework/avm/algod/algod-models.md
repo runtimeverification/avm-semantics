@@ -546,6 +546,7 @@ TODO: if an account contains an app, the state specification must also contain t
                            "gh": _,
                            "grp": GROUP_ID:String,
                            "lv": _LAST_VALID:Int,
+                           "note": _NOTE:String,
                            "rcv": RECEIVER:String,
                            "snd": SENDER:String,
                            "type": "pay"
@@ -590,6 +591,7 @@ TODO: if an account contains an app, the state specification must also contain t
                            "gh": _,
                            "grp": GROUP_ID:String,
                            "lv": _LAST_VALID:Int,
+                           "note": _NOTE:String,
                            "snd": SENDER:String,
                            "type": "axfer",
                            "xaid": ASSET_ID:Int
@@ -635,6 +637,7 @@ TODO: if an account contains an app, the state specification must also contain t
                            "gh": _,
                            "grp": GROUP_ID:String,
                            "lv": _LAST_VALID:Int,
+                           "note": _NOTE:String,
                            "snd": SENDER:String,
                            "type": "afrz"
                          })
@@ -686,6 +689,7 @@ TODO: if an account contains an app, the state specification must also contain t
                            "gh": _,
                            "grp": GROUP_ID:String,
                            "lv": _LAST_VALID:Int,
+                           "note": _NOTE:String,
                            "snd":  SENDER:String,
                            "type": "appl"
                          })
