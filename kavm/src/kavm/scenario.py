@@ -73,8 +73,6 @@ class KAVMScenario:
         """Given a dictionary representing a Transaction, insert missing keys with default values,
         and sort the keys in lexicographic order"""
 
-        print("test")
-
         def _insert_defaults(txn_dict: Dict[str, Any]) -> Dict[str, Any]:
             if not 'fv' in txn_dict:
                 txn_dict['fv'] = 1
