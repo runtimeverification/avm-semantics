@@ -1,0 +1,44 @@
+#pragma version 8
+
+int 100
+itob
+bsqrt
+btoi
+int 10
+==
+assert
+
+int 54321
+itob
+bsqrt
+btoi
+int 233
+==
+assert
+
+// 21960125718190961625
+byte 0x0130C209FDAFB133D9
+bsqrt
+// 4686163219 = sqrt(21960125718190961625)
+byte 0x0117512D13
+==
+assert
+
+int 0
+itob
+bsqrt
+btoi
+int 0
+==
+assert
+
+int 1
+itob
+bsqrt
+btoi
+int 1
+==
+assert
+
+int 1
+return
