@@ -2724,7 +2724,7 @@ Stateful TEAL Operations
              <genesisID>    .Bytes                                   </genesisID>
              <lease>        .Bytes                                   </lease>
              <note>         .Bytes                                   </note>
-             <rekeyTo>      getGlobalField(ZeroAddress)              </rekeyTo>
+             <rekeyTo>      PARAM_ZERO_ADDR                          </rekeyTo>
            </txHeader>
            <txnTypeSpecificFields>
              .Bag
@@ -2763,7 +2763,7 @@ Stateful TEAL Operations
              <genesisID>    .Bytes                                   </genesisID>
              <lease>        .Bytes                                   </lease>
              <note>         .Bytes                                   </note>
-             <rekeyTo>      getGlobalField(ZeroAddress)              </rekeyTo>
+             <rekeyTo>      PARAM_ZERO_ADDR                          </rekeyTo>
            </txHeader>
            <txnTypeSpecificFields>
              .Bag

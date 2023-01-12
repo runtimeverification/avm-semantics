@@ -701,6 +701,7 @@ TODO: if an account contains an app, the state specification must also contain t
              <typeEnum>    @ appl    </typeEnum>
              <groupID>     GROUP_ID </groupID>
              <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>
+             <rekeyTo>     PARAM_ZERO_ADDR </rekeyTo>
              ...           // other fields will receive default values
            </txHeader>
            <appCallTxFields>
@@ -768,6 +769,7 @@ TODO: if an account contains an app, the state specification must also contain t
                            "gh": _,
                            "grp": GROUP_ID:String,
                            "lv": _LAST_VALID:Int,
+                           "note": _NOTE:String,
                            "snd":  SENDER:String,
                            "type": "acfg"
                          })
