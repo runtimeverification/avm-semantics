@@ -121,7 +121,7 @@ The `#setupCounters` rule calculates the appropriate initial values for `<nextAs
   syntax Int ::= maxInList(List)          [function, total]
                | maxInListImpl(List, Int) [function, total]
   //-------------------------------------------------------
-  rule maxInList(XS) => maxInListImpl(XS, 1)
+  rule maxInList(XS) => maxInListImpl(XS, 0)
   rule maxInListImpl(.List, ACC) => ACC
   rule maxInListImpl(ListItem(X) XS, ACC) => maxInListImpl(XS, X)
     requires X >Int ACC
