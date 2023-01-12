@@ -121,6 +121,15 @@ class KAVMScenario:
                     txn_dict['apsu'] = None
                 if not 'apbx' in txn_dict:
                     txn_dict['apbx'] = []
+            if txn_dict['type'] == 'acfg':
+                if not 'caid' in txn_dict:
+                    txn_dict['caid'] = 0
+                if not 'am' in txn_dict['apar']:
+                    txn_dict['apar']['am'] = ''
+                if not 'df' in txn_dict['apar']:
+                    txn_dict['apar']['df'] = False
+                if not 'm' in txn_dict['apar']:
+                    txn_dict['apar']['m'] = txn_dict['apar']['c']
             if txn_dict['type'] == 'axfer':
                 if not 'xaid' in txn_dict:
                     txn_dict['xaid'] = 0
