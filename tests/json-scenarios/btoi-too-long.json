@@ -41,7 +41,7 @@
                     }
                 ]
             },
-            "expected-returncode": 9
+            "expected-returncode": 8
         }
     ]
 }
