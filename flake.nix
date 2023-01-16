@@ -86,6 +86,7 @@
               kavm
               cryptopp.dev
               curl.dev
+              fmt
               secp256k1
               msgpack
               openssl.dev
