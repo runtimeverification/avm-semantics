@@ -384,6 +384,7 @@ claim <k> log => . </k>
                 <typeEnum> 1 </typeEnum>
                 <groupID> "2" </groupID>
                 <sender> b"application1" </sender>
+                <rekeyTo> PARAM_ZERO_ADDR </rekeyTo>
                 ...
               </txHeader>
               <txnTypeSpecificFields>

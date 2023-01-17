@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from kavm.adaptors.algod_account import KAVMAccount
 from kavm.adaptors.algod_application import KAVMApplication, KAVMApplicationParams
+from kavm.constants import ZERO_ADDRESS
 
 
 def _sort_dict(input_dict: Dict[str, Any]) -> Dict[str, Any]:
@@ -34,7 +35,7 @@ class KAVMScenario:
             acc_dict_translated = {KAVMAccount.inverted_attribute_map[k]: v for k, v in acc_dict.items()}
             acc = KAVMAccount(**acc_dict_translated).dictify()
             if not acc['auth-addr']:
-                acc['auth-addr'] = acc['address']
+                acc['auth-addr'] = ZERO_ADDRESS
             if not acc['created-apps']:
                 acc['created-apps'] = []
             else:
@@ -85,6 +86,10 @@ class KAVMScenario:
                 txn_dict['fee'] = 1000
             if not 'grp' in txn_dict:
                 txn_dict['grp'] = 'dummy_grp'
+            if not 'note' in txn_dict:
+                txn_dict['note'] = ''
+            if not 'rekey' in txn_dict:
+                txn_dict['rekey'] = ZERO_ADDRESS
             if txn_dict['type'] == 'appl':
                 if not 'apaa' in txn_dict:
                     txn_dict['apaa'] = []
@@ -121,6 +126,15 @@ class KAVMScenario:
                     txn_dict['apsu'] = None
                 if not 'apbx' in txn_dict:
                     txn_dict['apbx'] = []
+            if txn_dict['type'] == 'acfg':
+                if not 'caid' in txn_dict:
+                    txn_dict['caid'] = 0
+                if not 'am' in txn_dict['apar']:
+                    txn_dict['apar']['am'] = ''
+                if not 'df' in txn_dict['apar']:
+                    txn_dict['apar']['df'] = False
+                if not 'm' in txn_dict['apar']:
+                    txn_dict['apar']['m'] = txn_dict['apar']['c']
             if txn_dict['type'] == 'axfer':
                 if not 'xaid' in txn_dict:
                     txn_dict['xaid'] = 0

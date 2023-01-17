@@ -266,6 +266,13 @@ class KAVMClient(algod.AlgodClient):
             raise AlgodHTTPError(
                 msg='KAVM has failed, rerun witn --log-level=ERROR to see the executed JSON scenario'
             ) from e
+        except RuntimeError as e:
+            _LOGGER.critical(
+                f'Transaction group evaluation failed, last generated scenario was: {json.dumps(scenario.dictify(), indent=4)}'
+            )
+            raise AlgodHTTPError(
+                msg='KAVM has failed, rerun witn --log-level=ERROR to see the executed JSON scenario'
+            ) from e
 
         try:
             # on succeful execution, the final state will be serialized and prineted to stderr
