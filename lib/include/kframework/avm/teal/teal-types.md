@@ -215,7 +215,7 @@ We expose several functions for working with lists.
   rule getTValueAt(0, V _) => V
   rule getTValueAt(0, V  ) => V
 
-  syntax Int ::= size(TValueList) [function, smtlib(tvlistsize)]
+  syntax Int ::= size(TValueList) [function, total, smtlib(tvlistsize)]
   // ---------------------------------------
   rule size(_ VL:TValueNeList) => 1 +Int size(VL)
   rule size(_:TValue       ) => 1
@@ -223,15 +223,13 @@ We expose several functions for working with lists.
 
   syntax Bool ::= contains(TValueList, TValue) [function, total]
   // ----------------------------------------------------------------
-  rule contains(V1:TValue  _:TValueNeList, V1:TValue) => true
-  rule contains(V1:TValue VL:TValueNeList, V2:TValue) => contains(VL, V2) requires V1 =/=K V2
+  rule contains(V1:TValue VL:TValueNeList, V2:TValue) => contains(VL, V2) orBool V1 ==K V2
   rule contains(V1:TValue                , V2:TValue) => V1 ==K V2
   rule contains(              .TValueList,  _:TValue) => false 
 
   syntax Bool ::= contains(TValuePairList, TValuePair) [function, total]
   // ----------------------------------------------------------------
-  rule contains(V1:TValuePair  _:TValuePairNeList, V1:TValuePair) => true
-  rule contains(V1:TValuePair VL:TValuePairNeList, V2:TValuePair) => contains(VL, V2) requires V1 =/=K V2
+  rule contains(V1:TValuePair VL:TValuePairNeList, V2:TValuePair) => contains(VL, V2) orBool V1 ==K V2
   rule contains(V1:TValuePair                    , V2:TValuePair) => V1 ==K V2
   rule contains(              .TValuePairList,      _:TValuePair) => false 
 

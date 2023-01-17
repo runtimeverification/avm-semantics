@@ -87,6 +87,7 @@ module TEAL-OPCODES
                             | "shr"
   syntax UnaryBitOpCode   ::= "~"
                             | "bitlen"
+                            | "bsqrt"
   syntax NullaryBitOpCode ::= "getbit"
                             | "setbit"
 ```
@@ -232,7 +233,6 @@ module TEAL-OPCODES
 #### Flow Control Operations
 
 ```k
-//  syntax Label [token]
   syntax Label ::= Int
 
   syntax BranchingOpCode ::= CondBranchOpCode

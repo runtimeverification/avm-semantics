@@ -243,13 +243,6 @@ teal, failure means undoing changes made to the state (for more details, see
   rule <k> #deactivateApp() => . ... </k>
        <currentApplicationID> APP_ID </currentApplicationID>
        <activeApps> (SetItem(APP_ID) => .Set) ... </activeApps>
-       <returncode> PANIC_CODE </returncode>
-    requires PANIC_CODE ==Int 0
-
-  rule <k> #deactivateApp() => . ... </k>
-       <activeApps> (SetItem(_APP_ID) => .Set) ... </activeApps>
-       <returncode> PANIC_CODE </returncode>
-    requires PANIC_CODE =/=Int 0
 
   rule <k> #checkStack() => .K ... </k>
        <stack> I : .TStack </stack>

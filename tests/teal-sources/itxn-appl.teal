@@ -28,7 +28,7 @@ itxn_begin
 global CurrentApplicationAddress
 itxn_field Sender
 
-txna Applications 0
+txna Applications 1
 itxn_field ApplicationID
 
 int 2

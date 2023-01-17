@@ -239,6 +239,18 @@ The largest integer B such that B^2 <= X
     requires notBool( X >=Int 0 andBool X <=Int MAX_UINT64)
 ```
 
+*Binary square root*
+
+The largest integer B such that B^2 <= X
+
+```k
+  rule <k> bsqrt => .K ... </k>
+       <stack> B:Bytes : XS => Int2Bytes(sqrtUInt(Bytes2Int(B, BE, Unsigned)), BE, Unsigned) : XS </stack>
+
+  rule <k> bsqrt => #panic(INVALID_ARGUMENT) ... </k>
+       <stack> _:Int : _ </stack>
+```
+
 The `sqrtTUInt64` function implements the integer square root algorithms described by the following excerpt
 from the [reference TEAL interpreter](https://github.com/algorand/go-algorand/blob/ca3e87734833123284d3a7d87fcc9eaaede8f32a/data/transactions/logic/eval.go#L1202):
 
@@ -257,6 +269,19 @@ for i := 0; i < 32; i++ {
 	}
 }
 cx.stack[last].Uint = root >> 1
+```
+
+`https://en.wikipedia.org/wiki/Integer_square_root#Example_implementation_in_C`
+
+```k
+  syntax Int ::= sqrtUInt(Int)           [function]
+  syntax Int ::= sqrtUInt(Int, Int, Int) [function]
+
+  rule sqrtUInt(X) => X requires X <=Int 1 andBool X >=Int 0
+  rule sqrtUInt(X) => sqrtUInt(X, X /Int 2, ((X /Int 2) +Int (X /Int (X /Int 2))) /Int 2) requires X >Int 1
+
+  rule sqrtUInt(X, X0, X1) => X0 requires X1 >=Int X0
+  rule sqrtUInt(X, X0, X1) => sqrtUInt(X, X1, (X1 +Int (X /Int X1)) /Int 2) requires X1 <Int X0
 ```
 
 Note that we need to perform the left shift modulo `MAX_UINT64 + 1`, otherwise the `SQ` variable will exceed `MAX_UINT64` in the last iteration.
@@ -376,7 +401,7 @@ Note that we need to perform the left shift modulo `MAX_UINT64 + 1`, otherwise t
     requires notBool (I2 >=Int 0 andBool I2 <Int 64)
 
   rule <k> ~ => .K ... </k>
-       <stack> I : XS => (~Int I) : XS </stack>
+       <stack> I : XS => (I xorInt MAX_UINT64) : XS </stack>
 
   rule <k> ~ => #panic(ILL_TYPED_STACK) ... </k>
        <stack> _:Bytes : _ </stack>
@@ -472,33 +497,6 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
   rule <k> bzero => #panic(INVALID_ARGUMENT) ... </k>
        <stack> X : _ </stack>
     requires X >Int MAX_BYTEARRAY_LEN
-```
-
-*Byte-array access and modification*
-
-```k
-  rule <k> getbyte => .K ... </k>
-       <stack> ARRAY : B : XS => ARRAY[B] : XS </stack>
-       <stacksize> S => S -Int 1 </stacksize>
-    requires 0 <=Int B andBool B <Int lengthBytes(ARRAY)
-
-  rule <k> getbyte => #panic(INDEX_OUT_OF_BOUNDS) ... </k>
-       <stack> ARRAY : B : _ </stack>
-    requires 0 >Int B orBool B >=Int lengthBytes(ARRAY)
-
-  rule <k> setbyte => .K ... </k>
-       <stack> ARRAY : B : C : XS => ARRAY[B <- C] : XS </stack>
-       <stacksize> S => S -Int 2 </stacksize>
-    requires 0 <=Int B andBool B <Int lengthBytes(ARRAY)
-             andBool 0 <=Int C andBool C <=Int MAX_UINT8
-
-  rule <k> setbyte => #panic(INDEX_OUT_OF_BOUNDS) ... </k>
-       <stack> ARRAY : B : _ </stack>
-    requires 0 >Int B orBool B >=Int lengthBytes(ARRAY)
-
-  rule <k> setbyte => #panic(ILL_TYPED_STACK) ... </k>
-       <stack> _ : _ : C : _ </stack>
-    requires 0 >Int C orBool C >Int MAX_UINT8
 ```
 
 *Byte-array sub-array extraction*

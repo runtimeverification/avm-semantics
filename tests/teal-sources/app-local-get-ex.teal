@@ -31,7 +31,7 @@ phase2:
 // Called from inside app 2
 
 txn Sender
-txn Applications 0
+txn Applications 1
 byte "test_key"
 app_local_get_ex
 assert
@@ -41,7 +41,7 @@ byte "test_val"
 assert
 
 txn Sender
-txn Applications 0
+txn Applications 1
 byte "unset_key"
 app_local_get_ex
 !
