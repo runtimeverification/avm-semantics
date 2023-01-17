@@ -45,7 +45,7 @@ past application call transactions in the group. We, thus, maintain a `<finalScr
         <genesisID>   NoTValue </genesisID>        // a human-readable name: does not necessarily uniquely identify the network
         <lease>       NoTValue </lease>
         <note>        NoTValue </note>
-        <rekeyTo>     NoTValue </rekeyTo>
+        <rekeyTo>     PARAM_ZERO_ADDR </rekeyTo>
       </txHeader>
 ```
 

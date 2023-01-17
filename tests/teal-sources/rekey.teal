@@ -1,0 +1,11 @@
+#pragma version 8
+
+txn Sender
+acct_params_get AcctAuthAddr
+assert
+txna Accounts 1
+==
+assert
+
+int 1
+return

@@ -453,6 +453,11 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
 ```k
   rule <k> btoi => .K ... </k>
        <stack> B : XS => Bytes2Int(B, BE, Unsigned) : XS </stack>
+    requires Bytes2Int(B, BE, Unsigned) <=Int MAX_UINT64
+
+  rule <k> btoi => #panic(INT_OVERFLOW) ... </k>
+       <stack> B : _ </stack>
+    requires Bytes2Int(B, BE, Unsigned) >Int MAX_UINT64
 ```
 
 *Bytes concatenation*
@@ -2749,7 +2754,7 @@ Stateful TEAL Operations
              <genesisID>    .Bytes                                   </genesisID>
              <lease>        .Bytes                                   </lease>
              <note>         .Bytes                                   </note>
-             <rekeyTo>      getGlobalField(ZeroAddress)              </rekeyTo>
+             <rekeyTo>      PARAM_ZERO_ADDR                          </rekeyTo>
            </txHeader>
            <txnTypeSpecificFields>
              .Bag
@@ -2788,7 +2793,7 @@ Stateful TEAL Operations
              <genesisID>    .Bytes                                   </genesisID>
              <lease>        .Bytes                                   </lease>
              <note>         .Bytes                                   </note>
-             <rekeyTo>      getGlobalField(ZeroAddress)              </rekeyTo>
+             <rekeyTo>      PARAM_ZERO_ADDR                          </rekeyTo>
            </txHeader>
            <txnTypeSpecificFields>
              .Bag

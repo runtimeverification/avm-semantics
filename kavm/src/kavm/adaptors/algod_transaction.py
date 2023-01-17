@@ -92,6 +92,10 @@ class KAVMTransaction(Transaction):
     def sanitize_byte_fields(txn_dict: Dict[str, Any]) -> Dict[str, Any]:
         """Convert bytes fields of Transaction into base64-encoded strigns"""
         for k, v in txn_dict.items():
+            if k == 'apar':
+                for sub_k, sub_v in txn_dict['apar'].items():
+                    if sub_k in ['c', 'f', 'r']:
+                        txn_dict['apar'][sub_k] = encode_address(sub_v)
             if type(v) is bytes:
                 if k in ['snd', 'rcv', 'close', 'asnd', 'arcv', 'aclose']:
                     txn_dict[k] = encode_address(v)

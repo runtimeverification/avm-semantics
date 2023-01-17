@@ -62,7 +62,7 @@ jobs:
           name: k-framework
           skipPush: true
       - name: 'Build via Nix'
-        run: GC_DONT_GC=1 nix build .#kavm
+        run: GC_DONT_GC=1 nix build .#kavm --print-build-logs
 
   test-pr:
     name: 'Test PR'
