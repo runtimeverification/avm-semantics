@@ -225,8 +225,8 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fields_s
             'GROUPIDX_CELL': maybe_tvalue(None),
             'GROUPID_CELL': maybe_tvalue(txn.group) if txn.group else KToken('"0"', KSort('String')),
             'LEASE_CELL': maybe_tvalue(txn.lease),
-            'NOTE_CELL': maybe_tvalue(txn.note),
-            'REKEYTO_CELL': maybe_tvalue(txn.rekey_to),
+            'NOTE_CELL': txn.note if txn.note else KToken('""', KSort('String')),
+            'REKEYTO_CELL': txn.rekey_to if txn.rekey_to else algorand_address_to_k_bytes(ZERO_ADDRESS),
         }
     )
 
