@@ -72,7 +72,7 @@ TODO: if an account contains an app, the state specification must also contain t
                               "apps-local-state": [LOCAL_STATE:JSONs],
                               "apps-total-schema": _APPS_TOTAL_SCHEMA,
                               "assets": [OPTIN_ASSETS:JSONs],
-                              "auth-addr": _AUTH_ADDR:String,
+                              "auth-addr": AUTH_ADDR:String,
                               "created-apps": [APPS:JSONs],
                               "created-assets": [ASSETS:JSONs],
                               "participation": _PARTICIPATION,
@@ -94,7 +94,7 @@ TODO: if an account contains an app, the state specification must also contain t
            <account>
              <address> DecodeAddressString(ADDR) </address>
              <balance> BALANCE    </balance>
-             <key> DecodeAddressString(ADDR) </key>
+             <key> DecodeAddressString(AUTH_ADDR) </key>
              <appsCreated> .Bag </appsCreated>
              <appsOptedIn> .Bag </appsOptedIn>
              <assetsCreated> .Bag </assetsCreated>
@@ -546,7 +546,9 @@ TODO: if an account contains an app, the state specification must also contain t
                            "gh": _,
                            "grp": GROUP_ID:String,
                            "lv": _LAST_VALID:Int,
+                           "note": _NOTE:String,
                            "rcv": RECEIVER:String,
+                           "rekey": REKEY_TO:String,
                            "snd": SENDER:String,
                            "type": "pay"
                          })
@@ -558,10 +560,11 @@ TODO: if an account contains an app, the state specification must also contain t
            <txID> Int2String(ID) </txID>
            <txHeader>
              <sender>      DecodeAddressString(SENDER)   </sender>
-             <txType>      "pay"    </txType>
-             <typeEnum>    @ pay    </typeEnum>
-             <groupID>     GROUP_ID </groupID>
+             <txType>      "pay"                                                    </txType>
+             <typeEnum>    @ pay                                                    </typeEnum>
+             <groupID>     GROUP_ID                                                 </groupID>
              <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>
+             <rekeyTo>     DecodeAddressString(REKEY_TO)                            </rekeyTo>
              ...           // other fields will receive default values
            </txHeader>
            <payTxFields>
@@ -590,6 +593,8 @@ TODO: if an account contains an app, the state specification must also contain t
                            "gh": _,
                            "grp": GROUP_ID:String,
                            "lv": _LAST_VALID:Int,
+                           "note": _NOTE:String,
+                           "rekey": REKEY_TO:String,
                            "snd": SENDER:String,
                            "type": "axfer",
                            "xaid": ASSET_ID:Int
@@ -601,11 +606,12 @@ TODO: if an account contains an app, the state specification must also contain t
          <transaction>
            <txID> Int2String(ID) </txID>
            <txHeader>
-             <sender>      DecodeAddressString(SENDER)   </sender>
-             <txType>      "axfer"    </txType>
-             <typeEnum>    @ axfer    </typeEnum>
-             <groupID>     GROUP_ID </groupID>
+             <sender>      DecodeAddressString(SENDER)                              </sender>
+             <txType>      "axfer"                                                  </txType>
+             <typeEnum>    @ axfer                                                  </typeEnum>
+             <groupID>     GROUP_ID                                                 </groupID>
              <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>
+             <rekeyTo>     DecodeAddressString(REKEY_TO)                            </rekeyTo>
              ...           // other fields will receive default values
            </txHeader>
            <assetTransferTxFields>
@@ -635,6 +641,8 @@ TODO: if an account contains an app, the state specification must also contain t
                            "gh": _,
                            "grp": GROUP_ID:String,
                            "lv": _LAST_VALID:Int,
+                           "note": _NOTE:String,
+                           "rekey": REKEY_TO:String,
                            "snd": SENDER:String,
                            "type": "afrz"
                          })
@@ -646,10 +654,11 @@ TODO: if an account contains an app, the state specification must also contain t
            <txID> Int2String(ID) </txID>
            <txHeader>
              <sender>      DecodeAddressString(SENDER)   </sender>
-             <txType>      "afrz"    </txType>
-             <typeEnum>    @ afrz    </typeEnum>
-             <groupID>     GROUP_ID </groupID>
+             <txType>      "afrz"                                                   </txType>
+             <typeEnum>    @ afrz                                                   </typeEnum>
+             <groupID>     GROUP_ID                                                 </groupID>
              <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>
+             <rekeyTo>     DecodeAddressString(REKEY_TO)                            </rekeyTo>
              ...           // other fields will receive default values
            </txHeader>
            <assetFreezeTxFields>
@@ -686,6 +695,8 @@ TODO: if an account contains an app, the state specification must also contain t
                            "gh": _,
                            "grp": GROUP_ID:String,
                            "lv": _LAST_VALID:Int,
+                           "note": _NOTE:String,
+                           "rekey": REKEY_TO:String,
                            "snd":  SENDER:String,
                            "type": "appl"
                          })
@@ -696,11 +707,12 @@ TODO: if an account contains an app, the state specification must also contain t
          <transaction>
            <txID> Int2String(ID) </txID>
            <txHeader>
-             <sender>      DecodeAddressString(SENDER)   </sender>
-             <txType>      "appl"    </txType>
-             <typeEnum>    @ appl    </typeEnum>
-             <groupID>     GROUP_ID </groupID>
+             <sender>      DecodeAddressString(SENDER)                              </sender>
+             <txType>      "appl"                                                   </txType>
+             <typeEnum>    @ appl                                                   </typeEnum>
+             <groupID>     GROUP_ID                                                 </groupID>
              <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>
+             <rekeyTo>     DecodeAddressString(REKEY_TO)                            </rekeyTo>
              ...           // other fields will receive default values
            </txHeader>
            <appCallTxFields>
@@ -768,6 +780,8 @@ TODO: if an account contains an app, the state specification must also contain t
                            "gh": _,
                            "grp": GROUP_ID:String,
                            "lv": _LAST_VALID:Int,
+                           "note": _NOTE:String,
+                           "rekey": REKEY_TO:String,
                            "snd":  SENDER:String,
                            "type": "acfg"
                          })
@@ -778,11 +792,12 @@ TODO: if an account contains an app, the state specification must also contain t
          <transaction>
            <txID> Int2String(ID) </txID>
            <txHeader>
-             <sender>      DecodeAddressString(SENDER)   </sender>
-             <txType>      "acfg"    </txType>
-             <typeEnum>    @ acfg    </typeEnum>
-             <groupID>     GROUP_ID </groupID>
+             <sender>      DecodeAddressString(SENDER)                              </sender>
+             <txType>      "acfg"                                                   </txType>
+             <typeEnum>    @ acfg                                                   </typeEnum>
+             <groupID>     GROUP_ID                                                 </groupID>
              <groupIdx>    groupSize(GROUP_ID, <transactions> TXNS </transactions>) </groupIdx>
+             <rekeyTo>     DecodeAddressString(REKEY_TO)                            </rekeyTo>
              ...           // other fields will receive default values
            </txHeader>
            <assetConfigTxFields>
