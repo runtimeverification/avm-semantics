@@ -276,11 +276,13 @@ module VERIFICATION
   // does not apply because the rule for getAppAddressBytes applies first
 
 //  rule Sha512_256raw(S:String) => Bytes2String(padLeftBytes(String2Bytes(S), 58, 0)) [simplification]
+    rule Sha512_256raw(S:String) => Sha512_256raw_symbolic(S:String) [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Cryptographic function hooks 
 ////////////////////////////////////////////////////////////////////////////////
 
   rule #Ceil ( Sha512_256raw ( _:String ) ) => #Top [simplification]
+
 
 endmodule
