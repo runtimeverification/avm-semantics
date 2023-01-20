@@ -54,8 +54,6 @@ there may be some remaining artefacts of the previous transaction's TEAL.
 ```
 
 ```k
-  syntax String ::= "Sha512_256raw_symbolic" "(" String ")" [function]
-
   rule <k> #initApp(APP_ID) => . ...</k>
        <currentApplicationID> _ => APP_ID </currentApplicationID>
        <currentApplicationAddress> _ => getAppAddressBytes(APP_ID) </currentApplicationAddress>

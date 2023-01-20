@@ -71,6 +71,15 @@ module VERIFICATION
     requires X >=Int 0
      andBool Y >=Int 0  [simplification]
 
+  syntax Bool ::= allOnes(Int) [function]
+  rule allOnes(0) => true
+  rule allOnes(N) => allOnes(N /Int 2) requires N modInt 2 ==Int 1 andBool N >Int 0
+  rule allOnes(N) => false requires N modInt 2 ==Int 0 andBool N >Int 0
+
+  rule X:Int &Int Y:Int => X
+    requires allOnes(Y)
+     andBool X <=Int Y [simplification]
+
 ////////////////////////////////////////////////////////////////////////////////
 // Map reasoning
 ////////////////////////////////////////////////////////////////////////////////

@@ -191,6 +191,8 @@ Application addresses are constructed by hashing the application ID in a specail
 See also [this section](https://developer.algorand.org/docs/get-details/dapps/smart-contracts/apps/#issuing-transactions-from-an-application) of the Algorand documentation.
 
 ```k
+  syntax String ::= "Sha512_256raw_symbolic" "(" String ")" [function]
+
   syntax Bytes ::= getAppAddressBytes(Int) [function, total]
   //-------------------------------------------------------------
   rule getAppAddressBytes(APP_ID) => String2Bytes(Sha512_256raw(Bytes2String(b"appID" +Bytes Int2Bytes(8, APP_ID, BE))))
