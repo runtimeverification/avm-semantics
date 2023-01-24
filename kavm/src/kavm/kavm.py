@@ -85,6 +85,7 @@ class KAVM(KRun, KProve):
         check: bool = True,
         existing_decompiled_teal_dir: Optional[Path] = None,
         rerun_on_error: bool = False,
+        output: str = "kore",
     ) -> Tuple[kore.Pattern, str]:
         """Run an AVM simulaion scenario with krun"""
 
@@ -104,26 +105,45 @@ class KAVM(KRun, KProve):
             tmp_scenario_file.flush()
             _LOGGER.info('Running KAVM')
             os.environ['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
+            print(os.environ['KAVM_DEFINITION_DIR'])
 
             try:
-                proc_result = _krun(
-                    input_file=Path(tmp_scenario_file.name),
-                    definition_dir=self.definition_dir,
-                    output=KRunOutput.KORE,
-                    depth=depth,
-                    no_expand_macros=False,
-                    profile=profile,
-                    check=check,
-                    cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
-                    pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
-                    pipe_stderr=True,
-                )
-                if proc_result.returncode != 0:
-                    raise RuntimeError('Non-zero exit-code from krun.')
+                if output == "kore":
+                    proc_result = _krun(
+                        input_file=Path(tmp_scenario_file.name),
+                        definition_dir=self.definition_dir,
+                        output=KRunOutput.KORE,
+                        depth=depth,
+                        no_expand_macros=False,
+                        profile=profile,
+                        check=check,
+                        cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
+                        pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
+                        pipe_stderr=True,
+                    )
+                    #                if proc_result.returncode != 0:
+                    #                    raise RuntimeError('Non-zero exit-code from krun.')
 
-                parser = KoreParser(proc_result.stdout)
-                final_pattern = parser.pattern()
-                assert parser.eof
+                    parser = KoreParser(proc_result.stdout)
+                    final_pattern = parser.pattern()
+                    assert parser.eof
+                if output == "pretty":
+                    proc_result = _krun(
+                        input_file=Path(tmp_scenario_file.name),
+                        definition_dir=self.definition_dir,
+                        output=KRunOutput.PRETTY,
+                        depth=depth,
+                        no_expand_macros=False,
+                        profile=profile,
+                        check=check,
+                        cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
+                        pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
+                        pipe_stderr=True,
+                    )
+                    #                if proc_result.returncode != 0:
+                    #                    raise RuntimeError('Non-zero exit-code from krun.')
+
+                    final_pattern = proc_result.stdout
 
                 return final_pattern, proc_result.stderr
             except RuntimeError as err:

@@ -36,6 +36,51 @@ module VERIFICATION
     [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
+// Recombine 128-bit Ints
+////////////////////////////////////////////////////////////////////////////////
+
+//      Upper 64 bits                    Lower 64 bits
+  rule ((X:Int >>Int 64) <<Int 64) +Int (X &Int 18446744073709551615) => X [simplification]
+
+  rule X:Int >>Int N:Int => 0 
+    requires X <Int 2 ^Int N
+     andBool 0 <=Int X [simplification]
+
+  rule X:Int >Int Y:Int /Int Z:Int => true
+    requires X >Int Y
+     andBool Z >Int 0 [simplification]
+
+  rule X:Int /Int Y:Int >=Int 0 => true
+    requires X >=Int 0
+     andBool Y >=Int 0 [simplification]
+
+  rule 0 >Int X:Int /Int Y:Int => false
+    requires X >=Int 0
+     andBool Y >=Int 0 [simplification]
+
+  rule A:Int >Int (X:Int &Int B:Int) => true 
+    requires X >=Int 0
+     andBool A >=Int 0
+     andBool B >=Int 0
+     andBool A >Int B [simplification]
+
+  rule 0 >Int (X:Int &Int Y:Int) => 0 >Int X
+    requires Y >=Int 0 [simplification]
+  
+  rule X:Int &Int Y:Int >=Int 0 => true
+    requires X >=Int 0
+     andBool Y >=Int 0  [simplification]
+
+  syntax Bool ::= allOnes(Int) [function]
+  rule allOnes(0) => true
+  rule allOnes(N) => allOnes(N /Int 2) requires N modInt 2 ==Int 1 andBool N >Int 0
+  rule allOnes(N) => false requires N modInt 2 ==Int 0 andBool N >Int 0
+
+  rule X:Int &Int Y:Int => X
+    requires allOnes(Y)
+     andBool X <=Int Y [simplification]
+
+////////////////////////////////////////////////////////////////////////////////
 // Map reasoning
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -196,6 +241,20 @@ module VERIFICATION
   rule X /Int Y >=Int N:Int => X >=Int N *Int Y
     requires Y >Int 0 [simplification, concrete(N, Y)]
 
+  rule X >Int Y *Int Z => ((X -Int 1) /Int Z) +Int 1 >Int Y
+    requires Z >Int 0
+     andBool X >=Int 1 [simplification, concrete(X, Z)]
+
+  rule 0 >Int Y *Int Z => 0 >Int Y
+    requires Z >Int 0 [simplification, concrete(Z)]
+
+  rule X *Int Y >=Int Z => X >=Int ((Z -Int 1) /Int Y) +Int 1
+    requires Y >Int 0 
+     andBool Z >=Int 1 [simplification, concrete(Z, Y)]
+
+  rule X *Int Y >=Int 0 => X >=Int 0
+    requires Y >Int 0 [simplification, concrete(Y)]
+
 //  rule N:Int >=Int X +Int Y => N -Int Y >=Int X [simplification, concrete(N, Y)]
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -276,11 +335,13 @@ module VERIFICATION
   // does not apply because the rule for getAppAddressBytes applies first
 
 //  rule Sha512_256raw(S:String) => Bytes2String(padLeftBytes(String2Bytes(S), 58, 0)) [simplification]
+//    rule Sha512_256raw(S:String) => Sha512_256raw_symbolic(S:String) [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Cryptographic function hooks 
 ////////////////////////////////////////////////////////////////////////////////
 
   rule #Ceil ( Sha512_256raw ( _:String ) ) => #Top [simplification]
+
 
 endmodule

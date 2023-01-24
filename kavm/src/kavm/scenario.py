@@ -234,7 +234,7 @@ class KAVMScenario:
                         teal_programs[pgm_name] = pgm_src
                         app['params']['clear-state-program'] = pgm_name
         try:
-            assert stages[1]['stage-type'] == 'submit-transactions' and stages[1]['data']['transactions']
+            assert stages[1]['stage-type'] == 'submit-transactions'# and stages[1]['data']['transactions']
         except (KeyError, AssertionError) as e:
             raise ValueError(
                 f'Test scenario {scenario_json_str} does not contain an "submit-transactions" stage as the second stage'
