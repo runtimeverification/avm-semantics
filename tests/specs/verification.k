@@ -80,6 +80,14 @@ module VERIFICATION
     requires allOnes(Y)
      andBool X <=Int Y [simplification]
 
+  rule sqrtUInt( X:Int *Int Y:Int ) >Int N:Int => false
+    requires X <=Int N
+     andBool Y <=Int N [simplification]
+
+  rule N >=Int sqrtUInt( X:Int *Int Y:Int ) => true
+    requires X <=Int N
+     andBool Y <=Int N [simplification]
+
 ////////////////////////////////////////////////////////////////////////////////
 // Map reasoning
 ////////////////////////////////////////////////////////////////////////////////
@@ -214,6 +222,14 @@ module VERIFICATION
 
   rule I1:Int +Int I2:Int >Int I3 => I1 >Int I3 -Int I2 [simplification, concrete(I2, I3), symbolic(I1)]
   rule I1:Int >=Int I2:Int +Int I3:Int => I1 -Int I3 >=Int I2 [simplification, concrete(I1, I3), symbolic(I2)]
+
+  rule I1:Int -Int I2:Int >=Int I3:Int => I1 -Int I3 >=Int I2 [simplification, concrete(I1, I3)]
+
+  rule I1:Int >Int I2:Int -Int I3:Int => I3 >Int I2 -Int I1 [simplification, concrete(I1, I2)]
+  
+//  rule I1:Int +Int (0 -Int I2:Int) => I1 -Int I2 [simplification]
+
+//  rule I1:Int +Int I2 => I1 -Int (0 -Int I2) requires I2 <Int 0 [simplification, concrete(I2)]
 
   rule N:Int /Int N:Int => 1 requires N =/=Int 0 [simplification]
 
