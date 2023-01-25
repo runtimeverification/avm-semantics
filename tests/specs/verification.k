@@ -200,6 +200,12 @@ module VERIFICATION
   rule A           >=Int bool2Int(_) => true requires A >=Int 1 [simplification]
   rule bool2Int(_) >=Int A           => true requires 0 >=Int A [simplification]
 
+  rule A:Int +Int bool2Int(_) >Int B:Int => false
+    requires A +Int 1 <=Int B [simplification]
+
+  rule B :Int >=Int A:Int +Int bool2Int(_) => true
+    requires A +Int 1 <=Int B [simplification]
+
 ////////////////////////////////////////////////////////////////////////////////
 // #if #then #else #fi
 ////////////////////////////////////////////////////////////////////////////////
