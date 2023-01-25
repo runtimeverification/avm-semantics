@@ -1,94 +1,64 @@
 # type: ignore
 
+import os
 import logging
 import sys
+from pathlib import Path
 
-from kavm.prover import AutoProver
+import algosdk
+from algosdk.account import generate_account
+from kavm.algod import KAVMClient
+from kavm.kavm import KAVM
+
+from kavm.proof import KAVMProof
+from pyk.kast.outer import read_kast_definition
+
+# from kavm.prover import AutoProver
 
 # from kcoin_vault_pyteal import router
 
 
-sdk_app_creator_account_dict = {
-    "address": "DJPACABYNRWAEXBYKT4WMGJO5CL7EYRENXCUSG2IOJNO44A4PWFAGLOLIA",
-    "amount": 999999000000,
-    "amount-without-pending-rewards": None,
-    "apps-local-state": None,
-    "apps-total-schema": None,
-    "assets": [{"amount": 500000, "asset-id": 1, "is-frozen": False}],
-    "created-apps": [
-        {
-            "id": 1,
-            "params": {
-                "creator": "DJPACABYNRWAEXBYKT4WMGJO5CL7EYRENXCUSG2IOJNO44A4PWFAGLOLIA",
-                "approval-program": "approval.teal",
-                "clear-state-program": "clear.teal",
-                "local-state-schema": {"nbs": 0, "nui": 0},
-                "global-state-schema": {"nbs": 0, "nui": 2},
-                "global-state": [
-                    {"key": "YXNzZXRfaWQ=", "value": {"bytes": "", "type": 2, "uint": 1}},
-                    {"key": "ZXhjaGFuZ2VfcmF0ZQ==", "value": {"bytes": "", "type": 2, "uint": 2}},
-                ],
-            },
-        }
-    ],
-    "created-assets": [],
-    "participation": None,
-    "pending-rewards": None,
-    "reward-base": None,
-    "rewards": None,
-    "round": None,
-    "status": None,
-    "sig-type": None,
-    "auth-addr": None,
-}
+def test_spec(initial_state_fixture):
+    sys.setrecursionlimit(15000000)
+    kcoin_vault_client, user_addr, user_private_key = initial_state_fixture
+    kcoin_vault_client.algod.kavm.use_directory = Path('.kavm')
+    sdk_creator_account_dict = kcoin_vault_client.algod.account_info(address=user_addr)
+    sdk_app_account_dict = kcoin_vault_client.algod.account_info(
+        address=algosdk.logic.get_application_address(kcoin_vault_client.app_id)
+    )
 
-sdk_app_account_dict = {
-    "address": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
-    "amount": 1000000,
-    "amount-without-pending-rewards": None,
-    "apps-local-state": None,
-    "apps-total-schema": None,
-    "assets": [{"amount": 500000, "asset-id": 1, "is-frozen": False}],
-    "created-apps": [],
-    "created-assets": [
-        {
-            "index": 1,
-            "params": {
-                "clawback": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
-                "creator": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
-                "decimals": 3,
-                "default-frozen": False,
-                "freeze": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
-                "manager": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
-                "metadata-hash": "",
-                "name": "K Coin",
-                "reserve": "WCS6TVPJRBSARHLN2326LRU5BYVJZUKI2VJ53CAWKYYHDE455ZGKANWMGM",
-                "total": 1000000,
-                "unit-name": "microK",
-                "url": "",
-            },
-        }
-    ],
-    "participation": None,
-    "pending-rewards": None,
-    "reward-base": None,
-    "rewards": None,
-    "round": None,
-    "status": None,
-    "sig-type": None,
-    "auth-addr": None,
-}
+    mint_group = kcoin_vault_client.call_mint(
+        sender_addr=user_addr, sender_pk=user_private_key, microalgo_amount=10000, dry_run=True
+    )
+
+    # kcoin_vault_client.algod.kavm._verification_definition = Path(os.environ.get('KAVM_VERIFICATION_DEFINITION_DIR'))
+    proof = KAVMProof(
+        kavm=kcoin_vault_client.algod.kavm,
+        claim_name='test-claim',
+        accts=[sdk_creator_account_dict, sdk_app_account_dict],
+        sdk_txns=[txn_with_signer.txn for txn_with_signer in mint_group],
+        teal_sources_dir=Path('.decompiled-teal'),
+    )
+
+    proof.prove()
+    # prover = AutoProver(
+    #     use_directory=Path('.kavm'),
+    #     pyteal_module_name='tests.algod_integration.contracts.kcoin_vault.kcoin_vault_pyteal',
+    #     app_id=1,
+    #     sdk_app_creator_account_dict=sdk_creator_account_dict,
+    #     sdk_app_account_dict=sdk_app_account_dict,
+    # )
+    # prover.prove('mint')
 
 
 if __name__ == "__main__":
     sys.setrecursionlimit(15000000)
     logging.basicConfig(level=logging.INFO)
 
-    prover = AutoProver(
-        pyteal_module_name='kcoin_vault_pyteal',
-        app_id=1,
-        sdk_app_creator_account_dict=sdk_app_creator_account_dict,
-        sdk_app_account_dict=sdk_app_account_dict,
-    )
-    prover.prove('mint')
-    prover.prove('burn')
+    creator_private_key, creator_addr = generate_account()
+    creator_addr = str(creator_addr)
+    algod = KAVMClient(faucet_address=creator_addr)
+    algod.kavm.use_directory = Path('.kavm')
+
+    proof = KAVMProof(kavm=algod.kavm, claim_name='test-claim', pre_accts=[], pre_txns=[])
+    proof.kavm._write_claim_definition(proof.build_claim(), proof._claim_name)

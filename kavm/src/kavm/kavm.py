@@ -33,20 +33,27 @@ class KAVM(KRun, KProve):
         teal_parser: Optional[Path] = None,
         scenario_parser: Optional[Path] = None,
         profile: bool = False,
-        verification_definition_dir: Optional[Path] = None,
+        # verification_definition_dir: Optional[Path] = None,
         main_file: Optional[Path] = None,
     ) -> None:
-        KRun.__init__(self, definition_dir, use_directory=use_directory, profile=profile)
-        KProve.__init__(
-            self, verification_definition_dir, use_directory=use_directory, main_file=main_file, profile=profile
-        ) if verification_definition_dir else None
+        self.backend = (definition_dir / 'backend.txt').read_text()
+
+        if self.backend == 'haskell':
+            KProve.__init__(
+                self,
+                definition_dir=definition_dir,
+                use_directory=use_directory,
+                main_file=main_file,
+                profile=profile,
+            )
+            self._verification_definition = definition_dir
+        KRun.__init__(self, definition_dir=definition_dir, use_directory=use_directory, profile=profile)
 
         self._catcat_parser = definition_dir / 'catcat'
         self._teal_parser = teal_parser if teal_parser else definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
         self._scenario_parser = (
             scenario_parser if scenario_parser else definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
         )
-        self._verification_definition = verification_definition_dir
 
     def parse_teal(self, file: Optional[Path]) -> kore.Pattern:
         '''Parse a TEAL program with the fast Bison parser'''

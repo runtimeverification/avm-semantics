@@ -11,7 +11,7 @@ TEST_CASE_DEADLINE = timedelta(seconds=5)
 N_TESTS = 25
 
 
-@pytest.mark.skip(reason="temporatry disabled")
+# @pytest.mark.skip(reason="temporatry disabled")
 @settings(deadline=TEST_CASE_DEADLINE, max_examples=N_TESTS, phases=[Phase.generate])
 @given(
     microalgos=st.integers(min_value=MIN_ARG_VALUE, max_value=MAX_ARG_VALUE),

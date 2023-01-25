@@ -52,6 +52,13 @@ def tvalue_list(values: List[Union[str, int, bytes]]) -> KInner:
         return generate_tvalue_list([maybe_tvalue(v) for v in values])
 
 
+def tvalue_bytes_list(values: List[bytes]) -> KInner:
+    if len(values) == 0:
+        return KApply('.TValueList')
+    else:
+        return generate_tvalue_list([bytesToken(dequote_str(str(v))[2:-1]) for v in values])
+
+
 def map_bytes_bytes(d: Dict[str, str]) -> KInner:
     """Convert a Dict[str, str] into a K Bytes to Bytes Map"""
     return build_assoc(
