@@ -4,7 +4,6 @@ import os
 from base64 import b64encode
 from pathlib import Path
 from pprint import PrettyPrinter
-from subprocess import CalledProcessError
 from typing import Any, Dict, Final, Iterable, List, Optional, cast
 
 import msgpack
@@ -232,13 +231,9 @@ class KAVMClient(algod.AlgodClient):
         # Construct a json scenario with no transactions and execute just the setup-network stage
         scenario = self._construct_scenario(accounts=self._accounts.values(), transactions=[])
         final_state, kavm_stderr = self.kavm.run_avm_json(
-            scenario=scenario,
-            existing_decompiled_teal_dir=self._decompiled_teal_dir_path,
-            check=False,
-            output="pretty"
+            scenario=scenario, existing_decompiled_teal_dir=self._decompiled_teal_dir_path, check=False, output="pretty"
         )
         return final_state
-
 
     def _eval_transactions(self, txns: List[Transaction]) -> Dict[str, str]:
         """
