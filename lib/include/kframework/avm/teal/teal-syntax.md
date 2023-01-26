@@ -233,7 +233,8 @@ module TEAL-OPCODES
 #### Flow Control Operations
 
 ```k
-  syntax Label ::= Int
+//  syntax Label ::= Int
+  syntax Label           ::= r"([a-zA-Z0-9]|_)+" [token]
 
   syntax BranchingOpCode ::= CondBranchOpCode
                            | JumpOpCode
@@ -398,7 +399,7 @@ module TEAL-SYNTAX
   syntax VersionPragma ::= "version" Int
 
   syntax TealPgm ::= TealOpCodeOrLabel
-                   | TealOpCodeOrLabel TealPgm
+                   | TealOpCodeOrLabel TealPgm [format(%1%n%2)]
   syntax TealInputPgm ::= TealPragmas TealPgm | TealPgm
 
 endmodule
@@ -436,7 +437,7 @@ We define the syntax of TEAL's comments (using K's built-in sort `#Layout`), alo
   syntax lexical AlnumUbar = r"{Alnum}|_"
   syntax lexical Special   = r"[-!?+<>=/*]"
 
-  syntax Label           ::= r"({AlnumUbar}|{Special})+" [token]
+//  syntax Label           ::= r"({AlnumUbar}|{Special})+" [token]
   syntax HexToken        ::= r"0x{HexDigit}+"            [prec(2),token]
   syntax TAddressLiteral ::= r"[0-9A-Z]{58}"             [prec(1),token]
 ```

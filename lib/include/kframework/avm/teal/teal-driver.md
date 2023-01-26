@@ -274,14 +274,14 @@ cx.stack[last].Uint = root >> 1
 `https://en.wikipedia.org/wiki/Integer_square_root#Example_implementation_in_C`
 
 ```k
-  syntax Int ::= sqrtUInt(Int)           [function]
-  syntax Int ::= sqrtUInt(Int, Int, Int) [function]
+  syntax Int ::= sqrtUInt(Int)           [function, smtlib(sqrtuint)]
+  syntax Int ::= sqrtUInt(Int, Int, Int) [function, smtlib(sqrtuint)]
 
-  rule sqrtUInt(X) => X requires X <=Int 1 andBool X >=Int 0
-  rule sqrtUInt(X) => sqrtUInt(X, X /Int 2, ((X /Int 2) +Int (X /Int (X /Int 2))) /Int 2) requires X >Int 1
+  rule sqrtUInt(X) => X requires X <=Int 1 andBool X >=Int 0 [concrete]
+  rule sqrtUInt(X) => sqrtUInt(X, X /Int 2, ((X /Int 2) +Int (X /Int (X /Int 2))) /Int 2) requires X >Int 1 [concrete]
 
-  rule sqrtUInt(X, X0, X1) => X0 requires X1 >=Int X0
-  rule sqrtUInt(X, X0, X1) => sqrtUInt(X, X1, (X1 +Int (X /Int X1)) /Int 2) requires X1 <Int X0
+  rule sqrtUInt(_, X0, X1) => X0 requires X1 >=Int X0 [concrete]
+  rule sqrtUInt(X, X0, X1) => sqrtUInt(X, X1, (X1 +Int (X /Int X1)) /Int 2) requires X1 <Int X0 [concrete]
 ```
 
 Note that we need to perform the left shift modulo `MAX_UINT64 + 1`, otherwise the `SQ` variable will exceed `MAX_UINT64` in the last iteration.
