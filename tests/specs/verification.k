@@ -232,6 +232,9 @@ module VERIFICATION
   rule I1:Int -Int I2:Int >=Int I3:Int => I1 -Int I3 >=Int I2 [simplification, concrete(I1, I3)]
 
   rule I1:Int >Int I2:Int -Int I3:Int => I3 >Int I2 -Int I1 [simplification, concrete(I1, I2)]
+
+  rule I1:Int *Int I2:Int /Int I2:Int => I1
+    requires I2 >Int 0 [simplification]
   
 //  rule I1:Int +Int (0 -Int I2:Int) => I1 -Int I2 [simplification]
 
