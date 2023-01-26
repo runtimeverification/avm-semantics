@@ -551,9 +551,10 @@ module ALGO-ITXN
            </txHeader>
            TXN_BODY
          </transaction>)
-         _TXNS
+         TXNS
        </transactions>
        <nextTxnID> TXN_ID => TXN_ID +Int 1 </nextTxnID>
+  requires notBool (Int2String(TXN_ID) in_transactions(<transactions> TXNS </transactions>))
 
   rule <k> #pushItxns() => . ...</k>
        <innerTransactions> .List </innerTransactions>
