@@ -88,6 +88,41 @@ module VERIFICATION
     requires X <=Int N
      andBool Y <=Int N [simplification]
 
+//   rule I1 *Int I2 >Int I3 -Int (I1 *Int I4) =>
+//        I1 *Int (I2 +Int I4) >Int I3 [simplification]
+
+
+  rule A /Int B >Int C -Int (D /Int B) => false
+    requires notBool(A +Int D >Int B *Int C) [simplification]
+
+//   rule A /Int B >Int C -Int (D /Int B) => A +Int D >Int B *Int C [simplification]
+
+  rule (A *Int B) +Int (A *Int C) => A *Int (B +Int C) [simplification]
+
+  rule A *Int B >=Int C *Int D => true
+    requires A >=Int C
+     andBool B >=Int D [simplification]
+
+  rule B *Int A >=Int C *Int D => true
+    requires A >=Int C
+     andBool B >=Int D [simplification]
+
+  rule A *Int B >Int C *Int D => false
+    requires C >=Int A
+     andBool D >=Int B [simplification]
+
+  rule B *Int A >Int C *Int D => false
+    requires C >=Int A
+     andBool D >=Int B [simplification]
+
+//   rule A *Int (B -Int C) => A *Int B -Int A *Int C [simplification]
+
+//   rule { A /Int B #Equals C /Int B } => true
+//     requires A ==Int C [simplification]
+// 
+//   rule A *Int B ==Int C *Int B => A ==Int C
+//     requires B >Int 0 [simplification]
+
 ////////////////////////////////////////////////////////////////////////////////
 // Map reasoning
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,7 +271,7 @@ module VERIFICATION
   rule I1:Int *Int I2:Int /Int I2:Int => I1
     requires I2 >Int 0 [simplification]
   
-//  rule I1:Int +Int (0 -Int I2:Int) => I1 -Int I2 [simplification]
+  rule I1:Int +Int (0 -Int I2:Int) => I1 -Int I2 [simplification]
 
 //  rule I1:Int +Int I2 => I1 -Int (0 -Int I2) requires I2 <Int 0 [simplification, concrete(I2)]
 
