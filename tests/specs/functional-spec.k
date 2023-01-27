@@ -65,10 +65,114 @@ module FUNCTIONAL-SPEC
 //     requires AMOUNT <Int 18446744073709551615
 //      andBool AMOUNT >=Int 0
 
-  claim <k>
-          runLemma(AMOUNT1:Int *Int AMOUNT2:Int /Int AMOUNT3:Int &Int 18446744073709551615)
-          =>
-          doneLemma(AMOUNT1:Int *Int AMOUNT2:Int /Int AMOUNT3:Int)
-        </k>
-    requires AMOUNT1 *Int AMOUNT2 /Int AMOUNT3 <=Int 18446744073709551615
+//   claim <k>
+//           runLemma(AMOUNT1:Int *Int AMOUNT2:Int /Int AMOUNT3:Int &Int 18446744073709551615)
+//           =>
+//           doneLemma(AMOUNT1:Int *Int AMOUNT2:Int /Int AMOUNT3:Int)
+//         </k>
+//     requires AMOUNT1 *Int AMOUNT2 /Int AMOUNT3 <=Int 18446744073709551615
+
+////////////////////
+
+//   claim <k>
+//           runLemma(
+//             (((A *Int B) /Int ( C +Int A )) *Int D) /Int 10000 
+//             >Int 
+//             B -Int 
+//             ((((A *Int B) /Int ( C +Int A )) *Int ( 10000 -Int E )) /Int 10000)
+//           )
+//           =>
+//           doneLemma(1)
+//         </k>
+//     requires A >=Int 0
+//      andBool B >=Int 0
+//      andBool C >=Int 0
+//      andBool C +Int A >Int 0
+//      andBool D >=Int 0
+//      andBool D <=Int 10000
+//      andBool E >=Int 0
+//      andBool E <=Int 10000
+//      andBool D <=Int E /Int 2
+
+     claim <k>
+             runLemma(
+      { AMM_ASSET2_BALANCE -Int AMOUNT *Int AMM_ASSET2_BALANCE /Int ( AMM_ASSET1_BALANCE +Int AMOUNT ) *Int ( 10000 -Int FEE_BPS ) /Int 10000 -Int AMOUNT *Int AMM_ASSET2_BALANCE /Int ( AMM_ASSET1_BALANCE +Int AMOUNT ) *Int PACT_FEE_BPS /Int 10000
+    #Equals
+      AMM_ASSET2_BALANCE -Int AMOUNT *Int AMM_ASSET2_BALANCE /Int ( AMM_ASSET1_BALANCE +Int AMOUNT ) *Int ( 10000 -Int FEE_BPS ) /Int 10000
+    }
+             )
+             =>
+             doneLemma(#Top)
+           </k>
+
+//   claim <k>
+//           runLemma(notBool(
+//             (((A *Int B) /Int ( C +Int A )) *Int D) +Int (((A *Int B) /Int ( C +Int A )) *Int ( 10000 -Int E ))
+//             >Int 10000 *Int B
+//           ))
+//           =>
+//           doneLemma(1)
+//         </k>
+//     requires A >=Int 0
+//      andBool B >=Int 0
+//      andBool C >=Int 0
+//      andBool C +Int A >Int 0
+//      andBool D >=Int 0
+//      andBool D <=Int 10000
+//      andBool E >=Int 0
+//      andBool E <=Int 10000
+//      andBool D <=Int E /Int 2
+
+//   claim <k>
+//           runLemma(notBool(
+//                  (A *Int B /Int ( C +Int A ) *Int D)
+//             +Int (A *Int B /Int ( C +Int A ) *Int ( 10000 -Int E ))
+//             >Int 
+//             B *Int 10000
+//           ))
+//           =>
+//           doneLemma(1)
+//         </k>
+//     requires A >=Int 0
+//      andBool B >=Int 0
+//      andBool C >=Int 0
+//      andBool C +Int A >Int 0
+//      andBool D >=Int 0
+//      andBool D <=Int 10000
+//      andBool E >=Int 0
+//      andBool E <=Int 10000
+//      andBool D <=Int E /Int 2
+
+// AMOUNT *Int AMM_ASSET2_BALANCE /Int ( AMM_ASSET1_BALANCE +Int AMOUNT ) *Int PACT_FEE_BPS /Int 10000 
+// >Int 
+// AMM_ASSET2_BALANCE -Int 
+// (((AMOUNT *Int AMM_ASSET2_BALANCE /Int ( AMM_ASSET1_BALANCE +Int AMOUNT )) *Int 10000) -Int ((AMOUNT *Int AMM_ASSET2_BALANCE /Int ( AMM_ASSET1_BALANCE +Int AMOUNT )) *Int FEE_BPS)) /Int 10000
+
+//   claim <k>
+//           runLemma(
+//             notBool((AMOUNT *Int AMM_ASSET2_BALANCE /Int ( AMM_ASSET1_BALANCE +Int AMOUNT ) *Int PACT_FEE_BPS)
+//             +Int (AMOUNT *Int AMM_ASSET2_BALANCE /Int ( AMM_ASSET1_BALANCE +Int AMOUNT ) *Int ( 10000 -Int
+//             FEE_BPS )) >Int (10000 *Int AMM_ASSET2_BALANCE))
+//           )
+//           =>
+//           doneLemma(1)
+//         </k>
+//     requires AMOUNT >=Int 0
+//      andBool AMM_ASSET2_BALANCE >=Int 0
+//      andBool AMM_ASSET1_BALANCE >=Int 0
+//      andBool AMM_ASSET1_BALANCE +Int AMOUNT >Int 0
+//      andBool PACT_FEE_BPS >=Int 0
+//      andBool PACT_FEE_BPS <=Int 10000
+//      andBool FEE_BPS >=Int 0
+//      andBool FEE_BPS <=Int 10000
+//      andBool PACT_FEE_BPS >Int FEE_BPS /Int 2
+
+// 10000 *Int AMM_ASSET2_BALANCE:Int 
+//   >=Int 
+// ((AMOUNT:Int *Int AMM_ASSET2_BALANCE:Int) /Int (AMM_ASSET1_BALANCE:Int +Int AMOUNT:Int)) *Int PACT_FEE_BPS:Int
+// +Int 
+// ((AMOUNT:Int *Int AMM_ASSET2_BALANCE:Int) /Int (AMM_ASSET1_BALANCE:Int +Int AMOUNT:Int)) *Int (10000 -Int FEE_BPS:Int)
+
+// 10000 *Int AMM_ASSET2_BALANCE:Int >=Int AMOUNT:Int *Int AMM_ASSET2_BALANCE:Int /Int AMM_ASSET1_BALANCE:Int +Int AMOUNT:Int *Int PACT_FEE_BPS:Int +Int 10000 -Int FEE_BPS:Int 
+
 endmodule
