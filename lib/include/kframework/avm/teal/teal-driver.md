@@ -675,7 +675,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
      andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
-     andBool lengthBytes(B) >Int 0
+     andBool Bytes2Int(B, BE, Unsigned) >Int 0
 
   rule <k> b/ => #panic(DIV_BY_ZERO) ... </k>
        <stack> B:Bytes : _:Bytes : _  </stack>
@@ -691,7 +691,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
      andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
-     andBool lengthBytes(B) >Int 0
+     andBool Bytes2Int(B, BE, Unsigned) >Int 0
 
   rule <k> b% => #panic(DIV_BY_ZERO) ... </k>
        <stack> B:Bytes : _:Bytes : _  </stack>

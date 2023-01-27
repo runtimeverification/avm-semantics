@@ -4,10 +4,11 @@ import subprocess
 import tempfile
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union
+from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union, cast
 
 from pyk.cli_utils import run_process
-from pyk.kast.inner import KSort
+from pyk.kast.inner import KSort, KToken
+from pyk.kast.manip import get_cell
 from pyk.kore import syntax as kore
 from pyk.kore.parser import KoreParser
 from pyk.ktool.kprint import paren
@@ -83,7 +84,8 @@ class KAVM(KRun, KProve):
         profile: bool = False,
         check: bool = True,
         existing_decompiled_teal_dir: Optional[Path] = None,
-        output: str = "kore",
+        output: str = 'kore',
+        rerun_on_error: bool = False,
     ) -> Tuple[kore.Pattern, str]:
         """Run an AVM simulaion scenario with krun"""
 
@@ -105,7 +107,6 @@ class KAVM(KRun, KProve):
             os.environ['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
             print(os.environ['KAVM_DEFINITION_DIR'])
 
-
             try:
                 if output == "kore":
                     proc_result = _krun(
@@ -120,8 +121,8 @@ class KAVM(KRun, KProve):
                         pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
                         pipe_stderr=True,
                     )
-    #                if proc_result.returncode != 0:
-    #                    raise RuntimeError('Non-zero exit-code from krun.')
+                    #                if proc_result.returncode != 0:
+                    #                    raise RuntimeError('Non-zero exit-code from krun.')
 
                     parser = KoreParser(proc_result.stdout)
                     final_pattern = parser.pattern()
@@ -139,27 +140,34 @@ class KAVM(KRun, KProve):
                         pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
                         pipe_stderr=True,
                     )
-    #                if proc_result.returncode != 0:
-    #                    raise RuntimeError('Non-zero exit-code from krun.')
-                    
+                    #                if proc_result.returncode != 0:
+                    #                    raise RuntimeError('Non-zero exit-code from krun.')
+
                     final_pattern = proc_result.stdout
 
                 return final_pattern, proc_result.stderr
-            # if _krun has thtown a RuntimeError, rerun with --output pretty to see the final state quicker
-            except RuntimeError:
-                _krun(
-                    input_file=Path(tmp_scenario_file.name),
-                    definition_dir=self.definition_dir,
-                    output=KRunOutput.PRETTY,
-                    depth=depth,
-                    no_expand_macros=False,
-                    profile=profile,
-                    check=check,
-                    cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
-                    pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
-                    pipe_stderr=True,
-                )
-                raise RuntimeError from None
+            except RuntimeError as err:
+                # if _krun has thtown a RuntimeError, rerun with --output pretty to see the final state quicker
+                if rerun_on_error:
+                    _krun(
+                        input_file=Path(tmp_scenario_file.name),
+                        definition_dir=self.definition_dir,
+                        output=KRunOutput.PRETTY,
+                        depth=depth,
+                        no_expand_macros=False,
+                        profile=profile,
+                        check=check,
+                        cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
+                        pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
+                        pipe_stderr=True,
+                    )
+                    raise RuntimeError from None
+                # otherwise, try to establish the reason from the output Kore
+                else:
+                    parser = KoreParser(err.args[1])
+                    final_pattern = parser.pattern()
+                    returnstatus = cast(KToken, get_cell(self.kore_to_kast(final_pattern), 'RETURNSTATUS_CELL')).token
+                    raise RuntimeError(returnstatus) from err
 
     def kast(
         self,
