@@ -822,6 +822,24 @@ Accessor functions
     requires APP =/=K APP'
 
   rule _ in_apps(<appsCreated> .Bag </appsCreated>) => false
+
+  syntax Bool ::= String "in_transactions" "(" TransactionsCell ")" [function, total]
+  // --------------------------------------------------------------------------------
+  rule TXN_ID in_transactions(<transactions>
+                                <transaction>
+                                  <txID> TXN_ID </txID> ...
+                                </transaction> ...
+                              </transactions> ) => true
+
+  rule TXN_ID in_transactions(<transactions>
+                                <transaction>
+                                  <txID> TXN_ID' </txID> ...
+                                </transaction> REST
+                              </transactions>)
+       => TXN_ID in_transactions(<transactions> REST </transactions>)
+    requires TXN_ID =/=K TXN_ID'
+
+  rule _ in_transactions(<transactions> .Bag </transactions>) => false
 ```
 
 ### Resource referencing
