@@ -280,7 +280,7 @@ cx.stack[last].Uint = root >> 1
   rule sqrtUInt(X) => X requires X <=Int 1 andBool X >=Int 0
   rule sqrtUInt(X) => sqrtUInt(X, X /Int 2, ((X /Int 2) +Int (X /Int (X /Int 2))) /Int 2) requires X >Int 1
 
-  rule sqrtUInt(X, X0, X1) => X0 requires X1 >=Int X0
+  rule sqrtUInt(_, X0, X1) => X0 requires X1 >=Int X0
   rule sqrtUInt(X, X0, X1) => sqrtUInt(X, X1, (X1 +Int (X /Int X1)) /Int 2) requires X1 <Int X0
 ```
 
