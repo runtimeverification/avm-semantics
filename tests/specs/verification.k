@@ -216,6 +216,8 @@ module VERIFICATION
   // Subterm equality
   rule { Int2Bytes( I1, BYTE_ORDER:Endianness, SIGNEDNESS:Signedness ) #Equals Int2Bytes( I2, BYTE_ORDER, SIGNEDNESS ) } => { I1 #Equals I2 } [simplification]
 
+  rule { Int2String(I1) #Equals Int2String(I2) } => { I1 #Equals I2 } [simplification]
+
 ////////////////////////////////////////////////////////////////////////////////
 // Int and Bool conversions
 ////////////////////////////////////////////////////////////////////////////////
