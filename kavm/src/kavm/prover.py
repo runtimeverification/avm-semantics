@@ -19,6 +19,7 @@ from pyk.kast.manip import (
     flatten_label,
     inline_cell_maps,
     minimize_term,
+    omit_large_tokens,
     push_down_rewrites,
     set_cell,
     split_config_and_constraints,
@@ -700,7 +701,8 @@ class KAVMProof:
             pass
 
         pretty_constraints = [
-            pretty_print_kast(term, symbol_table=symbol_table) for term in flatten_label('#And', constraints)
+            pretty_print_kast(omit_large_tokens(term), symbol_table=symbol_table)
+            for term in flatten_label('#And', constraints)
         ]
         pretty_constraints.reverse()
         pretty_constraints_str = '\n #And '.join(pretty_constraints)
