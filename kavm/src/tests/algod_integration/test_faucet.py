@@ -12,7 +12,6 @@ def test_faucet(
     client: AlgodClient,
     faucet: Dict[str, str],
 ) -> None:
-
     """Faucet can fund two accounts using a group of two PaymentTxn"""
     private_key_alice, alice = account.generate_account()
     private_key_bob, bob = account.generate_account()

@@ -679,11 +679,23 @@ class SymbolicAsset:  # noqa: B903
 
         #         result = proof.prove_claim(claim=claim, claim_id=self._claim_name)
 
-        #         if type(result) is KApply and result.label.name == "#Top":
-        #             print(f"Proved {self._claim_name}")
-        #         else:
-        #             print(f"Failed to prove {self._claim_name}:")
-        #             self.report_failure(result, symbol_table)
+        if type(result) is KApply and result.label.name == "#Top":
+            _LOGGER.info(f'Successfully verified specifiction for method: {self._claim_name}')
+        else:
+            _LOGGER.error(f'Failed to verifiy specifiction for method: {self._claim_name}')
+            self.report_failure(result, symbol_table)
+
+    def report_failure(self, final_term: KInner, symbol_table: Dict):
+        final_config_filename = self._use_directory / f'{self._claim_name}_final_configuration.txt'
+        scenario_filename = self._use_directory / f'{self._claim_name}_simulation.json'
+        with open(final_config_filename, 'w') as file:
+            file.write(pretty_print_kast(minimize_term(inline_cell_maps(final_term)), symbol_table=symbol_table))
+        config, constraints = split_config_and_constraints(final_term)
+        _, subst = split_config_from(config)
+        try:
+            _LOGGER.info(f"KAVM <returnstatus>: {subst['RETURNSTATUS_CELL'].token}")
+        except Exception:
+            pass
 
         pretty_constraints = [
             pretty_print_kast(omit_large_tokens(term), symbol_table=symbol_table)
@@ -741,7 +753,6 @@ class AutoProver:
         definition_dir: Optional[Path] = None,
         verification_definition_dir: Optional[Path] = None,
     ):
-
         if use_directory:
             self._use_directory = use_directory
         else:

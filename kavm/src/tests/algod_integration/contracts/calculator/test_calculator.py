@@ -22,7 +22,6 @@ def create_app(
     global_schema: transaction.StateSchema,
     local_schema: transaction.StateSchema,
 ) -> int:
-
     # declare on_complete as NoOp
     on_complete = transaction.OnComplete.NoOpOC.real
 
@@ -88,7 +87,6 @@ def compile_teal(client: AlgodClient, source_code: str) -> bytes:
 
 
 def create_contract(client: AlgodClient, app_creator: Dict[str, str]) -> abi.Contract:
-
     approval_source, clear_source, contract_interface = compile_to_teal()
     # Compile approval and clear TEAL programs
     approval_program = compile_teal(client, approval_source)
