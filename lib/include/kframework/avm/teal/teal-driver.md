@@ -280,7 +280,7 @@ cx.stack[last].Uint = root >> 1
   rule sqrtUInt(X) => X requires X <=Int 1 andBool X >=Int 0
   rule sqrtUInt(X) => sqrtUInt(X, X /Int 2, ((X /Int 2) +Int (X /Int (X /Int 2))) /Int 2) requires X >Int 1
 
-  rule sqrtUInt(X, X0, X1) => X0 requires X1 >=Int X0
+  rule sqrtUInt(_, X0, X1) => X0 requires X1 >=Int X0
   rule sqrtUInt(X, X0, X1) => sqrtUInt(X, X1, (X1 +Int (X /Int X1)) /Int 2) requires X1 <Int X0
 ```
 
@@ -675,7 +675,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
      andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
-     andBool lengthBytes(B) >Int 0
+     andBool Bytes2Int(B, BE, Unsigned) >Int 0
 
   rule <k> b/ => #panic(DIV_BY_ZERO) ... </k>
        <stack> B:Bytes : _:Bytes : _  </stack>
@@ -691,7 +691,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
      andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
-     andBool lengthBytes(B) >Int 0
+     andBool Bytes2Int(B, BE, Unsigned) >Int 0
 
   rule <k> b% => #panic(DIV_BY_ZERO) ... </k>
        <stack> B:Bytes : _:Bytes : _  </stack>
