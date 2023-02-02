@@ -8,7 +8,6 @@ from kavm.algod import KAVMClient
 
 
 def test_send_transactions(faucet: Dict[str, str], kalgod: KAVMClient, suggested_params: SuggestedParams) -> None:
-
     # generate account
     _, receiver = account.generate_account()
 

@@ -504,7 +504,6 @@ class KAVMProof:
         # run(10001)
 
     def prove(self) -> None:
-
         lhs = KApply(
             "<kavm>",
             [
@@ -688,7 +687,6 @@ class KAVMProof:
             self.report_failure(result, symbol_table)
 
     def report_failure(self, final_term: KInner, symbol_table: Dict):
-
         final_config_filename = self._use_directory / f'{self._claim_name}_final_configuration.txt'
         scenario_filename = self._use_directory / f'{self._claim_name}_simulation.json'
         with open(final_config_filename, 'w') as file:
@@ -757,7 +755,6 @@ class AutoProver:
         definition_dir: Optional[Path] = None,
         verification_definition_dir: Optional[Path] = None,
     ):
-
         if use_directory:
             self._use_directory = use_directory
         else:
