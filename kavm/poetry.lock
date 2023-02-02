@@ -597,14 +597,14 @@ test = ["coverage", "mock (>=4)", "pytest (>=7)", "pytest-cov", "pytest-mock (>=
 
 [[package]]
 name = "hypothesis"
-version = "6.65.2"
+version = "6.66.0"
 description = "A library for property-based testing"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "hypothesis-6.65.2-py3-none-any.whl", hash = "sha256:26c52473a526b31672d97f88be0b7ac134f0ea180737c71ada2a4d82ad175e92"},
-    {file = "hypothesis-6.65.2.tar.gz", hash = "sha256:821279f05fad38575271be3fdfff1e22232613f3d21b3fc991d735057f9b5b47"},
+    {file = "hypothesis-6.66.0-py3-none-any.whl", hash = "sha256:f3633335bd6deb856c7aaeddaf48247b2933856d407bd1343b49da84d3263181"},
+    {file = "hypothesis-6.66.0.tar.gz", hash = "sha256:2fb334ab068dc6e7c02d49a1c694f66bd1f681197eeed94406650a59eebef870"},
 ]
 
 [package.dependencies]
@@ -1346,7 +1346,7 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pyk"
-version = "0.1.110"
+version = "0.1.111"
 description = ""
 category = "main"
 optional = false
@@ -1367,8 +1367,8 @@ tomli = "^2.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/runtimeverification/pyk.git"
-reference = "v0.1.110"
-resolved_reference = "9b3fcda24bca66451373dd9131b5439d7c0ebf78"
+reference = "v0.1.111"
+resolved_reference = "e5a7edc790475922fd8acdc4d917be8544e8018c"
 
 [[package]]
 name = "pynacl"
@@ -1886,4 +1886,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "28d6cec03aeb448ef977ba328fe66c725b1fdb4f83ccbc400e08fa0d26fbbfa4"
+content-hash = "4edcb71a675edab32dc9475f42571273d169773d048aed4192581fd157163a8d"
