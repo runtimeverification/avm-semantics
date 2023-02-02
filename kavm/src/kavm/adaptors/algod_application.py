@@ -14,7 +14,6 @@ from kavm.pyk_utils import map_bytes_bytes, map_bytes_ints
 
 
 class KAVMApplicationParams(models.ApplicationParams):
-
     inverted_attribute_map = {v: k for k, v in models.ApplicationParams.attribute_map.items()}
 
 

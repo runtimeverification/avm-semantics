@@ -91,7 +91,6 @@ class KAVM(KRun, KProve):
         with tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_scenario_file, (
             existing_decompiled_teal_dir if existing_decompiled_teal_dir else tempfile.TemporaryDirectory()  # type: ignore
         ) as decompiled_teal_dir, tempfile.NamedTemporaryFile('w+t', delete=False) as tmp_teals_file:
-
             _LOGGER.info('Parsing TEAL_PROGRAMS')
             for teal_file, teal_src in scenario._teal_programs.items():
                 (Path(decompiled_teal_dir) / teal_file).write_text(teal_src)
