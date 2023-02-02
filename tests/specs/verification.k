@@ -147,6 +147,10 @@ module VERIFICATION
 
   rule _ in_keys (.Map) => false [simplification]
 
+  rule X in_keys ( (X |-> _) _:Map ) => true [simplification]
+  rule X in_keys ( (Y |-> _) M:Map ) => X in_keys(M)
+    requires X =/=K Y [simplification]
+
   // size
   rule size( _:Map [_ <- _] )  >Int 0 => true   [simplification]
   rule size( _:Map [_ <- _] ) ==Int 0 => false  [simplification]

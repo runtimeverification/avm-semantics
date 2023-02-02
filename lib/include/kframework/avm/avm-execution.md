@@ -650,12 +650,14 @@ Asset transfer goes through if:
          <assetCloseTo>  CLOSE_TO </assetCloseTo>
          ...
        </transaction>
-    requires assetCreated(ASSET_ID)
-     andBool hasOptedInAsset(ASSET_ID, SENDER)
+    requires (assetCreated(ASSET_ID)
+     andBool CLOSE_TO ==K getGlobalField(ZeroAddress))
+     andThenBool (
+             hasOptedInAsset(ASSET_ID, SENDER)
      andBool hasOptedInAsset(ASSET_ID, RECEIVER)
-     andBool CLOSE_TO ==K getGlobalField(ZeroAddress)
      andBool (getOptInAssetField(AssetFrozen, RECEIVER, ASSET_ID) ==K 0)
      andBool (getOptInAssetField(AssetFrozen, SENDER,   ASSET_ID) ==K 0)
+     )
 ```
 
 Asset transfer with a non-zero amount fails if:

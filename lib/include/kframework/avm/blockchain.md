@@ -455,13 +455,13 @@ Accessor functions
 
   syntax Bool ::= assetCreated(TValue) [function]
   // -------------------------------------------
-  rule [[ assetCreated(ASSET) => true ]]
+  rule [[ assetCreated(ASSET) => ASSET in_keys(AC) ]]
        <assetCreator> AC </assetCreator>
-    requires ASSET in_keys(AC)
+//    requires ASSET in_keys(AC)
 
-  rule [[ assetCreated(ASSET) => false ]]
-       <assetCreator> AC </assetCreator>
-    requires notBool (ASSET in_keys(AC))
+//  rule [[ assetCreated(ASSET) => false ]]
+//       <assetCreator> AC </assetCreator>
+//    requires notBool (ASSET in_keys(AC))
 
  syntax TValue ::= getAssetInfo(AssetField, TValue) [function]
   // -----------------------------------------------------------
