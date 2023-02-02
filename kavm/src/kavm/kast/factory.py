@@ -1,16 +1,16 @@
-from typing import Dict, Optional, List
 from pathlib import Path
+from typing import Dict, Optional
 
 from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, Subst, build_assoc
 from pyk.kast.manip import split_config_from
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
+from pyk.utils import dequote_str
 
 from kavm.adaptors.teal_key_value import raw_list_state_to_dict_bytes_bytes, raw_list_state_to_dict_bytes_ints
 from kavm.constants import MIN_BALANCE
 from kavm.kavm import KAVM
 from kavm.pyk_utils import algorand_address_to_k_bytes, map_bytes_bytes, map_bytes_ints
-from pyk.utils import dequote_str
 
 
 def preprocess_teal_program(term: KInner) -> KInner:

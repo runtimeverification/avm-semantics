@@ -1,13 +1,13 @@
 import base64
+import importlib
 from typing import List
 
-import pytest
 import algosdk
+import pyteal
+import pytest
 from algosdk.atomic_transaction_composer import AccountTransactionSigner, TransactionWithSigner
 from algosdk.future import transaction
 from algosdk.v2client.algod import AlgodClient
-import pyteal
-import importlib
 
 from kavm.algod import KAVMAtomicTransactionComposer
 
@@ -67,7 +67,7 @@ class ContractClient:
         creator_addr: str,
         creator_private_key: str,
         app_account_microalgos: int = 10**6,
-    ):
+    ) -> None:
         # create app
         on_complete = transaction.OnComplete.NoOpOC.real
         global_schema = transaction.StateSchema(num_uints=2, num_byte_slices=0)

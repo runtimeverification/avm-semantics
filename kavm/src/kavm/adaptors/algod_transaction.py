@@ -2,7 +2,7 @@ from base64 import b64decode, b64encode
 from typing import Any, Dict, List, Optional, cast
 
 from algosdk.constants import APPCALL_TXN, ASSETTRANSFER_TXN, PAYMENT_TXN
-from algosdk.encoding import encode_address, decode_address
+from algosdk.encoding import decode_address, encode_address
 from algosdk.future.transaction import (
     ApplicationCallTxn,
     AssetTransferTxn,
@@ -20,7 +20,7 @@ from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
 
 from kavm.constants import ZERO_ADDRESS
-from kavm.pyk_utils import algorand_address_to_k_bytes, maybe_tvalue, tvalue_list, tvalue_bytes_list
+from kavm.pyk_utils import algorand_address_to_k_bytes, maybe_tvalue, tvalue_bytes_list, tvalue_list
 
 
 class KAVMApplyData:

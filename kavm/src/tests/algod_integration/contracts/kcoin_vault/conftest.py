@@ -3,10 +3,10 @@ from typing import Tuple
 
 import pytest
 from algosdk.account import generate_account
-from algosdk.future import transaction
 from algosdk.atomic_transaction_composer import AccountTransactionSigner, TransactionWithSigner
+from algosdk.future import transaction
 
-from kavm.algod import KAVMClient, KAVMAtomicTransactionComposer
+from kavm.algod import KAVMAtomicTransactionComposer, KAVMClient
 
 from ..kcoin_vault.client import ContractClient
 

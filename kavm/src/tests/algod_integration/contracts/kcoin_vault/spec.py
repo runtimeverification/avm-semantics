@@ -1,21 +1,14 @@
 # type: ignore
 
-import os
 import logging
 import sys
 from pathlib import Path
 
 import algosdk
 from algosdk.account import generate_account
+
 from kavm.algod import KAVMClient
-from kavm.kavm import KAVM
-
 from kavm.proof import KAVMProof
-from pyk.kast.outer import read_kast_definition
-
-# from kavm.prover import AutoProver
-
-# from kcoin_vault_pyteal import router
 
 
 def test_spec(initial_state_fixture):
@@ -31,7 +24,6 @@ def test_spec(initial_state_fixture):
         sender_addr=user_addr, sender_pk=user_private_key, microalgo_amount=10000, dry_run=True
     )
 
-    # kcoin_vault_client.algod.kavm._verification_definition = Path(os.environ.get('KAVM_VERIFICATION_DEFINITION_DIR'))
     proof = KAVMProof(
         kavm=kcoin_vault_client.algod.kavm,
         claim_name='test-claim',
@@ -41,14 +33,6 @@ def test_spec(initial_state_fixture):
     )
 
     proof.prove()
-    # prover = AutoProver(
-    #     use_directory=Path('.kavm'),
-    #     pyteal_module_name='tests.algod_integration.contracts.kcoin_vault.kcoin_vault_pyteal',
-    #     app_id=1,
-    #     sdk_app_creator_account_dict=sdk_creator_account_dict,
-    #     sdk_app_account_dict=sdk_app_account_dict,
-    # )
-    # prover.prove('mint')
 
 
 if __name__ == "__main__":
