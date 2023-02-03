@@ -274,7 +274,8 @@ avm_files    :=                            \
                 avm/teal/teal-types.md     \
                 avm/algod/algod-models.md  \
                 avm/avm-testing.md         \
-                avm/panics.md
+                avm/panics.md              \
+                avm/macros.md
 
 avm_includes := $(patsubst %, $(KAVM_INCLUDE)/kframework/%, $(avm_files))
 

@@ -1,9 +1,11 @@
 requires "avm/avm-execution.md"
+requires "avm/macros.md"
 
 // Verification interface and lemmas
 module VERIFICATION
   imports AVM-EXECUTION
   imports TEAL-TYPES
+  imports MACROS
 
   syntax KItem ::= tealLogExpr(Bytes)
 // ------------------------------------
@@ -256,6 +258,8 @@ module VERIFICATION
     requires Y >Int 0 [simplification, concrete(Y)]
 
 //  rule N:Int >=Int X +Int Y => N -Int Y >=Int X [simplification, concrete(N, Y)]
+
+  rule X +Int (0 -Int Y) => X -Int Y [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Comparisons
