@@ -1232,6 +1232,21 @@ pycryptodomex = ">=3.6.0,<4"
 pynacl = ">=1.4.0,<2"
 
 [[package]]
+name = "pybind11"
+version = "2.10.3"
+description = "Seamless operability between C++11 and Python"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "pybind11-2.10.3-py3-none-any.whl", hash = "sha256:123e303f39ad5de97ddfa4f1f473cb85881a0a94ee5714eb3c37e2405371fc12"},
+    {file = "pybind11-2.10.3.tar.gz", hash = "sha256:08cfe6d4f73746447cc85a400c8169a91608b8a00c5feecd8ff251a70565d12f"},
+]
+
+[package.extras]
+global = ["pybind11-global (==2.10.3)"]
+
+[[package]]
 name = "pycobertura"
 version = "3.0.0"
 description = "\"A Cobertura coverage parser that can diff reports and show coverage progress.\""
@@ -1346,7 +1361,7 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pyk"
-version = "0.1.112"
+version = "0.1.116"
 description = ""
 category = "main"
 optional = false
@@ -1361,14 +1376,15 @@ gql = {version = "^3.4.0", extras = ["requests"]}
 graphene = "^3.1.1"
 graphql-server = "^3.0.0b5"
 graphviz = "^0.20.1"
+pybind11 = "^2.10.3"
 textual = "^0.10.1"
 tomli = "^2.0.1"
 
 [package.source]
 type = "git"
 url = "https://github.com/runtimeverification/pyk.git"
-reference = "v0.1.112"
-resolved_reference = "a19269f382cbbe6a14582397f0985e9964167f45"
+reference = "v0.1.116"
+resolved_reference = "ec96d8208e74e18aa3767c37c7308d9a706fd547"
 
 [[package]]
 name = "pynacl"
@@ -1886,4 +1902,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "0d82270de3038f629637f579d33c773516ed118bc18279fcc0f7f2f1d4182c2a"
+content-hash = "797d0cae174d2e372b921a4202275193a307d7875a6bcc4148b62ec2451f6477"
