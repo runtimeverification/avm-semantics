@@ -4,6 +4,7 @@ import os
 from base64 import b64encode
 from pathlib import Path
 from pprint import PrettyPrinter
+from subprocess import CalledProcessError
 from typing import Any, Dict, Final, Iterable, List, Optional, cast
 
 import msgpack
@@ -22,6 +23,7 @@ from algosdk.atomic_transaction_composer import (
 from algosdk.error import AlgodHTTPError
 from algosdk.future.transaction import PaymentTxn, Transaction
 from algosdk.v2client import algod
+from pyk.kore.syntax import Pattern
 
 from kavm import constants
 from kavm.adaptors.algod_account import KAVMAccount
@@ -227,6 +229,14 @@ class KAVMClient(algod.AlgodClient):
         else:
             raise NotImplementedError(f'Endpoint not implemented: {requrl}')
 
+    def intermediate_k_state(self) -> Pattern:
+        # Construct a json scenario with no transactions and execute just the setup-network stage
+        scenario = self._construct_scenario(accounts=self._accounts.values(), transactions=[])
+        final_state, kavm_stderr = self.kavm.run_avm_json(
+            scenario=scenario, existing_decompiled_teal_dir=self._decompiled_teal_dir_path, check=False, output="pretty"
+        )
+        return final_state
+
     def _eval_transactions(self, txns: List[Transaction]) -> Dict[str, str]:
         """
         Evaluate a transaction group
@@ -258,10 +268,20 @@ class KAVMClient(algod.AlgodClient):
                 scenario=scenario,
                 existing_decompiled_teal_dir=self._decompiled_teal_dir_path,
             )
+        except CalledProcessError as e:
+            _LOGGER.critical(
+                f'Transaction group evaluation failed, last generated scenario was: {json.dumps(scenario.dictify(), indent=4)}'
+            )
+            raise AlgodHTTPError(
+                msg='KAVM has failed, rerun witn --log-level=ERROR to see the executed JSON scenario'
+            ) from e
         except RuntimeError as e:
-            _LOGGER.error(f'Transaction group evaluation failed with status: {e.args[0]}')
-            _LOGGER.debug(f'Last generated scenario was: {json.dumps(scenario.dictify(), indent=4)}')
-            raise AlgodHTTPError(msg=f'KAVM has failed with status {e.args[0]}') from None
+            _LOGGER.critical(
+                f'Transaction group evaluation failed, last generated scenario was: {json.dumps(scenario.dictify(), indent=4)}'
+            )
+            raise AlgodHTTPError(
+                msg='KAVM has failed, rerun witn --log-level=ERROR to see the executed JSON scenario'
+            ) from e
 
         try:
             # on succeful execution, the final state will be serialized and prineted to stderr
