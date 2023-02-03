@@ -597,14 +597,14 @@ test = ["coverage", "mock (>=4)", "pytest (>=7)", "pytest-cov", "pytest-mock (>=
 
 [[package]]
 name = "hypothesis"
-version = "6.65.2"
+version = "6.66.0"
 description = "A library for property-based testing"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "hypothesis-6.65.2-py3-none-any.whl", hash = "sha256:26c52473a526b31672d97f88be0b7ac134f0ea180737c71ada2a4d82ad175e92"},
-    {file = "hypothesis-6.65.2.tar.gz", hash = "sha256:821279f05fad38575271be3fdfff1e22232613f3d21b3fc991d735057f9b5b47"},
+    {file = "hypothesis-6.66.0-py3-none-any.whl", hash = "sha256:f3633335bd6deb856c7aaeddaf48247b2933856d407bd1343b49da84d3263181"},
+    {file = "hypothesis-6.66.0.tar.gz", hash = "sha256:2fb334ab068dc6e7c02d49a1c694f66bd1f681197eeed94406650a59eebef870"},
 ]
 
 [package.dependencies]
@@ -1232,6 +1232,21 @@ pycryptodomex = ">=3.6.0,<4"
 pynacl = ">=1.4.0,<2"
 
 [[package]]
+name = "pybind11"
+version = "2.10.3"
+description = "Seamless operability between C++11 and Python"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "pybind11-2.10.3-py3-none-any.whl", hash = "sha256:123e303f39ad5de97ddfa4f1f473cb85881a0a94ee5714eb3c37e2405371fc12"},
+    {file = "pybind11-2.10.3.tar.gz", hash = "sha256:08cfe6d4f73746447cc85a400c8169a91608b8a00c5feecd8ff251a70565d12f"},
+]
+
+[package.extras]
+global = ["pybind11-global (==2.10.3)"]
+
+[[package]]
 name = "pycobertura"
 version = "3.0.0"
 description = "\"A Cobertura coverage parser that can diff reports and show coverage progress.\""
@@ -1346,7 +1361,7 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pyk"
-version = "0.1.110"
+version = "0.1.116"
 description = ""
 category = "main"
 optional = false
@@ -1361,14 +1376,15 @@ gql = {version = "^3.4.0", extras = ["requests"]}
 graphene = "^3.1.1"
 graphql-server = "^3.0.0b5"
 graphviz = "^0.20.1"
+pybind11 = "^2.10.3"
 textual = "^0.10.1"
 tomli = "^2.0.1"
 
 [package.source]
 type = "git"
 url = "https://github.com/runtimeverification/pyk.git"
-reference = "v0.1.110"
-resolved_reference = "9b3fcda24bca66451373dd9131b5439d7c0ebf78"
+reference = "v0.1.116"
+resolved_reference = "ec96d8208e74e18aa3767c37c7308d9a706fd547"
 
 [[package]]
 name = "pynacl"
@@ -1886,4 +1902,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "28d6cec03aeb448ef977ba328fe66c725b1fdb4f83ccbc400e08fa0d26fbbfa4"
+content-hash = "797d0cae174d2e372b921a4202275193a307d7875a6bcc4148b62ec2451f6477"
