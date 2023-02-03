@@ -84,7 +84,10 @@ The parsed TEAL pragmas and program are initially supplied on the `<k>` cell as
 `TealPragmas` and `TealInputPgm`, wrapped into an `OpaqueTeal` constructor.
 
 ```k
-  syntax KItem ::= OpaqueTeal(TealInputPgm)
+  syntax Map ::= loadProgramCell(TealPgm, Int) [function]
+  syntax LoadLabelsResult ::= loadLabelsCell(TealPgm, Int, Map)  [function]
+  syntax Int ::= loadVersionCell(TealPragmas) [function]
+
 ```
 
 The `OpaqueTeal` wraps the program source to prevent undesired triggering of program loading
@@ -101,21 +104,21 @@ Pragmas are applied directly, and then the `#LoadPgm` performs program pre-proce
 * if a label is encountered twice, the `#panic(DUPLICATE_LABEL)` computation is triggered.
 
 ```k
-  rule <k> OpaqueTeal(Rs:TealPragmas P:TealPgm) => Rs ~> #LoadPgm(P, 0) ... </k>
-  rule <k> OpaqueTeal(P:TealPgm)                => #LoadPgm(P, 0) ... </k>
-  rule <k> R:TealPragma Rs:TealPragmas          => R ~> Rs ... </k>
-
-  rule <k> #pragma version V => . ... </k>
-       <version> _ => V </version>
+  rule loadVersionCell ( #pragma version V _:TealPragmas ) => V
+  rule loadVersionCell ( #pragma version V               ) => V
 
   // Load the teal program into the `<progam>` cell (program memory)
   syntax KItem ::= #LoadPgm(TealPgm, Int)
   // ----------------------------------
-  rule <k> #LoadPgm( Op Pgm, PC ) => #LoadPgm( Pgm, PC +Int 1 ) ... </k>
-       <mode> Mode </mode>
-       <program> PGM => PGM[PC <- Op] </program>
-    requires #ValidOpForMode( Mode, Op )
-     andBool (notBool isLabelCode(Op))
+  rule loadProgramCell( Op:TealOpCodeOrLabel Pgm, PC ) => ((PC |-> Op) loadProgramCell( Pgm, PC +Int 1 ))
+  rule loadProgramCell( Op:TealOpCodeOrLabel,     PC ) =>  (PC |-> Op)
+
+  rule loadLabelsCell( Op:TealOpCodeOrLabel Pgm, PC, LABELS ) => loadLabelsCell( Pgm, PC +Int 1, LABELS ) requires notBool(isLabelCode(Op))
+  rule loadLabelsCell( Op:TealOpCodeOrLabel,     _ , LABELS ) => LABELS                                   requires notBool(isLabelCode(Op))
+  rule loadLabelsCell( (L:):LabelCode Pgm, PC, LABELS ) => (loadLabelsCell( Pgm, PC +Int 1, (LABELS (L |-> PC)))) requires notBool (L in_labels LABELS)
+  rule loadLabelsCell( (L:):LabelCode,     PC, LABELS ) => (L |-> PC) LABELS requires notBool (L in_labels LABELS)
+  rule loadLabelsCell( (L:):LabelCode _,   _,  LABELS ) => duplicate-label requires (L in_labels LABELS)
+  rule loadLabelsCell( (L:):LabelCode,     _,  LABELS ) => duplicate-label requires (L in_labels LABELS)
 
   rule <k> #LoadPgm( (L:) Pgm, PC ) => #LoadPgm( Pgm, PC +Int 1 ) ... </k>
        <program> PGM => PGM[PC <- (L:):LabelCode] </program>
