@@ -86,17 +86,32 @@ and the current configuration is frozen for examination.
 The execution flow of a single transaction is as follows:
 * pop transaction from deque
 * check signature
-* (optional) eval stateless TEAL, if the transaction is signed by a logic signature
+* (optional, **not implemented**) eval stateless TEAL, if the transaction is signed by a logic signature
 * (optional) eval stateful TEAL, if the transaction is an application call
 * apply effects if accepted
 
 All transactions will be signed, either by a normal account or by a logic signature.
 The signature verification process will either check the signature itself, or evaluate
-the attached stateless TEAL if the transaction is logicsig-signed.
+the attached stateless TEAL if the transaction is logicsig-signed (**not implemented**).
 
 ```k
   syntax AlgorandCommand ::= #evalTx()
   //----------------------------------
+  rule <k> #evalTx() => 
+             #checkTxnSignature() 
+          ~> #executeTxn(TXN_TYPE) 
+       ... 
+       </k>
+       <currentTx> TXN_ID </currentTx>
+       <transaction>
+         <txID> TXN_ID </txID>
+         <typeEnum> TXN_TYPE </typeEnum>
+         <sender> SENDER_ADDR </sender>
+         ...
+       </transaction>
+       <touchedAccounts> TA => addToListNoDup(SENDER_ADDR, TA) </touchedAccounts>
+   requires TXN_TYPE =/=K @appl
+
   rule <k> #evalTx() => 
              #initContext()
           ~> #checkTxnSignature() 
@@ -112,6 +127,7 @@ the attached stateless TEAL if the transaction is logicsig-signed.
          ...
        </transaction>
        <touchedAccounts> TA => addToListNoDup(SENDER_ADDR, TA) </touchedAccounts>
+   requires TXN_TYPE ==K @appl
 
   rule <k> #evalTx() => #restoreContext() ~> #evalTeal() ... </k>
        <currentTx> TXN_ID </currentTx>
