@@ -1,9 +1,11 @@
 requires "avm/avm-execution.md"
+requires "avm/macros.md"
 
 // Verification interface and lemmas
 module VERIFICATION
   imports AVM-EXECUTION
   imports TEAL-TYPES
+  imports MACROS
 
   syntax KItem ::= tealLogExpr(Bytes)
 // ------------------------------------

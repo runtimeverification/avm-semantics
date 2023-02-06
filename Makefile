@@ -442,11 +442,13 @@ avm_prove_internal_specs := $(filter-out $(avm_prove_specs_failing), $(wildcard 
 avm_prove_simple_specs := $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/simple/*-spec.k))
 avm_prove_opcode_specs :=  $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/opcodes/*-spec.md))
 avm_prove_call_specs :=  $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/calls/*-spec.md))
+avm_prove_transactions_specs := $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/transactions/*-spec.k))
 
 test-avm-semantics-internal-prove: $(avm_prove_internal_specs:=.prove)
 test-avm-semantics-opcode-prove: $(avm_prove_opcode_specs:=.prove)
 test-avm-semantics-simple-prove: $(avm_prove_simple_specs:=.prove)
 test-avm-semantics-calls-prove: $(avm_prove_call_specs:=.prove)
+test-avm-semantics-transactions-prove: $(avm_prove_transactions_specs:=.prove)
 
 tests/specs/%-spec.k.prove: build-avm-verification $(KAVM_LIB)/version
 	$(POETRY_RUN) \
