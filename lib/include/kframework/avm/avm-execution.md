@@ -133,12 +133,13 @@ the attached stateless TEAL if the transaction is logicsig-signed (**not impleme
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID> TXN_ID </txID>
-         <typeEnum> _TXN_TYPE </typeEnum>
+         <typeEnum> TXN_TYPE </typeEnum>
          <resume> true </resume>
          <sender> SENDER_ADDR </sender>
          ...
        </transaction>
        <touchedAccounts> TA => addToListNoDup(SENDER_ADDR, TA) </touchedAccounts>
+   requires TXN_TYPE ==K @appl
 
 ```
 
