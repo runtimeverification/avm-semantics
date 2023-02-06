@@ -32,14 +32,7 @@ claim
             <closeRemainderTo> NoTValue </closeRemainderTo>
           </payTxFields>
         </txnTypeSpecificFields>
-        <applyData>
-          <txScratch> _ => ?_ </txScratch>
-          <logData> .TValueList => ?_ </logData>
-          <logSize> 0 => ?_ </logSize>
-          ...
-        </applyData>
-        <txnExecutionContext> _ => ?_ </txnExecutionContext>
-        <resume> false => true </resume>
+        ...
       </transaction>
       <transaction>
         <txID> APPL_TX_ID:String </txID>
