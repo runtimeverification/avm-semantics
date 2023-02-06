@@ -13,6 +13,8 @@ from typing import Any, Callable, Dict, Final, Iterable, List, Optional, TypeVar
 from pyk.cli_utils import dir_path, file_path
 from pyk.kast.inner import KApply
 from pyk.kast.manip import minimize_term
+from pyk.kcfg.kcfg import KCFG
+from pyk.kcfg.tui import KCFGViewer
 from pyk.kore import syntax as kore
 from pyk.ktool.kprove import KoreExecLogFormat
 
@@ -251,6 +253,20 @@ def exec_env(
     print(f"KAVM_VERIFICATION_DEFINITION_DIR={os.environ.get('KAVM_VERIFICATION_DEFINITION_DIR')}")
 
 
+def exec_kcfg_view(
+    definition_dir: Path,
+    kcfg_file: Path,
+    use_directory: Optional[Path] = None,
+    **kwargs: Any,
+) -> None:
+    use_directory = use_directory if use_directory else Path('.kavm')
+    kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory)
+
+    kcfg = KCFG.from_json(kcfg_file.read_text())
+    app = KCFGViewer(kcfg=kcfg, kprint=kavm, minimize=False)
+    app.run()
+
+
 def main() -> None:
     sys.setrecursionlimit(15000000)
     parser = create_argument_parser()
@@ -452,6 +468,11 @@ def create_argument_parser() -> ArgumentParser:
         type=int,
         help='Execute at most N rewrite steps',
     )
+
+    # kcfg-view
+    kcfg_view_subparser = command_parser.add_parser('kcfg-view', help='Explore KCFG', parents=[shared_args])
+    kcfg_view_subparser.add_argument('--definition-dir', dest='definition_dir', type=dir_path)
+    kcfg_view_subparser.add_argument('kcfg_file', type=file_path, help='Path to KCFG JSON file')
 
     return parser
 
