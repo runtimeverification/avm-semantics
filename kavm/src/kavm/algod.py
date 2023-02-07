@@ -151,7 +151,13 @@ class KAVMClient(algod.AlgodClient):
         elif endpoint == 'accounts':
             if len(params) == 1:
                 address = params[0]
-                return self._accounts[address].dictify()
+                try:
+                    return self._accounts[address].dictify()
+                except KeyError:
+                    _LOGGER.warning(
+                        f'Account {address} is unknown to KAVM. Returing an account with the requested address and 0 balance to the client'
+                    )
+                    return KAVMAccount(address=address, amount=0).dictify()
             else:
                 raise NotImplementedError(f'Endpoint not implemented: {requrl}')
 
