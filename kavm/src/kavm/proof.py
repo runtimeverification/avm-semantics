@@ -1,13 +1,25 @@
 # type: ignore
 
 import copy
+import itertools
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Final, List, Optional
+from typing import Any, Dict, Final, List, Optional, Set
 
 from algosdk.future.transaction import Transaction
-from pyk.kast.inner import KApply, KInner, KLabel, KRewrite, KSort, KToken, KVariable, Subst, build_assoc
+from pyk.kast.inner import (
+    KApply,
+    KInner,
+    KLabel,
+    KRewrite,
+    KSort,
+    KToken,
+    KVariable,
+    Subst,
+    build_assoc,
+    var_occurrences,
+)
 from pyk.kast.manip import (
     inline_cell_maps,
     minimize_term,
@@ -55,11 +67,21 @@ class SymbolicAccount:
         self._sdk_account_dict = sdk_account_dict
         self._apps = apps if apps else {}
         self._assets = assets if assets else {}
+        self._vars: Set[KVariable] = collect_vars(sdk_account_dict)
 
     @staticmethod
     def from_sdk_account(
-        term_factory: KAVMTermFactory, sdk_account_dict: Dict[str, Any], teal_sources_dir: Path
+        term_factory: KAVMTermFactory,
+        sdk_account_dict: Dict[str, Any],
+        teal_sources_dir: Path,
     ) -> 'SymbolicAccount':
+        '''
+        Traverse the nexted sdk_account dict that holds the account's data,
+        including created apps and assets and:
+        * Generate K cells for apps and assets
+        * Bring created apps and assets to the top level of the resulting SymbolicAccount object.
+          indexing them by their ids
+        '''
         try:
             apps = {}
             for sdk_app_dict in sdk_account_dict['created-apps']:
@@ -85,6 +107,20 @@ class SymbolicAccount:
         )
 
 
+def collect_vars(symbolic_sdk_dict: Dict[str, Any]) -> Set[KVariable]:
+    result = set()
+
+    def doit(d: Dict[str, Any]) -> None:
+        for v in d.values():
+            if isinstance(v, KVariable):
+                result.add(v)
+            if isinstance(v, Dict):
+                doit(v)
+
+    doit(symbolic_sdk_dict)
+    return result
+
+
 class KAVMProof:
     def __init__(
         self,
@@ -93,6 +129,7 @@ class KAVMProof:
         accts: List[Dict[str, Any]],
         sdk_txns: List[Transaction],
         teal_sources_dir: Optional[Path] = None,
+        preconditions: Optional[List[KInner]] = None,
     ) -> None:
         self.kavm = kavm
 
@@ -101,7 +138,9 @@ class KAVMProof:
 
         self._accounts: List[SymbolicAccount] = [
             SymbolicAccount.from_sdk_account(
-                term_factory=KAVMTermFactory(self.kavm), sdk_account_dict=acc, teal_sources_dir=teal_sources_dir
+                term_factory=KAVMTermFactory(self.kavm),
+                sdk_account_dict=acc,
+                teal_sources_dir=teal_sources_dir,
             )
             for acc in accts
         ]
@@ -110,6 +149,9 @@ class KAVMProof:
             transaction_k_term(kavm=kavm, txid=str(txn_id), txn=txn, symbolic_fields_subst=txn_fields_subst(txn_id))
             for txn_id, txn in enumerate(sdk_txns)
         ]
+
+        self._preconditions: List[KInner] = preconditions if preconditions else []
+        self._postconditions: List[KInner] = []
 
     def build_app_creator_map(self) -> KInner:
         '''Construct the <appCreator> cell Kast term'''
@@ -162,7 +204,7 @@ class KAVMProof:
 
         txn_ids = [str(idx) for idx, _ in enumerate(self._txns_pre)]
 
-        # _LOGGER.info(json.dumps({k: self.kavm.pretty_print(v) for k, v in subst.items()}, indent=4))
+        ### build LHS substitution from provided account and transaction data
         lhs_subst = copy.deepcopy(subst)
         lhs_subst['ACCOUNTSMAP_CELL'] = self.build_accounts()
         lhs_subst['APPCREATOR_CELL'] = self.build_app_creator_map()
@@ -177,6 +219,24 @@ class KAVMProof:
         lhs_subst['NEXTAPPID_CELL'] = intToken(2)
         lhs_subst['NEXTASSETID_CELL'] = intToken(2)
 
+        lhs = Subst(lhs_subst).apply(symbolic_config)
+
+        # free variables of sort Int in accounts (TODO: and transactions)
+        # should be uint64. Build range predicates:
+        lhs_range_predicates = []
+        acc_vars = set().union(*[acc._vars for acc in self._accounts])
+        txn_vars = set()
+        for txn in self._txns_pre:
+            txn_vars = txn_vars.union(itertools.chain.from_iterable(var_occurrences(txn).values()))
+        for var in acc_vars.union(txn_vars):
+            if var.sort is not None and var.sort == KSort('Int'):
+                range_predicate_term = KAVMTermFactory.range_uint(64, var)
+                lhs_range_predicates.append(range_predicate_term)
+                _LOGGER.info(f'adding range predicate as precondition: {self.kavm.pretty_print(range_predicate_term)}')
+
+        requires = build_assoc(KToken("true", "Bool"), KLabel("_andBool_"), self._preconditions + lhs_range_predicates)
+
+        ### build RHS substitution with either LHS data or existential variables
         rhs_subst = copy.deepcopy(subst)
         rhs_subst['ACCOUNTSMAP_CELL'] = KVariable('?_')
         rhs_subst['APPCREATOR_CELL'] = lhs_subst['APPCREATOR_CELL']
@@ -224,18 +284,13 @@ class KAVMProof:
         rhs_subst['NEXTAPPID_CELL'] = KVariable('?_')
         rhs_subst['NEXTASSETID_CELL'] = KVariable('?_')
 
-        # lhs = account_subst.compose(Subst(subst)).apply(symbolic_config)
-        lhs = Subst(lhs_subst).apply(symbolic_config)
         rhs = Subst(rhs_subst).apply(symbolic_config)
-
-        # requires = build_assoc(KToken("true", "Bool"), KLabel("_andBool_"), self._preconditions)
-
-        # ensures = build_assoc(KToken("true", "Bool"), KLabel("_andBool_"), self._postconditions)
+        ensures = build_assoc(KToken("true", "Bool"), KLabel("_andBool_"), self._postconditions)
 
         claim = KClaim(
             body=push_down_rewrites(KRewrite(lhs, rhs)),
-            # requires=requires,
-            # ensures=ensures,
+            requires=requires,
+            ensures=ensures,
         )
 
         return claim
@@ -268,8 +323,10 @@ class KAVMProof:
             file.write(pretty_print_kast(minimize_term(inline_cell_maps(final_term)), symbol_table=symbol_table))
         config, constraints = split_config_and_constraints(final_term)
         symbolic_config, subst = split_config_from(config)
-        _LOGGER.info(pretty_print_kast(subst['RETURNSTATUS_CELL'], symbol_table=symbol_table))
+        _LOGGER.info('KAVM return code: ' + pretty_print_kast(subst['RETURNCODE_CELL'], symbol_table=symbol_table))
+        _LOGGER.info('KAVM return status: ' + pretty_print_kast(subst['RETURNSTATUS_CELL'], symbol_table=symbol_table))
         _LOGGER.info('Constraints: ')
         _LOGGER.info(pretty_print_kast(constraints, symbol_table=symbol_table))
         # print(pretty_print_kast(get_cell(final_term, 'TEAL_CELL'), symbol_table=symbol_table))
         _LOGGER.info(f'Pretty printed final configuration to {final_config_filename}')
+        exit(1)
