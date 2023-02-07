@@ -276,7 +276,7 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fields_s
         type_specific_subst = Subst(
             {
                 'RECEIVER_CELL': algorand_address_to_k_bytes(txn.receiver),
-                'AMOUNT_CELL': maybe_tvalue(txn.amt),
+                'AMOUNT_CELL': txn.amt if isinstance(txn.amt, KInner) else maybe_tvalue(txn.amt),
                 'CLOSEREMAINDERTO_CELL': algorand_address_to_k_bytes(ZERO_ADDRESS),
             }
         )

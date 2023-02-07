@@ -111,7 +111,9 @@ class KAVMTermFactory:
         sdk_fields_subst = Subst(
             {
                 'ADDRESS_CELL': algorand_address_to_k_bytes(sdk_account_dict['address']),
-                'BALANCE_CELL': intToken(sdk_account_dict['amount']),
+                'BALANCE_CELL': sdk_account_dict['amount']
+                if isinstance(sdk_account_dict['amount'], KInner)
+                else intToken(sdk_account_dict['amount']),
                 'MINBALANCE_CELL': intToken(sdk_account_dict['min-balance'])
                 if 'min-balance' in sdk_account_dict
                 else intToken(MIN_BALANCE),
