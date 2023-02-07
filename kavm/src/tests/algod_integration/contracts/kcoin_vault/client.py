@@ -110,7 +110,7 @@ class ContractClient:
             self.suggested_params,
             signer,
         )
-        resp = comp.execute(self.algod, 2, override_tx_ids=['0'])
+        resp = comp.execute(self.algod, 2)
         self.asset_id = resp.abi_results[0].return_value
 
     def call_mint(
@@ -147,7 +147,7 @@ class ContractClient:
             ],
         )
         if not dry_run:
-            resp = comp.execute(self.algod, 2, override_tx_ids=['0', '1'])
+            resp = comp.execute(self.algod, 2)
             return resp.abi_results[0].return_value
         else:
             return comp.build_group()
@@ -189,5 +189,5 @@ class ContractClient:
                 )
             ],
         )
-        resp = comp.execute(self.algod, 2, override_tx_ids=['0', '1'])
+        resp = comp.execute(self.algod, 2)
         return resp.abi_results[0].return_value

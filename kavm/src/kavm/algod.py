@@ -324,9 +324,15 @@ class KAVMClient(algod.AlgodClient):
 
 
 class KAVMAtomicTransactionComposer(AtomicTransactionComposer):
-    def execute(
-        self, client: algod.AlgodClient, wait_rounds: int, override_tx_ids: Optional[List[str]] = None
-    ) -> "AtomicTransactionResponse":
+    """
+    This class overrides the 'execute' method of the base AtomicTransactionComposer class
+    by only introducing two lines of code which override the transactions IDs with
+    sequential integers (converted to strings). This is a requirement of KAVM's K implementation.
+    However, if a vanilla 'AlgodClient' is passed as 'clinet', the default transctions ids will be used
+    to maintain compatibility with go-algorand.
+    """
+
+    def execute(self, client: algod.AlgodClient, wait_rounds: int) -> "AtomicTransactionResponse":
         """
         Send the transaction group to the network and wait until it's committed
         to a block. An error will be thrown if submission or execution fails.
@@ -353,9 +359,10 @@ class KAVMAtomicTransactionComposer(AtomicTransactionComposer):
         self.submit(client)
         self.status = AtomicTransactionComposerStatus.SUBMITTED
 
-        # HACK: override the real transaction ids with the ones KAVM gave us
-        if override_tx_ids:
-            self.tx_ids = override_tx_ids
+        # HACK: override the real transaction ids with sequential integers if running with KAVM
+        # leave them as is otherwise
+        if isinstance(client, KAVMClient):
+            self.tx_ids = [str(idx) for idx, _ in enumerate(self.txn_list)]
 
         resp = transaction.wait_for_confirmation(client, self.tx_ids[0], wait_rounds)
 

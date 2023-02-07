@@ -162,11 +162,6 @@ def test_calculator(
         method_args=method_args,
     )
 
-    if type(client) is KAVMClient:
-        override_txn_ids = ['0']
-    else:
-        override_txn_ids = None
-
     with expectation:
-        resp = comp.execute(client, 2, override_tx_ids=override_txn_ids)
+        resp = comp.execute(client, 2)
         assert resp.abi_results[0].return_value == expected_result

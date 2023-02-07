@@ -32,5 +32,5 @@ def initial_state_fixture() -> Tuple[ContractClient, str, str]:
             signer=AccountTransactionSigner(creator_private_key),
         )
     )
-    comp.execute(client.algod, 2, override_tx_ids=['0'])
+    comp.execute(client.algod, 2)
     return client, str(creator_addr), creator_private_key
