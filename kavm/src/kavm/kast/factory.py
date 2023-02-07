@@ -248,3 +248,11 @@ class KAVMTermFactory:
         opt_in_app_cell = sdk_fields_subst.compose(symbolic_fields_subst).apply(symbolic_opt_in_app_cell)  # type: ignore
 
         return opt_in_app_cell
+
+    @staticmethod
+    def range_uint(width: int, term: KInner) -> KApply:
+        return KApply('#rangeUInt(_,_)_MACROS_Bool_Int_Int', [intToken(width), term])
+
+    @staticmethod
+    def range(lower_bound: int, upper_bound: int, term: KInner) -> KApply:
+        return KApply('#range(_<=_<=_)_MACROS_Bool_Int_Int_Int', [intToken(lower_bound), term, intToken(upper_bound)])
