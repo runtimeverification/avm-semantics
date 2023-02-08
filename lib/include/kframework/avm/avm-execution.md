@@ -662,8 +662,8 @@ Asset transfer goes through if:
     requires (assetCreated(ASSET_ID)
      andBool CLOSE_TO ==K getGlobalField(ZeroAddress))
      andThenBool (
-             hasOptedInAsset(ASSET_ID, SENDER)
-     andBool hasOptedInAsset(ASSET_ID, RECEIVER)
+             ASSET_ID in_optedInAssets(getOptedInAssetsCell(SENDER))
+     andBool ASSET_ID in_optedInAssets(getOptedInAssetsCell(RECEIVER))
      andBool (getOptInAssetField(AssetFrozen, RECEIVER, ASSET_ID) ==K 0)
      andBool (getOptInAssetField(AssetFrozen, SENDER,   ASSET_ID) ==K 0)
      )
@@ -697,8 +697,8 @@ Asset transfer with a non-zero amount fails if:
      andBool SENDER =/=K RECEIVER
      andBool CLOSE_TO ==K getGlobalField(ZeroAddress)
      andBool AMOUNT >Int 0
-     andBool (notBool hasOptedInAsset(ASSET_ID, SENDER)
-      orBool notBool hasOptedInAsset(ASSET_ID, RECEIVER))
+     andBool (notBool ASSET_ID in_optedInAssets(getOptedInAssetsCell(SENDER))
+      orBool notBool ASSET_ID in_optedInAssets(getOptedInAssetsCell(RECEIVER)))
 
   rule <k> #executeTxn(@axfer) => #panic(ASSET_NOT_FOUND) ... </k>
        <currentTx> TXN_ID </currentTx>
@@ -719,13 +719,13 @@ Asset transfer with a non-zero amount fails if:
          <assetAmount>   AMOUNT   </assetAmount>
          ...
        </transaction>
-    requires assetCreated(ASSET_ID)
+    requires (assetCreated(ASSET_ID)
      andBool ((AMOUNT >Int 0
-     andBool (hasOptedInAsset(ASSET_ID, SENDER)
-              andBool hasOptedInAsset(ASSET_ID, RECEIVER)))
+     andBool ( ASSET_ID in_optedInAssets(getOptedInAssetsCell(SENDER))
+              andBool ASSET_ID in_optedInAssets(getOptedInAssetsCell(RECEIVER))))))
      andThenBool
             ((getOptInAssetField(AssetFrozen, SENDER, ASSET_ID) ==K 1)
-     orBool  (getOptInAssetField(AssetFrozen, RECEIVER, ASSET_ID) ==K 1)))
+     orBool  (getOptInAssetField(AssetFrozen, RECEIVER, ASSET_ID) ==K 1))
 ```
 
 **Asset opt-in** is a special case of asset transfer: a transfer of zero to self.
@@ -766,7 +766,7 @@ Asset opt-in goes through if:
        </account>
     requires assetCreated(ASSET_ID)
      andBool CLOSE_TO ==K getGlobalField(ZeroAddress)
-     andBool notBool hasOptedInAsset(ASSET_ID, SENDER)
+     andBool notBool ASSET_ID in_optedInAssets(getOptedInAssetsCell(SENDER)) 
 ```
 
 **Asset opt-out** is a special case of asset transfer: a transfer with the AssetCloseTo field set.

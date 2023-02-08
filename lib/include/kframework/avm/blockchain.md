@@ -403,6 +403,18 @@ Accessor functions
 ### Asset State Accessors
 
 ```k
+  syntax AssetsOptedInCell ::= getOptedInAssetsCell(Bytes) [function]
+  rule [[ getOptedInAssetsCell(ADDR) => <assetsOptedIn> A </assetsOptedIn> ]]
+       <account>
+         <address>
+           ADDR
+         </address>
+         <assetsOptedIn>
+           A
+         </assetsOptedIn>
+         ...
+       </account>
+
   syntax Bool ::= hasOptedInAsset(TValue, TValue) [function, total]
   // -----------------------------------------------------
   rule [[ hasOptedInAsset(ASSET, ADDR) => true ]]
@@ -747,19 +759,18 @@ Accessor functions
 
   syntax Bool ::= TValue "in_optedInAssets" "(" AssetsOptedInCell ")" [function]
   // -----------------------------------------------------------------
-  rule ASSET in_optedInAssets(<assetsOptedIn>
-                       <optInAsset>
-                         <optInAssetID> ASSET </optInAssetID> ...
-                       </optInAsset> ...
-                     </assetsOptedIn>) => true
+//  rule ASSET in_optedInAssets(<assetsOptedIn>
+//                       <optInAsset>
+//                         <optInAssetID> ASSET </optInAssetID> ...
+//                       </optInAsset> ...
+//                     </assetsOptedIn>) => true
 
   rule ASSET in_optedInAssets(<assetsOptedIn>
                        <optInAsset>
                          <optInAssetID> ASSET' </optInAssetID> ...
                        </optInAsset> REST
                      </assetsOptedIn>)
-       => ASSET in_optedInAssets(<assetsOptedIn> REST </assetsOptedIn>)
-    requires ASSET =/=K ASSET'
+       => (ASSET ==K ASSET') orBool (ASSET in_optedInAssets(<assetsOptedIn> REST </assetsOptedIn>))
 
   rule _ in_optedInAssets(<assetsOptedIn> .Bag </assetsOptedIn>) => false
 
