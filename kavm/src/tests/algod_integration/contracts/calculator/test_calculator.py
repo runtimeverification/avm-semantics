@@ -8,7 +8,7 @@ from algosdk.atomic_transaction_composer import AccountTransactionSigner
 from algosdk.future import transaction
 from algosdk.v2client.algod import AlgodClient
 
-from kavm.algod import KAVMAtomicTransactionComposer, KAVMClient
+from kavm.algod import KAVMAtomicTransactionComposer
 
 from ..calculator.calculator_pyteal import compile_to_teal
 

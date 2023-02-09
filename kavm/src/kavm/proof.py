@@ -22,6 +22,7 @@ from pyk.kast.inner import (
 )
 from pyk.kast.manip import (
     inline_cell_maps,
+    minimize_rule,
     minimize_term,
     push_down_rewrites,
     split_config_and_constraints,
@@ -31,11 +32,12 @@ from pyk.kast.outer import KClaim
 from pyk.ktool.kprint import build_symbol_table, paren, pretty_print_kast
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
+from pyk.utils import hash_str
 
 from kavm.adaptors.algod_transaction import transaction_k_term
 from kavm.kast.factory import KAVMTermFactory
 from kavm.kavm import KAVM
-from kavm.pyk_utils import algorand_address_to_k_bytes
+from kavm.pyk_utils import algorand_address_to_k_bytes, existentialize_leafs
 
 _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
@@ -116,6 +118,9 @@ def collect_vars(symbolic_sdk_dict: Dict[str, Any]) -> Set[KVariable]:
                 result.add(v)
             if isinstance(v, Dict):
                 doit(v)
+            if isinstance(v, List):
+                for item in v:
+                    doit(item)
 
     doit(symbolic_sdk_dict)
     return result
@@ -130,6 +135,7 @@ class KAVMProof:
         sdk_txns: List[Transaction],
         teal_sources_dir: Optional[Path] = None,
         preconditions: Optional[List[KInner]] = None,
+        postconditions: Optional[List[KInner]] = None,
     ) -> None:
         self.kavm = kavm
 
@@ -144,14 +150,66 @@ class KAVMProof:
             )
             for acc in accts
         ]
-        txn_fields_subst = lambda i: Subst({'GROUPIDX_CELL': intToken(i)})
+        txns_pre_fields_subst = lambda groud_idx: Subst({'GROUPIDX_CELL': intToken(groud_idx)})
         self._txns_pre = [
-            transaction_k_term(kavm=kavm, txid=str(txn_id), txn=txn, symbolic_fields_subst=txn_fields_subst(txn_id))
+            transaction_k_term(
+                kavm=kavm, txid=str(txn_id), txn=txn, symbolic_fields_subst=txns_pre_fields_subst(txn_id)
+            )
+            for txn_id, txn in enumerate(sdk_txns)
+        ]
+        # TODO: this needs refactoring
+        txns_post_fields_subst = lambda groud_idx, var_suffix: Subst(
+            {
+                'GROUPIDX_CELL': intToken(groud_idx),
+                'TXSCRATCH_CELL': KVariable('?TXSCRATCH_CELL' + '_' + var_suffix),
+                'TXCONFIGASSET_CELL': KVariable('?TXCONFIGASSET_CELL' + '_' + var_suffix),
+                'TXAPPLICATIONID_CELL': KVariable('?TXAPPLICATIONID_CELL' + '_' + var_suffix),
+                'LOGDATA_CELL': KVariable('?LOGDATA_CELL' + '_' + var_suffix),
+                'LOGSIZE_CELL': KVariable('?LOGSIZE_CELL' + '_' + var_suffix),
+                'TXNEXECUTIONCONTEXT_CELL': KVariable('?TXNEXECUTIONCONTEXT_CELL' + '_' + var_suffix),
+                'RESUME_CELL': KVariable('?RESUME_CELL' + '_' + var_suffix),
+            }
+        )
+        self._txns_post = [
+            transaction_k_term(
+                kavm=kavm,
+                txid=str(txn_id),
+                txn=txn,
+                symbolic_fields_subst=txns_post_fields_subst(txn_id, hash_str(txn)[0:8]),
+            )
             for txn_id, txn in enumerate(sdk_txns)
         ]
 
         self._preconditions: List[KInner] = preconditions if preconditions else []
-        self._postconditions: List[KInner] = []
+        self._postconditions: List[KInner] = postconditions if postconditions else []
+
+        self._evar_mapping: Dict[KVariable, KVariable] = {}
+        # generate existential variables that the lhs vars rewrite to,
+        # to be added as equality postconditions
+        lhs_vars = self._collect_lhs_vars()
+        for lhs_var in lhs_vars:
+            rhs_evar = KVariable(name='?' + lhs_var.name + '_POST', sort=lhs_var.sort)
+            self._evar_mapping[lhs_var] = rhs_evar
+
+    def require(self, preconditions: [KInner]) -> None:
+        '''Add preconditions to the requries clause of the proof's claim'''
+        self._preconditions.extend(preconditions)
+
+    def ensure(self, postconditions: [KInner]) -> None:
+        '''Add postconditions to the ensures clause of the proof's claim'''
+        self._postconditions.extend(postconditions)
+
+    @property
+    def evar_constraints(self) -> List[KInner]:
+        return [KApply('_==K_', [lhs_var, rhs_evar]) for lhs_var, rhs_evar in self._evar_mapping.items()]
+
+    def _collect_lhs_vars(self) -> Set[KVariable]:
+        '''Collect KVariable terms that occure in accounts and trasnactions'''
+        acc_vars = set().union(*[acc._vars for acc in self._accounts])
+        txn_vars = set()
+        for txn in self._txns_pre:
+            txn_vars = txn_vars.union(itertools.chain.from_iterable(var_occurrences(txn).values()))
+        return acc_vars.union(txn_vars)
 
     def build_app_creator_map(self) -> KInner:
         '''Construct the <appCreator> cell Kast term'''
@@ -176,11 +234,12 @@ class KAVMProof:
             txns,
         )
 
-    def build_accounts(self) -> KInner:
+    @classmethod
+    def build_account_cell_map(cls, account_cells: List[KInner]) -> KInner:
         return build_assoc(
             KToken(".Bag", "AccountCellMap"),
             KLabel("_AccountCellMap_"),
-            [acc._acc_cell for acc in self._accounts],
+            account_cells,
         )
 
     @staticmethod
@@ -206,10 +265,12 @@ class KAVMProof:
 
         ### build LHS substitution from provided account and transaction data
         lhs_subst = copy.deepcopy(subst)
-        lhs_subst['ACCOUNTSMAP_CELL'] = self.build_accounts()
+        lhs_subst['ACCOUNTSMAP_CELL'] = self.build_account_cell_map([acc._acc_cell for acc in self._accounts])
         lhs_subst['APPCREATOR_CELL'] = self.build_app_creator_map()
         lhs_subst['ASSETCREATOR_CELL'] = self.build_asset_creator_map()
-        lhs_subst['TRANSACTIONS_CELL'] = self.build_transactions(txns=self._txns_pre)
+        lhs_subst['TRANSACTIONS_CELL'] = self.build_transactions(
+            txns=self._txns_pre + [KToken(".Bag", "TransactionCellMap")]
+        )
         lhs_subst['DEQUE_CELL'] = KAVMProof.build_deque(txn_ids)
         lhs_subst['DEQUEINDEXSET_CELL'] = KAVMProof.build_deque_set(txn_ids)
         lhs_subst['TXNINDEXMAP_CELL'] = KToken('.Bag', 'TxnIndexMapGroupCell')
@@ -221,27 +282,33 @@ class KAVMProof:
 
         lhs = Subst(lhs_subst).apply(symbolic_config)
 
-        # free variables of sort Int in accounts (TODO: and transactions)
+        # free variables of sort Int in accounts and transactions
         # should be uint64. Build range predicates:
         lhs_range_predicates = []
-        acc_vars = set().union(*[acc._vars for acc in self._accounts])
-        txn_vars = set()
-        for txn in self._txns_pre:
-            txn_vars = txn_vars.union(itertools.chain.from_iterable(var_occurrences(txn).values()))
-        for var in acc_vars.union(txn_vars):
+        for var in self._collect_lhs_vars():
             if var.sort is not None and var.sort == KSort('Int'):
                 range_predicate_term = KAVMTermFactory.range_uint(64, var)
                 lhs_range_predicates.append(range_predicate_term)
-                _LOGGER.info(f'adding range predicate as precondition: {self.kavm.pretty_print(range_predicate_term)}')
-
-        requires = build_assoc(KToken("true", "Bool"), KLabel("_andBool_"), self._preconditions + lhs_range_predicates)
 
         ### build RHS substitution with either LHS data or existential variables
         rhs_subst = copy.deepcopy(subst)
-        rhs_subst['ACCOUNTSMAP_CELL'] = KVariable('?_')
+        evar_subst = Subst({lhs_var.name: rhs_evar for lhs_var, rhs_evar in self._evar_mapping.items()})
+
+        rhs_account_cells = [
+            existentialize_leafs(evar_subst.apply(acc._acc_cell), keep_vars=evar_subst.values())
+            for acc in self._accounts
+        ]
+        # # rhs_transaction_cells = [evar_subst.apply(txn) for txn in self._txns_pre]
+        # print('Abstracted state:')
+        # print('=================')
+        # for cell in self._txns_post:
+        #     print(self.kavm.pretty_print(cell))
+        # assert False
+
+        rhs_subst['ACCOUNTSMAP_CELL'] = self.build_account_cell_map(rhs_account_cells)
+        rhs_subst['TRANSACTIONS_CELL'] = self.build_transactions(txns=self._txns_post + [KVariable('?FUTURE_TXNS')])
         rhs_subst['APPCREATOR_CELL'] = lhs_subst['APPCREATOR_CELL']
         rhs_subst['ASSETCREATOR_CELL'] = lhs_subst['ASSETCREATOR_CELL']
-        rhs_subst['TRANSACTIONS_CELL'] = KVariable('?_')
         rhs_subst['DEQUEINDEXSET_CELL'] = lhs_subst['DEQUEINDEXSET_CELL']
         rhs_subst['DEQUE_CELL'] = KToken('.List', 'List')
         rhs_subst['TXNINDEXMAP_CELL'] = KVariable('?_')
@@ -285,6 +352,8 @@ class KAVMProof:
         rhs_subst['NEXTASSETID_CELL'] = KVariable('?_')
 
         rhs = Subst(rhs_subst).apply(symbolic_config)
+
+        requires = build_assoc(KToken("true", "Bool"), KLabel("_andBool_"), self._preconditions + lhs_range_predicates)
         ensures = build_assoc(KToken("true", "Bool"), KLabel("_andBool_"), self._postconditions)
 
         claim = KClaim(
@@ -301,9 +370,8 @@ class KAVMProof:
         kavm_haskell = KAVM(
             definition_dir=Path(os.environ.get('KAVM_VERIFICATION_DEFINITION_DIR')), use_directory=self._use_directory
         )
-        kavm_haskell._write_claim_definition(claim, self._claim_name)
+        kavm_haskell._write_claim_definition(minimize_rule(claim), self._claim_name)
 
-        # defn = read_kast_definition(self.kavm._verification_definition / 'parsed.json')
         symbol_table = build_symbol_table(kavm_haskell.definition)
         symbol_table['_+Bytes_'] = paren(lambda a1, a2: a1 + ' +Bytes ' + a2)
         symbol_table['_andBool_'] = paren(symbol_table['_andBool_'])
@@ -322,11 +390,10 @@ class KAVMProof:
         with open(final_config_filename, 'w') as file:
             file.write(pretty_print_kast(minimize_term(inline_cell_maps(final_term)), symbol_table=symbol_table))
         config, constraints = split_config_and_constraints(final_term)
-        symbolic_config, subst = split_config_from(config)
+        _, subst = split_config_from(config)
         _LOGGER.info('KAVM return code: ' + pretty_print_kast(subst['RETURNCODE_CELL'], symbol_table=symbol_table))
         _LOGGER.info('KAVM return status: ' + pretty_print_kast(subst['RETURNSTATUS_CELL'], symbol_table=symbol_table))
         _LOGGER.info('Constraints: ')
         _LOGGER.info(pretty_print_kast(constraints, symbol_table=symbol_table))
-        # print(pretty_print_kast(get_cell(final_term, 'TEAL_CELL'), symbol_table=symbol_table))
         _LOGGER.info(f'Pretty printed final configuration to {final_config_filename}')
         exit(1)
