@@ -33,6 +33,7 @@ def test_mint_spec(initial_state_fixture):
     # Ideally we'd want Beaker to give as a client, but for now it is defined manually
     # in ./client.py.
     kcoin_vault_client, user_addr, user_private_key = initial_state_fixture
+    Path('.kavm').mkdir(parents=True, exist_ok=True)
     kcoin_vault_client.algod.kavm.use_directory = Path('.kavm')
 
     # declare all K symbolic variables that we'll use in the spec
