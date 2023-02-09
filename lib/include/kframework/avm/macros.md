@@ -17,13 +17,23 @@ Accounts
 
 ```k
 
-  syntax AccountCell ::= account(Bytes, Int) [macro]
-  // -----------------------------------------------
-  rule account(ADDRESS, BALANCE) =>
+  syntax AccountCell ::= account(Bytes, Int, Int) [macro]
+  // ----------------------------------------------------
+  rule account(ADDRESS, BALANCE, MIN_BALANCE) =>
         <account>
-          <address> ADDRESS </address>
-          <balance> BALANCE </balance>
-          ...
+          <address>    ADDRESS     </address>
+          <balance>    BALANCE     </balance>
+          <minBalance> MIN_BALANCE </minBalance>
+          <round>      0           </round>
+          <preRewards> 0           </preRewards>
+          <rewards>    0           </rewards>
+          <status>     0           </status>
+          <key>        "":TBytes    </key>
+          <appsCreated>   .Bag </appsCreated>
+          <appsOptedIn>   .Bag </appsOptedIn>
+          <assetsCreated> .Bag </assetsCreated>
+          <assetsOptedIn> .Bag </assetsOptedIn>
+          <boxes>         .Bag </boxes>
         </account>
 ```
 
@@ -44,13 +54,19 @@ Transactions
               <txType>   "pay"           </txType>
               <typeEnum> @ pay           </typeEnum>
               <rekeyTo>  PARAM_ZERO_ADDR </rekeyTo>
-              ...
+              <fee>         0            </fee>
+              <firstValid>  0            </firstValid>
+              <lastValid>   0            </lastValid>
+              <genesisHash> ""           </genesisHash>
+              <genesisID>   ""           </genesisID>
+              <lease>       ""           </lease>
+              <note>        ""           </note>
           </txHeader>
           <txnTypeSpecificFields>
             <payTxFields>
-                <receiver> RECEIVER </receiver>
-                <amount> AMOUNT </amount>
-                ...
+                <receiver> RECEIVER                </receiver>
+                <amount> AMOUNT                    </amount>
+                <closeRemainderTo> PARAM_ZERO_ADDR </closeRemainderTo>
             </payTxFields>
             ...
           </txnTypeSpecificFields>
