@@ -20,7 +20,7 @@ from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
 
 from kavm.constants import ZERO_ADDRESS
-from kavm.pyk_utils import algorand_address_to_k_bytes, maybe_tvalue, tvalue_bytes_list, tvalue_list
+from kavm.pyk_utils import algorand_address_to_k_bytes, maybe_tvalue, token_or_expr, tvalue_bytes_list, tvalue_list
 
 
 class KAVMApplyData:
@@ -240,12 +240,12 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fields_s
     symbolic_fields_subst = symbolic_fields_subst if symbolic_fields_subst else Subst({})
     header_subst = Subst(
         {
-            'FEE_CELL': maybe_tvalue(txn.fee),
+            'FEE_CELL': token_or_expr(maybe_tvalue, txn.fee),
             'FIRSTVALID_CELL': maybe_tvalue(txn.first_valid_round),
             'LASTVALID_CELL': maybe_tvalue(txn.last_valid_round),
             'GENESISHASH_CELL': maybe_tvalue(txn.genesis_hash),
             'GENESISID_CELL': maybe_tvalue(txn.genesis_id),
-            'SENDER_CELL': algorand_address_to_k_bytes(txn.sender),
+            'SENDER_CELL': token_or_expr(algorand_address_to_k_bytes, txn.sender),
             'TXTYPE_CELL': maybe_tvalue(txn.type),
             'TYPEENUM_CELL': maybe_tvalue(txn_type_to_type_enum(txn.type)),
             'GROUPIDX_CELL': maybe_tvalue(None),
@@ -275,9 +275,9 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fields_s
         txn = cast(PaymentTxn, txn)
         type_specific_subst = Subst(
             {
-                'RECEIVER_CELL': algorand_address_to_k_bytes(txn.receiver),
-                'AMOUNT_CELL': txn.amt if isinstance(txn.amt, KInner) else maybe_tvalue(txn.amt),
-                'CLOSEREMAINDERTO_CELL': algorand_address_to_k_bytes(ZERO_ADDRESS),
+                'RECEIVER_CELL': token_or_expr(algorand_address_to_k_bytes, txn.receiver),
+                'AMOUNT_CELL': token_or_expr(maybe_tvalue, txn.amt),
+                'CLOSEREMAINDERTO_CELL': token_or_expr(algorand_address_to_k_bytes, ZERO_ADDRESS),
             }
         )
         type_specific_fields_cell = [

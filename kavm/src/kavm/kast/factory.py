@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, Subst, build_assoc
 from pyk.kast.manip import split_config_from
@@ -10,7 +10,7 @@ from pyk.utils import dequote_str
 from kavm.adaptors.teal_key_value import raw_list_state_to_dict_bytes_bytes, raw_list_state_to_dict_bytes_ints
 from kavm.constants import MIN_BALANCE
 from kavm.kavm import KAVM
-from kavm.pyk_utils import algorand_address_to_k_bytes, map_bytes_bytes, map_bytes_ints
+from kavm.pyk_utils import algorand_address_to_k_bytes, map_bytes_bytes, map_bytes_ints, token_or_expr
 
 
 def preprocess_teal_program(term: KInner) -> KInner:
@@ -57,7 +57,7 @@ class KAVMTermFactory:
                 'ASSETID_CELL': intToken(sdk_asset_dict['index']),
                 'ASSETNAME_CELL': stringToken(sdk_asset_dict['params']['name']),
                 'ASSETUNITNAME_CELL': stringToken(sdk_asset_dict['params']['unit-name']),
-                'ASSETTOTAL_CELL': intToken(sdk_asset_dict['params']['total']),
+                'ASSETTOTAL_CELL': token_or_expr(intToken, sdk_asset_dict['params']['total']),
                 'ASSETDECIMALS_CELL': intToken(sdk_asset_dict['params']['decimals']),
                 'ASSETDEFAULTFROZEN_CELL': intToken(1) if sdk_asset_dict['params']['default-frozen'] else intToken(0),
                 'ASSETURL_CELL': stringToken(sdk_asset_dict['params']['url']),
@@ -81,7 +81,7 @@ class KAVMTermFactory:
         sdk_fields_subst = Subst(
             {
                 'OPTINASSETID_CELL': intToken(sdk_asset_holding['asset-id']),
-                'OPTINASSETBALANCE_CELL': intToken(sdk_asset_holding['amount']),
+                'OPTINASSETBALANCE_CELL': token_or_expr(intToken, sdk_asset_holding['amount']),
                 'OPTINASSETFROZEN_CELL': intToken(1) if sdk_asset_holding['is-frozen'] else intToken(0),
             }
         )
@@ -111,10 +111,8 @@ class KAVMTermFactory:
         sdk_fields_subst = Subst(
             {
                 'ADDRESS_CELL': algorand_address_to_k_bytes(sdk_account_dict['address']),
-                'BALANCE_CELL': sdk_account_dict['amount']
-                if isinstance(sdk_account_dict['amount'], KInner)
-                else intToken(sdk_account_dict['amount']),
-                'MINBALANCE_CELL': intToken(sdk_account_dict['min-balance'])
+                'BALANCE_CELL': token_or_expr(intToken, sdk_account_dict['amount']),
+                'MINBALANCE_CELL': token_or_expr(intToken, sdk_account_dict['min-balance'])
                 if 'min-balance' in sdk_account_dict
                 else intToken(MIN_BALANCE),
                 'ROUND_CELL': intToken(sdk_account_dict['round'])
@@ -256,5 +254,12 @@ class KAVMTermFactory:
         return KApply('#rangeUInt(_,_)_MACROS_Bool_Int_Int', [intToken(width), term])
 
     @staticmethod
-    def range(lower_bound: int, upper_bound: int, term: KInner) -> KApply:
-        return KApply('#range(_<=_<=_)_MACROS_Bool_Int_Int_Int', [intToken(lower_bound), term, intToken(upper_bound)])
+    def range(lower_bound: Union[int, KInner], upper_bound: Union[int, KInner], term: KInner) -> KApply:
+        return KApply(
+            '#range(_<=_<=_)_MACROS_Bool_Int_Int_Int',
+            [token_or_expr(intToken, lower_bound), term, token_or_expr(intToken, upper_bound)],
+        )
+
+    @staticmethod
+    def pow64() -> KApply:
+        return KApply('pow64_MACROS_Int', [])
