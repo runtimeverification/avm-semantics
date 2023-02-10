@@ -44,7 +44,7 @@ module ALGO-ITXN
          ListItem(<transaction> <rekeyTo> _ => VAL </rekeyTo> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(TxType, VAL) => . ... </k>
+  rule <k> #setItxnField(Type, VAL) => . ... </k>
        <innerTransactions>
          ...
          ListItem(<transaction> 
@@ -278,7 +278,7 @@ module ALGO-ITXN
          ListItem(<transaction> <assetAmount> _ => VAL </assetAmount> ... </transaction>)
        </innerTransactions>
 
-  rule <k> #setItxnField(AssetASender, VAL) => . ... </k>
+  rule <k> #setItxnField(AssetSender, VAL) => . ... </k>
        <innerTransactions>
          ...
          ListItem(<transaction> <assetASender> _ => VAL </assetASender> ... </transaction>)
