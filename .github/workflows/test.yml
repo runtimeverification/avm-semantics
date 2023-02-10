@@ -117,6 +117,9 @@ jobs:
       - name: 'Test AVM semantics --- proofs --- opcodes'
         run: |
            docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-opcode-prove'
+      - name: 'Test AVM semantics --- proofs --- transactions'
+        run: |
+           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-transactions-prove'
       - name: 'Test AVM semantics --- proofs --- app calls'
         run: |
            docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-calls-prove'
