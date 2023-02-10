@@ -737,7 +737,6 @@ module OPCODES-V1-SPEC
             <groupID> GROUP_ID:String </groupID>
             <groupIdx> GROUP_INDEX:Int </groupIdx>
             <sender> SENDER:Bytes </sender>
-            <typeEnum> TYPE </typeEnum>
             ...
           </transaction>
           ...
@@ -750,7 +749,6 @@ module OPCODES-V1-SPEC
           ...
         </txnIndexMap>
     requires S <Int MAX_STACK_DEPTH
-      andBool #isValidForTxnType(Sender, TYPE)
 ```
 </details>
 </td></tr>
@@ -793,7 +791,6 @@ module OPCODES-V1-SPEC
              <groupID> GROUP_ID:String </groupID>
              <groupIdx> GROUP_INDEX:Int </groupIdx>
              <sender> SENDER:Bytes </sender>
-             <typeEnum> TYPE </typeEnum>
              ...
            </transaction>
            ...
@@ -809,7 +806,6 @@ module OPCODES-V1-SPEC
            ...
          </txnIndexMap>
      requires S <Int MAX_STACK_DEPTH
-      andBool #isValidForTxnType(Sender, TYPE)
       andBool GROUP_INDEX =/=K CURRENT_GROUP_INDEX
       andBool CURRENT_TX_ID =/=K TARGET_TX_ID
 ```
