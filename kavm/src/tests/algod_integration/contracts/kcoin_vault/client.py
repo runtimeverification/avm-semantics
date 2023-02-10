@@ -1,13 +1,15 @@
 import base64
+import importlib
+from typing import List
 
 import algosdk
+import pyteal
+import pytest
 from algosdk.atomic_transaction_composer import AccountTransactionSigner, TransactionWithSigner
 from algosdk.future import transaction
 from algosdk.v2client.algod import AlgodClient
 
 from kavm.algod import KAVMAtomicTransactionComposer
-
-from ..kcoin_vault.kcoin_vault_pyteal import compile_to_teal  # type: ignore
 
 
 def compile_teal(client: AlgodClient, source_code: str) -> bytes:
@@ -24,73 +26,96 @@ class ContractClient:
       * creator opts into app's asset
     '''
 
-    def __init__(
-        self,
-        algod: AlgodClient,
-        creator_addr: str,
-        creator_private_key: str,
-    ) -> None:
+    def __init__(self, algod: AlgodClient, pyteal_code_module: str) -> None:
         self.algod = algod
+        self.suggested_params = self.algod.suggested_params()
+        self.suggested_params.flat_fee = True
+        self.suggested_params.fee = 2000
 
-        approval_source, clear_source, self.contract_interface = compile_to_teal()
+        with pytest.MonkeyPatch.context() as monkeypatch:
+            monkeypatch.setattr(
+                target=pyteal.Router,
+                name='hoare_method',
+                value=lambda *args, **kwargs: lambda _: None,
+                raising=False,
+            )
+            monkeypatch.setattr(
+                target=pyteal.Router,
+                name='precondition',
+                value=lambda *args, **kwargs: lambda _: None,
+                raising=False,
+            )
+            monkeypatch.setattr(
+                target=pyteal.Router,
+                name='postcondition',
+                value=lambda *args, **kwargs: lambda _: None,
+                raising=False,
+            )
+            config = importlib.import_module(pyteal_code_module)
+            approval_source, clear_source, self.contract_interface = config.compile_to_teal()
 
         # Compile approval and clear TEAL programs
-        approval_program = compile_teal(algod, approval_source)
-        clear_program = compile_teal(algod, clear_source)
+        self.approval_program = compile_teal(algod, approval_source)
+        self.clear_program = compile_teal(algod, clear_source)
 
+        # initialize app_id and asset_id to 0
+        self.app_id = 0
+        self.asset_id = 0
+
+    def deploy(
+        self,
+        creator_addr: str,
+        creator_private_key: str,
+        app_account_microalgos: int = 10**6,
+    ) -> None:
         # create app
         on_complete = transaction.OnComplete.NoOpOC.real
-        params = algod.suggested_params()
-
         global_schema = transaction.StateSchema(num_uints=2, num_byte_slices=0)
         txn = transaction.ApplicationCreateTxn(
-            creator_addr, params, on_complete, approval_program, clear_program, global_schema, local_schema=None
+            creator_addr,
+            self.suggested_params,
+            on_complete,
+            self.approval_program,
+            self.clear_program,
+            global_schema,
+            local_schema=None,
         )
-
         signed_txn = txn.sign(creator_private_key)
         tx_id = signed_txn.transaction.get_txid()
+        self.algod.send_transactions([signed_txn])
+        transaction.wait_for_confirmation(self.algod, tx_id, 4)
 
-        algod.send_transactions([signed_txn])
-        transaction.wait_for_confirmation(algod, tx_id, 4)
-
-        # display results
-        transaction_response = algod.pending_transaction_info(tx_id)
+        transaction_response = self.algod.pending_transaction_info(tx_id)
         self.app_id = transaction_response["application-index"]
 
-        ## Fund app with algos
+        # Fund app with algos
         fund_app_account_txn = transaction.PaymentTxn(
-            sender=creator_addr, sp=params, receiver=algosdk.logic.get_application_address(self.app_id), amt=10**6
+            sender=creator_addr,
+            sp=self.suggested_params,
+            receiver=algosdk.logic.get_application_address(self.app_id),
+            amt=app_account_microalgos,
         )
         signed_txn = fund_app_account_txn.sign(creator_private_key)
         tx_id = signed_txn.transaction.get_txid()
-        algod.send_transactions([signed_txn])
-        transaction.wait_for_confirmation(algod, tx_id, 4)
+        self.algod.send_transactions([signed_txn])
+        transaction.wait_for_confirmation(self.algod, tx_id, 4)
 
         # Initialize App's asset
         signer = AccountTransactionSigner(creator_private_key)
         comp = KAVMAtomicTransactionComposer()
         comp.add_method_call(
-            self.app_id, self.contract_interface.get_method_by_name("init_asset"), creator_addr, params, signer
+            self.app_id,
+            self.contract_interface.get_method_by_name("init_asset"),
+            creator_addr,
+            self.suggested_params,
+            signer,
         )
-
-        resp = comp.execute(self.algod, 2, override_tx_ids=['0'])
+        resp = comp.execute(self.algod, 2)
         self.asset_id = resp.abi_results[0].return_value
 
-        # Opt-in to app's asset
-        comp = KAVMAtomicTransactionComposer()
-        comp.add_transaction(
-            TransactionWithSigner(
-                transaction.AssetOptInTxn(sender=creator_addr, sp=params, index=self.asset_id), signer
-            )
-        )
-        resp = comp.execute(self.algod, 2, override_tx_ids=['0'])
-
     def call_mint(
-        self,
-        sender_addr: str,
-        sender_pk: str,
-        microalgo_amount: int,
-    ) -> int:
+        self, sender_addr: str, sender_pk: str, microalgo_amount: int, dry_run: bool = False
+    ) -> int | List[TransactionWithSigner]:
         """
         Call app's 'mint' method
         """
@@ -121,8 +146,11 @@ class ContractClient:
                 )
             ],
         )
-        resp = comp.execute(self.algod, 2, override_tx_ids=['0', '1'])
-        return resp.abi_results[0].return_value
+        if not dry_run:
+            resp = comp.execute(self.algod, 2)
+            return resp.abi_results[0].return_value
+        else:
+            return comp.build_group()
 
     def call_burn(
         self,
@@ -161,5 +189,5 @@ class ContractClient:
                 )
             ],
         )
-        resp = comp.execute(self.algod, 2, override_tx_ids=['0', '1'])
+        resp = comp.execute(self.algod, 2)
         return resp.abi_results[0].return_value
