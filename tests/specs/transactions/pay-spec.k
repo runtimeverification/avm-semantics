@@ -38,26 +38,6 @@ claim [pay]:
       <deque>           ListItem("0") => .List </deque>
       <dequeIndexSet>   SetItem("0")           </dequeIndexSet>
       <touchedAccounts> .List => ?_            </touchedAccounts>
-      <currentTxnExecution>
-        <teal>
-          <pc> 0 </pc>
-          <program> .Map </program>
-          <mode> undefined </mode>
-          <version> 1 </version>
-          <stack> .TStack </stack>
-          <stacksize> 0 </stacksize>
-          <jumped> false </jumped>
-          <labels> .Map </labels>
-          <callStack> .List </callStack>
-          <scratch> .Map </scratch>
-          <intcblock> .Map </intcblock>
-          <bytecblock> .Map </bytecblock>
-        </teal>
-        <effects>       .List    </effects>
-        <lastTxnGroupID> _ => ?_ </lastTxnGroupID>
-        ...
-      </currentTxnExecution>
-
       ...
     </avmExecution>
 
