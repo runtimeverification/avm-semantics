@@ -92,6 +92,10 @@ class KAVMTransaction(Transaction):
     def sanitize_byte_fields(txn_dict: Dict[str, Any]) -> Dict[str, Any]:
         """Convert bytes fields of Transaction into base64-encoded strigns"""
         for k, v in txn_dict.items():
+            if k == 'apar':
+                for sub_k, sub_v in txn_dict['apar'].items():
+                    if sub_k in ['c', 'f', 'r']:
+                        txn_dict['apar'][sub_k] = encode_address(sub_v)
             if type(v) is bytes:
                 if k in ['snd', 'rcv', 'close', 'asnd', 'arcv', 'aclose']:
                     txn_dict[k] = encode_address(v)
@@ -225,8 +229,8 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fields_s
             'GROUPIDX_CELL': maybe_tvalue(None),
             'GROUPID_CELL': maybe_tvalue(txn.group) if txn.group else KToken('"0"', KSort('String')),
             'LEASE_CELL': maybe_tvalue(txn.lease),
-            'NOTE_CELL': maybe_tvalue(txn.note),
-            'REKEYTO_CELL': maybe_tvalue(txn.rekey_to),
+            'NOTE_CELL': txn.note if txn.note else KToken('""', KSort('String')),
+            'REKEYTO_CELL': txn.rekey_to if txn.rekey_to else algorand_address_to_k_bytes(ZERO_ADDRESS),
         }
     )
 

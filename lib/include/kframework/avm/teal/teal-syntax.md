@@ -87,6 +87,7 @@ module TEAL-OPCODES
                             | "shr"
   syntax UnaryBitOpCode   ::= "~"
                             | "bitlen"
+                            | "bsqrt"
   syntax NullaryBitOpCode ::= "getbit"
                             | "setbit"
 ```

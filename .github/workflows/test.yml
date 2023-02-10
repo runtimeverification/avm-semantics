@@ -40,12 +40,15 @@ jobs:
             os: ubuntu-latest
           - runner: macos-12
             os: macos-12
+          - runner: MacM1
+            os: self-macos-12
     runs-on: ${{ matrix.runner }}
     needs: version-bump
     steps:
       - name: 'Check out code'
         uses: actions/checkout@v3
       - name: 'Install Nix/Cachix'
+        if: ${{ !startsWith(matrix.os, 'self') }}
         uses: cachix/install-nix-action@v18
         with:
           # Keep nix at <=2.7 https://github.com/NixOS/nix/issues/6572
@@ -54,11 +57,12 @@ jobs:
             substituters = http://cache.nixos.org https://cache.iog.io
             trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ=
       - uses: cachix/cachix-action@v10
+        if: ${{ !startsWith(matrix.os, 'self') }}
         with:
           name: k-framework
           skipPush: true
       - name: 'Build via Nix'
-        run: nix build .#kavm
+        run: GC_DONT_GC=1 nix build .#kavm --print-build-logs
 
   test-pr:
     name: 'Test PR'
@@ -73,10 +77,7 @@ jobs:
         run: |
           set -euxo pipefail
 
-          cd deps/k
-          git fetch --no-recurse-submodules origin 'refs/tags/*:refs/tags/*'
-          K_VERSION="$(git tag --points-at HEAD | cut --characters=2- | head -n 1)"
-          cd ../..
+          K_VERSION="$(cat deps/k_release | cut --characters=2-)"
 
           KAVM_COMMIT="$(git rev-parse --short=7 HEAD)"
 

@@ -102,8 +102,32 @@ Note that the applications and ASAs are part of the accounts' state as well, and
   rule <k> #readSetupStage({ "data": {"accounts": ACCTS:JSON}
                            , "stage-type": "setup-network"
                            })
-        => #setupAccounts(ACCTS) ...
+        => #setupAccounts(ACCTS) ~> #setupCounters() ...
        </k>
+```
+
+The `#setupCounters` rule calculates the appropriate initial values for `<nextAssetID>` and `<nextAppID>`.
+
+```k
+  syntax TestingCommand ::= #setupCounters()
+  //----------------------------------------
+
+  rule <k> #setupCounters() => .K ... </k>
+       <assetCreator> ASSET_CREATOR_MAP </assetCreator>
+       <appCreator>   APP_CREATOR_MAP   </appCreator>
+       <nextAssetID> _ => maxInList(keys_list(ASSET_CREATOR_MAP)) +Int 1 </nextAssetID>
+       <nextAppID>   _ => maxInList(keys_list(APP_CREATOR_MAP)) +Int 1   </nextAppID>
+
+  syntax Int ::= maxInList(List)          [function, total]
+               | maxInListImpl(List, Int) [function, total]
+  //-------------------------------------------------------
+  rule maxInList(XS) => maxInListImpl(XS, 0)
+  rule maxInListImpl(.List, ACC) => ACC
+  rule maxInListImpl(ListItem(X) XS, ACC) => maxInListImpl(XS, X)
+    requires X >Int ACC
+  rule maxInListImpl(ListItem(X) XS, ACC) => maxInListImpl(XS, ACC)
+    requires X <=Int ACC
+
 ```
 
 #### Transaction execution stage

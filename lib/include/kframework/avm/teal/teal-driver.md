@@ -239,6 +239,18 @@ The largest integer B such that B^2 <= X
     requires notBool( X >=Int 0 andBool X <=Int MAX_UINT64)
 ```
 
+*Binary square root*
+
+The largest integer B such that B^2 <= X
+
+```k
+  rule <k> bsqrt => .K ... </k>
+       <stack> B:Bytes : XS => Int2Bytes(sqrtUInt(Bytes2Int(B, BE, Unsigned)), BE, Unsigned) : XS </stack>
+
+  rule <k> bsqrt => #panic(INVALID_ARGUMENT) ... </k>
+       <stack> _:Int : _ </stack>
+```
+
 The `sqrtTUInt64` function implements the integer square root algorithms described by the following excerpt
 from the [reference TEAL interpreter](https://github.com/algorand/go-algorand/blob/ca3e87734833123284d3a7d87fcc9eaaede8f32a/data/transactions/logic/eval.go#L1202):
 
@@ -257,6 +269,19 @@ for i := 0; i < 32; i++ {
 	}
 }
 cx.stack[last].Uint = root >> 1
+```
+
+`https://en.wikipedia.org/wiki/Integer_square_root#Example_implementation_in_C`
+
+```k
+  syntax Int ::= sqrtUInt(Int)           [function]
+  syntax Int ::= sqrtUInt(Int, Int, Int) [function]
+
+  rule sqrtUInt(X) => X requires X <=Int 1 andBool X >=Int 0
+  rule sqrtUInt(X) => sqrtUInt(X, X /Int 2, ((X /Int 2) +Int (X /Int (X /Int 2))) /Int 2) requires X >Int 1
+
+  rule sqrtUInt(_, X0, X1) => X0 requires X1 >=Int X0
+  rule sqrtUInt(X, X0, X1) => sqrtUInt(X, X1, (X1 +Int (X /Int X1)) /Int 2) requires X1 <Int X0
 ```
 
 Note that we need to perform the left shift modulo `MAX_UINT64 + 1`, otherwise the `SQ` variable will exceed `MAX_UINT64` in the last iteration.
@@ -376,7 +401,7 @@ Note that we need to perform the left shift modulo `MAX_UINT64 + 1`, otherwise t
     requires notBool (I2 >=Int 0 andBool I2 <Int 64)
 
   rule <k> ~ => .K ... </k>
-       <stack> I : XS => (~Int I) : XS </stack>
+       <stack> I : XS => (I xorInt MAX_UINT64) : XS </stack>
 
   rule <k> ~ => #panic(ILL_TYPED_STACK) ... </k>
        <stack> _:Bytes : _ </stack>
@@ -428,6 +453,11 @@ If X is a byte-array, it is interpreted as a big-endian unsigned integer. bitlen
 ```k
   rule <k> btoi => .K ... </k>
        <stack> B : XS => Bytes2Int(B, BE, Unsigned) : XS </stack>
+    requires Bytes2Int(B, BE, Unsigned) <=Int MAX_UINT64
+
+  rule <k> btoi => #panic(INT_OVERFLOW) ... </k>
+       <stack> B : _ </stack>
+    requires Bytes2Int(B, BE, Unsigned) >Int MAX_UINT64
 ```
 
 *Bytes concatenation*
@@ -645,7 +675,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
      andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
-     andBool lengthBytes(B) >Int 0
+     andBool Bytes2Int(B, BE, Unsigned) >Int 0
 
   rule <k> b/ => #panic(DIV_BY_ZERO) ... </k>
        <stack> B:Bytes : _:Bytes : _  </stack>
@@ -661,7 +691,7 @@ The length of the arguments is limited to `MAX_BYTE_MATH_SIZE`, but there is no 
        <stacksize> S => S -Int 1 </stacksize>
     requires lengthBytes(A) <=Int MAX_BYTE_MATH_SIZE
      andBool lengthBytes(B) <=Int MAX_BYTE_MATH_SIZE
-     andBool lengthBytes(B) >Int 0
+     andBool Bytes2Int(B, BE, Unsigned) >Int 0
 
   rule <k> b% => #panic(DIV_BY_ZERO) ... </k>
        <stack> B:Bytes : _:Bytes : _  </stack>
@@ -2724,7 +2754,7 @@ Stateful TEAL Operations
              <genesisID>    .Bytes                                   </genesisID>
              <lease>        .Bytes                                   </lease>
              <note>         .Bytes                                   </note>
-             <rekeyTo>      getGlobalField(ZeroAddress)              </rekeyTo>
+             <rekeyTo>      PARAM_ZERO_ADDR                          </rekeyTo>
            </txHeader>
            <txnTypeSpecificFields>
              .Bag
@@ -2763,7 +2793,7 @@ Stateful TEAL Operations
              <genesisID>    .Bytes                                   </genesisID>
              <lease>        .Bytes                                   </lease>
              <note>         .Bytes                                   </note>
-             <rekeyTo>      getGlobalField(ZeroAddress)              </rekeyTo>
+             <rekeyTo>      PARAM_ZERO_ADDR                          </rekeyTo>
            </txHeader>
            <txnTypeSpecificFields>
              .Bag

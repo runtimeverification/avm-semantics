@@ -22,6 +22,7 @@ claim
           <typeEnum> @ pay </typeEnum>
           <groupID> GROUP_ID:String </groupID>
           <groupIdx> 0 </groupIdx>
+          <rekeyTo> PARAM_ZERO_ADDR </rekeyTo>
           ...
         </txHeader>
         <txnTypeSpecificFields>
@@ -101,6 +102,7 @@ claim
       <accountsMap>
         <account>
           <address> SENDER_ADDRESS:Bytes => ?_ </address>
+          <key> PARAM_ZERO_ADDR </key>
           <balance> SENDER_BALANCE:Int => ?_ </balance>
           <minBalance> SENDER_MIN_BALANCE:Int </minBalance>
           <appsCreated> .Bag </appsCreated>
@@ -118,6 +120,7 @@ claim
         </account>
         <account>
           <address> CREATOR_ADDRESS:Bytes => ?_ </address>
+          <key> PARAM_ZERO_ADDR </key>
           <balance> _ => ?_ </balance>
           <minBalance> _ => ?_ </minBalance>
           <appsCreated>
@@ -220,6 +223,7 @@ END:
         </account>
         <account>
           <address> APP_ADDRESS:Bytes </address>
+          <key> PARAM_ZERO_ADDR </key>
           <balance> APP_BALANCE:Int => ?_ </balance>
           <minBalance> APP_MIN_BALANCE:Int </minBalance>
           <appsCreated> .Bag </appsCreated>

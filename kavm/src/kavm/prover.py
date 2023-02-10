@@ -16,8 +16,10 @@ from hypothesis import HealthCheck, Phase, given, settings
 from hypothesis.control import assume
 from pyk.kast.inner import KApply, KInner, KLabel, KRewrite, KSort, KToken, KVariable, Subst, build_assoc
 from pyk.kast.manip import (
+    flatten_label,
     inline_cell_maps,
     minimize_term,
+    omit_large_tokens,
     push_down_rewrites,
     set_cell,
     split_config_and_constraints,
@@ -502,7 +504,6 @@ class KAVMProof:
         # run(10001)
 
     def prove(self) -> None:
-
         lhs = KApply(
             "<kavm>",
             [
@@ -676,12 +677,13 @@ class KAVMProof:
         proof = KProve(definition_dir=self.kavm._verification_definition, use_directory=self._use_directory)
         proof._symbol_table = symbol_table
 
+        _LOGGER.info(f'Verifying specification for method: {self._claim_name}')
         result = proof.prove_claim(claim=claim, claim_id=self._claim_name)
 
         if type(result) is KApply and result.label.name == "#Top":
-            print(f"Proved {self._claim_name}")
+            _LOGGER.info(f'Successfully verified specifiction for method: {self._claim_name}')
         else:
-            print(f"Failed to prove {self._claim_name}:")
+            _LOGGER.error(f'Failed to verifiy specifiction for method: {self._claim_name}')
             self.report_failure(result, symbol_table)
 
     def report_failure(self, final_term: KInner, symbol_table: Dict):
@@ -690,11 +692,19 @@ class KAVMProof:
         with open(final_config_filename, 'w') as file:
             file.write(pretty_print_kast(minimize_term(inline_cell_maps(final_term)), symbol_table=symbol_table))
         config, constraints = split_config_and_constraints(final_term)
-        symbolic_config, subst = split_config_from(config)
-        print(pretty_print_kast(subst['RETURNSTATUS_CELL'], symbol_table=symbol_table))
-        print('Constraints: ')
-        print(pretty_print_kast(constraints, symbol_table=symbol_table))
-        # print(pretty_print_kast(get_cell(final_term, 'TEAL_CELL'), symbol_table=symbol_table))
+        _, subst = split_config_from(config)
+        try:
+            _LOGGER.info(f"KAVM <returnstatus>: {subst['RETURNSTATUS_CELL'].token}")
+        except Exception:
+            pass
+
+        pretty_constraints = [
+            pretty_print_kast(omit_large_tokens(term), symbol_table=symbol_table)
+            for term in flatten_label('#And', constraints)
+        ]
+        pretty_constraints.reverse()
+        pretty_constraints_str = '\n #And '.join(pretty_constraints)
+        _LOGGER.info(f'Constraints: \n {pretty_constraints_str}')
         _LOGGER.info(f'Pretty printed final configuration to {final_config_filename}')
         scenario = self.generate_scenario()
         _LOGGER.info(f'Writing concrete simulation scenario to {scenario_filename}')
@@ -740,11 +750,11 @@ class AutoProver:
         app_id: int,
         sdk_app_creator_account_dict: Dict,
         sdk_app_account_dict: Dict,
+        method_names: Optional[List[str]] = None,
         use_directory: Optional[Path] = None,
         definition_dir: Optional[Path] = None,
         verification_definition_dir: Optional[Path] = None,
     ):
-
         if use_directory:
             self._use_directory = use_directory
         else:
@@ -796,6 +806,7 @@ class AutoProver:
             pyteal_module = importlib.import_module(pyteal_module_name)
             approval_pgm, clear_pgm, contract = pyteal_module.router.compile_program(version=8)
 
+        method_names = method_names if method_names else [m.name for m in contract.methods]
         approval_pgm_path = self._use_directory / 'approval.teal'
         clear_pgm_path = self._use_directory / 'clear.teal'
         write_to_file(approval_pgm, approval_pgm_path)
@@ -836,6 +847,8 @@ class AutoProver:
                     [labels[i], intToken(i)],
                 )
             )
+
+        contract.methods = [m for m in contract.methods if m.name in method_names]
 
         for method in contract.methods:
             if not isinstance(method, HoareMethod):
