@@ -276,6 +276,35 @@ def exec_kcfg_view(
     app.run()
 
 
+def exec_kcfg_show(
+    definition_dir: Path,
+    spec_file: Path,
+    claim_id: str,
+    spec_module: Optional[str] = None,
+    use_directory: Optional[Path] = None,
+    nodes: Iterable[str] = (),
+    minimize: bool = True,
+    **kwargs: Any,
+) -> None:
+    use_directory = use_directory if use_directory else Path('.kavm')
+    kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory)
+
+    spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').upper()
+
+    claim_label = f'{spec_module}.{claim_id}'
+    cfg_id = f'{claim_label}.kfcg'
+    kcfg = KCFGExplore.read_cfg(cfg_id, use_directory)
+    if kcfg is None:
+        raise ValueError(f'Could not find KCFG in {use_directory} for: {cfg_id}')
+    list(map(print, kcfg.pretty(kavm, minimize=minimize)))
+
+    for node_id in nodes:
+        kast = kcfg.node(node_id).cterm.kast
+        if minimize:
+            kast = minimize_term(kast)
+        print(f'\n\nNode {node_id}:\n\n{kavm.pretty_print(kast)}\n')
+
+
 def exec_kcfg_prove(
     definition_dir: Path,
     spec_file: Path,
@@ -508,6 +537,28 @@ def create_argument_parser() -> ArgumentParser:
     kcfg_view_subparser.add_argument('--definition-dir', dest='definition_dir', type=dir_path)
     kcfg_view_subparser.add_argument('spec_file', type=file_path, help='Path to the K spec file')
     kcfg_view_subparser.add_argument('claim_id', type=str, help='Claim from "spec_file" to prove')
+
+    # kcfg-show
+    kcfg_show_subparser = command_parser.add_parser(
+        'kcfg-show', help='Show detailed output about KCFG', parents=[shared_args]
+    )
+    kcfg_show_subparser.add_argument('--definition-dir', dest='definition_dir', type=dir_path)
+    kcfg_show_subparser.add_argument('spec_file', type=file_path, help='Path to the K spec file')
+    kcfg_show_subparser.add_argument('claim_id', type=str, help='Claim from "spec_file" to prove')
+    kcfg_show_subparser.add_argument(
+        '--node',
+        type=str,
+        dest='nodes',
+        default=[],
+        action='append',
+        help='Node to display more detailed information about.',
+    )
+    kcfg_show_subparser.add_argument(
+        '--minimize', default=True, dest='minimize', action='store_true', help='Minimize node output.'
+    )
+    kcfg_show_subparser.add_argument(
+        '--no-minimize', dest='minimize', action='store_false', help='Do not minimize node output.'
+    )
 
     # kcfg-prove
     kcfg_prove_subparser = command_parser.add_parser(
