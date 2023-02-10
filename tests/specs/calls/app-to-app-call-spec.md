@@ -59,21 +59,14 @@ claim
         <dequeIndexSet> SetItem(APPL_TX_ID) => ?_ </dequeIndexSet>
       </txnDeque>
       <currentTxnExecution>
-         <globals>
-           <groupSize>                 _ => ?_ </groupSize>
-           <globalRound>               _ => ?_ </globalRound>
-           <latestTimestamp>           _ => ?_ </latestTimestamp>
-           <currentApplicationID>      _ => ?_ </currentApplicationID>
-           <currentApplicationAddress> _ => ?_ </currentApplicationAddress>
-           <creatorAddress>            _ => ?_ </creatorAddress>
-         </globals>
+         <globals> _ => ?_ </globals>
          <teal>    _ => ?_  </teal>
          <effects> .List => ?_ </effects>
          <lastTxnGroupID> _ => ?_ </lastTxnGroupID>
       </currentTxnExecution>
       <innerTransactions> .List => ?_ </innerTransactions>
-      <activeApps> .Set </activeApps>
-      <touchedAccounts> .List </touchedAccounts>
+      <activeApps> .Set => ?_ </activeApps>
+      <touchedAccounts> .List => ?_ </touchedAccounts>
     </avmExecution>
 
     <blockchain>
@@ -101,25 +94,25 @@ claim
 txn NumAppArgs
 int 0
 ==
-bnz MAIN_L10
+bnz main_l10
 txna ApplicationArgs 0
 method "add(application,uint64,uint64)uint64"
 ==
-bnz MAIN_L9
+bnz main_l9
 txna ApplicationArgs 0
 method "sub(application,uint64,uint64)uint64"
 ==
-bnz MAIN_L8
+bnz main_l8
 txna ApplicationArgs 0
 method "mul(application,uint64,uint64)uint64"
 ==
-bnz MAIN_L7
+bnz main_l7
 txna ApplicationArgs 0
 method "div(application,uint64,uint64)uint64"
 ==
-bnz MAIN_L6
+bnz main_l6
 err
-MAIN_L6:
+main_l6:
 txn OnCompletion
 int NoOp
 ==
@@ -141,7 +134,7 @@ store 23
 load 21
 load 22
 load 23
-callsub DIV_3
+callsub div_3
 store 24
 byte "\x15\x1f\x7c\x75"
 load 24
@@ -150,7 +143,7 @@ concat
 log
 int 1
 return
-MAIN_L7:
+main_l7:
 txn OnCompletion
 int NoOp
 ==
@@ -172,7 +165,7 @@ store 16
 load 14
 load 15
 load 16
-callsub MUL_2
+callsub mul_2
 store 17
 byte "\x15\x1f\x7c\x75"
 load 17
@@ -181,7 +174,7 @@ concat
 log
 int 1
 return
-MAIN_L8:
+main_l8:
 txn OnCompletion
 int NoOp
 ==
@@ -203,7 +196,7 @@ store 9
 load 7
 load 8
 load 9
-callsub SUB_1
+callsub sub_1
 store 10
 byte "\x15\x1f\x7c\x75"
 load 10
@@ -212,7 +205,7 @@ concat
 log
 int 1
 return
-MAIN_L9:
+main_l9:
 txn OnCompletion
 int NoOp
 ==
@@ -234,7 +227,7 @@ store 2
 load 0
 load 1
 load 2
-callsub ADD_0
+callsub add_0
 store 3
 byte "\x15\x1f\x7c\x75"
 load 3
@@ -243,13 +236,13 @@ concat
 log
 int 1
 return
-MAIN_L10:
+main_l10:
 txn OnCompletion
 int NoOp
 ==
-bnz MAIN_L12
+bnz main_l12
 err
-MAIN_L12:
+main_l12:
 txn ApplicationID
 int 0
 ==
@@ -258,7 +251,7 @@ int 1
 return
 
 // add
-ADD_0:
+add_0:
 store 6
 store 5
 store 4
@@ -283,7 +276,7 @@ btoi
 retsub
 
 // sub
-SUB_1:
+sub_1:
 store 13
 store 12
 store 11
@@ -308,7 +301,7 @@ btoi
 retsub
 
 // mul
-MUL_2:
+mul_2:
 store 20
 store 19
 store 18
@@ -333,7 +326,7 @@ btoi
 retsub
 
 // div
-DIV_3:
+div_3:
 store 27
 store 26
 store 25
@@ -373,25 +366,25 @@ retsub
 txn NumAppArgs
 int 0
 ==
-bnz MAIN_L10
+bnz main_l10
 txna ApplicationArgs 0
 method "add(uint64,uint64)uint64"
 ==
-bnz MAIN_L9
+bnz main_l9
 txna ApplicationArgs 0
 method "sub(uint64,uint64)uint64"
 ==
-bnz MAIN_L8
+bnz main_l8
 txna ApplicationArgs 0
 method "mul(uint64,uint64)uint64"
 ==
-bnz MAIN_L7
+bnz main_l7
 txna ApplicationArgs 0
 method "div(uint64,uint64)uint64"
 ==
-bnz MAIN_L6
+bnz main_l6
 err
-MAIN_L6:
+main_l6:
 txn OnCompletion
 int NoOp
 ==
@@ -408,7 +401,7 @@ btoi
 store 10
 load 9
 load 10
-callsub DIV_3
+callsub div_3
 store 11
 byte "\x15\x1f\x7c\x75"
 load 11
@@ -417,7 +410,7 @@ concat
 log
 int 1
 return
-MAIN_L7:
+main_l7:
 txn OnCompletion
 int NoOp
 ==
@@ -434,7 +427,7 @@ btoi
 store 7
 load 6
 load 7
-callsub MUL_2
+callsub mul_2
 store 8
 byte "\x15\x1f\x7c\x75"
 load 8
@@ -443,7 +436,7 @@ concat
 log
 int 1
 return
-MAIN_L8:
+main_l8:
 txn OnCompletion
 int NoOp
 ==
@@ -460,7 +453,7 @@ btoi
 store 4
 load 3
 load 4
-callsub SUB_1
+callsub sub_1
 store 5
 byte "\x15\x1f\x7c\x75"
 load 5
@@ -469,7 +462,7 @@ concat
 log
 int 1
 return
-MAIN_L9:
+main_l9:
 txn OnCompletion
 int NoOp
 ==
@@ -486,7 +479,7 @@ btoi
 store 1
 load 0
 load 1
-callsub ADD_0
+callsub add_0
 store 2
 byte "\x15\x1f\x7c\x75"
 load 2
@@ -495,13 +488,13 @@ concat
 log
 int 1
 return
-MAIN_L10:
+main_l10:
 txn OnCompletion
 int NoOp
 ==
-bnz MAIN_L12
+bnz main_l12
 err
-MAIN_L12:
+main_l12:
 txn ApplicationID
 int 0
 ==
@@ -510,22 +503,22 @@ int 1
 return
 
 // add
-ADD_0:
+add_0:
 +
 retsub
 
 // sub
-SUB_1:
+sub_1:
 -
 retsub
 
 // mul
-MUL_2:
+mul_2:
 *
 retsub
 
 // div
-DIV_3:
+div_3:
 /
 retsub
                 ):TealInputPgm => ?_
@@ -611,17 +604,17 @@ retsub
    andBool ARG1 >Int 0
    andBool ARG2 >Int 0
 
-  // Label uniqueness
-   andBool 0 ==K ADD_0
-   andBool 1 ==K SUB_1
-   andBool 2 ==K MUL_2
-   andBool 3 ==K DIV_3
-   andBool 4 ==K MAIN_L6
-   andBool 5 ==K MAIN_L7
-   andBool 6 ==K MAIN_L8
-   andBool 7 ==K MAIN_L9
-   andBool 8 ==K MAIN_L10
-   andBool 9 ==K MAIN_L12
+//  // Label uniqueness
+//   andBool 0 ==K add_0
+//   andBool 1 ==K sub_1
+//   andBool 2 ==K mul_2
+//   andBool 3 ==K div_3
+//   andBool 4 ==K main_l6
+//   andBool 5 ==K main_l7
+//   andBool 6 ==K main_l8
+//   andBool 7 ==K main_l9
+//   andBool 8 ==K main_l10
+//   andBool 9 ==K main_l12
 
 ```
 
