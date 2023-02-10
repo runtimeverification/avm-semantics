@@ -256,14 +256,22 @@ def exec_env(
 
 def exec_kcfg_view(
     definition_dir: Path,
-    kcfg_file: Path,
+    spec_file: Path,
+    claim_id: str,
+    spec_module: Optional[str] = None,
     use_directory: Optional[Path] = None,
     **kwargs: Any,
 ) -> None:
     use_directory = use_directory if use_directory else Path('.kavm')
     kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory)
 
-    kcfg = KCFG.from_json(kcfg_file.read_text())
+    spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').upper()
+
+    claim_label = f'{spec_module}.{claim_id}'
+    cfg_id = f'{claim_label}.kfcg'
+    kcfg = KCFGExplore.read_cfg(cfg_id, use_directory)
+    if kcfg is None:
+        raise ValueError(f'Could not find KCFG in {use_directory} for: {cfg_id}')
     app = KCFGViewer(kcfg=kcfg, kprint=kavm, minimize=False)
     app.run()
 
@@ -498,18 +506,17 @@ def create_argument_parser() -> ArgumentParser:
     # kcfg-view
     kcfg_view_subparser = command_parser.add_parser('kcfg-view', help='Explore KCFG', parents=[shared_args])
     kcfg_view_subparser.add_argument('--definition-dir', dest='definition_dir', type=dir_path)
-    kcfg_view_subparser.add_argument('kcfg_file', type=file_path, help='Path to KCFG JSON file')
+    kcfg_view_subparser.add_argument('spec_file', type=file_path, help='Path to the K spec file')
+    kcfg_view_subparser.add_argument('claim_id', type=str, help='Claim from "spec_file" to prove')
 
     # kcfg-prove
     kcfg_prove_subparser = command_parser.add_parser(
         'kcfg-prove', help='Prove a claim using RPC-based prover. Generate KCFG for the claim.', parents=[shared_args]
     )
     kcfg_prove_subparser.add_argument('--definition-dir', dest='definition_dir', type=dir_path)
-    kcfg_prove_subparser.add_argument(
-        '--claim-id', dest='claim_id', required=True, type=str, help='Claim from "spec_file" to prove'
-    )
-    kcfg_prove_subparser.add_argument('--port', dest='kore_rpc_port', required=True, type=int, help='Port for kore-rpc')
     kcfg_prove_subparser.add_argument('spec_file', type=file_path, help='Path to the K spec file')
+    kcfg_prove_subparser.add_argument('claim_id', type=str, help='Claim from "spec_file" to prove')
+    kcfg_prove_subparser.add_argument('--port', dest='kore_rpc_port', required=True, type=int, help='Port for kore-rpc')
 
     return parser
 
