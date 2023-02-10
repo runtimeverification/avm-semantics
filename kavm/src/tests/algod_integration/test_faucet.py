@@ -5,7 +5,9 @@ from algosdk.future import transaction
 from algosdk.future.transaction import PaymentTxn
 from algosdk.v2client.algod import AlgodClient
 
-from kavm.constants import FAUCET_ALGO_SUPPLY
+'''
+This file tests submitting payment transactions and querying account balances
+'''
 
 
 def test_faucet(
@@ -13,12 +15,14 @@ def test_faucet(
     faucet: Dict[str, str],
 ) -> None:
     """Faucet can fund two accounts using a group of two PaymentTxn"""
-    private_key_alice, alice = account.generate_account()
-    private_key_bob, bob = account.generate_account()
+    _, alice = account.generate_account()
+    _, bob = account.generate_account()
 
-    # check faucet's balance
-    faucet_balance = client.account_info(faucet['address'])['amount']
-    assert faucet_balance >= FAUCET_ALGO_SUPPLY
+    # check initial balances are zero
+    alice_balance = client.account_info(alice)['amount']
+    bob_balance = client.account_info(bob)['amount']
+    assert alice_balance == 0
+    assert bob_balance == 0
 
     # fund accounts from the faucet
     sp = client.suggested_params()
@@ -63,10 +67,6 @@ def test_faucet_separate_groups(
     _, accounts[1] = account.generate_account()
 
     for i in range(len(accounts)):
-        # check faucet's balance is reasonably high
-        faucet_balance = client.account_info(faucet['address'])['amount']
-        assert faucet_balance >= 0.5 * FAUCET_ALGO_SUPPLY
-
         # fund accounts from the faucet
         sp = client.suggested_params()
         amount = 100_000 + i

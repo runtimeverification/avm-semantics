@@ -1,14 +1,46 @@
-from typing import Dict, Optional
+from pathlib import Path
+from typing import Dict, Optional, Union
 
 from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, Subst, build_assoc
 from pyk.kast.manip import split_config_from
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
+from pyk.utils import dequote_str
 
 from kavm.adaptors.teal_key_value import raw_list_state_to_dict_bytes_bytes, raw_list_state_to_dict_bytes_ints
 from kavm.constants import MIN_BALANCE
 from kavm.kavm import KAVM
-from kavm.pyk_utils import algorand_address_to_k_bytes, map_bytes_bytes, map_bytes_ints
+from kavm.pyk_utils import algorand_address_to_k_bytes, map_bytes_bytes, map_bytes_ints, token_or_expr
+
+
+def preprocess_teal_program(term: KInner) -> KInner:
+    '''Preprocess parsed TEAL program by converting hex tokens to strings'''
+
+    def preprocess_teal_program_impl(term: KInner) -> KInner:
+        def hex_token_to_k_string(ht: str) -> str:
+            string = ""
+            for i in range(0, len(ht), 2):
+                string += "\\x"
+                string += ht[i] + ht[i + 1]
+            return string
+
+        if type(term) is KApply:
+            if len(term.args) == 0:
+                return term
+            else:
+                result = KApply(label=term.label, args=[preprocess_teal_program_impl(arg) for arg in term.args])
+                return result
+        else:
+            if type(term) is KToken:
+                if term.sort == KSort(name="HexToken"):
+                    return stringToken(dequote_str(hex_token_to_k_string(term.token[2:])))
+
+                else:
+                    return term
+            else:
+                return term
+
+    return preprocess_teal_program_impl(term)
 
 
 class KAVMTermFactory:
@@ -25,7 +57,7 @@ class KAVMTermFactory:
                 'ASSETID_CELL': intToken(sdk_asset_dict['index']),
                 'ASSETNAME_CELL': stringToken(sdk_asset_dict['params']['name']),
                 'ASSETUNITNAME_CELL': stringToken(sdk_asset_dict['params']['unit-name']),
-                'ASSETTOTAL_CELL': intToken(sdk_asset_dict['params']['total']),
+                'ASSETTOTAL_CELL': token_or_expr(intToken, sdk_asset_dict['params']['total']),
                 'ASSETDECIMALS_CELL': intToken(sdk_asset_dict['params']['decimals']),
                 'ASSETDEFAULTFROZEN_CELL': intToken(1) if sdk_asset_dict['params']['default-frozen'] else intToken(0),
                 'ASSETURL_CELL': stringToken(sdk_asset_dict['params']['url']),
@@ -49,7 +81,7 @@ class KAVMTermFactory:
         sdk_fields_subst = Subst(
             {
                 'OPTINASSETID_CELL': intToken(sdk_asset_holding['asset-id']),
-                'OPTINASSETBALANCE_CELL': intToken(sdk_asset_holding['amount']),
+                'OPTINASSETBALANCE_CELL': token_or_expr(intToken, sdk_asset_holding['amount']),
                 'OPTINASSETFROZEN_CELL': intToken(1) if sdk_asset_holding['is-frozen'] else intToken(0),
             }
         )
@@ -58,7 +90,12 @@ class KAVMTermFactory:
 
         return opt_in_asset_cell
 
-    def account_cell(self, sdk_account_dict: Dict, symbolic_fields_subst: Optional[Subst] = None) -> KInner:
+    def account_cell(
+        self,
+        sdk_account_dict: Dict,
+        teal_sources_dir: Path,
+        symbolic_fields_subst: Optional[Subst] = None,
+    ) -> KInner:
         symbolic_fields_subst = symbolic_fields_subst if symbolic_fields_subst else Subst({})
 
         symbolic_account_cell, default_fields_subst = split_config_from(
@@ -74,8 +111,8 @@ class KAVMTermFactory:
         sdk_fields_subst = Subst(
             {
                 'ADDRESS_CELL': algorand_address_to_k_bytes(sdk_account_dict['address']),
-                'BALANCE_CELL': intToken(sdk_account_dict['amount']),
-                'MINBALANCE_CELL': intToken(sdk_account_dict['min-balance'])
+                'BALANCE_CELL': token_or_expr(intToken, sdk_account_dict['amount']),
+                'MINBALANCE_CELL': token_or_expr(intToken, sdk_account_dict['min-balance'])
                 if 'min-balance' in sdk_account_dict
                 else intToken(MIN_BALANCE),
                 'ROUND_CELL': intToken(sdk_account_dict['round'])
@@ -96,7 +133,7 @@ class KAVMTermFactory:
                 'APPSCREATED_CELL': build_assoc(
                     KToken('.Bag', 'AppMapCell'),
                     '_AppCellMap_',
-                    [self.app_cell(sdk_app) for sdk_app in sdk_account_dict['created-apps']],
+                    [self.app_cell(sdk_app, teal_sources_dir) for sdk_app in sdk_account_dict['created-apps']],
                 ),
                 'APPSOPTEDIN_CELL': build_assoc(
                     KToken('.Bag', 'OptInAppMapCell'),
@@ -121,7 +158,9 @@ class KAVMTermFactory:
 
         return account_cell
 
-    def app_cell(self, sdk_app_dict: Dict, symbolic_fields_subst: Optional[Subst] = None) -> KInner:
+    def app_cell(
+        self, sdk_app_dict: Dict, teal_sources_dir: Path, symbolic_fields_subst: Optional[Subst] = None
+    ) -> KInner:
         symbolic_fields_subst = symbolic_fields_subst if symbolic_fields_subst else Subst({})
 
         symbolic_app_cell, _ = split_config_from(self._kavm.definition.init_config(KSort('AppCellMap')))
@@ -154,17 +193,33 @@ class KAVMTermFactory:
             global_bytes = {}
             global_ints = {}
 
+        try:
+            approval_pgm_path = teal_sources_dir / sdk_app_dict['params']['approval-program']
+            approval_pgm_term = preprocess_teal_program(
+                self._kavm.kore_to_kast(self._kavm.parse_teal(approval_pgm_path))
+            )
+        except Exception as e:
+            approval_pgm_term = KApply(
+                label=KLabel(name='int__TEAL-OPCODES_PseudoOpCode_PseudoTUInt64', params=()),
+                args=[KToken(token='0', sort=KSort(name='Int'))],
+            )
+            raise e
+        try:
+            clear_pgm_path = teal_sources_dir / sdk_app_dict['params']['clear-state-program']
+            clear_pgm_term = preprocess_teal_program(self._kavm.kore_to_kast(self._kavm.parse_teal(clear_pgm_path)))
+
+        except Exception as e:
+            clear_pgm_term = KApply(
+                label=KLabel(name='int__TEAL-OPCODES_PseudoOpCode_PseudoTUInt64', params=()),
+                args=[KToken(token='0', sort=KSort(name='Int'))],
+            )
+            raise e
+
         sdk_fields_subst = Subst(
             {
                 'APPID_CELL': intToken(sdk_app_dict['id']),
-                'APPROVALPGMSRC_CELL': KApply(
-                    label=KLabel(name='int__TEAL-OPCODES_PseudoOpCode_PseudoTUInt64', params=()),
-                    args=[KToken(token='0', sort=KSort(name='Int'))],
-                ),
-                'CLEARSTATEPGMSRC_CELL': KApply(
-                    label=KLabel(name='int__TEAL-OPCODES_PseudoOpCode_PseudoTUInt64', params=()),
-                    args=[KToken(token='0', sort=KSort(name='Int'))],
-                ),
+                'APPROVALPGMSRC_CELL': approval_pgm_term,
+                'CLEARSTATEPGMSRC_CELL': clear_pgm_term,
                 'APPROVALPGM_CELL': stringToken(sdk_app_dict['params']['approval-program']),
                 'CLEARSTATEPGM_CELL': stringToken(sdk_app_dict['params']['clear-state-program']),
                 'GLOBALNUMINTS_CELL': intToken(global_num_uint),
@@ -193,3 +248,18 @@ class KAVMTermFactory:
         opt_in_app_cell = sdk_fields_subst.compose(symbolic_fields_subst).apply(symbolic_opt_in_app_cell)  # type: ignore
 
         return opt_in_app_cell
+
+    @staticmethod
+    def range_uint(width: int, term: KInner) -> KApply:
+        return KApply('#rangeUInt(_,_)_MACROS_Bool_Int_Int', [intToken(width), term])
+
+    @staticmethod
+    def range(lower_bound: Union[int, KInner], upper_bound: Union[int, KInner], term: KInner) -> KApply:
+        return KApply(
+            '#range(_<=_<=_)_MACROS_Bool_Int_Int_Int',
+            [token_or_expr(intToken, lower_bound), term, token_or_expr(intToken, upper_bound)],
+        )
+
+    @staticmethod
+    def pow64() -> KApply:
+        return KApply('pow64_MACROS_Int', [])

@@ -117,9 +117,15 @@ jobs:
       - name: 'Test AVM semantics --- proofs --- opcodes'
         run: |
            docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-opcode-prove'
+      - name: 'Test AVM semantics --- proofs --- transactions'
+        run: |
+           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-transactions-prove'
       - name: 'Test AVM semantics --- proofs --- app calls'
         run: |
            docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-calls-prove'
+      - name: 'Test AVM semantics --- proofs --- PyTeal generated'
+        run: |
+           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'THREADS=4 make test-pyteal-prove'
       # - name: 'Test AVM semantics --- proofs --- simple'
       #   run: |
       #     docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-simple-prove'
