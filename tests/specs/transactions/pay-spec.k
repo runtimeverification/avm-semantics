@@ -30,7 +30,7 @@ claim [pay]:
           </txnTypeSpecificFields>
           <resume> false </resume>
           ...
-        </transaction>
+        </transaction> => ?_
     </transactions>
 
     <avmExecution>
