@@ -435,6 +435,12 @@ test-kavm-bison-parsers:
 test-kavm-avm-simulation:
 	$(MAKE) test-scenarios -C $(PY_KAVM_DIR)
 
+############################################
+## AVM PyTeal-generated Symbolic Proof Tests
+############################################
+test-pyteal-prove:
+	$(MAKE) test-generated-claims -C $(PY_KAVM_DIR)
+
 ###########################
 ## AVM Symbolic Proof Tests
 ###########################
