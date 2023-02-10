@@ -277,7 +277,9 @@ def exec_kcfg_prove(
     use_directory: Optional[Path] = None,
     **kwargs: Any,
 ) -> None:
-    use_directory = use_directory if use_directory else Path('.kavm')
+    default_kavm_dir = Path('.kavm')
+    default_kavm_dir.mkdir(parents=True, exist_ok=True)
+    use_directory = use_directory if use_directory else default_kavm_dir
     kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory)
 
     spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').upper()
