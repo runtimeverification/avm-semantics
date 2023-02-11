@@ -10,7 +10,7 @@ from pathlib import Path
 from subprocess import CalledProcessError
 from typing import Any, Callable, Dict, Final, Iterable, List, Optional, TypeVar
 
-from pyk.cli_utils import dir_path, file_path
+from pyk.cli_utils import BugReport, dir_path, file_path
 from pyk.kast.inner import KApply
 from pyk.kast.manip import minimize_term
 from pyk.kcfg.explore import KCFGExplore
@@ -317,7 +317,8 @@ def exec_kcfg_prove(
     default_kavm_dir = Path('.kavm')
     default_kavm_dir.mkdir(parents=True, exist_ok=True)
     use_directory = use_directory if use_directory else default_kavm_dir
-    kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory)
+    bug_report = BugReport(Path('kavm-bug'))
+    kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory, bug_report=bug_report)
 
     spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').upper()
     claim_label = f'{spec_module}.{claim_id}'
@@ -326,8 +327,8 @@ def exec_kcfg_prove(
     cfg = KCFG.from_claim(kavm.definition, claims[0])
     cfg_id = f'{claim_label}.kfcg'
 
-    with KCFGExplore(kavm, kore_rpc_port, bug_report=kavm._bug_report) as kcfg_explore:
-        kcfg_explore.all_path_reachability_prove(cfg_id, cfg, cfg_dir=kavm.use_directory)
+    with KCFGExplore(kavm, kore_rpc_port, bug_report=bug_report) as kcfg_explore:
+        kcfg_explore.all_path_reachability_prove(cfg_id, cfg, cfg_dir=kavm.use_directory, execute_depth=1)
 
 
 def main() -> None:

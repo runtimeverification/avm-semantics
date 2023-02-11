@@ -6,7 +6,7 @@ from pathlib import Path
 from subprocess import CompletedProcess
 from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union, cast
 
-from pyk.cli_utils import run_process
+from pyk.cli_utils import BugReport, run_process
 from pyk.kast.inner import KSort, KToken
 from pyk.kast.manip import get_cell
 from pyk.kore import syntax as kore
@@ -35,10 +35,16 @@ class KAVM(KRun, KProve):
         profile: bool = False,
         verification_definition_dir: Optional[Path] = None,
         main_file: Optional[Path] = None,
+        bug_report: Optional[BugReport] = None,
     ) -> None:
-        KRun.__init__(self, definition_dir, use_directory=use_directory, profile=profile)
+        KRun.__init__(self, definition_dir, use_directory=use_directory, profile=profile, bug_report=bug_report)
         KProve.__init__(
-            self, verification_definition_dir, use_directory=use_directory, main_file=main_file, profile=profile
+            self,
+            verification_definition_dir,
+            use_directory=use_directory,
+            main_file=main_file,
+            profile=profile,
+            bug_report=bug_report,
         ) if verification_definition_dir else None
 
         self._catcat_parser = definition_dir / 'catcat'
