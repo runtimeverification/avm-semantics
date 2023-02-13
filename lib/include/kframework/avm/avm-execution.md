@@ -62,23 +62,36 @@ and the current configuration is frozen for examination.
   syntax AlgorandCommand ::= #evalFirstTx()
                            | #evalNextTx()
 
-  rule <k> #evalFirstTx() => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalNextTx() ... </k>
+  rule <k> #evalFirstTx() => #getNextTxn() ~> #startTx() ~> #evalTx() ~> #popTxnFront() ~> #endTx() ~> #evalNextTx() ... </k>
        <deque> TXN_DEQUE </deque>
     requires TXN_DEQUE =/=K .List
 
-  rule <k> #evalNextTx() => #getNextTxn() ~> #evalTx() ~> #popTxnFront() ~> #evalNextTx() ... </k>
+  rule <k> #evalNextTx() => #getNextTxn() ~> #startTx() ~> #evalTx() ~> #popTxnFront() ~> #endTx() ~> #evalNextTx() ... </k>
        <deque> TXN_DEQUE </deque>
     requires TXN_DEQUE =/=K .List andBool (getTxnGroupID(getNextTxnID()) ==K getTxnGroupID(getCurrentTxn()))
 
   // Finish executing inner transaction group and resume next outer layer
-  rule <k> #evalNextTx() => #getNextTxn() ~> #evalTx() ... </k>
+  rule <k> #evalNextTx() => #getNextTxn() ~> #startTx() ~> #evalTx() ~> #endTx() ... </k>
        <deque> TXN_DEQUE </deque>
     requires TXN_DEQUE =/=K .List andBool (getTxnGroupID(getNextTxnID()) =/=K getTxnGroupID(getCurrentTxn()))
 
   // Minimum balances are only checked at the conclusion of the outer-level group.
-  rule <k> #evalNextTx() => #checkSufficientBalance() ... </k>
+  rule <k> #evalNextTx() => #startTx() ~> #checkSufficientBalance() ~> #endTx() ... </k>
        <returncode> _ => 0 </returncode>
        <deque> .List </deque>
+```
+
+#### Dummy service rules for `KCFG`
+
+The the `#startTx()` and `#endTx()` rules serve as markers of the start and end of transaction execution.
+We'll use them to save the node holding transaction's pre- and post-states in `KCFG`.
+
+```k
+  syntax AlgorandCommand ::= #startTx()
+                           | #endTx()
+  //-----------------------------------
+  rule [starttx]: <k> #startTx() => .K ... </k>
+  rule [endtx]:   <k> #endTx()   => .K ... </k>
 ```
 
 ### Executing next transaction
@@ -94,13 +107,17 @@ All transactions will be signed, either by a normal account or by a logic signat
 The signature verification process will either check the signature itself, or evaluate
 the attached stateless TEAL if the transaction is logicsig-signed (**not implemented**).
 
+#### Non-`appl` transaction
+
+Rule for transaction that don't execute TEAL (we do not implement logic signatures yet)
+
 ```k
   syntax AlgorandCommand ::= #evalTx()
   //----------------------------------
-  rule <k> #evalTx() => 
-             #checkTxnSignature() 
-          ~> #executeTxn(TXN_TYPE) 
-       ... 
+  rule <k> #evalTx()
+        => #checkTxnSignature()
+        ~> #executeTxn(TXN_TYPE)
+        ...
        </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
@@ -111,12 +128,18 @@ the attached stateless TEAL if the transaction is logicsig-signed (**not impleme
        </transaction>
        <touchedAccounts> TA => addToListNoDup(SENDER_ADDR, TA) </touchedAccounts>
    requires TXN_TYPE =/=K @appl
+```
 
-  rule <k> #evalTx() => 
-             #initContext()
-          ~> #checkTxnSignature() 
-          ~> #executeTxn(TXN_TYPE) 
-       ... 
+#### `appl` transaction
+
+Execute application call
+
+```k
+  rule <k> #evalTx()
+        => #initContext()
+        ~> #checkTxnSignature()
+        ~> #executeTxn(TXN_TYPE)
+        ...
        </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
@@ -128,8 +151,16 @@ the attached stateless TEAL if the transaction is logicsig-signed (**not impleme
        </transaction>
        <touchedAccounts> TA => addToListNoDup(SENDER_ADDR, TA) </touchedAccounts>
    requires TXN_TYPE ==K @appl
+```
 
-  rule <k> #evalTx() => #restoreContext() ~> #evalTeal() ... </k>
+Resume application call after returning from an inner group
+
+```k
+  rule  <k> #evalTx()
+         => #restoreContext()
+         ~> #evalTeal()
+         ...
+       </k>
        <currentTx> TXN_ID </currentTx>
        <transaction>
          <txID> TXN_ID </txID>
@@ -140,7 +171,6 @@ the attached stateless TEAL if the transaction is logicsig-signed (**not impleme
        </transaction>
        <touchedAccounts> TA => addToListNoDup(SENDER_ADDR, TA) </touchedAccounts>
    requires TXN_TYPE ==K @appl
-
 ```
 
 #### Check signature
