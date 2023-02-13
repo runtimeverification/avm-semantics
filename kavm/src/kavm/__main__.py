@@ -265,7 +265,7 @@ def exec_kcfg_view(
     use_directory = use_directory if use_directory else Path('.kavm')
     kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory)
 
-    spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').upper()
+    spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').removesuffix('.md').upper()
 
     claim_label = f'{spec_module}.{claim_id}'
     cfg_id = f'{claim_label}.kfcg'
@@ -289,7 +289,7 @@ def exec_kcfg_show(
     use_directory = use_directory if use_directory else Path('.kavm')
     kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory)
 
-    spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').upper()
+    spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').removesuffix('.md').upper()
 
     claim_label = f'{spec_module}.{claim_id}'
     cfg_id = f'{claim_label}.kfcg'
@@ -321,7 +321,7 @@ def exec_kcfg_prove(
     bug_report_path = BugReport(use_directory / 'kavm-bug') if bug_report else None
     kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory, bug_report=bug_report_path)
 
-    spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').upper()
+    spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').removesuffix('.md').upper()
     claim_label = f'{spec_module}.{claim_id}'
     claims = kavm.get_claims(spec_file, spec_module_name=spec_module, claim_labels=[claim_label])
 
