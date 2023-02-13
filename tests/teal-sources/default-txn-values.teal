@@ -1,0 +1,19 @@
+#pragma version 8
+
+txn AssetSender
+global ZeroAddress
+==
+assert
+
+txn ConfigAssetTotal
+int 0
+==
+assert
+
+txn ConfigAssetName
+byte ""
+==
+assert
+
+int 1
+return
