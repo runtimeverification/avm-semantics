@@ -310,6 +310,7 @@ def exec_kcfg_prove(
     spec_file: Path,
     claim_id: str,
     kore_rpc_port: int,
+    bug_report: bool = False,
     spec_module: Optional[str] = None,
     use_directory: Optional[Path] = None,
     **kwargs: Any,
@@ -317,8 +318,8 @@ def exec_kcfg_prove(
     default_kavm_dir = Path('.kavm')
     default_kavm_dir.mkdir(parents=True, exist_ok=True)
     use_directory = use_directory if use_directory else default_kavm_dir
-    bug_report = BugReport(Path('kavm-bug'))
-    kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory, bug_report=bug_report)
+    bug_report_path = BugReport(use_directory / 'kavm-bug') if bug_report else None
+    kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory, bug_report=bug_report_path)
 
     spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').upper()
     claim_label = f'{spec_module}.{claim_id}'
@@ -571,6 +572,7 @@ def create_argument_parser() -> ArgumentParser:
         'kcfg-prove', help='Prove a claim using RPC-based prover. Generate KCFG for the claim.', parents=[shared_args]
     )
     kcfg_prove_subparser.add_argument('--definition-dir', dest='definition_dir', type=dir_path)
+    kcfg_prove_subparser.add_argument('--bug-report', dest='bug_report', default=False, action='store_true')
     kcfg_prove_subparser.add_argument('spec_file', type=file_path, help='Path to the K spec file')
     kcfg_prove_subparser.add_argument('claim_id', type=str, help='Claim from "spec_file" to prove')
     kcfg_prove_subparser.add_argument('--port', dest='kore_rpc_port', required=True, type=int, help='Port for kore-rpc')
