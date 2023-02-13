@@ -327,8 +327,13 @@ def exec_kcfg_prove(
     cfg = KCFG.from_claim(kavm.definition, claims[0])
     cfg_id = f'{claim_label}.kfcg'
 
-    with KCFGExplore(kavm, kore_rpc_port, bug_report=bug_report) as kcfg_explore:
-        kcfg_explore.all_path_reachability_prove(cfg_id, cfg, cfg_dir=kavm.use_directory, execute_depth=1)
+    with KCFGExplore(kavm, kore_rpc_port, bug_report=bug_report_path) as kcfg_explore:
+        kcfg_explore.all_path_reachability_prove(
+            cfg_id,
+            cfg,
+            cfg_dir=kavm.use_directory,
+            terminal_rules=['AVM-EXECUTION.starttx', 'AVM-EXECUTION.endtx', 'AVM-PANIC.panic'],
+        )
 
 
 def main() -> None:
