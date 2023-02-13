@@ -76,7 +76,7 @@ and the current configuration is frozen for examination.
     requires TXN_DEQUE =/=K .List andBool (getTxnGroupID(getNextTxnID()) =/=K getTxnGroupID(getCurrentTxn()))
 
   // Minimum balances are only checked at the conclusion of the outer-level group.
-  rule <k> #evalNextTx() => #startTx() ~> #checkSufficientBalance() ~> #endTx() ... </k>
+  rule <k> #evalNextTx() => #checkSufficientBalance() ~> #endTx() ... </k>
        <returncode> _ => 0 </returncode>
        <deque> .List </deque>
 ```
