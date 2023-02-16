@@ -407,8 +407,21 @@ TODO: address contact creation.
   rule <k> #evalTeal() => #startExecution() ... </k>
 
   syntax AlgorandCommand ::= #loadInputPgm( TealInputPgm )
+  syntax AlgorandCommand ::= #checkDuplicateLabels()
 
-  rule <k> #loadInputPgm(PGM) => OpaqueTeal(PGM) ...</k>
+  rule <k> #loadInputPgm(PRAGMAS:TealPragmas PGM:TealPgm) => #checkDuplicateLabels() ...</k>
+       <program> _ => loadProgramCell(PGM, 0) </program>
+       <labels> _ => loadLabelsCell(PGM, 0, .Map) </labels>
+       <version> _ => loadVersionCell(PRAGMAS) </version>
+
+  rule <k> #loadInputPgm(PGM:TealPgm) => #checkDuplicateLabels() ...</k>
+       <program> _ => loadProgramCell(PGM, 0) </program>
+       <labels> _ => loadLabelsCell(PGM, 0, .Map) </labels>
+       <version> _ => 8 </version>
+
+  rule <k> #checkDuplicateLabels() => #panic(DUPLICATE_LABEL) ... </k>
+       <labels> duplicate-label </labels>
+  rule <k> #checkDuplicateLabels() => . ... </k> [owise]
 ```
 
 ##### Stateless
