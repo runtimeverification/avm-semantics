@@ -26,9 +26,6 @@ module AVM-CONFIGURATION
       <returncode exit=""> 4 </returncode> // the simulator exit code
       <returnstatus> "":String </returnstatus> // the exit status message
 
-      // The transaction group as submitted
-      <transactions/>
-
       // Transaction can create inner transactions, and we chose to treat them similarly to the outer ones.
       // We add them into an execution deque --- inner transactions are executed right after their parent one.
       // Initially, the execution deque will contain the transactions from the submitted group (up to `MaxTxGroupSize`, 16 currently).
@@ -82,6 +79,9 @@ module AVM-CONFIGURATION
         <touchedAccounts> .List </touchedAccounts>
 
       </avmExecution>
+
+      // The transaction group as submitted
+      <transactions/>
 
       // The blockchain state will be incrementally updated after
       // each transaction in the group. If one of the transactions fails,
