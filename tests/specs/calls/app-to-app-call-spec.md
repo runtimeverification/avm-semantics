@@ -5,7 +5,7 @@ module APP-TO-APP-CALL-SPEC
 
 ```k
 
-claim
+claim [main]:
   <kavm>
 
     <k> #initGlobals() ~> #evalTxGroup() => . </k>
@@ -67,7 +67,20 @@ claim
            <currentApplicationAddress> _ => ?_ </currentApplicationAddress>
            <creatorAddress>            _ => ?_ </creatorAddress>
          </globals>
-         <teal>    _ => ?_  </teal>
+         <teal>
+           <pc> 0 => ?_ </pc>
+           <program> .Map  => ?_ </program>
+           <mode> undefined  => ?_ </mode>
+           <version> 1  => ?_ </version>
+           <stack> .TStack  => ?_ </stack>
+           <stacksize> 0  => ?_ </stacksize>
+           <jumped> false  => ?_ </jumped>
+           <labels> .Map  => ?_ </labels>
+           <callStack> .List  => ?_ </callStack>
+           <scratch> .Map  => ?_ </scratch>
+           <intcblock> .Map  => ?_ </intcblock>
+           <bytecblock> .Map  => ?_ </bytecblock>
+         </teal>
          <effects> .List => ?_ </effects>
          <lastTxnGroupID> _ => ?_ </lastTxnGroupID>
       </currentTxnExecution>

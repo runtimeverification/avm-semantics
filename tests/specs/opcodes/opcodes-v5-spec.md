@@ -232,8 +232,8 @@ claim <k> log => . </k>
               <txHeader>
                  <fee> 0 </fee>
                  <sender> b"application1" </sender>
-                 <firstValid> 0 </firstValid>
-                 <lastValid> 100 </lastValid>
+                 <firstValid> ?_ </firstValid>
+                 <lastValid> ?_ </lastValid>
                  <genesisHash> .Bytes </genesisHash>
                  <txType> "unknown" </txType>
                  <typeEnum> 0 </typeEnum>

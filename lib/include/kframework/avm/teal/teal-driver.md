@@ -2744,8 +2744,11 @@ Stateful TEAL Operations
              // TODO Fee is calculated dynamically
              <fee>         0                                         </fee>
              <sender>      getGlobalField(CurrentApplicationAddress) </sender>
-             <firstValid>  getTxnField(getCurrentTxn(), FirstValid)  </firstValid>
-             <lastValid>   getTxnField(getCurrentTxn(), LastValid)  </lastValid>
+             <firstValid>  getDefaultValue(FirstValid)  </firstValid>
+             <lastValid>   getDefaultValue(LastValid)   </lastValid>
+//           TODO: insert First/LastValid from parent TXN once we need them
+//             <firstValid>  getTxnField(getCurrentTxn(), FirstValid)  </firstValid>
+//             <lastValid>   getTxnField(getCurrentTxn(), LastValid)  </lastValid>
              <genesisHash> .Bytes                                    </genesisHash>
              <txType>       "unknown"                                </txType>
              <typeEnum>     0                                        </typeEnum>
