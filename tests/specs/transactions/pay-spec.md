@@ -33,28 +33,6 @@ claim
       <accountsMap>
           (account(SENDER_ADDRESS, SENDER_BALANCE) => account(SENDER_ADDRESS, ?SENDER_BALANCE_POST))
           (account(RECEIVER_ADDRESS, RECEIVER_BALANCE) => account(RECEIVER_ADDRESS, ?RECEIVER_BALANCE_POST))
-//        <account>
-//          <address> SENDER_ADDRESS:Bytes </address>
-//          <balance> SENDER_BALANCE:Int => ?SENDER_BALANCE_POST </balance>
-//          <minBalance> SENDER_MIN_BALANCE:Int </minBalance>
-//          <appsCreated> .Bag </appsCreated>
-//          <appsOptedIn> .Bag </appsOptedIn>
-//          <assetsCreated> .Bag </assetsCreated>
-//          <assetsOptedIn> .Bag </assetsOptedIn>
-//          <boxes> .Bag </boxes>
-//          ...
-//        </account>
-//        <account>
-//          <address> RECEIVER_ADDRESS:Bytes </address>
-//          <balance> RECEIVER_BALANCE:Int => ?RECEIVER_BALANCE_POST </balance>
-//          <minBalance> RECEIVER_MIN_BALANCE:Int </minBalance>
-//          <appsCreated> .Bag </appsCreated>
-//          <appsOptedIn> .Bag </appsOptedIn>
-//          <assetsCreated> .Bag </assetsCreated>
-//          <assetsOptedIn> .Bag </assetsOptedIn>
-//          <boxes> .Bag </boxes>
-//          ...
-//        </account>
       </accountsMap>
       <txnIndexMap> .Bag => ?_ </txnIndexMap>
       <nextTxnID> 1 => ?_ </nextTxnID>
