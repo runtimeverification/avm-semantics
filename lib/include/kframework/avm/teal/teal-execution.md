@@ -84,7 +84,7 @@ The parsed TEAL pragmas and program are supplied to the `#loadInputPgm` rule tha
 
 * calls the `loadProgramCell` function to transform the program into a `Map` from program counter values to opcodes
 * calls the `loadLabelsCell` to extract the `Map` from labels to program counter values
-* if pragmas are supplied, loads the version
+* if pragmas are supplied, loads the version; otherwise sets the version to `PARAM_DEFAULT_TEAL_VERSION`
 * panics if duplicate labels were discovered by the `loadLabelsCell` function
 
 ```k
@@ -99,7 +99,7 @@ The parsed TEAL pragmas and program are supplied to the `#loadInputPgm` rule tha
   rule <k> #loadInputPgm(PGM:TealPgm) => #checkDuplicateLabels() ...</k>
        <program> _ => loadProgramCell(PGM, 0)      </program>
        <labels>  _ => loadLabelsCell(PGM, 0, .Map) </labels>
-       <version> _ => 8                            </version>
+       <version> _ => PARAM_DEFAULT_TEAL_VERSION   </version>
 ```
 
 ```k
