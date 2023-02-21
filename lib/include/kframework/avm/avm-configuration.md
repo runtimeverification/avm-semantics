@@ -170,6 +170,10 @@ To perform jumps, we maintain a map of labels to their program addresses and a `
        <labels> LL </labels>
 ```
 
+```k
+  syntax LoadLabelsResult ::= Map | "duplicate-label" |  "no-labels"
+```
+
 A subroutine call in TEAL is essentially an unconditional branch to a label, which also saves the program address of the next instruction on the call stack.
 
 ```k
@@ -186,7 +190,7 @@ A subroutine call in TEAL is essentially an unconditional branch to a label, whi
       <stack> .TStack </stack>             // stores UInt64 or Bytes
       <stacksize> 0 </stacksize>           // current stack size
       <jumped> false </jumped>             // `true` if the previous opcode triggered a jump
-      <labels> .Map </labels>              // a map from labels seen so far in a program
+      <labels> no-labels </labels>              // a map from labels seen so far in a program
                                            // to their corresponding program addresses, Label |-> Int
       <callStack> .List </callStack>
       <scratch> .Map </scratch>            // Int |-> TValue
