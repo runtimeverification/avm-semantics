@@ -398,30 +398,11 @@ needs to be evaluated to approve/deny the transaction.
 ##### Stateful
 
 Application call transactions trigger the execution of the contract's approval or clear state program, assuming that the contract exists.
-We do not consider the special case of contract creation (deployment) here, it will be addressed in the later rules.
-TODO: address contact creation.
 
 ```k
   syntax AlgorandCommand ::= #evalTeal()
 
   rule <k> #evalTeal() => #startExecution() ... </k>
-
-  syntax AlgorandCommand ::= #loadInputPgm( TealInputPgm )
-  syntax AlgorandCommand ::= #checkDuplicateLabels()
-
-  rule <k> #loadInputPgm(PRAGMAS:TealPragmas PGM:TealPgm) => #checkDuplicateLabels() ...</k>
-       <program> _ => loadProgramCell(PGM, 0) </program>
-       <labels> _ => loadLabelsCell(PGM, 0, .Map) </labels>
-       <version> _ => loadVersionCell(PRAGMAS) </version>
-
-  rule <k> #loadInputPgm(PGM:TealPgm) => #checkDuplicateLabels() ...</k>
-       <program> _ => loadProgramCell(PGM, 0) </program>
-       <labels> _ => loadLabelsCell(PGM, 0, .Map) </labels>
-       <version> _ => 8 </version>
-
-  rule <k> #checkDuplicateLabels() => #panic(DUPLICATE_LABEL) ... </k>
-       <labels> duplicate-label </labels>
-  rule <k> #checkDuplicateLabels() => . ... </k> [owise]
 ```
 
 ##### Stateless

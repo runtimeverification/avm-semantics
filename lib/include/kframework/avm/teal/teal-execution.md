@@ -80,86 +80,60 @@ there may be some remaining artefacts of the previous transaction's TEAL.
 
 ### Program initialization
 
-The parsed TEAL pragmas and program are initially supplied on the `<k>` cell as
-`TealPragmas` and `TealInputPgm`, wrapped into an `OpaqueTeal` constructor.
+The parsed TEAL pragmas and program are supplied to the `#loadInputPgm` rule that:
+
+* calls the `loadProgramCell` function to transform the program into a `Map` from program counter values to opcodes
+* calls the `loadLabelsCell` to extract the `Map` from labels to program counter values
+* if pragmas are supplied, loads the version
+* panics if duplicate labels were discovered by the `loadLabelsCell` function
 
 ```k
-  syntax Map ::= loadProgramCell(TealPgm, Int) [function]
-  syntax LoadLabelsResult ::= loadLabelsCell(TealPgm, Int, Map)  [function]
-  syntax Int ::= loadVersionCell(TealPragmas) [function]
+  syntax AlgorandCommand ::= #loadInputPgm( TealInputPgm )
+  //------------------------------------------------------
+
+  rule <k> #loadInputPgm(PRAGMAS:TealPragmas PGM:TealPgm) => #checkDuplicateLabels() ...</k>
+       <program> _ => loadProgramCell(PGM, 0)      </program>
+       <labels>  _ => loadLabelsCell(PGM, 0, .Map) </labels>
+       <version> _ => loadVersionCell(PRAGMAS)     </version>
+
+  rule <k> #loadInputPgm(PGM:TealPgm) => #checkDuplicateLabels() ...</k>
+       <program> _ => loadProgramCell(PGM, 0)      </program>
+       <labels>  _ => loadLabelsCell(PGM, 0, .Map) </labels>
+       <version> _ => 8                            </version>
 ```
 
-The `OpaqueTeal` wraps the program source to prevent undesired triggering of program loading
-when naked opcodes are placed onto the `<k>` cell.
+```k
+  syntax AlgorandCommand ::= #checkDuplicateLabels()
+  //------------------------------------------------
+  rule <k> #checkDuplicateLabels() => #panic(DUPLICATE_LABEL) ... </k>
+       <labels> duplicate-label </labels>
+  rule <k> #checkDuplicateLabels() => . ... </k> [owise]
+```
 
-Pragmas are applied directly, and then the `#LoadPgm` performs program pre-processing:
-
-* the program is transformed into a `Map` from program addresses to opcodes and stored
-  into the `<program>` cell;
-* every opcode is checked to be valid for the current execution mode and
-  `#panic(INVALID_OP_FOR_MODE)` is triggered accordingly;
-* the labels are collected and stored into the `<labels>` cell as keys, with their program
-  addresses as values;
-* if a label is encountered twice, the `#panic(DUPLICATE_LABEL)` computation is triggered.
 
 ```k
+  syntax Int ::= loadVersionCell(TealPragmas) [function, total]
+  //-----------------------------------------------------------
   rule loadVersionCell ( #pragma version V _:TealPragmas ) => V
   rule loadVersionCell ( #pragma version V               ) => V
+```
 
-  // Load the teal program into the `<progam>` cell (program memory)
-  syntax KItem ::= #LoadPgm(TealPgm, Int)
-  // ----------------------------------
+```k
+  syntax Map ::= loadProgramCell(TealPgm, Int) [function, total]
+  //------------------------------------------------------------
   rule loadProgramCell( Op:TealOpCodeOrLabel Pgm, PC ) => ((PC |-> Op) loadProgramCell( Pgm, PC +Int 1 ))
   rule loadProgramCell( Op:TealOpCodeOrLabel,     PC ) =>  (PC |-> Op)
+```
 
+```k
+  syntax LoadLabelsResult ::= loadLabelsCell(TealPgm, Int, Map)  [function, total]
+  //------------------------------------------------------------------------------
   rule loadLabelsCell( Op:TealOpCodeOrLabel Pgm, PC, LABELS ) => loadLabelsCell( Pgm, PC +Int 1, LABELS ) requires notBool(isLabelCode(Op))
   rule loadLabelsCell( Op:TealOpCodeOrLabel,     _ , LABELS ) => LABELS                                   requires notBool(isLabelCode(Op))
   rule loadLabelsCell( (L:):LabelCode Pgm, PC, LABELS ) => (loadLabelsCell( Pgm, PC +Int 1, (LABELS (L |-> PC)))) requires notBool (L in_labels LABELS)
   rule loadLabelsCell( (L:):LabelCode,     PC, LABELS ) => (L |-> PC) LABELS requires notBool (L in_labels LABELS)
   rule loadLabelsCell( (L:):LabelCode _,   _,  LABELS ) => duplicate-label requires (L in_labels LABELS)
   rule loadLabelsCell( (L:):LabelCode,     _,  LABELS ) => duplicate-label requires (L in_labels LABELS)
-
-  rule <k> #LoadPgm( (L:) Pgm, PC ) => #LoadPgm( Pgm, PC +Int 1 ) ... </k>
-       <program> PGM => PGM[PC <- (L:):LabelCode] </program>
-       <labels> LL => LL[L <- PC] </labels>
-    requires notBool (L in_labels LL)
-
-  rule <k> #LoadPgm( (L:) _, _ ) => #panic(DUPLICATE_LABEL) ... </k>
-       <labels> LL </labels>
-    requires L in_labels LL
-
-  rule <k> #LoadPgm( Op _, _) => #panic(INVALID_OP_FOR_MODE) ... </k>
-       <mode> Mode </mode>
-    requires notBool #ValidOpForMode( Mode, Op )
-
-  rule <k> #LoadPgm( Op, PC) => .K ... </k>
-       <mode> Mode </mode>
-       <program> PGM => PGM[PC <- Op] </program>
-    requires #ValidOpForMode( Mode, Op )
-     andBool (notBool isLabelCode(Op))
-
-  rule <k> #LoadPgm( (L:) , PC ) => .K ... </k>
-       <program> PGM => PGM[PC <- (L:):LabelCode] </program>
-       <labels> LL => LL[L <- PC] </labels>
-    requires notBool (L in_labels LL)
-
-  rule <k> #LoadPgm( (L:) , _ ) => #panic(DUPLICATE_LABEL) ... </k>
-       <labels> LL </labels>
-    requires L in_labels LL
-
-  rule <k> #LoadPgm( Op, _) => #panic(INVALID_OP_FOR_MODE) ... </k>
-       <mode> Mode </mode>
-    requires notBool #ValidOpForMode( Mode, Op )
-
-  syntax Bool ::= #ValidOpForMode( TealMode, TealOpCodeOrLabel ) [function]
-  // ----------------------------------------------------------------------
-  rule #ValidOpForMode( _M:TealMode, _O:PseudoOpCode ) => true
-  rule #ValidOpForMode( _M:TealMode, _O:OpCode       ) => true
-  rule #ValidOpForMode( _M:TealMode, _L:LabelCode    ) => true
-  rule #ValidOpForMode( stateless,   _O:SigOpCode    ) => true
-  rule #ValidOpForMode( stateful,    _O:AppOpCode    ) => true
-  rule #ValidOpForMode( stateful,    _O:SigOpCode    ) => false
-  rule #ValidOpForMode( stateless,   _O:AppOpCode    ) => false
 ```
 
 TEAL Execution
