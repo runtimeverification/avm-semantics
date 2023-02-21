@@ -428,17 +428,11 @@ needs to be evaluated to approve/deny the transaction.
 ##### Stateful
 
 Application call transactions trigger the execution of the contract's approval or clear state program, assuming that the contract exists.
-We do not consider the special case of contract creation (deployment) here, it will be addressed in the later rules.
-TODO: address contact creation.
 
 ```k
   syntax AlgorandCommand ::= #evalTeal()
 
   rule <k> #evalTeal() => #startExecution() ... </k>
-
-  syntax AlgorandCommand ::= #loadInputPgm( TealInputPgm )
-
-  rule <k> #loadInputPgm(PGM) => OpaqueTeal(PGM) ...</k>
 ```
 
 ##### Stateless

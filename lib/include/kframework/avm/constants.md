@@ -23,6 +23,7 @@ module AVM-CONSTANTS
                | "PARAM_MAX_BYTE_VALUE_SIZE"    [macro]
                | "PARAM_MAX_SUM_KEY_VALUE_SIZE" [macro]
                | "PARAM_MAX_BOX_SIZE"           [macro]
+               | "PARAM_DEFAULT_TEAL_VERSION"   [macro]
 
   syntax Bytes ::= "PARAM_ZERO_ADDR"            [macro]
 ```
@@ -124,6 +125,12 @@ Maximum size of a box storage box
 
 ```k
   rule PARAM_MAX_BOX_SIZE => 32768
+```
+
+Default TEAL version
+
+```k
+  rule PARAM_DEFAULT_TEAL_VERSION => 8
 ```
 
 Zero Address
