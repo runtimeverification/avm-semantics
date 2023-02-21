@@ -347,5 +347,4 @@ module VERIFICATION
 
   rule #Ceil ( Sha512_256raw ( _:String ) ) => #Top [simplification]
 
-
 endmodule
