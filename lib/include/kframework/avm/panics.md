@@ -259,7 +259,8 @@ return code to 3 (see return codes below).
   syntax KItem ::= #panic(Int)
   syntax KItem ::= #stopIfError()
 
-  rule <k> #panic(S) => #stopIfError() ... </k>
+  rule [panic]:
+       <k> #panic(S) => #stopIfError() ... </k>
        <returncode> _ => S </returncode>
        <returnstatus> _ => returnDesc(S) </returnstatus>
 
