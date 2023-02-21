@@ -604,17 +604,6 @@ retsub
    andBool ARG1 >Int 0
    andBool ARG2 >Int 0
 
-//  // Label uniqueness
-//   andBool 0 ==K add_0
-//   andBool 1 ==K sub_1
-//   andBool 2 ==K mul_2
-//   andBool 3 ==K div_3
-//   andBool 4 ==K main_l6
-//   andBool 5 ==K main_l7
-//   andBool 6 ==K main_l8
-//   andBool 7 ==K main_l9
-//   andBool 8 ==K main_l10
-//   andBool 9 ==K main_l12
 
 ```
 
