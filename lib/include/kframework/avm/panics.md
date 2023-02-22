@@ -1,10 +1,8 @@
 ```k
-
 module AVM-PANIC
   imports STRING
   imports INT
   imports AVM-CONFIGURATION
-
 ```
 
 Panic Behaviors
@@ -76,7 +74,6 @@ Panic conditions (1 -- 18 above) are captured by the `panic` computation,
 which carries a message describing the reason for panicking and sets the
 return code to 3 (see return codes below).
 ```k
-
   // Application return types
   syntax Int ::= "SUCCESS" [macro]
                | "ZERO_STACK" [macro]
@@ -138,64 +135,11 @@ return code to 3 (see return codes below).
                | "MISSING_APP_CREATOR" [macro]
                | "APP_ALREADY_ACTIVE" [macro]
                | "INSUFFICIENT_ASSET_BALANCE" [macro]
+```
 
-  syntax String ::= returnDesc(Int) [function]
-  //----------------------------------------------------
-  rule returnDesc(INVALID_OP_FOR_MODE)        => "invalid opcode for current execution mode"
-  rule returnDesc(ERR_OPCODE)                 => "err opcode encountered"
-  rule returnDesc(INT_OVERFLOW)               => "integer overflow"
-  rule returnDesc(INT_UNDERFLOW)              => "integer underflow"
-  rule returnDesc(DIV_BY_ZERO)                => "division by zero"
-  rule returnDesc(BYTES_OVERFLOW)             => "resulting byte array too large"
-  rule returnDesc(TXN_ACCESS_FAILED)          => "transaction field access failed"
-  rule returnDesc(TXN_INVALID)                => "a transaction is malformed"
-  rule returnDesc(INVALID_SCRATCH_LOC)        => "invalid scratch space location"
-  rule returnDesc(TXN_OUT_OF_BOUNDS)          => "transaction index out of bounds"
-  rule returnDesc(FUTURE_TXN)                 => "tried to access transaction that hasn't executed yet"
-  rule returnDesc(INDEX_OUT_OF_BOUNDS)        => "array index out of bounds"
-  rule returnDesc(ILLEGAL_JUMP)               => "illegal branch to a non-existing label"
-  rule returnDesc(ILL_TYPED_STACK)            => "wrong argument type(s) for opcode"
-  rule returnDesc(LOG_CALLS_EXCEEDED)         => "too many log calls in transaction"
-  rule returnDesc(LOG_SIZE_EXCEEDED)          => "total size of log calls in transaction is too large"
-  rule returnDesc(GLOBAL_BYTES_EXCEEDED)      => "tried to store too many byte values in global storage"
-  rule returnDesc(GLOBAL_INTS_EXCEEDED)       => "tried to store too many int values in global storage"
-  rule returnDesc(LOCAL_BYTES_EXCEEDED)       => "tried to store too many byte values in local storage"
-  rule returnDesc(LOCAL_INTS_EXCEEDED)        => "tried to store too many int values in local storage"
-  rule returnDesc(INVALID_ARGUMENT)           => "wrong argument range(s) for opcode"
-  rule returnDesc(STACK_OVERFLOW)             => "stack overflow"
-  rule returnDesc(STACK_UNDERFLOW)            => "stack underflow"
-  rule returnDesc(ASSERTION_VIOLATION)        => "assertion violation"
-  rule returnDesc(DUPLICATE_LABEL)            => "duplicate label"
-  rule returnDesc(IMPOSSIBLE_NEGATIVE_NUMBER) => "impossible happened: negative number on stack"
-  rule returnDesc(CALLSTACK_UNDERFLOW)        => "call stack underflow: illegal retsub"
-  rule returnDesc(CALLSTACK_OVERFLOW)         => "call stack overflow: recursion is too deep"
-  rule returnDesc(ITXN_REENTRY)               => "application called from itself"
-  rule returnDesc(MATH_BYTES_ARG_TOO_LONG)    => "math attempted on large byte-array"
-  rule returnDesc(INSUFFICIENT_FUNDS)         => "negative balance reached"
-  rule returnDesc(KEY_TOO_LARGE)              => "key is too long"
-  rule returnDesc(BYTE_VALUE_TOO_LARGE)       => "tried to store too large of a byte value"
-  rule returnDesc(KEY_VALUE_TOO_LARGE)        => "sum of key length and value length is too high"
-  rule returnDesc(ASSERTION_VIOLATION)        => "assertion violation"
-  rule returnDesc(BOX_TOO_LARGE)              => "tried to create a box which is too large"
-  rule returnDesc(CHANGED_BOX_SIZE)           => "called box_create on existing box with a different size"
-  rule returnDesc(BOX_NOT_FOUND)              => "tried to access a box name that doesn't exist"
-  rule returnDesc(BOX_UNAVAILABLE)            => "tried to access box not referenced in any transaction in this group"
-  rule returnDesc(BOX_WRONG_LENGTH)           => "tried to replace a box byte array with one of a different length"
-  rule returnDesc(BOX_OUT_OF_BOUNDS)          => "tried to access out of bounds of a box byte array"
-  rule returnDesc(BOX_CREATE_EXTERNAL)        => "tried to create a box for which a reference already exists tied to another application"
-  rule returnDesc(MIN_BALANCE_VIOLATION)      => "account's balance falls below its allowed minimum balance"
-  rule returnDesc(UNSUPPORTED_TXN_TYPE)       => "attempt to execute an unsupported transaction type"
-  rule returnDesc(ASSET_FROZEN)               => "attempt to send frozen asset holdings"
-  rule returnDesc(ASSET_NOT_OPT_IN)           => "either sender or receiver have not opted into asset"
-  rule returnDesc(UNKNOWN_ADDRESS)            => "address is not in the <accountsMap>"
-  rule returnDesc(ASSET_NO_PERMISSION)        => "sender does not have permission to modify asset"
-  rule returnDesc(TXN_DEQUE_ERROR)            => "txn deque error"
-  rule returnDesc(ASSET_NOT_FOUND)            => "tried to modify an asset which hasn't been created"
-  rule returnDesc(MISSING_APP_CREATOR)        => "Found app that is missing for <appCreator>"
-  rule returnDesc(APP_ALREADY_ACTIVE)         => "attempt to #initApp that already is in <activeApps>"
-  rule returnDesc(INSUFFICIENT_ASSET_BALANCE) => "tried to transfer more of an asset than owned"
+The macro production above translate to the following integer panic codes:
 
-  //------------------------------------
+```k
   rule SUCCESS                    => 0
   rule ZERO_STACK                 => 1
   rule BAD_STACK                  => 2
@@ -255,33 +199,93 @@ return code to 3 (see return codes below).
   rule MISSING_APP_CREATOR        => 55
   rule APP_ALREADY_ACTIVE         => 56
   rule INSUFFICIENT_ASSET_BALANCE => 57
+```
 
+The `returnDesc` function builds the human-readable description of the panic codes:
+
+```k
+  syntax String ::= returnDesc(Int) [function]
+  //------------------------------------------
+  rule returnDesc(INVALID_OP_FOR_MODE)        => "invalid opcode for current execution mode"
+  rule returnDesc(ERR_OPCODE)                 => "err opcode encountered"
+  rule returnDesc(INT_OVERFLOW)               => "integer overflow"
+  rule returnDesc(INT_UNDERFLOW)              => "integer underflow"
+  rule returnDesc(DIV_BY_ZERO)                => "division by zero"
+  rule returnDesc(BYTES_OVERFLOW)             => "resulting byte array too large"
+  rule returnDesc(TXN_ACCESS_FAILED)          => "transaction field access failed"
+  rule returnDesc(TXN_INVALID)                => "a transaction is malformed"
+  rule returnDesc(INVALID_SCRATCH_LOC)        => "invalid scratch space location"
+  rule returnDesc(TXN_OUT_OF_BOUNDS)          => "transaction index out of bounds"
+  rule returnDesc(FUTURE_TXN)                 => "tried to access transaction that hasn't executed yet"
+  rule returnDesc(INDEX_OUT_OF_BOUNDS)        => "array index out of bounds"
+  rule returnDesc(ILLEGAL_JUMP)               => "illegal branch to a non-existing label"
+  rule returnDesc(ILL_TYPED_STACK)            => "wrong argument type(s) for opcode"
+  rule returnDesc(LOG_CALLS_EXCEEDED)         => "too many log calls in transaction"
+  rule returnDesc(LOG_SIZE_EXCEEDED)          => "total size of log calls in transaction is too large"
+  rule returnDesc(GLOBAL_BYTES_EXCEEDED)      => "tried to store too many byte values in global storage"
+  rule returnDesc(GLOBAL_INTS_EXCEEDED)       => "tried to store too many int values in global storage"
+  rule returnDesc(LOCAL_BYTES_EXCEEDED)       => "tried to store too many byte values in local storage"
+  rule returnDesc(LOCAL_INTS_EXCEEDED)        => "tried to store too many int values in local storage"
+  rule returnDesc(INVALID_ARGUMENT)           => "wrong argument range(s) for opcode"
+  rule returnDesc(STACK_OVERFLOW)             => "stack overflow"
+  rule returnDesc(STACK_UNDERFLOW)            => "stack underflow"
+  rule returnDesc(ASSERTION_VIOLATION)        => "assertion violation"
+  rule returnDesc(DUPLICATE_LABEL)            => "duplicate label"
+  rule returnDesc(IMPOSSIBLE_NEGATIVE_NUMBER) => "impossible happened: negative number on stack"
+  rule returnDesc(CALLSTACK_UNDERFLOW)        => "call stack underflow: illegal retsub"
+  rule returnDesc(CALLSTACK_OVERFLOW)         => "call stack overflow: recursion is too deep"
+  rule returnDesc(ITXN_REENTRY)               => "application called from itself"
+  rule returnDesc(MATH_BYTES_ARG_TOO_LONG)    => "math attempted on large byte-array"
+  rule returnDesc(INSUFFICIENT_FUNDS)         => "negative balance reached"
+  rule returnDesc(KEY_TOO_LARGE)              => "key is too long"
+  rule returnDesc(BYTE_VALUE_TOO_LARGE)       => "tried to store too large of a byte value"
+  rule returnDesc(KEY_VALUE_TOO_LARGE)        => "sum of key length and value length is too high"
+  rule returnDesc(ASSERTION_VIOLATION)        => "assertion violation"
+  rule returnDesc(BOX_TOO_LARGE)              => "tried to create a box which is too large"
+  rule returnDesc(CHANGED_BOX_SIZE)           => "called box_create on existing box with a different size"
+  rule returnDesc(BOX_NOT_FOUND)              => "tried to access a box name that doesn't exist"
+  rule returnDesc(BOX_UNAVAILABLE)            => "tried to access box not referenced in any transaction in this group"
+  rule returnDesc(BOX_WRONG_LENGTH)           => "tried to replace a box byte array with one of a different length"
+  rule returnDesc(BOX_OUT_OF_BOUNDS)          => "tried to access out of bounds of a box byte array"
+  rule returnDesc(BOX_CREATE_EXTERNAL)        => "tried to create a box for which a reference already exists tied to another application"
+  rule returnDesc(MIN_BALANCE_VIOLATION)      => "account's balance falls below its allowed minimum balance"
+  rule returnDesc(UNSUPPORTED_TXN_TYPE)       => "attempt to execute an unsupported transaction type"
+  rule returnDesc(ASSET_FROZEN)               => "attempt to send frozen asset holdings"
+  rule returnDesc(ASSET_NOT_OPT_IN)           => "either sender or receiver have not opted into asset"
+  rule returnDesc(UNKNOWN_ADDRESS)            => "address is not in the <accountsMap>"
+  rule returnDesc(ASSET_NO_PERMISSION)        => "sender does not have permission to modify asset"
+  rule returnDesc(TXN_DEQUE_ERROR)            => "txn deque error"
+  rule returnDesc(ASSET_NOT_FOUND)            => "tried to modify an asset which hasn't been created"
+  rule returnDesc(MISSING_APP_CREATOR)        => "Found app that is missing for <appCreator>"
+  rule returnDesc(APP_ALREADY_ACTIVE)         => "attempt to #initApp that already is in <activeApps>"
+  rule returnDesc(INSUFFICIENT_ASSET_BALANCE) => "tried to transfer more of an asset than owned"
+```
+
+```k
   syntax KItem ::= #panic(Int)
-  syntax KItem ::= #stopIfError()
+                 | #panic(Int, KItem)
+  syntax KItem ::= #stopIfError(KItem)
 
   rule [panic]:
-       <k> #panic(S) => #stopIfError() ... </k>
+       <k> #panic(S) => #stopIfError(#panic(S)) ... </k>
+       <returncode> _ => S </returncode>
+       <returnstatus> _ => returnDesc(S) </returnstatus>
+
+  rule [richPanic]:
+       <k> #panic(S, ARGS) => #stopIfError(#panic(S, ARGS)) ... </k>
        <returncode> _ => S </returncode>
        <returnstatus> _ => returnDesc(S) </returnstatus>
 
   // Leave the testing commands on the K cell
-  rule <k> #stopIfError() ~> X:TestingCommand => X:TestingCommand ~> #stopIfError() ... </k>
+  rule <k> #stopIfError(ERR) ~> X:TestingCommand => X:TestingCommand ~> #stopIfError(ERR) ... </k>
 
   // Consume the rest of the K cell if the execution terminated with an error
-  rule <k> #stopIfError() ~> (ITEM:KItem => .K) ... </k>
+  rule <k> #stopIfError(_) ~> (ITEM:KItem => .K) ... </k>
        <returncode> RETURN_CODE </returncode>
     requires RETURN_CODE =/=Int 0
      andBool notBool(isTestingCommand(ITEM))
+```
 
-  rule <k> #stopIfError() => .K </k>
-       <returncode> RETURN_CODE </returncode>
-    requires RETURN_CODE =/=Int 0
-
-  rule <k> #stopIfError() => . ... </k>
-       <returncode> RETURN_CODE </returncode>
-       <returnstatus> _ => "Success" </returnstatus>
-    requires RETURN_CODE ==Int 0
-
+```k
 endmodule
-
 ```
