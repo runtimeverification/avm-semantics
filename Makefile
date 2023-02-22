@@ -446,6 +446,7 @@ avm_prove_simple_specs := $(filter-out $(avm_prove_specs_failing), $(wildcard te
 avm_prove_opcode_specs :=  $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/opcodes/*-spec.md))
 avm_prove_call_specs :=  $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/calls/*-spec.md))
 avm_prove_transactions_specs := $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/transactions/*-spec.k))
+avm_prove_pact_specs := $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/pact/*-spec.k))
 
 test-avm-semantics-internal-prove: $(avm_prove_internal_specs:=.prove)
 test-avm-semantics-opcode-prove: $(avm_prove_opcode_specs:=.prove)
@@ -453,11 +454,20 @@ test-avm-semantics-simple-prove: $(avm_prove_simple_specs:=.prove)
 test-avm-semantics-calls-prove: $(avm_prove_call_specs:=.prove)
 test-avm-semantics-calls-kcfg-prove: $(avm_prove_call_specs:=.kcfg.prove)
 test-avm-semantics-transactions-prove: $(avm_prove_transactions_specs:=.prove)
+test-avm-semantics-pact-prove: $(avm_prove_pact_specs:=.prove)
 
-tests/specs/%-spec.k.prove: build-avm-verification $(KAVM_LIB)/version
+.SECONDEXPANSION:
+tests/specs/%/verification/timestamp: tests/specs/$$(firstword $$(subst /, ,$$*))/verification.k $$(avm_includes)
+	mkdir -p tests/specs/$*/verification
+	$(POETRY_RUN)                                                                             \
+	$(KAVM) kompile tests/specs/$*/verification.k --backend haskell --definition-dir tests/specs/$*/verification         \
+													 --emit-json --hook-namespaces KRYPTO KAVM                              \
+													 -I "${KAVM_INCLUDE}/kframework" -I "${plugin_include}/kframework"
+
+.SECONDEXPANSION:
+tests/specs/%-spec.k.prove: tests/specs/$$(firstword $$(subst /, ,$$*))/verification/timestamp $$(KAVM_LIB)/version
 	$(POETRY_RUN) \
-	$(KAVM) prove tests/specs/$*-spec.k --definition $(KAVM_VERIFICATION_DEFINITION_DIR)
-
+	$(KAVM) prove tests/specs/$*-spec.k --definition $(CURDIR)/tests/specs/$(firstword $(subst /, ,$*))/verification --smt-timeout 1000000
 
 tests/specs/%-spec.md.prove: build-avm-verification $(KAVM_LIB)/version
 	$(POETRY_RUN) \
