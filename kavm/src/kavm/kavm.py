@@ -4,11 +4,10 @@ import subprocess
 import tempfile
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union, cast
+from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union
 
 from pyk.cli_utils import BugReport, run_process
-from pyk.kast.inner import KSort, KToken
-from pyk.kast.manip import get_cell
+from pyk.kast.inner import KSort
 from pyk.kore import syntax as kore
 from pyk.kore.parser import KoreParser
 from pyk.ktool.kprint import paren
@@ -131,28 +130,8 @@ class KAVM(KRun, KProve):
                 assert parser.eof
 
                 return final_pattern, proc_result.stderr
-            except RuntimeError as err:
-                # if _krun has thtown a RuntimeError, rerun with --output pretty to see the final state quicker
-                if rerun_on_error:
-                    _krun(
-                        input_file=Path(tmp_scenario_file.name),
-                        definition_dir=self.definition_dir,
-                        output=KRunOutput.PRETTY,
-                        depth=depth,
-                        no_expand_macros=False,
-                        profile=profile,
-                        check=check,
-                        cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
-                        pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
-                        pipe_stderr=True,
-                    )
-                    raise RuntimeError from None
-                # otherwise, try to establish the reason from the output Kore
-                else:
-                    parser = KoreParser(err.args[1])
-                    final_pattern = parser.pattern()
-                    returnstatus = cast(KToken, get_cell(self.kore_to_kast(final_pattern), 'RETURNSTATUS_CELL')).token
-                    raise RuntimeError(returnstatus) from err
+            except RuntimeError:
+                raise
 
     def kast(
         self,
