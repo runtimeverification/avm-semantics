@@ -17,6 +17,7 @@ from pyk.kcfg.explore import KCFGExplore
 from pyk.kcfg.kcfg import KCFG
 from pyk.kcfg.tui import KCFGViewer
 from pyk.kore import syntax as kore
+from pyk.kore.parser import KoreParser
 from pyk.ktool.kprove import KoreExecLogFormat
 
 from kavm.kavm import KAVM
@@ -218,7 +219,6 @@ def exec_run(
             final_state, kavm_stderr = kavm.run_avm_json(scenario=scenario, profile=profile, depth=depth)
             if output == 'kore':
                 print(final_state)
-                exit(0)
             if output == 'pretty':
                 final_state_kast = kavm.kore_to_kast(final_state)
                 print(kavm.pretty_print(final_state_kast))
@@ -233,15 +233,21 @@ def exec_run(
                 print(json.dumps(json.loads(state_dump_str), indent=4))
             if output == 'stderr-json':
                 print(json.dumps(json.loads(kavm_stderr), indent=4))
-            exit(0)
         else:
             print(f'Unrecognized input file extension: {input_file.suffix}')
             exit(1)
     except RuntimeError as err:
         msg, stdout, stderr = err.args
-        _LOGGER.critical(stdout)
-        _LOGGER.critical(msg)
+        if output == 'kore':
+            print(stdout)
+        if output == 'pretty':
+            parser = KoreParser(stdout)
+            final_state = parser.pattern()
+            assert parser.eof
+            final_state_kast = kavm.kore_to_kast(final_state)
+            print(kavm.pretty_print(final_state_kast))
         _LOGGER.critical(stderr)
+        _LOGGER.critical(msg)
 
 
 def exec_env(
