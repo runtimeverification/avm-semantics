@@ -375,13 +375,11 @@ uninstall:
 KCOVR:=$(KAVM_K_BIN)/kcovr
 
 $(BUILD_DIR)/coverage.xml: test-kavm-avm-simulation
-	$(POETRY_RUN) $(KCOVR) $(KAVM_DEFINITION_DIR)       \
-        -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
+	$(KCOVR) $(KAVM_DEFINITION_DIR) -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
 	$(KAVM_SCRIPTS)/post-process-coverage $(BUILD_DIR)/coverage.xml
 
 transient-coverage:
-	$(POETRY_RUN) $(KCOVR) $(KAVM_DEFINITION_DIR)       \
-        -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
+	$(KCOVR) $(KAVM_DEFINITION_DIR) -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
 	$(KAVM_SCRIPTS)/post-process-coverage $(BUILD_DIR)/coverage.xml
 
 $(BUILD_DIR)/coverage.html: $(BUILD_DIR)/coverage.xml
