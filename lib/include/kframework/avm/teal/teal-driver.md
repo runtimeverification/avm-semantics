@@ -1345,7 +1345,11 @@ Subroutines share the regular `<stack>` and `<scratch>` with the main TEAL progr
   rule <k> _:BlockchainOpCode => #panic(STACK_OVERFLOW) ... </k>
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
+```
 
+The `loadFromGroup` rules access a particular field in the *current* transaction group.
+
+```k
   syntax KItem ::= loadFromGroup(Int, TxnField)
   //-------------------------------------------
   rule <k> loadFromGroup(GROUP_IDX, FIELD) => . ... </k>
