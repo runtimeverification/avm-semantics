@@ -218,7 +218,7 @@ def exec_run(
             scenario = KAVMScenario.from_json(input_file.read_text(), teal_sources_dir)
             final_state, kavm_stderr = kavm.run_avm_json(scenario=scenario, profile=profile, depth=depth)
             if output == 'kore':
-                print(final_state)
+                print(final_state.text)
             if output == 'pretty':
                 final_state_kast = kavm.kore_to_kast(final_state)
                 print(kavm.pretty_print(final_state_kast))
