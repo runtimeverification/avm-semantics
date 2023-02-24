@@ -38,9 +38,10 @@ module VERIFICATION
     [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
-// Recombine 128-bit Ints
+// Bit shifts
 ////////////////////////////////////////////////////////////////////////////////
 
+// Recombine 128-bit Ints
 //      Upper 64 bits                    Lower 64 bits
   rule ((X:Int >>Int 64) <<Int 64) +Int (X &Int 18446744073709551615) => X [simplification]
 
@@ -48,17 +49,9 @@ module VERIFICATION
     requires X <Int 2 ^Int N
      andBool 0 <=Int X [simplification]
 
-  rule X:Int >Int Y:Int /Int Z:Int => true
-    requires X >Int Y
-     andBool Z >Int 0 [simplification]
-
-  rule X:Int /Int Y:Int >=Int 0 => true
-    requires X >=Int 0
-     andBool Y >=Int 0 [simplification]
-
-  rule 0 >Int X:Int /Int Y:Int => false
-    requires X >=Int 0
-     andBool Y >=Int 0 [simplification]
+////////////////////////////////////////////////////////////////////////////////
+// Bitwise And simplification
+////////////////////////////////////////////////////////////////////////////////
 
   rule A:Int >Int (X:Int &Int B:Int) => true 
     requires X >=Int 0
@@ -257,9 +250,19 @@ module VERIFICATION
   rule X *Int Y >=Int 0 => X >=Int 0
     requires Y >Int 0 [simplification, concrete(Y)]
 
-//  rule N:Int >=Int X +Int Y => N -Int Y >=Int X [simplification, concrete(N, Y)]
-
   rule X +Int (0 -Int Y) => X -Int Y [simplification]
+
+  rule X:Int /Int Y:Int >=Int 0 => true
+    requires X >=Int 0
+     andBool Y >=Int 0 [simplification]
+
+  rule 0 >Int X:Int /Int Y:Int => false
+    requires X >=Int 0
+     andBool Y >=Int 0 [simplification]
+
+  rule X:Int >Int Y:Int /Int Z:Int => true
+    requires X >Int Y
+     andBool Z >Int 0 [simplification]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Comparisons

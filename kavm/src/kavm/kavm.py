@@ -111,7 +111,6 @@ class KAVM(KRun, KProve):
             tmp_scenario_file.flush()
             _LOGGER.info('Running KAVM')
             os.environ['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
-            print(os.environ['KAVM_DEFINITION_DIR'])
 
             try:
                 if output == "kore":
@@ -127,8 +126,8 @@ class KAVM(KRun, KProve):
                         pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
                         pipe_stderr=True,
                     )
-                    #                if proc_result.returncode != 0:
-                    #                    raise RuntimeError('Non-zero exit-code from krun.')
+                    if proc_result.returncode != 0:
+                        raise RuntimeError('Non-zero exit-code from krun.')
 
                     parser = KoreParser(proc_result.stdout)
                     final_pattern = parser.pattern()
@@ -146,8 +145,8 @@ class KAVM(KRun, KProve):
                         pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
                         pipe_stderr=True,
                     )
-                    #                if proc_result.returncode != 0:
-                    #                    raise RuntimeError('Non-zero exit-code from krun.')
+                    if proc_result.returncode != 0:
+                        raise RuntimeError('Non-zero exit-code from krun.')
 
                     final_pattern = proc_result.stdout
 
@@ -155,19 +154,19 @@ class KAVM(KRun, KProve):
             except RuntimeError as err:
                 # if _krun has thtown a RuntimeError, rerun with --output pretty to see the final state quicker
                 if rerun_on_error:
-                    _krun(
+                    rerun_result = _krun(
                         input_file=Path(tmp_scenario_file.name),
                         definition_dir=self.definition_dir,
                         output=KRunOutput.PRETTY,
                         depth=depth,
                         no_expand_macros=False,
                         profile=profile,
-                        check=check,
+                        check=False,
                         cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
                         pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
                         pipe_stderr=True,
                     )
-                    raise RuntimeError from None
+                    raise RuntimeError(f'Final configuration was: {rerun_result.stdout}') from err
                 # otherwise, try to establish the reason from the output Kore
                 else:
                     parser = KoreParser(err.args[1])

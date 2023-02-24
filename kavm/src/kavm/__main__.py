@@ -212,7 +212,9 @@ def exec_run(
     try:
         if input_file.suffix == '.json':
             scenario = KAVMScenario.from_json(input_file.read_text(), teal_sources_dir)
-            final_state, kavm_stderr = kavm.run_avm_json(scenario=scenario, profile=profile, depth=depth)
+            final_state, kavm_stderr = kavm.run_avm_json(
+                scenario=scenario, profile=profile, depth=depth, rerun_on_error=True, check=False
+            )
             if output == 'kore':
                 print(final_state)
                 exit(0)
