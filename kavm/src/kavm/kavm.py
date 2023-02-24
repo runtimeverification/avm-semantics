@@ -118,8 +118,8 @@ class KAVM(KRun, KProve):
                     no_expand_macros=False,
                     profile=profile,
                     check=check,
-                    cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
-                    pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
+                    cmap={'TEAL_PROGRAMS': tmp_teals_file.name, 'CHECK': str(check_return_code).lower()},
+                    pmap={'TEAL_PROGRAMS': str(self._catcat_parser), 'CHECK': str(self._bool_parser)},
                     pipe_stderr=True,
                 )
                 if proc_result.returncode != 0:

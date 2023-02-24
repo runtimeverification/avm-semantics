@@ -205,6 +205,7 @@ def exec_run(
     output: str,
     profile: bool,
     depth: Optional[int],
+    check_return_code: bool = True,
     **kwargs: Any,
 ) -> None:
     kavm = KAVM(definition_dir=definition_dir)
@@ -216,7 +217,9 @@ def exec_run(
     try:
         if input_file.suffix == '.json':
             scenario = KAVMScenario.from_json(input_file.read_text(), teal_sources_dir)
-            final_state, kavm_stderr = kavm.run_avm_json(scenario=scenario, profile=profile, depth=depth)
+            final_state, kavm_stderr = kavm.run_avm_json(
+                scenario=scenario, profile=profile, depth=depth, check_return_code=check_return_code
+            )
             if output == 'kore':
                 print(final_state.text)
             if output == 'pretty':
@@ -543,6 +546,13 @@ def create_argument_parser() -> ArgumentParser:
         dest='depth',
         type=int,
         help='Execute at most N rewrite steps',
+    )
+    run_subparser.add_argument(
+        '--skip-check',
+        dest='check_return_code',
+        default=True,
+        action='store_false',
+        help="Don't enforece the check of 'expected-returncode', return the real KAVM panic code instead",
     )
 
     # kcfg-view
