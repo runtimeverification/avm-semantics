@@ -158,7 +158,6 @@ module SWAP-ALGOS-SPEC
     </avmExecution>
     <blockchain>
       <accountsMap>
-      //((
         <account>
           <address>
             ASSET_CREATOR_ADDRESS
@@ -199,13 +198,13 @@ module SWAP-ALGOS-SPEC
           <boxes>
             .Bag
           </boxes>
-        </account> //) => ?_)
+        </account>
         <account>
-          ((<address>
+          <address>
             SENDER_ADDR
           </address>
           <balance>
-            SENDER_ASSET1_INITIAL_BALANCE:Int// => ?SENDER_ASSET1_FINAL_BALANCE
+            SENDER_ASSET1_INITIAL_BALANCE:Int => ?SENDER_ASSET1_FINAL_BALANCE
           </balance>
           <minBalance>
             SENDER_MIN_BALANCE:Int
@@ -221,7 +220,7 @@ module SWAP-ALGOS-SPEC
           </rewards>
           <status>
             0
-          </status>) => ?_)
+          </status>
           <key>
             ORIGINAL_SENDER_KEY:Bytes => ?NEW_SENDER_KEY:Bytes
           </key>
@@ -236,8 +235,7 @@ module SWAP-ALGOS-SPEC
           </assetsCreated>
           <assetsOptedIn>
             ((assetHolding(SECONDARY_ASSET_ID, SENDER_ASSET2_INITIAL_BALANCE)) =>
-             (assetHolding(SECONDARY_ASSET_ID, ?SENDER_ASSET2_FINAL_BALANCE))
-)
+             (assetHolding(SECONDARY_ASSET_ID, ?SENDER_ASSET2_FINAL_BALANCE)))
           </assetsOptedIn>
           <boxes>
             .Bag
@@ -251,7 +249,7 @@ module SWAP-ALGOS-SPEC
             _CONTRACT_CREATOR_BALANCE:Int
           </balance>
           <minBalance>
-            CONTRACT_CREATOR_MIN_BALANCE:Int
+            _CONTRACT_CREATOR_MIN_BALANCE:Int
           </minBalance>
           <round>
             0
@@ -274,7 +272,7 @@ module SWAP-ALGOS-SPEC
                 APP_ID:Int
               </appID>
               <approvalPgmSrc>
-                cpmmApprovalMacro(PRIMARY_ASSET_ID, SECONDARY_ASSET_ID, ADMIN_AND_TREASURY_ADDRESS, FEE_BPS, PACT_FEE_BPS)
+                cpmmApprovalMacro(PRIMARY_ASSET_ID, SECONDARY_ASSET_ID, _ADMIN_AND_TREASURY_ADDRESS, FEE_BPS, PACT_FEE_BPS)
               </approvalPgmSrc>
               <clearStatePgmSrc>
                 #pragma version 6
@@ -304,7 +302,7 @@ module SWAP-ALGOS-SPEC
                   b"A"              |-> (AMM_ASSET1_BALANCE_STORED => ?AMM_ASSET1_FINAL_BALANCE_STORED)
                   b"B"              |-> (AMM_ASSET2_BALANCE_STORED => ?AMM_ASSET2_FINAL_BALANCE_STORED)
                   b"FEE_BPS"        |-> FEE_BPS
-                  b"L"              |-> LIQUIDITY:Int
+                  b"L"              |-> _LIQUIDITY:Int
                   b"LTID"           |-> LT_ID:Int
                   b"PACT_FEE_BPS"   |-> PACT_FEE_BPS
                   b"PRIMARY_FEES"   |-> (PRIMARY_FEES_INITIAL => ?PRIMARY_FEES_FINAL)
@@ -376,7 +374,7 @@ module SWAP-ALGOS-SPEC
             ((assetHolding(SECONDARY_ASSET_ID, AMM_ASSET2_BALANCE_REAL)) =>
               (assetHolding(SECONDARY_ASSET_ID, ?AMM_ASSET2_FINAL_BALANCE))
 )
-            (assetHolding(LT_ID, AMM_LT_BALANCE:Int))
+            (assetHolding(LT_ID, _AMM_LT_BALANCE:Int))
           </assetsOptedIn>
           <boxes>
             .Bag
@@ -397,10 +395,10 @@ module SWAP-ALGOS-SPEC
         0 => ?_
       </blockheight>
       <nextAssetID>
-        NEXT_ASSET_ID:Int => ?_
+        _NEXT_ASSET_ID:Int => ?_
       </nextAssetID>
       <nextAppID>
-        NEXT_APP_ID:Int => ?_
+        _NEXT_APP_ID:Int => ?_
       </nextAppID>
       <nextTxnID>
         NEXT_TX_ID:Int => ?_
@@ -421,8 +419,7 @@ module SWAP-ALGOS-SPEC
    andBool #rangeUInt( 64, AMM_ASSET2_BALANCE_STORED )
    andBool #rangeUInt( 64, AMM_ASSET1_BALANCE_REAL )
    andBool #rangeUInt( 64, AMM_ASSET2_BALANCE_REAL )
-   andBool #rangeUInt( 64, FUNDER_ASSET1_BALANCE )
-   andBool #rangeUInt( 64, FUNDER_ASSET2_BALANCE )
+   andBool #rangeUInt( 64, PRIMARY_FEES_INITIAL )
    andBool #rangeUInt( 64, SECONDARY_FEES_INITIAL )
    andBool #rangeUInt( 64, MIN_EXPECTED )
    andBool #rangeUInt( 64, FEE_BPS )

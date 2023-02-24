@@ -1,7 +1,7 @@
 module AXFER-SPEC
   imports VERIFICATION
 
-  claim
+  claim [main]:
   <kavm>
     <k>
       #evalTxGroup( ) => .K
@@ -23,7 +23,7 @@ module AXFER-SPEC
           <typeEnum> @axfer </typeEnum>
           <rekeyTo> PARAM_ZERO_ADDR </rekeyTo>
           <fee> 0 </fee>
-          ...
+          _
         </txHeader>
         <txnTypeSpecificFields>
           <assetTransferTxFields>
@@ -35,7 +35,7 @@ module AXFER-SPEC
           </assetTransferTxFields>
         </txnTypeSpecificFields>
         <resume> false </resume>
-        ...
+        _
       </transaction>) => ?_
     </transactions>
     <avmExecution>
@@ -68,7 +68,7 @@ module AXFER-SPEC
             (assetHolding(PRIMARY_ASSET_ID, FAUCET_PRIMARY_BALANCE) => assetHolding(PRIMARY_ASSET_ID, ?FAUCET_PRIMARY_BALANCE_POST))
             (assetHolding(SECONDARY_ASSET_ID, FAUCET_SECONDARY_BALANCE) => assetHolding(SECONDARY_ASSET_ID, ?FAUCET_SECONDARY_BALANCE_POST))
           </assetsOptedIn>
-          ...
+          _
         </account>
         <account>
           <address> TREASURY_ADDRESS </address>
@@ -130,7 +130,7 @@ module AXFER-SPEC
               </extraPages>
             </app>
           </appsCreated>
-          ...
+          _
         </account>
         <account>
           <address>
@@ -150,7 +150,7 @@ module AXFER-SPEC
             (assetHolding(SECONDARY_ASSET_ID, CONTRACT_SECONDARY_BALANCE) => assetHolding(SECONDARY_ASSET_ID, ?CONTRACT_SECONDARY_BALANCE_POST))
             assetHolding(LT_ASSET_ID, 18446744073709551615)
           </assetsOptedIn>
-          ...
+          _
         </account>
       </accountsMap>
       <appCreator>
@@ -176,9 +176,9 @@ module AXFER-SPEC
       <txnIndexMap>
         .Bag => ?_
       </txnIndexMap>
-      ...
+      _
     </blockchain>
-    ...
+    _
   </kavm>
   requires true
    // parameters for cpmmApprovalMacro to instantiate the contract's TEAL

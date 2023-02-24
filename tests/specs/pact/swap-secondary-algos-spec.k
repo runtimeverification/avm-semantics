@@ -23,7 +23,7 @@ module SWAP-SECONDARY-ALGOS-SPEC
           </sender>
           <txType> "axfer" </txType>
           <typeEnum> @axfer </typeEnum>
-          <rekeyTo> TXN1_REKEY_TO:Bytes </rekeyTo>
+          <rekeyTo> _TXN1_REKEY_TO:Bytes </rekeyTo>
           ...
         </txHeader>
         <txnTypeSpecificFields>
@@ -50,7 +50,7 @@ module SWAP-SECONDARY-ALGOS-SPEC
           </sender>
           <txType> "appl" </txType>
           <typeEnum> @appl </typeEnum>
-          <rekeyTo> TXN2_REKEY_TO:Bytes </rekeyTo>
+          <rekeyTo> _TXN2_REKEY_TO:Bytes </rekeyTo>
           <firstValid> 0 </firstValid>
           <lastValid> 0 </lastValid>
           ...
@@ -160,16 +160,15 @@ module SWAP-SECONDARY-ALGOS-SPEC
     </avmExecution>
     <blockchain>
       <accountsMap>
-      //((
         <account>
           <address>
             ASSET_CREATOR_ADDRESS
           </address>
           <balance>
-            ASSET_CREATOR_ASSET1_BALANCE:Int
+            _ASSET_CREATOR_ASSET1_BALANCE:Int
           </balance>
           <minBalance>
-            ASSET_CREATOR_MIN_BALANCE:Int
+            _ASSET_CREATOR_MIN_BALANCE:Int
           </minBalance>
           <round>
             0
@@ -196,18 +195,18 @@ module SWAP-SECONDARY-ALGOS-SPEC
             asset(SECONDARY_ASSET_ID:Int, (pow64) -Int 1, 0, PARAM_ZERO_ADDR)
           </assetsCreated>
           <assetsOptedIn>
-            assetHolding(SECONDARY_ASSET_ID, ASSET_CREATOR_ASSET2_BALANCE:Int)
+            assetHolding(SECONDARY_ASSET_ID, _ASSET_CREATOR_ASSET2_BALANCE:Int)
           </assetsOptedIn>
           <boxes>
             .Bag
           </boxes>
-        </account> //) => ?_)
+        </account>
         <account>
-          ((<address>
+          <address>
             SENDER_ADDR
           </address>
           <balance>
-            SENDER_ASSET1_INITIAL_BALANCE:Int// => ?SENDER_ASSET1_FINAL_BALANCE
+            SENDER_ASSET1_INITIAL_BALANCE:Int => ?SENDER_ASSET1_FINAL_BALANCE
           </balance>
           <minBalance>
             SENDER_MIN_BALANCE:Int
@@ -223,7 +222,7 @@ module SWAP-SECONDARY-ALGOS-SPEC
           </rewards>
           <status>
             0
-          </status>) => ?_)
+          </status>
           <key>
             ORIGINAL_SENDER_KEY:Bytes => ?NEW_SENDER_KEY:Bytes
           </key>
@@ -251,10 +250,10 @@ module SWAP-SECONDARY-ALGOS-SPEC
             CONTRACT_CREATOR_ADDR:Bytes
           </address>
           <balance>
-            CONTRACT_CREATOR_BALANCE:Int
+            _CONTRACT_CREATOR_BALANCE:Int
           </balance>
           <minBalance>
-            CONTRACT_CREATOR_MIN_BALANCE:Int
+            _CONTRACT_CREATOR_MIN_BALANCE:Int
           </minBalance>
           <round>
             0
@@ -277,7 +276,7 @@ module SWAP-SECONDARY-ALGOS-SPEC
                 APP_ID:Int
               </appID>
               <approvalPgmSrc>
-                cpmmApprovalMacro(PRIMARY_ASSET_ID, SECONDARY_ASSET_ID, ADMIN_AND_TREASURY_ADDRESS, FEE_BPS, PACT_FEE_BPS)
+                cpmmApprovalMacro(PRIMARY_ASSET_ID, SECONDARY_ASSET_ID, _ADMIN_AND_TREASURY_ADDRESS, FEE_BPS, PACT_FEE_BPS)
               </approvalPgmSrc>
               <clearStatePgmSrc>
                 #pragma version 6
@@ -307,7 +306,7 @@ module SWAP-SECONDARY-ALGOS-SPEC
                   b"A"              |-> (AMM_ASSET1_BALANCE_STORED => ?AMM_ASSET1_FINAL_BALANCE_STORED)
                   b"B"              |-> (AMM_ASSET2_BALANCE_STORED => ?AMM_ASSET2_FINAL_BALANCE_STORED)
                   b"FEE_BPS"        |-> FEE_BPS
-                  b"L"              |-> LIQUIDITY:Int
+                  b"L"              |-> _LIQUIDITY:Int
                   b"LTID"           |-> LT_ID:Int
                   b"PACT_FEE_BPS"   |-> PACT_FEE_BPS
                   b"PRIMARY_FEES"   |-> (PRIMARY_FEES_INITIAL => ?PRIMARY_FEES_FINAL)
@@ -379,7 +378,7 @@ module SWAP-SECONDARY-ALGOS-SPEC
             ((assetHolding(SECONDARY_ASSET_ID, AMM_ASSET2_BALANCE_REAL)) =>
               (assetHolding(SECONDARY_ASSET_ID, ?AMM_ASSET2_FINAL_BALANCE))
 )
-            (assetHolding(LT_ID, AMM_LT_BALANCE:Int))
+            (assetHolding(LT_ID, _AMM_LT_BALANCE:Int))
             ...
           </assetsOptedIn>
           <boxes>
@@ -401,10 +400,10 @@ module SWAP-SECONDARY-ALGOS-SPEC
         0 => ?_
       </blockheight>
       <nextAssetID>
-        NEXT_ASSET_ID:Int => ?_
+        _NEXT_ASSET_ID:Int => ?_
       </nextAssetID>
       <nextAppID>
-        NEXT_APP_ID:Int => ?_
+        _NEXT_APP_ID:Int => ?_
       </nextAppID>
       <nextTxnID>
         NEXT_TX_ID:Int => ?_
@@ -425,8 +424,7 @@ module SWAP-SECONDARY-ALGOS-SPEC
    andBool #rangeUInt( 64, AMM_ASSET2_BALANCE_STORED )
    andBool #rangeUInt( 64, AMM_ASSET1_BALANCE_REAL )
    andBool #rangeUInt( 64, AMM_ASSET2_BALANCE_REAL )
-   andBool #rangeUInt( 64, FUNDER_ASSET1_BALANCE )
-   andBool #rangeUInt( 64, FUNDER_ASSET2_BALANCE )
+   andBool #rangeUInt( 64, PRIMARY_FEES_INITIAL )
    andBool #rangeUInt( 64, SECONDARY_FEES_INITIAL )
    andBool #rangeUInt( 64, MIN_EXPECTED )
    andBool #rangeUInt( 64, FEE_BPS )
@@ -437,8 +435,8 @@ module SWAP-SECONDARY-ALGOS-SPEC
 
    // Balances always start off above the minumum balance because any transaction group that ends with this being
    // violated will reject.
-   andBool SENDER_BALANCE           >=Int SENDER_MIN_BALANCE
-   andBool CONTRACT_ACCOUNT_BALANCE >=Int CONTRACT_ACCOUNT_MIN_BALANCE
+   andBool SENDER_ASSET1_INITIAL_BALANCE >=Int SENDER_MIN_BALANCE
+   andBool AMM_ASSET1_BALANCE_REAL       >=Int CONTRACT_ACCOUNT_MIN_BALANCE
 
    // Stored fees amount shouldn't overflow (should be impossible because the total amount of an asset cannot
    // exceed 2^64 - 1)

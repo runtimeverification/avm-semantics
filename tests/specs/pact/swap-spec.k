@@ -23,7 +23,7 @@ module SWAP-SPEC
           </sender>
           <txType> "axfer" </txType>
           <typeEnum> @axfer </typeEnum>
-          <rekeyTo> TXN1_REKEY_TO:Bytes </rekeyTo>
+          <rekeyTo> _TXN1_REKEY_TO:Bytes </rekeyTo>
           ...
         </txHeader>
         <txnTypeSpecificFields>
@@ -50,7 +50,7 @@ module SWAP-SPEC
           </sender>
           <txType> "appl" </txType>
           <typeEnum> @appl </typeEnum>
-          <rekeyTo> TXN2_REKEY_TO:Bytes </rekeyTo>
+          <rekeyTo> _TXN2_REKEY_TO:Bytes </rekeyTo>
           <firstValid> 0 </firstValid>
           <lastValid> 0 </lastValid>
           ...
@@ -165,10 +165,10 @@ module SWAP-SPEC
             ASSET_CREATOR_ADDRESS
           </address>
           <balance>
-            ASSET_CREATOR_BALANCE:Int
+            _ASSET_CREATOR_BALANCE:Int
           </balance>
           <minBalance>
-            ASSET_CREATOR_MIN_BALANCE:Int
+            _ASSET_CREATOR_MIN_BALANCE:Int
           </minBalance>
           <round>
             0
@@ -196,8 +196,8 @@ module SWAP-SPEC
             asset(SECONDARY_ASSET_ID:Int, (pow64) -Int 1, 0, PARAM_ZERO_ADDR)
           </assetsCreated>
           <assetsOptedIn>
-            assetHolding(PRIMARY_ASSET_ID, ASSET_CREATOR_ASSET1_BALANCE:Int)
-            assetHolding(SECONDARY_ASSET_ID, ASSET_CREATOR_ASSET2_BALANCE:Int)
+            assetHolding(PRIMARY_ASSET_ID, _ASSET_CREATOR_ASSET1_BALANCE:Int)
+            assetHolding(SECONDARY_ASSET_ID, _ASSET_CREATOR_ASSET2_BALANCE:Int)
           </assetsOptedIn>
           <boxes>
             .Bag
@@ -253,10 +253,10 @@ module SWAP-SPEC
             CONTRACT_CREATOR_ADDR:Bytes
           </address>
           <balance>
-            CONTRACT_CREATOR_BALANCE:Int
+            _CONTRACT_CREATOR_BALANCE:Int
           </balance>
           <minBalance>
-            CONTRACT_CREATOR_MIN_BALANCE:Int
+            _CONTRACT_CREATOR_MIN_BALANCE:Int
           </minBalance>
           <round>
             0
@@ -279,7 +279,7 @@ module SWAP-SPEC
                 APP_ID:Int
               </appID>
               <approvalPgmSrc>
-                cpmmApprovalMacro(PRIMARY_ASSET_ID, SECONDARY_ASSET_ID, ADMIN_AND_TREASURY_ADDRESS, FEE_BPS, PACT_FEE_BPS)
+                cpmmApprovalMacro(PRIMARY_ASSET_ID, SECONDARY_ASSET_ID, _ADMIN_AND_TREASURY_ADDRESS, FEE_BPS, PACT_FEE_BPS)
               </approvalPgmSrc>
               <clearStatePgmSrc>
                 #pragma version 6
@@ -309,7 +309,7 @@ module SWAP-SPEC
                   b"A"              |-> (AMM_ASSET1_BALANCE_STORED => ?AMM_ASSET1_FINAL_BALANCE_STORED)
                   b"B"              |-> (AMM_ASSET2_BALANCE_STORED => ?AMM_ASSET2_FINAL_BALANCE_STORED)
                   b"FEE_BPS"        |-> FEE_BPS
-                  b"L"              |-> LIQUIDITY:Int
+                  b"L"              |-> _LIQUIDITY:Int
                   b"LTID"           |-> LT_ID:Int
                   b"PACT_FEE_BPS"   |-> PACT_FEE_BPS
                   b"PRIMARY_FEES"   |-> (PRIMARY_FEES_INITIAL => ?PRIMARY_FEES_FINAL)
@@ -382,7 +382,7 @@ module SWAP-SPEC
               (assetHolding(PRIMARY_ASSET_ID, ?AMM_ASSET1_FINAL_BALANCE)))
             ((assetHolding(SECONDARY_ASSET_ID, AMM_ASSET2_BALANCE_REAL)) =>
               (assetHolding(SECONDARY_ASSET_ID, ?AMM_ASSET2_FINAL_BALANCE)))
-            (assetHolding(LT_ID, AMM_LT_BALANCE:Int))
+            (assetHolding(LT_ID, _AMM_LT_BALANCE:Int))
             ...
           </assetsOptedIn>
           <boxes>
@@ -405,10 +405,10 @@ module SWAP-SPEC
         0 => ?_
       </blockheight>
       <nextAssetID>
-        NEXT_ASSET_ID:Int => ?_
+        _NEXT_ASSET_ID:Int => ?_
       </nextAssetID>
       <nextAppID>
-        NEXT_APP_ID:Int => ?_
+        _NEXT_APP_ID:Int => ?_
       </nextAppID>
       <nextTxnID>
         NEXT_TX_ID:Int => ?_
@@ -429,8 +429,7 @@ module SWAP-SPEC
    andBool #rangeUInt( 64, AMM_ASSET2_BALANCE_STORED )
    andBool #rangeUInt( 64, AMM_ASSET1_BALANCE_REAL )
    andBool #rangeUInt( 64, AMM_ASSET2_BALANCE_REAL )
-   andBool #rangeUInt( 64, FUNDER_ASSET1_BALANCE )
-   andBool #rangeUInt( 64, FUNDER_ASSET2_BALANCE )
+   andBool #rangeUInt( 64, PRIMARY_FEES_INITIAL )
    andBool #rangeUInt( 64, SECONDARY_FEES_INITIAL )
    andBool #rangeUInt( 64, MIN_EXPECTED )
    andBool #rangeUInt( 64, FEE_BPS )
