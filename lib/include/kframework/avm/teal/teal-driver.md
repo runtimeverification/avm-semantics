@@ -1380,7 +1380,7 @@ The `loadFromGroup` rules access a particular field in the *current* transaction
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 
-  rule <k> loadFromGroup(GROUP_IDX, FIELD) => #panic(TXN_ACCESS_FAILED, loadFromGroup(GROUP_IDX, FIELD)) ...</k>
+  rule <k> loadFromGroup(GROUP_IDX, FIELD) => #panic(TXN_ACCESS_FAILED) ...</k>
        <currentTx> CURRENT_TX_ID </currentTx>
        <transaction>
          <txID> CURRENT_TX_ID </txID>
@@ -1423,7 +1423,7 @@ The `loadFromGroup` rules access a particular field in the *current* transaction
        <stacksize> S </stacksize>
     requires S >=Int MAX_STACK_DEPTH
 
-  rule <k> loadFromGroup(GROUP_IDX, FIELD, IDX) => #panic(TXN_ACCESS_FAILED, loadFromGroup(GROUP_IDX, FIELD, IDX)) ...</k>
+  rule <k> loadFromGroup(GROUP_IDX, FIELD, IDX) => #panic(TXN_ACCESS_FAILED) ...</k>
        <currentTx> CURRENT_TX_ID </currentTx>
        <transaction>
          <txID> CURRENT_TX_ID </txID>
