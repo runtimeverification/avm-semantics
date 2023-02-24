@@ -201,6 +201,8 @@ module VERIFICATION
 //   rule N:Int +Int M:Int >Int M:Int => N:Int >Int 0
 //     requires M =/=Int 0 [simplification, concrete(M)]
 
+// addition
+
   rule I1:Int  >Int I2:Int +Int I3:Int => I1 -Int I3  >Int I2 [simplification, concrete(I1, I3), symbolic(I2)]
   rule I1:Int >=Int I2:Int +Int I3:Int => I1 -Int I3 >=Int I2 [simplification, concrete(I1, I3), symbolic(I2)]
 
@@ -210,7 +212,11 @@ module VERIFICATION
   rule I1:Int +Int I2:Int >Int I3 => I1 >Int I3 -Int I2 [simplification, concrete(I2, I3), symbolic(I1)]
   rule I1:Int >=Int I2:Int +Int I3:Int => I1 -Int I3 >=Int I2 [simplification, concrete(I1, I3), symbolic(I2)]
 
-  rule N:Int /Int N:Int => 1 requires N =/=Int 0 [simplification]
+// subtraction
+
+  rule X +Int (0 -Int Y) => X -Int Y [simplification]
+
+// log2Int
 
   rule #Ceil ( log2Int ( X:Int ) ) => #Top requires X >Int 0 [simplification]
 
@@ -224,6 +230,11 @@ module VERIFICATION
 
   rule log2Int(X:Int) >=Int N:Int => X >=Int 2 ^Int N [simplification, concrete(N)]
 
+// division
+
+  rule N:Int /Int N:Int => 1 requires N =/=Int 0 [simplification]
+
+  // inequalities
   rule X /Int Y  >Int N:Int => X  >Int ((N +Int 1) *Int Y) -Int 1
     requires Y >Int 0 [simplification, concrete(N, Y)]
 
@@ -236,22 +247,6 @@ module VERIFICATION
   rule X /Int Y >=Int N:Int => X >=Int N *Int Y
     requires Y >Int 0 [simplification, concrete(N, Y)]
 
-  rule X >Int Y *Int Z => ((X -Int 1) /Int Z) +Int 1 >Int Y
-    requires Z >Int 0
-     andBool X >=Int 1 [simplification, concrete(X, Z)]
-
-  rule 0 >Int Y *Int Z => 0 >Int Y
-    requires Z >Int 0 [simplification, concrete(Z)]
-
-  rule X *Int Y >=Int Z => X >=Int ((Z -Int 1) /Int Y) +Int 1
-    requires Y >Int 0 
-     andBool Z >=Int 1 [simplification, concrete(Z, Y)]
-
-  rule X *Int Y >=Int 0 => X >=Int 0
-    requires Y >Int 0 [simplification, concrete(Y)]
-
-  rule X +Int (0 -Int Y) => X -Int Y [simplification]
-
   rule X:Int /Int Y:Int >=Int 0 => true
     requires X >=Int 0
      andBool Y >=Int 0 [simplification]
@@ -263,6 +258,28 @@ module VERIFICATION
   rule X:Int >Int Y:Int /Int Z:Int => true
     requires X >Int Y
      andBool Z >Int 0 [simplification]
+
+// multiplication
+
+  rule X >Int Y *Int Z => ((X -Int 1) /Int Z) +Int 1 >Int Y
+    requires Z >Int 0
+     andBool X >=Int 1 [simplification, concrete(X, Z)]
+
+  rule X *Int Y >=Int Z => X >=Int ((Z -Int 1) /Int Y) +Int 1
+    requires Y >Int 0 
+     andBool Z >=Int 1 [simplification, concrete(Z, Y)]
+
+  rule X >=Int Y *Int Z => X /Int Z >=Int Y
+    requires Z >Int 0 [simplification, concrete(X, Z)]
+
+  rule X *Int Y >Int Z => X >Int Z /Int Y
+    requires Y >Int 0 [simplification, concrete(Y, Z)]
+
+  rule X *Int Y >=Int 0 => X >=Int 0
+    requires Y >Int 0 [simplification, concrete(Y)]
+
+  rule 0 >Int Y *Int Z => 0 >Int Y
+    requires Z >Int 0 [simplification, concrete(Z)]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Comparisons
