@@ -82,59 +82,61 @@ return code to 3 (see return codes below).
                | "STUCK" [macro]
                | "INVALID_JSON" [macro]
 
-  // Panic types
-  syntax Int ::= "INVALID_OP_FOR_MODE" [macro]
-               | "ERR_OPCODE" [macro]
-               | "INT_OVERFLOW" [macro]
-               | "INT_UNDERFLOW" [macro]
-               | "DIV_BY_ZERO" [macro]
-               | "BYTES_OVERFLOW" [macro]
-               | "TXN_ACCESS_FAILED" [macro]
-               | "TXN_INVALID" [macro]
-               | "INVALID_SCRATCH_LOC" [macro]
-               | "TXN_OUT_OF_BOUNDS" [macro]
-               | "FUTURE_TXN" [macro]
-               | "INDEX_OUT_OF_BOUNDS" [macro]
-               | "ILLEGAL_JUMP" [macro]
-               | "ILL_TYPED_STACK" [macro]
-               | "LOG_CALLS_EXCEEDED" [macro]
-               | "LOG_SIZE_EXCEEDED" [macro]
-               | "GLOBAL_BYTES_EXCEEDED" [macro]
-               | "GLOBAL_INTS_EXCEEDED" [macro]
-               | "LOCAL_BYTES_EXCEEDED" [macro]
-               | "LOCAL_INTS_EXCEEDED" [macro]
-               | "STACK_OVERFLOW" [macro]
-               | "STACK_UNDERFLOW" [macro]
-               | "ASSERTION_VIOLATION" [macro]
-               | "IMPOSSIBLE_NEGATIVE_NUMBER" [macro]
-               | "DUPLICATE_LABEL" [macro]
-               | "CALLSTACK_UNDERFLOW" [macro]
-               | "CALLSTACK_OVERFLOW" [macro]
-               | "INVALID_ARGUMENT" [macro]
-               | "ITXN_REENTRY" [macro]
-               | "MATH_BYTES_ARG_TOO_LONG" [macro]
-               | "INSUFFICIENT_FUNDS" [macro]
-               | "KEY_TOO_LARGE" [macro]
-               | "BYTE_VALUE_TOO_LARGE" [macro]
-               | "KEY_VALUE_TOO_LARGE" [macro]
-               | "BOX_TOO_LARGE" [macro]
-               | "CHANGED_BOX_SIZE" [macro]
-               | "BOX_NOT_FOUND" [macro]
-               | "BOX_UNAVAILABLE" [macro]
-               | "BOX_WRONG_LENGTH" [macro]
-               | "BOX_OUT_OF_BOUNDS" [macro]
-               | "BOX_CREATE_EXTERNAL" [macro]
-               | "MIN_BALANCE_VIOLATION" [macro]
-               | "UNSUPPORTED_TXN_TYPE" [macro]
-               | "ASSET_FROZEN" [macro]
-               | "ASSET_NOT_OPT_IN" [macro]
-               | "UNKNOWN_ADDRESS" [macro]
-               | "ASSET_NO_PERMISSION" [macro]
-               | "TXN_DEQUE_ERROR" [macro]
-               | "ASSET_NOT_FOUND" [macro]
-               | "MISSING_APP_CREATOR" [macro]
-               | "APP_ALREADY_ACTIVE" [macro]
-               | "INSUFFICIENT_ASSET_BALANCE" [macro]
+  // Panic code types
+  syntax PanicCode ::= Int
+
+  syntax PanicCode ::= "INVALID_OP_FOR_MODE" [macro]
+                     | "ERR_OPCODE" [macro]
+                     | "INT_OVERFLOW" [macro]
+                     | "INT_UNDERFLOW" [macro]
+                     | "DIV_BY_ZERO" [macro]
+                     | "BYTES_OVERFLOW" [macro]
+                     | "TXN_ACCESS_FAILED" [macro]
+                     | "TXN_INVALID" [macro]
+                     | "INVALID_SCRATCH_LOC" [macro]
+                     | "TXN_OUT_OF_BOUNDS" [macro]
+                     | "FUTURE_TXN" [macro]
+                     | "INDEX_OUT_OF_BOUNDS" [macro]
+                     | "ILLEGAL_JUMP" [macro]
+                     | "ILL_TYPED_STACK" [macro]
+                     | "LOG_CALLS_EXCEEDED" [macro]
+                     | "LOG_SIZE_EXCEEDED" [macro]
+                     | "GLOBAL_BYTES_EXCEEDED" [macro]
+                     | "GLOBAL_INTS_EXCEEDED" [macro]
+                     | "LOCAL_BYTES_EXCEEDED" [macro]
+                     | "LOCAL_INTS_EXCEEDED" [macro]
+                     | "STACK_OVERFLOW" [macro]
+                     | "STACK_UNDERFLOW" [macro]
+                     | "ASSERTION_VIOLATION" [macro]
+                     | "IMPOSSIBLE_NEGATIVE_NUMBER" [macro]
+                     | "DUPLICATE_LABEL" [macro]
+                     | "CALLSTACK_UNDERFLOW" [macro]
+                     | "CALLSTACK_OVERFLOW" [macro]
+                     | "INVALID_ARGUMENT" [macro]
+                     | "ITXN_REENTRY" [macro]
+                     | "MATH_BYTES_ARG_TOO_LONG" [macro]
+                     | "INSUFFICIENT_FUNDS" [macro]
+                     | "KEY_TOO_LARGE" [macro]
+                     | "BYTE_VALUE_TOO_LARGE" [macro]
+                     | "KEY_VALUE_TOO_LARGE" [macro]
+                     | "BOX_TOO_LARGE" [macro]
+                     | "CHANGED_BOX_SIZE" [macro]
+                     | "BOX_NOT_FOUND" [macro]
+                     | "BOX_UNAVAILABLE" [macro]
+                     | "BOX_WRONG_LENGTH" [macro]
+                     | "BOX_OUT_OF_BOUNDS" [macro]
+                     | "BOX_CREATE_EXTERNAL" [macro]
+                     | "MIN_BALANCE_VIOLATION" [macro]
+                     | "UNSUPPORTED_TXN_TYPE" [macro]
+                     | "ASSET_FROZEN" [macro]
+                     | "ASSET_NOT_OPT_IN" [macro]
+                     | "UNKNOWN_ADDRESS" [macro]
+                     | "ASSET_NO_PERMISSION" [macro]
+                     | "TXN_DEQUE_ERROR" [macro]
+                     | "ASSET_NOT_FOUND" [macro]
+                     | "MISSING_APP_CREATOR" [macro]
+                     | "APP_ALREADY_ACTIVE" [macro]
+                     | "INSUFFICIENT_ASSET_BALANCE" [macro]
 ```
 
 The macro production above translate to the following integer panic codes:
@@ -204,8 +206,8 @@ The macro production above translate to the following integer panic codes:
 The `returnDesc` function builds the human-readable description of the panic codes:
 
 ```k
-  syntax String ::= returnDesc(Int) [function]
-  //------------------------------------------
+  syntax String ::= returnDesc(PanicCode) [function]
+  //------------------------------------------------
   rule returnDesc(INVALID_OP_FOR_MODE)        => "invalid opcode for current execution mode"
   rule returnDesc(ERR_OPCODE)                 => "err opcode encountered"
   rule returnDesc(INT_OVERFLOW)               => "integer overflow"
@@ -262,17 +264,37 @@ The `returnDesc` function builds the human-readable description of the panic cod
 ```
 
 ```k
-  syntax KItem ::= #panic(Int)
-                 | #panic(Int, KItem)
+  syntax KItem ::= #panic(PanicCode)
+                 | #panic(PanicCode, KItem)
   syntax KItem ::= #stopIfError(KItem)
 
+  syntax Map ::= reportPanic(KItem) [function]
+  //------------------------------------------
+  rule [[ reportPanic(ARG) => ("txid"   |-> TX_ID
+                               "k"      |-> ARG
+                               #if getTxnField(TX_ID, TypeEnum) ==K @appl
+                               #then
+                                 ("pc"       |-> PC)
+                                 ("opcode"   |-> PGM[PC])
+                                 ("stack"    |-> XS)
+                                 ("approval" |-> getTxnField(TX_ID, ApprovalProgram))
+                               #else
+                                 .Map
+                               #fi
+                              )
+       ]]
+       <currentTx> TX_ID </currentTx>
+       <pc> PC </pc>
+       <program> PGM </program>
+       <stack> XS </stack>
+
   rule [panic]:
-       <k> #panic(S) => #stopIfError(#panic(S)) ... </k>
+       <k> #panic(S) => #stopIfError(reportPanic(#panic(S))) ... </k>
        <returncode> _ => S </returncode>
        <returnstatus> _ => returnDesc(S) </returnstatus>
 
   rule [richPanic]:
-       <k> #panic(S, ARGS) => #stopIfError(#panic(S, ARGS)) ... </k>
+       <k> #panic(S, ARGS) => #stopIfError(reportPanic(#panic(S, ARGS))) ... </k>
        <returncode> _ => S </returncode>
        <returnstatus> _ => returnDesc(S) </returnstatus>
 
