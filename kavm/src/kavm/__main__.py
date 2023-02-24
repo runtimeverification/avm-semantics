@@ -224,7 +224,7 @@ def exec_run(
                 print(final_state.text)
             if output == 'pretty':
                 final_state_kast = kavm.kore_to_kast(final_state)
-                print(kavm.pretty_print(final_state_kast))
+                print(kavm.pretty_print(KAVM.reduce_config_for_pretty_printing(final_state_kast)))
             if output == 'final-state-json':
                 _LOGGER.info('Extracting <state_dumps> cell from KORE output')
                 state_dumps_kore = get_state_dumps_kore(final_state)
@@ -248,7 +248,7 @@ def exec_run(
             final_state = parser.pattern()
             assert parser.eof
             final_state_kast = kavm.kore_to_kast(final_state)
-            print(kavm.pretty_print(final_state_kast))
+            print(kavm.pretty_print(KAVM.reduce_config_for_pretty_printing(final_state_kast)))
         _LOGGER.critical(stderr)
         _LOGGER.critical(msg)
 

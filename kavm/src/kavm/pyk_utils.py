@@ -1,11 +1,12 @@
 import typing
 from base64 import b64encode
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Collection, Dict, List, Optional, Set, Tuple, Union
 
 from algosdk.encoding import decode_address
 from algosdk.future.transaction import OnComplete
-from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, build_assoc, top_down
+from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, bottom_up, build_assoc, top_down
 from pyk.prelude.bytes import bytesToken
+from pyk.prelude.k import DOTS
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
 from pyk.utils import dequote_str
@@ -159,3 +160,19 @@ def algorand_address_to_k_bytes(addr: str) -> KToken:
 def method_selector_to_k_bytes(method_selector: bytes) -> KToken:
     """Serialize an Algorand address string to K Bytes token"""
     return bytesToken(dequote_str(str(method_selector))[2:-1])
+
+
+def empty_cells_to_dots(kast: KInner, empty_labels: Collection[str]) -> KInner:
+    def _empty_cells_to_dots(_kast: KInner) -> KInner:
+        if (
+            type(_kast) is KApply
+            and _kast.is_cell
+            and len(_kast.args) == 1
+            and type(_kast.args[0]) is KApply
+            and _kast.args[0].label.name in empty_labels
+        ):
+            return DOTS
+        else:
+            return _kast
+
+    return bottom_up(_empty_cells_to_dots, kast)

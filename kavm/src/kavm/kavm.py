@@ -7,7 +7,8 @@ from subprocess import CompletedProcess
 from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union
 
 from pyk.cli_utils import BugReport, run_process
-from pyk.kast.inner import KSort
+from pyk.kast.inner import KInner, KSort
+from pyk.kast.manip import minimize_term
 from pyk.kore import syntax as kore
 from pyk.kore.parser import KoreParser
 from pyk.ktool.kprint import paren
@@ -15,6 +16,7 @@ from pyk.ktool.kprove import KProve
 from pyk.ktool.krun import KRun, KRunOutput, _krun
 from pyk.prelude.k import K
 
+from kavm.pyk_utils import empty_cells_to_dots
 from kavm.scenario import KAVMScenario
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -46,6 +48,7 @@ class KAVM(KRun, KProve):
             bug_report=bug_report,
         ) if verification_definition_dir else None
 
+        self._bool_parser = definition_dir / 'parser_Bool_AVM-TESTING-SYNTAX'
         self._catcat_parser = definition_dir / 'catcat'
         self._teal_parser = teal_parser if teal_parser else definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
         self._scenario_parser = (
@@ -90,6 +93,7 @@ class KAVM(KRun, KProve):
         check: bool = True,
         existing_decompiled_teal_dir: Optional[Path] = None,
         rerun_on_error: bool = False,
+        check_return_code: bool = True,
     ) -> Tuple[kore.Pattern, str]:
         """Run an AVM simulaion scenario with krun"""
 
@@ -171,11 +175,82 @@ class KAVM(KRun, KProve):
 
     @staticmethod
     def _patch_symbol_table(symbol_table: Dict[str, Callable[..., str]]) -> None:
-        symbol_table['_+Int_'] = paren(symbol_table['_+Int_'])
-        symbol_table['_+Bytes_'] = paren(lambda a1, a2: a1 + '+Bytes' + a2)
+        symbol_table['_Map_'] = lambda m1, m2: m1 + '\n' + m2
+        paren_symbols = [
+            '#And',
+            '_andBool_',
+            '#Implies',
+            '_impliesBool_',
+            '_&Int_',
+            '_*Int_',
+            '_+Int_',
+            '_-Int_',
+            '_/Int_',
+            '_|Int_',
+            '_modInt_',
+            'notBool_',
+            '#Or',
+            '_orBool_',
+            '_Set_',
+        ]
+        for symb in paren_symbols:
+            if symb in symbol_table:
+                symbol_table[symb] = paren(symbol_table[symb])
 
     @staticmethod
     def concrete_rules() -> List[str]:
         return [
             'TEAL-TYPES.getAppAddressBytes',
         ]
+
+    @staticmethod
+    def reduce_config_for_pretty_printing(term: KInner) -> KInner:
+        '''
+        Omit various parts of the configuration that are irrelevant
+
+        - Input: <generatedTop> cell term with full information
+        - Output: <generatedTop> cell with the 'empty' or irrelevant cells collappsed
+
+        This function is intended for pretty-printing only and is very opinionated
+        '''
+        labels_to_remove = [
+            '<effects>',
+            '<program>',
+            '<firstValid>',
+            '<lastValid>',
+            '<genesisHash>',
+            '<genesisID>',
+            '<typeEnum>',
+            '<lease>',
+            '<note>',
+            '<blocks>',
+            '<blockheight>',
+            '<globalRound>',
+            '<latestTimestamp>',
+            '<approvalProgramSrc>',
+            '<approvalPgmSrc>',
+            '<clearStateProgramSrc>',
+            '<clearStatePgmSrc>',
+            '<mode>',
+            '<version>',
+            '<stacksize>',
+            '<dequeIndexSet>',
+            '<round>',
+            '<preRewards>',
+            '<rewards>',
+            '<status>',
+            '<state-dumps>',
+            '<tealPrograms>',
+        ]
+        empty_labels = [
+            '.Map',
+            '.AppCellMap',
+            '.OptInAppCellMap',
+            '.AssetCellMap',
+            '.OptInAssetCellMap',
+            '.BoxCellMap',
+            '.TValueList',
+            '.TValuePairList',
+        ]
+        reduced_term = minimize_term(empty_cells_to_dots(term, empty_labels), abstract_labels=labels_to_remove)
+        return reduced_term
