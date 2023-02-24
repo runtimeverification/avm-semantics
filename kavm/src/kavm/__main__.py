@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, Final, Iterable, List, Optional, TypeVar
 
 from pyk.cli_utils import BugReport, dir_path, file_path
 from pyk.kast.inner import KApply
-from pyk.kast.manip import minimize_term
+from pyk.kast.manip import get_cell, minimize_term
 from pyk.kcfg.explore import KCFGExplore
 from pyk.kcfg.kcfg import KCFG
 from pyk.kcfg.tui import KCFGViewer
@@ -225,6 +225,9 @@ def exec_run(
             if output == 'pretty':
                 final_state_kast = kavm.kore_to_kast(final_state)
                 print(kavm.pretty_print(KAVM.reduce_config_for_pretty_printing(final_state_kast)))
+            if output == 'k-cell':
+                final_state_kast = kavm.kore_to_kast(final_state)
+                print(kavm.pretty_print(get_cell(final_state_kast, 'K_CELL')))
             if output == 'final-state-json':
                 _LOGGER.info('Extracting <state_dumps> cell from KORE output')
                 state_dumps_kore = get_state_dumps_kore(final_state)
@@ -243,12 +246,15 @@ def exec_run(
         msg, stdout, stderr = err.args
         if output == 'kore':
             print(stdout)
-        if output == 'pretty':
+        else:
             parser = KoreParser(stdout)
             final_state = parser.pattern()
             assert parser.eof
             final_state_kast = kavm.kore_to_kast(final_state)
-            print(kavm.pretty_print(KAVM.reduce_config_for_pretty_printing(final_state_kast)))
+            if output == 'pretty':
+                print(kavm.pretty_print(KAVM.reduce_config_for_pretty_printing(final_state_kast)))
+            if output == 'k-cell':
+                print(kavm.pretty_print(get_cell(final_state_kast, 'K_CELL')))
         _LOGGER.critical(stderr)
         _LOGGER.critical(msg)
 
@@ -538,7 +544,7 @@ def create_argument_parser() -> ArgumentParser:
         dest='output',
         type=str,
         help='Output mode',
-        choices=['pretty', 'json', 'kore', 'kast', 'none', 'final-state-json', 'stderr-json'],
+        choices=['pretty', 'json', 'kore', 'kast', 'none', 'final-state-json', 'stderr-json', 'k-cell'],
         required=True,
     )
     run_subparser.add_argument(
