@@ -6,7 +6,7 @@ from pathlib import Path
 from subprocess import CompletedProcess
 from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union, cast
 
-from pyk.cli_utils import run_process
+from pyk.cli_utils import BugReport, run_process
 from pyk.kast.inner import KSort, KToken
 from pyk.kast.manip import get_cell
 from pyk.kore import syntax as kore
@@ -35,6 +35,7 @@ class KAVM(KRun, KProve):
         profile: bool = False,
         # verification_definition_dir: Optional[Path] = None,
         main_file: Optional[Path] = None,
+        bug_report: Optional[BugReport] = None,
     ) -> None:
         self.backend = (definition_dir / 'backend.txt').read_text()
 
@@ -47,7 +48,7 @@ class KAVM(KRun, KProve):
                 profile=profile,
             )
             self._verification_definition = definition_dir
-        KRun.__init__(self, definition_dir=definition_dir, use_directory=use_directory, profile=profile)
+        KRun.__init__(self, definition_dir, use_directory=use_directory, profile=profile, bug_report=bug_report)
 
         self._catcat_parser = definition_dir / 'catcat'
         self._teal_parser = teal_parser if teal_parser else definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'

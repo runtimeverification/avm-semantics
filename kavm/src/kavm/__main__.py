@@ -10,9 +10,12 @@ from pathlib import Path
 from subprocess import CalledProcessError
 from typing import Any, Callable, Dict, Final, Iterable, List, Optional, TypeVar
 
-from pyk.cli_utils import dir_path, file_path
+from pyk.cli_utils import BugReport, dir_path, file_path
 from pyk.kast.inner import KApply
 from pyk.kast.manip import minimize_term
+from pyk.kcfg.explore import KCFGExplore
+from pyk.kcfg.kcfg import KCFG
+from pyk.kcfg.tui import KCFGViewer
 from pyk.kore import syntax as kore
 from pyk.ktool.kprove import KoreExecLogFormat
 
@@ -253,6 +256,89 @@ def exec_env(
     print(f"KAVM_VERIFICATION_DEFINITION_DIR={os.environ.get('KAVM_VERIFICATION_DEFINITION_DIR')}")
 
 
+def exec_kcfg_view(
+    definition_dir: Path,
+    spec_file: Path,
+    claim_id: str,
+    spec_module: Optional[str] = None,
+    use_directory: Optional[Path] = None,
+    **kwargs: Any,
+) -> None:
+    use_directory = use_directory if use_directory else Path('.kavm')
+    kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory)
+
+    spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').removesuffix('.md').upper()
+
+    claim_label = f'{spec_module}.{claim_id}'
+    cfg_id = f'{claim_label}.kfcg'
+    kcfg = KCFGExplore.read_cfg(cfg_id, use_directory)
+    if kcfg is None:
+        raise ValueError(f'Could not find KCFG in {use_directory} for: {cfg_id}')
+    app = KCFGViewer(kcfg=kcfg, kprint=kavm, minimize=False)
+    app.run()
+
+
+def exec_kcfg_show(
+    definition_dir: Path,
+    spec_file: Path,
+    claim_id: str,
+    spec_module: Optional[str] = None,
+    use_directory: Optional[Path] = None,
+    nodes: Iterable[str] = (),
+    minimize: bool = True,
+    **kwargs: Any,
+) -> None:
+    use_directory = use_directory if use_directory else Path('.kavm')
+    kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory)
+
+    spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').removesuffix('.md').upper()
+
+    claim_label = f'{spec_module}.{claim_id}'
+    cfg_id = f'{claim_label}.kfcg'
+    kcfg = KCFGExplore.read_cfg(cfg_id, use_directory)
+    if kcfg is None:
+        raise ValueError(f'Could not find KCFG in {use_directory} for: {cfg_id}')
+    list(map(print, kcfg.pretty(kavm, minimize=minimize)))
+
+    for node_id in nodes:
+        kast = kcfg.node(node_id).cterm.kast
+        if minimize:
+            kast = minimize_term(kast)
+        print(f'\n\nNode {node_id}:\n\n{kavm.pretty_print(kast)}\n')
+
+
+def exec_kcfg_prove(
+    definition_dir: Path,
+    spec_file: Path,
+    claim_id: str,
+    kore_rpc_port: int,
+    bug_report: bool = False,
+    spec_module: Optional[str] = None,
+    use_directory: Optional[Path] = None,
+    **kwargs: Any,
+) -> None:
+    default_kavm_dir = Path('.kavm')
+    default_kavm_dir.mkdir(parents=True, exist_ok=True)
+    use_directory = use_directory if use_directory else default_kavm_dir
+    bug_report_path = BugReport(use_directory / 'kavm-bug') if bug_report else None
+    kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory, bug_report=bug_report_path)
+
+    spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').removesuffix('.md').upper()
+    claim_label = f'{spec_module}.{claim_id}'
+    claims = kavm.get_claims(spec_file, spec_module_name=spec_module, claim_labels=[claim_label])
+
+    cfg = KCFG.from_claim(kavm.definition, claims[0])
+    cfg_id = f'{claim_label}.kfcg'
+
+    with KCFGExplore(kavm, kore_rpc_port, bug_report=bug_report_path) as kcfg_explore:
+        kcfg_explore.all_path_reachability_prove(
+            cfg_id,
+            cfg,
+            cfg_dir=kavm.use_directory,
+            terminal_rules=['AVM-EXECUTION.starttx', 'AVM-EXECUTION.endtx', 'AVM-PANIC.panic'],
+        )
+
+
 def main() -> None:
     sys.setrecursionlimit(15000000)
     parser = create_argument_parser()
@@ -454,6 +540,44 @@ def create_argument_parser() -> ArgumentParser:
         type=int,
         help='Execute at most N rewrite steps',
     )
+
+    # kcfg-view
+    kcfg_view_subparser = command_parser.add_parser('kcfg-view', help='Explore KCFG', parents=[shared_args])
+    kcfg_view_subparser.add_argument('--definition-dir', dest='definition_dir', type=dir_path)
+    kcfg_view_subparser.add_argument('spec_file', type=file_path, help='Path to the K spec file')
+    kcfg_view_subparser.add_argument('claim_id', type=str, help='Claim from "spec_file" to prove')
+
+    # kcfg-show
+    kcfg_show_subparser = command_parser.add_parser(
+        'kcfg-show', help='Show detailed output about KCFG', parents=[shared_args]
+    )
+    kcfg_show_subparser.add_argument('--definition-dir', dest='definition_dir', type=dir_path)
+    kcfg_show_subparser.add_argument('spec_file', type=file_path, help='Path to the K spec file')
+    kcfg_show_subparser.add_argument('claim_id', type=str, help='Claim from "spec_file" to prove')
+    kcfg_show_subparser.add_argument(
+        '--node',
+        type=str,
+        dest='nodes',
+        default=[],
+        action='append',
+        help='Node to display more detailed information about.',
+    )
+    kcfg_show_subparser.add_argument(
+        '--minimize', default=True, dest='minimize', action='store_true', help='Minimize node output.'
+    )
+    kcfg_show_subparser.add_argument(
+        '--no-minimize', dest='minimize', action='store_false', help='Do not minimize node output.'
+    )
+
+    # kcfg-prove
+    kcfg_prove_subparser = command_parser.add_parser(
+        'kcfg-prove', help='Prove a claim using RPC-based prover. Generate KCFG for the claim.', parents=[shared_args]
+    )
+    kcfg_prove_subparser.add_argument('--definition-dir', dest='definition_dir', type=dir_path)
+    kcfg_prove_subparser.add_argument('--bug-report', dest='bug_report', default=False, action='store_true')
+    kcfg_prove_subparser.add_argument('spec_file', type=file_path, help='Path to the K spec file')
+    kcfg_prove_subparser.add_argument('claim_id', type=str, help='Claim from "spec_file" to prove')
+    kcfg_prove_subparser.add_argument('--port', dest='kore_rpc_port', required=True, type=int, help='Port for kore-rpc')
 
     return parser
 

@@ -97,7 +97,9 @@ module VERIFICATION
   rule X in_keys( M:Map [Y <- _] ) => X in_keys(M) 
     requires X =/=K Y [simplification]
 
-  rule _ in_keys (.Map) => false [simplification]
+  rule ((X |-> Y) _:Map)[X] => Y [simplification]
+  rule ((X |-> _) M:Map)[X'] => M[X']
+    requires X =/=K X' [simplification]
 
   // size
   rule size( _:Map [_ <- _] )  >Int 0 => true   [simplification]

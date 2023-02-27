@@ -55,6 +55,8 @@ K_OPTS := -Xmx8G
 endif
 export K_OPTS
 
+KORE_RPC_PORT := $(if $(KORE_RPC_PORT),$(KORE_RPC_PORT),7777)
+
 .PHONY: all clean distclean install uninstall                                         \
         deps k-deps libsecp256k1 libff plugin-deps hook-deps                          \
         build build-avm build-avm-verification build-kavm                             \
@@ -456,14 +458,24 @@ test-avm-semantics-opcode-prove: $(avm_prove_opcode_specs:=.prove)
 test-avm-semantics-simple-prove: $(avm_prove_simple_specs:=.prove)
 test-avm-semantics-calls-prove: $(avm_prove_call_specs:=.prove)
 test-avm-semantics-transactions-prove: $(avm_prove_transactions_specs:=.prove)
+test-avm-semantics-calls-kcfg-prove: $(avm_prove_call_specs:=.kcfg.prove)
 
 tests/specs/%-spec.k.prove: build-avm-verification $(KAVM_LIB)/version
 	$(POETRY_RUN) \
 	$(KAVM) prove tests/specs/$*-spec.k --definition $(KAVM_VERIFICATION_DEFINITION_DIR)
 
+
 tests/specs/%-spec.md.prove: build-avm-verification $(KAVM_LIB)/version
 	$(POETRY_RUN) \
 	$(KAVM) prove tests/specs/$*-spec.md --definition $(KAVM_VERIFICATION_DEFINITION_DIR)
+
+tests/specs/%-spec.k.kcfg.prove: build-avm-verification $(KAVM_LIB)/version
+	$(POETRY_RUN) \
+	$(KAVM) kcfg-prove --port $(KORE_RPC_PORT) --definition-dir $(KAVM_VERIFICATION_DEFINITION_DIR) tests/specs/$*-spec.k main
+
+tests/specs/%-spec.md.kcfg.prove: build-avm-verification $(KAVM_LIB)/version
+	$(POETRY_RUN) \
+	$(KAVM) kcfg-prove --port $(KORE_RPC_PORT) --definition-dir $(KAVM_VERIFICATION_DEFINITION_DIR) tests/specs/$*-spec.md main
 
 clean-verification:
 	rm -rf tests/specs/verification-kompiled

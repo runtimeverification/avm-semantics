@@ -97,9 +97,10 @@ module TEAL-FIELDS
                           | "Note"
                           | "Lease"
                           | "RekeyTo"
-                          | "TxType"
+                          | "Type"
                           | "TypeEnum"
                           | "GroupIndex"
+                          | "StateProofPK"
 
   // Dynamic fields can only be accessed after the transaction has finished, by subsequent transactions in the
   // group.
@@ -134,7 +135,7 @@ module TEAL-FIELDS
 
   syntax TxnAxferField  ::= "XferAsset"
                           | "AssetAmount"
-                          | "AssetASender"
+                          | "AssetSender"
                           | "AssetReceiver"
                           | "AssetCloseTo"
 
@@ -147,8 +148,16 @@ module TEAL-FIELDS
                           | "NumAppArgs"
                           | "NumAccounts"
                           | "NumAssets"
+                          | "NumApplications"
                           | "ApprovalProgram"
                           | "ClearStateProgram"
+                          | "ExtraProgramPages"
+                          | "NumApprovalProgramPages"
+                          | "NumClearStateProgramPages"
+                          | "LocalNumByteSlice"
+                          | "LocalNumUint"
+                          | "GlobalNumByteSlice"
+                          | "GlobalNumUint"
 ```
 
 ### `txna`/`gtxna` fields

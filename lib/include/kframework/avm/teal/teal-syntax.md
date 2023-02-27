@@ -233,7 +233,6 @@ module TEAL-OPCODES
 #### Flow Control Operations
 
 ```k
-//  syntax Label ::= Int
   syntax Label           ::= r"([a-zA-Z0-9]|_)+" [token]
 
   syntax BranchingOpCode ::= CondBranchOpCode
@@ -437,7 +436,6 @@ We define the syntax of TEAL's comments (using K's built-in sort `#Layout`), alo
   syntax lexical AlnumUbar = r"{Alnum}|_"
   syntax lexical Special   = r"[-!?+<>=/*]"
 
-//  syntax Label           ::= r"({AlnumUbar}|{Special})+" [token]
   syntax HexToken        ::= r"0x{HexDigit}+"            [prec(2),token]
   syntax TAddressLiteral ::= r"[0-9A-Z]{58}"             [prec(1),token]
 ```
@@ -695,9 +693,10 @@ module TEAL-UNPARSER
   rule TealField2String(Note)                     => "Note"
   rule TealField2String(Lease)                    => "Lease"
   rule TealField2String(RekeyTo)                  => "RekeyTo"
-  rule TealField2String(TxType)                   => "TxType"
+  rule TealField2String(Type)                     => "Type"
   rule TealField2String(TypeEnum)                 => "TypeEnum"
   rule TealField2String(GroupIndex)               => "GroupIndex"
+  rule TealField2String(StateProofPK)             => "StateProofPK"
   rule TealField2String(LastLog)                  => "LastLog"
   rule TealField2String(NumLogs)                  => "NumLogs"
   rule TealField2String(Logs)                     => "Logs"
@@ -723,7 +722,7 @@ module TEAL-UNPARSER
   rule TealField2String(ConfigAssetClawback)      => "ConfigAssetClawback"
   rule TealField2String(XferAsset)                => "XferAsset"
   rule TealField2String(AssetAmount)              => "AssetAmount"
-  rule TealField2String(AssetASender)             => "AssetASender"
+  rule TealField2String(AssetSender)              => "AssetSender"
   rule TealField2String(AssetReceiver)            => "AssetReceiver"
   rule TealField2String(AssetCloseTo)             => "AssetCloseTo"
   rule TealField2String(FreezeAsset)              => "FreezeAsset"
@@ -734,8 +733,16 @@ module TEAL-UNPARSER
   rule TealField2String(NumAppArgs)               => "NumAppArgs"
   rule TealField2String(NumAccounts)              => "NumAccounts"
   rule TealField2String(NumAssets)                => "NumAssets"
+  rule TealField2String(NumApplications)          => "NumApplications"
   rule TealField2String(ApprovalProgram)          => "ApprovalProgram"
   rule TealField2String(ClearStateProgram)        => "ClearStateProgram"
+  rule TealField2String(ExtraProgramPages)        => "ExtraProgramPages"
+  rule TealField2String(NumApprovalProgramPages   => "NumApprovalProgramPages"
+  rule TealField2String(NumClearStateProgramPages)=> "NumClearStateProgramPages"
+  rule TealField2String(LocalNumByteSlice)        => "LocalNumByteSlice"
+  rule TealField2String(LocalNumUint)             => "LocalNumUint"
+  rule TealField2String(GlobalNumByteSlice)       => "GlobalNumByteSlice"
+  rule TealField2String(GlobalNumUint)            => "GlobalNumUint"
   rule TealField2String(ApplicationArgs)          => "ApplicationArgs"
   rule TealField2String(Accounts)                 => "Accounts"
   rule TealField2String(Applications)             => "Applications"

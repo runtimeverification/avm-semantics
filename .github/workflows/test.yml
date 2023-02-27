@@ -126,6 +126,9 @@ jobs:
       - name: 'Test AVM semantics --- proofs --- PyTeal generated'
         run: |
            docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'THREADS=4 make test-pyteal-prove'
+      - name: 'Test AVM semantics --- KCFG proofs --- app calls'
+        run: |
+           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make test-avm-semantics-calls-kcfg-prove'
       # - name: 'Test AVM semantics --- proofs --- simple'
       #   run: |
       #     docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-simple-prove'

@@ -245,37 +245,29 @@ module ALGO-TXN
   rule [[ getTxnField(I, TxID) => normalize(I) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          ...
        </transaction>
-    requires #isValidForTxnType(TxID, TYPE)
 
   rule [[ getTxnField(I, Sender) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <sender> X </sender>
          ...
        </transaction>
-    requires #isValidForTxnType(Sender, TYPE)
 
   rule [[ getTxnField(I, Fee) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <fee> X </fee>
          ...
        </transaction>
-    requires #isValidForTxnType(Fee, TYPE)
 
   rule [[ getTxnField(I, FirstValid) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <firstValid> X </firstValid>
          ...
        </transaction>
-    requires #isValidForTxnType(FirstValid, TYPE)
 
   //  rule [[ getTxnField(I, FirstValidTime) => normalize(X) ]]
   //    <transaction>
@@ -287,38 +279,30 @@ module ALGO-TXN
   rule [[ getTxnField(I, LastValid) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <lastValid> X </lastValid>
          ...
        </transaction>
-    requires #isValidForTxnType(LastValid, TYPE)
 
   rule [[ getTxnField(I, Note)  => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <note> X </note>
          ...
        </transaction>
-    requires #isValidForTxnType(Note, TYPE)
 
   rule [[ getTxnField(I, Lease)  => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <lease> X </lease>
          ...
        </transaction>
-    requires #isValidForTxnType(Lease, TYPE)
 
-  rule [[ getTxnField(I, TxType)  => normalize(X) ]]
+  rule [[ getTxnField(I, Type)  => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <txType> X </txType>
          ...
        </transaction>
-    requires #isValidForTxnType(TxType, TYPE)
 
   rule [[ getTxnField(I, TypeEnum)  => normalize(X) ]]
        <transaction>
@@ -326,506 +310,465 @@ module ALGO-TXN
          <typeEnum> X </typeEnum>
          ...
        </transaction>
-    requires #isValidForTxnType(TypeEnum, X)
 
   rule [[ getTxnField(I, GroupIndex)  => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <groupIdx> X </groupIdx>
          ...
        </transaction>
-    requires #isValidForTxnType(GroupIndex, TYPE)
 
   rule [[ getTxnField(I, RekeyTo)  => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <rekeyTo> X </rekeyTo>
          ...
        </transaction>
-    requires #isValidForTxnType(RekeyTo, TYPE)
 
   rule [[ getTxnField(I, Receiver) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <receiver> X </receiver>
          ...
        </transaction>
-    requires #isValidForTxnType(Receiver, TYPE)
 
   rule [[ getTxnField(I, Amount) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <amount> X </amount>
          ...
        </transaction>
-    requires #isValidForTxnType(Amount, TYPE)
 
   rule [[ getTxnField(I, CloseRemainderTo) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <closeRemainderTo> X </closeRemainderTo>
          ...
        </transaction>
-    requires #isValidForTxnType(CloseRemainderTo, TYPE)
 
   rule [[ getTxnField(I, VotePK) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <votePk> X </votePk>
          ...
        </transaction>
-    requires #isValidForTxnType(VotePK, TYPE)
 
   rule [[ getTxnField(I, SelectionPK) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <selectionPK> X </selectionPK>
          ...
        </transaction>
-    requires #isValidForTxnType(SelectionPK, TYPE)
 
   rule [[ getTxnField(I, VoteFirst) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <voteFirst> X </voteFirst>
          ...
        </transaction>
-    requires #isValidForTxnType(VoteFirst, TYPE)
 
   rule [[ getTxnField(I, VoteLast) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <voteLast> X </voteLast>
          ...
        </transaction>
-    requires #isValidForTxnType(VoteLast, TYPE)
 
   rule [[ getTxnField(I, VoteKeyDilution) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <voteKeyDilution> X </voteKeyDilution>
          ...
        </transaction>
-    requires #isValidForTxnType(VoteKeyDilution, TYPE)
 
   rule [[ getTxnField(I, XferAsset) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <xferAsset> X </xferAsset>
          ...
        </transaction>
-    requires #isValidForTxnType(XferAsset, TYPE)
 
   rule [[ getTxnField(I, AssetAmount) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <assetAmount> X </assetAmount>
          ...
        </transaction>
-    requires #isValidForTxnType(AssetAmount, TYPE)
 
-  rule [[ getTxnField(I, AssetASender) => normalize(X) ]]
+  rule [[ getTxnField(I, AssetSender) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <assetASender> X </assetASender>
          ...
        </transaction>
-    requires #isValidForTxnType(AssetASender, TYPE)
 
   rule [[ getTxnField(I, AssetReceiver) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <assetReceiver> X </assetReceiver>
          ...
        </transaction>
-    requires #isValidForTxnType(AssetReceiver, TYPE)
 
   rule [[ getTxnField(I, AssetCloseTo) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <assetCloseTo> X </assetCloseTo>
          ...
        </transaction>
-    requires #isValidForTxnType(AssetCloseTo, TYPE)
 
   rule [[ getTxnField(I, ApplicationID) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <applicationID> X </applicationID>
          ...
        </transaction>
-    requires #isValidForTxnType(ApplicationID, TYPE)
 
   rule [[ getTxnField(I, OnCompletion) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <onCompletion> X </onCompletion>
          ...
        </transaction>
-    requires #isValidForTxnType(OnCompletion, TYPE)
 
   rule [[ getTxnField(I, ApplicationArgs, J) => normalize(getTValueAt(J, X)) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <applicationArgs> X </applicationArgs>
          ...
        </transaction>
-    requires #isValidForTxnType(ApplicationArgs, TYPE)
-     andBool 0 <=Int J andBool J <Int size(X)
+    requires 0 <=Int J andBool J <Int size(X)
 
   rule [[ getTxnField(I, ApplicationArgs) => X ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <applicationArgs> X </applicationArgs>
          ...
        </transaction>
-    requires #isValidForTxnType(ApplicationArgs, TYPE)
 
   rule [[ getTxnField(I, NumAppArgs) => size(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <applicationArgs> X </applicationArgs>
          ...
        </transaction>
-    requires #isValidForTxnType(NumAppArgs, TYPE)
 
   rule [[ getTxnField(I, Accounts, 0) => normalize(A) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <sender> A </sender>
          ...
        </transaction>
-    requires #isValidForTxnType(Accounts, TYPE)
 
   rule [[ getTxnField(I, Accounts, J) => normalize(getTValueAt(J -Int 1, X)) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <accounts> X </accounts>
          ...
        </transaction>
-    requires #isValidForTxnType(Accounts, TYPE)
-     andBool 0 <Int J andBool J <=Int size(X)
+    requires 0 <Int J andBool J <=Int size(X)
 
   rule [[ getTxnField(I, Accounts) => (A X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <sender> A </sender>
          <accounts> X </accounts>
          ...
        </transaction>
-    requires #isValidForTxnType(Accounts, TYPE)
 
   rule [[ getTxnField(I, NumAccounts) => size(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <accounts> X </accounts>
          ...
        </transaction>
-    requires #isValidForTxnType(NumAccounts, TYPE)
 
   rule [[ getTxnField(I, ApprovalProgram) => X ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <approvalProgram> X </approvalProgram>
          ...
        </transaction>
-    requires #isValidForTxnType(ApprovalProgram, TYPE)
 
   rule [[ getTxnField(I, ClearStateProgram) => X ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <clearStateProgram> X </clearStateProgram>
          ...
        </transaction>
-    requires #isValidForTxnType(ClearStateProgram, TYPE)
 
   rule [[ getTxnField(I, ConfigAsset) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <configAsset> X </configAsset>
          ...
        </transaction>
-    requires #isValidForTxnType(ConfigAsset, TYPE)
 
   rule [[ getTxnField(I, ConfigAssetTotal) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <configTotal> X </configTotal>
          ...
        </transaction>
-    requires #isValidForTxnType(ConfigAssetTotal, TYPE)
 
   rule [[ getTxnField(I, ConfigAssetDecimals) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <configDecimals> X </configDecimals>
          ...
        </transaction>
-    requires #isValidForTxnType(ConfigAssetDecimals, TYPE)
 
   rule [[ getTxnField(I, ConfigAssetDefaultFrozen) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <configDefaultFrozen> X </configDefaultFrozen>
          ...
        </transaction>
-    requires #isValidForTxnType(ConfigAssetDefaultFrozen, TYPE)
 
   rule [[ getTxnField(I, ConfigAssetUnitName) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <configUnitName> X </configUnitName>
          ...
        </transaction>
-    requires #isValidForTxnType(ConfigAssetUnitName, TYPE)
 
   rule [[ getTxnField(I, ConfigAssetName) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <configAssetName> X </configAssetName>
          ...
        </transaction>
-    requires #isValidForTxnType(ConfigAssetName, TYPE)
 
   rule [[ getTxnField(I, ConfigAssetURL) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <configAssetURL> X </configAssetURL>
          ...
        </transaction>
-    requires #isValidForTxnType(ConfigAssetURL, TYPE)
 
   rule [[ getTxnField(I, ConfigAssetMetaDataHash) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <configMetaDataHash> X </configMetaDataHash>
          ...
        </transaction>
-    requires #isValidForTxnType(ConfigAssetMetaDataHash, TYPE)
 
   rule [[ getTxnField(I, ConfigAssetManager) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <configManagerAddr> X </configManagerAddr>
          ...
        </transaction>
-    requires #isValidForTxnType(ConfigAssetManager, TYPE)
 
   rule [[ getTxnField(I, ConfigAssetReserve) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <configReserveAddr> X </configReserveAddr>
          ...
        </transaction>
-    requires #isValidForTxnType(ConfigAssetReserve, TYPE)
 
   rule [[ getTxnField(I, ConfigAssetFreeze) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <configFreezeAddr> X </configFreezeAddr>
          ...
        </transaction>
-    requires #isValidForTxnType(ConfigAssetFreeze, TYPE)
 
   rule [[ getTxnField(I, ConfigAssetClawback) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <configClawbackAddr> X </configClawbackAddr>
          ...
        </transaction>
-    requires #isValidForTxnType(ConfigAssetClawback, TYPE)
 
   rule [[ getTxnField(I, FreezeAsset) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <freezeAsset> X </freezeAsset>
          ...
        </transaction>
-    requires #isValidForTxnType(FreezeAsset, TYPE)
 
   rule [[ getTxnField(I, FreezeAssetAccount) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <freezeAccount> X </freezeAccount>
          ...
        </transaction>
-    requires #isValidForTxnType(FreezeAssetAccount, TYPE)
 
   rule [[ getTxnField(I, FreezeAssetFrozen) => normalize(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <assetFrozen> X </assetFrozen>
          ...
        </transaction>
-    requires #isValidForTxnType(FreezeAssetFrozen, TYPE)
 
   rule [[ getTxnField(I, Applications, 0) => normalize(A) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          ...
        </transaction>
        <currentApplicationID> A </currentApplicationID>
-    requires #isValidForTxnType(Applications, TYPE)
 
   rule [[ getTxnField(I, Applications, J) => normalize(getTValueAt(J -Int 1, X)) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <foreignApps> X </foreignApps>
          ...
        </transaction>
-    requires #isValidForTxnType(Applications, TYPE)
-     andBool 0 <=Int J andBool J <=Int size(X)
+    requires 0 <=Int J andBool J <=Int size(X)
 
   rule [[ getTxnField(I, Applications) => (A X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <foreignApps> X </foreignApps>
          ...
        </transaction>
        <currentApplicationID> A </currentApplicationID>
-    requires #isValidForTxnType(Applications, TYPE)
 
   rule [[ getTxnField(I, Assets, J) => normalize(getTValueAt(J, X)) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <foreignAssets> X </foreignAssets>
          ...
        </transaction>
-    requires #isValidForTxnType(Assets, TYPE)
-     andBool 0 <=Int J andBool J <Int size(X)
+    requires 0 <=Int J andBool J <Int size(X)
 
   rule [[ getTxnField(I, Assets) => X ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <foreignAssets> X </foreignAssets>
          ...
        </transaction>
-    requires #isValidForTxnType(Assets, TYPE)
 
   rule [[ getTxnField(I, NumAssets) => size(X) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <foreignAssets> X </foreignAssets>
          ...
        </transaction>
-    requires #isValidForTxnType(NumAssets, TYPE)
 
   rule [[ getTxnField(I, LastLog) => MSG ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <logData> _ MSG:TBytes </logData>
          ...
        </transaction>
-    requires #isValidForTxnType(LastLog, TYPE)
 
   rule [[ getTxnField(I, LastLog) => MSG ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <logData> MSG:TBytes </logData>
          ...
        </transaction>
-    requires #isValidForTxnType(LastLog, TYPE)
 
   rule [[ getTxnField(I, NumLogs) => size(LOGS) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <logData> LOGS </logData>
          ...
        </transaction>
-    requires #isValidForTxnType(NumLogs, TYPE)
 
   rule [[ getTxnField(I, Logs, J) => normalize(getTValueAt(J, LOGS)) ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <logData> LOGS </logData>
          ...
        </transaction>
-    requires #isValidForTxnType(Logs, TYPE)
 
   rule [[ getTxnField(I, Logs) => LOGS ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <logData> LOGS </logData>
          ...
        </transaction>
-    requires #isValidForTxnType(Logs, TYPE)
 
   rule [[ getTxnField(I, CreatedApplicationID) => CREATED_APP ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <txApplicationID> CREATED_APP </txApplicationID>
          ...
        </transaction>
-    requires #isValidForTxnType(CreatedApplicationID, TYPE)
 
   rule [[ getTxnField(I, CreatedAssetID) => CREATED_ASSET ]]
        <transaction>
          <txID> I </txID>
-         <typeEnum> TYPE  </typeEnum>
          <txConfigAsset> CREATED_ASSET </txConfigAsset>
          ...
        </transaction>
-    requires #isValidForTxnType(CreatedAssetID, TYPE)
 ```
 
 *Failure*
 ```k
-  rule getTxnField(_, _:TxnaField)    => .TValueList [owise]
-  rule getTxnField(_, _:TxnField    ) => NoTValue    [owise]
-  rule getTxnField(_, _, _          ) => NoTValue    [owise]
+  rule getTxnField(_, _:TxnaField    ) => .TValueList            [owise]
+  rule getTxnField(_, FIELD:TxnField ) => getDefaultValue(FIELD) [owise]
+  rule getTxnField(_, _:TxnaField, _ ) => NoTValue               [owise]
+```
+
+*Default field values*
+```k
+
+  syntax TValue ::= getDefaultValue(TxnField) [function]
+
+  rule getDefaultValue(Sender)                    => PARAM_ZERO_ADDR
+  rule getDefaultValue(Fee)                       => 0
+  rule getDefaultValue(FirstValid)                => 0
+  rule getDefaultValue(LastValid)                 => 0
+  rule getDefaultValue(Note)                      => .Bytes
+  rule getDefaultValue(Lease)                     => .Bytes
+  rule getDefaultValue(Receiver)                  => PARAM_ZERO_ADDR
+  rule getDefaultValue(Amount)                    => 0
+  rule getDefaultValue(CloseRemainderTo)          => PARAM_ZERO_ADDR
+  rule getDefaultValue(VotePK)                    => PARAM_ZERO_ADDR
+  rule getDefaultValue(SelectionPK)               => PARAM_ZERO_ADDR
+  rule getDefaultValue(VoteFirst)                 => 0
+  rule getDefaultValue(VoteLast)                  => 0
+  rule getDefaultValue(VoteKeyDilution)           => 0
+  rule getDefaultValue(Type)                      => .Bytes
+  rule getDefaultValue(TypeEnum)                  => 0
+  rule getDefaultValue(XferAsset)                 => 0
+  rule getDefaultValue(AssetAmount)               => 0
+  rule getDefaultValue(AssetSender)               => PARAM_ZERO_ADDR
+  rule getDefaultValue(AssetReceiver)             => PARAM_ZERO_ADDR
+  rule getDefaultValue(AssetCloseTo)              => PARAM_ZERO_ADDR
+  rule getDefaultValue(GroupIndex)                => 0
+  rule getDefaultValue(TxID)                      => .Bytes
+  rule getDefaultValue(ApplicationID)             => 0
+  rule getDefaultValue(OnCompletion)              => 0
+  rule getDefaultValue(NumAppArgs)                => 0
+  rule getDefaultValue(NumAccounts)               => 0
+  rule getDefaultValue(ApprovalProgram)           => .Bytes
+  rule getDefaultValue(ClearStateProgram)         => .Bytes
+  rule getDefaultValue(RekeyTo)                   => PARAM_ZERO_ADDR
+  rule getDefaultValue(ConfigAsset)               => 0
+  rule getDefaultValue(ConfigAssetTotal)          => 0
+  rule getDefaultValue(ConfigAssetDecimals)       => 0
+  rule getDefaultValue(ConfigAssetDefaultFrozen)  => 0
+  rule getDefaultValue(ConfigAssetUnitName)       => .Bytes
+  rule getDefaultValue(ConfigAssetName)           => .Bytes
+  rule getDefaultValue(ConfigAssetURL)            => .Bytes
+  rule getDefaultValue(ConfigAssetMetaDataHash)   => .Bytes
+  rule getDefaultValue(ConfigAssetManager)        => PARAM_ZERO_ADDR
+  rule getDefaultValue(ConfigAssetReserve)        => PARAM_ZERO_ADDR
+  rule getDefaultValue(ConfigAssetFreeze)         => PARAM_ZERO_ADDR
+  rule getDefaultValue(ConfigAssetClawback)       => PARAM_ZERO_ADDR
+  rule getDefaultValue(FreezeAsset)               => 0
+  rule getDefaultValue(FreezeAssetAccount)        => PARAM_ZERO_ADDR
+  rule getDefaultValue(FreezeAssetFrozen)         => 0
+  rule getDefaultValue(NumAssets)                 => 0
+  rule getDefaultValue(NumApplications)           => 0
+  rule getDefaultValue(GlobalNumUint)             => 0
+  rule getDefaultValue(GlobalNumByteSlice)        => 0
+  rule getDefaultValue(LocalNumUint)              => 0
+  rule getDefaultValue(LocalNumByteSlice)         => 0
+  rule getDefaultValue(ExtraProgramPages)         => 0
+  rule getDefaultValue(Nonparticipation)          => 0
+  rule getDefaultValue(NumLogs)                   => 0
+  rule getDefaultValue(CreatedAssetID)            => 0
+  rule getDefaultValue(CreatedApplicationID)      => 0
+  rule getDefaultValue(LastLog)                   => .Bytes
+  rule getDefaultValue(StateProofPK)              => .Bytes
+  rule getDefaultValue(NumApprovalProgramPages)   => 0
+  rule getDefaultValue(NumClearStateProgramPages) => 0
+
 ```
 
 *Other Helper Functions*
@@ -909,30 +852,6 @@ module ALGO-TXN
 
   rule _ in_txns( <transactions> .Bag </transactions> ) => false
 
-
-  syntax Bool ::= #isValidForTxnType(TxnField,     Int) [function, total]
-  syntax Bool ::= #isValidForTxnType(TxnaField,    Int) [function, total]
-  // -------------------------------------------------------------
-  // all transaction types
-  rule #isValidForTxnType(_:TxnHeaderField  , I)    => 1 <=Int I andBool I <=Int 6
-  rule #isValidForTxnType(_:TxnaDynamicField, I)    => 1 <=Int I andBool I <=Int 6
-  rule #isValidForTxnType(_:TxnDynamicField , I)    => 1 <=Int I andBool I <=Int 6
-  // the pay transaction type
-  rule #isValidForTxnType(_:TxnPayField     , I)    => I ==Int 1
-  // the keyreg transaction type
-  rule #isValidForTxnType(_:TxnKeyregField  , I)    => I ==Int 2
-  // the config asset transaction type
-  rule #isValidForTxnType(_:TxnAcfgField    , I)    => I ==Int 3
-  // the asset transfer transaction type
-  rule #isValidForTxnType(_:TxnAxferField   , I)    => I ==Int 4
-  // the asset freeze transaction type
-  rule #isValidForTxnType(_:TxnAfrzField    , I)    => I ==Int 5
-  // the application call transaction type
-  rule #isValidForTxnType(_:TxnApplField  , I)    => I ==Int 6
-  rule #isValidForTxnType(_:TxnaField     , I)    => I ==Int 6
-  // catch-all failure case
-  rule #isValidForTxnType(_:TxnField  , _)    => false [owise]
-  rule #isValidForTxnType(_:TxnaField , _)    => false [owise]
 
 endmodule
 ```

@@ -1,7 +1,7 @@
 module PAY-SPEC
   imports VERIFICATION
 
-claim [pay]:
+claim [main]:
   <kavm>
     <k> #evalFirstTx() => .K ... </k>
 
