@@ -2,7 +2,7 @@ from base64 import b64decode, b64encode
 from typing import Any, Dict, List, Optional, cast
 
 from algosdk.constants import APPCALL_TXN, ASSETTRANSFER_TXN, PAYMENT_TXN
-from algosdk.encoding import encode_address
+from algosdk.encoding import decode_address, encode_address
 from algosdk.future.transaction import (
     ApplicationCallTxn,
     AssetTransferTxn,
@@ -11,6 +11,7 @@ from algosdk.future.transaction import (
     StateSchema,
     SuggestedParams,
     Transaction,
+    binascii,
 )
 from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, Subst
 from pyk.kast.manip import split_config_from
@@ -19,7 +20,7 @@ from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
 
 from kavm.constants import ZERO_ADDRESS
-from kavm.pyk_utils import algorand_address_to_k_bytes, maybe_tvalue, tvalue_list
+from kavm.pyk_utils import algorand_address_to_k_bytes, maybe_tvalue, token_or_expr, tvalue_bytes_list, tvalue_list
 
 
 class KAVMApplyData:
@@ -104,6 +105,27 @@ class KAVMTransaction(Transaction):
             # base64 encode application arguments
             if k == 'apaa':
                 txn_dict[k] = [b64encode(v).decode('utf8') for v in txn_dict[k]]
+        return txn_dict
+
+    @staticmethod
+    def desanitize_byte_fields(txn_dict: Dict[str, Any]) -> Dict[str, Any]:
+        """Convert base64-encoded fields of Transaction into raw bytes"""
+        for k, v in txn_dict.items():
+            if k == 'apar':
+                for sub_k, sub_v in txn_dict['apar'].items():
+                    if sub_k in ['c', 'f', 'r']:
+                        txn_dict['apar'][sub_k] = decode_address(sub_v)
+            if type(v) is str:
+                if k in ['snd', 'rcv', 'close', 'asnd', 'arcv', 'aclose', 'rekey']:
+                    txn_dict[k] = decode_address(v)
+                else:
+                    if not k in ['type']:
+                        try:
+                            txn_dict[k] = b64decode(v)
+                        except binascii.Error:
+                            txn_dict[k] = v.encode('utf-8')
+            if k == 'apaa':
+                txn_dict[k] = [b64decode(v) for v in txn_dict[k]]
         return txn_dict
 
     @staticmethod
@@ -218,19 +240,19 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fields_s
     symbolic_fields_subst = symbolic_fields_subst if symbolic_fields_subst else Subst({})
     header_subst = Subst(
         {
-            'FEE_CELL': maybe_tvalue(txn.fee),
+            'FEE_CELL': token_or_expr(maybe_tvalue, txn.fee),
             'FIRSTVALID_CELL': maybe_tvalue(txn.first_valid_round),
             'LASTVALID_CELL': maybe_tvalue(txn.last_valid_round),
             'GENESISHASH_CELL': maybe_tvalue(txn.genesis_hash),
             'GENESISID_CELL': maybe_tvalue(txn.genesis_id),
-            'SENDER_CELL': bytesToken(txn.sender),
+            'SENDER_CELL': token_or_expr(algorand_address_to_k_bytes, txn.sender),
             'TXTYPE_CELL': maybe_tvalue(txn.type),
             'TYPEENUM_CELL': maybe_tvalue(txn_type_to_type_enum(txn.type)),
             'GROUPIDX_CELL': maybe_tvalue(None),
             'GROUPID_CELL': maybe_tvalue(txn.group) if txn.group else KToken('"0"', KSort('String')),
             'LEASE_CELL': maybe_tvalue(txn.lease),
-            'NOTE_CELL': txn.note if txn.note else KToken('""', KSort('String')),
-            'REKEYTO_CELL': txn.rekey_to if txn.rekey_to else algorand_address_to_k_bytes(ZERO_ADDRESS),
+            'NOTE_CELL': KToken('""', KSort('String')),
+            'REKEYTO_CELL': bytesToken(txn.rekey_to) if txn.rekey_to else algorand_address_to_k_bytes(ZERO_ADDRESS),
         }
     )
 
@@ -253,9 +275,9 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fields_s
         txn = cast(PaymentTxn, txn)
         type_specific_subst = Subst(
             {
-                'RECEIVER_CELL': bytesToken(txn.receiver),
-                'AMOUNT_CELL': maybe_tvalue(txn.amt),
-                'CLOSEREMAINDERTO_CELL': algorand_address_to_k_bytes(ZERO_ADDRESS),
+                'RECEIVER_CELL': token_or_expr(algorand_address_to_k_bytes, txn.receiver),
+                'AMOUNT_CELL': token_or_expr(maybe_tvalue, txn.amt),
+                'CLOSEREMAINDERTO_CELL': token_or_expr(algorand_address_to_k_bytes, ZERO_ADDRESS),
             }
         )
         type_specific_fields_cell = [
@@ -271,7 +293,7 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fields_s
         type_specific_subst = Subst(
             {
                 'XFERASSET_CELL': intToken(txn.index),
-                'ASSETRECEIVER_CELL': bytesToken(txn.receiver),
+                'ASSETRECEIVER_CELL': algorand_address_to_k_bytes(txn.receiver),
                 'ASSETAMOUNT_CELL': maybe_tvalue(txn.amount),
                 'ASSETCLOSETO_CELL': algorand_address_to_k_bytes(ZERO_ADDRESS),
                 'ASSETASENDER_CELL': algorand_address_to_k_bytes(ZERO_ADDRESS),
@@ -309,7 +331,7 @@ def transaction_k_term(kavm: Any, txn: Transaction, txid: str, symbolic_fields_s
                     args=[KToken(token='1', sort=KSort(name='Int'))],
                 ),
                 # 'APPLICATIONARGS_CELL': tvalue_list(txn.app_args if txn.app_args else []),
-                'APPLICATIONARGS_CELL': tvalue_list(txn.app_args if txn.app_args else []),
+                'APPLICATIONARGS_CELL': tvalue_bytes_list(txn.app_args if txn.app_args else []),
                 'FOREIGNAPPS_CELL': tvalue_list(txn.foreign_apps if txn.foreign_apps else []),
                 'FOREIGNASSETS_CELL': tvalue_list(txn.foreign_assets)
                 if txn.foreign_assets is not None

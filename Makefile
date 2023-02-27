@@ -437,6 +437,12 @@ test-kavm-bison-parsers:
 test-kavm-avm-simulation:
 	$(MAKE) test-scenarios -C $(PY_KAVM_DIR)
 
+############################################
+## AVM PyTeal-generated Symbolic Proof Tests
+############################################
+test-pyteal-prove:
+	$(MAKE) test-generated-claims -C $(PY_KAVM_DIR)
+
 ###########################
 ## AVM Symbolic Proof Tests
 ###########################
@@ -451,8 +457,8 @@ test-avm-semantics-internal-prove: $(avm_prove_internal_specs:=.prove)
 test-avm-semantics-opcode-prove: $(avm_prove_opcode_specs:=.prove)
 test-avm-semantics-simple-prove: $(avm_prove_simple_specs:=.prove)
 test-avm-semantics-calls-prove: $(avm_prove_call_specs:=.prove)
-test-avm-semantics-calls-kcfg-prove: $(avm_prove_call_specs:=.kcfg.prove)
 test-avm-semantics-transactions-prove: $(avm_prove_transactions_specs:=.prove)
+test-avm-semantics-calls-kcfg-prove: $(avm_prove_call_specs:=.kcfg.prove)
 
 tests/specs/%-spec.k.prove: build-avm-verification $(KAVM_LIB)/version
 	$(POETRY_RUN) \
