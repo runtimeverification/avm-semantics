@@ -1,7 +1,7 @@
 module PAY-SPEC
   imports VERIFICATION
 
-claim [pay]:
+claim [main]:
   <kavm>
     <k> #evalFirstTx() => .K ... </k>
 
@@ -73,15 +73,12 @@ claim [pay]:
    andBool #rangeUInt(64, RECEIVER_BALANCE)
    andBool #rangeUInt(64, PAYMENT_AMOUNT)
 
-   // payment amount is small
-   andBool #range(0 < PAYMENT_AMOUNT <= 10000)
-
    // spec-specific requirements on variables
    andBool SENDER_MIN_BALANCE   >=Int PARAM_MIN_BALANCE
    andBool RECEIVER_MIN_BALANCE >=Int PARAM_MIN_BALANCE
    andBool SENDER_BALANCE       >=Int SENDER_MIN_BALANCE +Int PAYMENT_AMOUNT
    andBool RECEIVER_BALANCE     >=Int RECEIVER_MIN_BALANCE
-   andBool #rangeUInt(64, RECEIVER_BALANCE +Int PAYMENT_AMOUNT)
+   // andBool #rangeUInt(64, RECEIVER_BALANCE +Int PAYMENT_AMOUNT)
 
    // Addresses are unique
    andBool SENDER_ADDRESS =/=K RECEIVER_ADDRESS

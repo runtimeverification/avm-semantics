@@ -302,7 +302,8 @@ The `returnDesc` function builds the human-readable description of the panic cod
   rule <k> #stopIfError(ERR) ~> X:TestingCommand => X:TestingCommand ~> #stopIfError(ERR) ... </k>
 
   // Consume the rest of the K cell if the execution terminated with an error
-  rule <k> #stopIfError(_) ~> (ITEM:KItem => .K) ... </k>
+  rule [stopIfError]:
+       <k> #stopIfError(_) ~> (ITEM:KItem => .K) ... </k>
        <returncode> RETURN_CODE </returncode>
     requires RETURN_CODE =/=Int 0
      andBool notBool(isTestingCommand(ITEM))

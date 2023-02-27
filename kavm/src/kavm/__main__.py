@@ -348,7 +348,7 @@ def exec_kcfg_prove(
             cfg_id,
             cfg,
             cfg_dir=kavm.use_directory,
-            terminal_rules=['AVM-EXECUTION.starttx', 'AVM-EXECUTION.endtx', 'AVM-PANIC.panic'],
+            terminal_rules=['AVM-EXECUTION.starttx', 'AVM-EXECUTION.endtx', 'AVM-PANIC.panic', 'AVM-PANIC.richPanic'],
         )
 
 
