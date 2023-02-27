@@ -146,8 +146,8 @@ claim <k> itxn_next => . </k>
               <txHeader>
                  <fee> 0 </fee>
                  <sender> b"application1" </sender>
-                 <firstValid> 100 </firstValid>
-                 <lastValid> 300 </lastValid>
+                 <firstValid> ?_ </firstValid>
+                 <lastValid> ?_ </lastValid>
                  <genesisHash> .Bytes </genesisHash>
                  <txType> "unknown" </txType>
                  <typeEnum> 0 </typeEnum>
