@@ -105,6 +105,9 @@ def generate_interpreter(
 ) -> None:
     '''Kompile KAVM to produce an LLVM-based interpreter'''
 
+    interpreter_object_file = definition_dir / 'partial.o'
+    interpreter_executable_file = definition_dir / 'interpreter'
+
     def _kompile_partial() -> None:
         command = [
             'kompile',
@@ -121,7 +124,7 @@ def generate_interpreter(
         command += [str(arg) for include in includes for arg in ['-I', include]] if includes else []
         command += ['--md-selector', md_selector] if md_selector else []
         command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
-        command += ['-ccopt', '-c', '-ccopt', '-o', '-ccopt', 'partial.o']
+        command += ['-ccopt', '-c', '-ccopt', '-o', '-ccopt', str(interpreter_object_file)]
         command += ['--coverage'] if coverage else []
         try:
             subprocess.run(command, check=True, text=True)
@@ -150,8 +153,8 @@ def generate_interpreter(
 
     _kompile_partial()
     _llvm_kompile(
-        interpreter_object_file=definition_dir / 'partial.o',
-        interpreter_executable_file=definition_dir / 'interpreter',
+        interpreter_object_file=interpreter_object_file.resolve(),
+        interpreter_executable_file=interpreter_executable_file.resolve(),
         hook_cpp_files=hook_cpp_files,
         # includes=includes,
         hook_clang_flags=hook_clang_flags,
