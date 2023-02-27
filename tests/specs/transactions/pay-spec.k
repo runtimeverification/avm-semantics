@@ -1,7 +1,7 @@
 module PAY-SPEC
   imports VERIFICATION
 
-claim [pay]:
+claim [main]:
   <kavm>
     <k> #evalFirstTx() => .K ... </k>
 
@@ -30,7 +30,7 @@ claim [pay]:
           </txnTypeSpecificFields>
           <resume> false </resume>
           ...
-        </transaction> => ?_
+        </transaction>
     </transactions>
 
     <avmExecution>
