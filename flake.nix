@@ -72,7 +72,7 @@
             python = prev.python310;
             projectDir = ./kavm;
             overrides = prev.poetry2nix.overrides.withoutDefaults
-              (finalPython: prevPython: { pyk = prev.python310Packages.pyk; });
+              (finalPython: prevPython: { pyk = prev.pyk-python310; });
             preferWheels = true;
             # We remove `"dev"` from `checkGroups`, so that poetry2nix does not try to resolve dev dependencies.
             checkGroups = [ ];
