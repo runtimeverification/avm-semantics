@@ -27,4 +27,32 @@ module FUNCTIONAL-SPEC
      andBool ARG1 >=Int 0
      andBool ARG2 >=Int 0
 
+  claim <k> 
+          runLemma(bool2Int ( ( ( AMOUNT:Int *Int 3000000 >>Int 64 <<Int 64 ) +Int ( AMOUNT:Int *Int 3000000 &Int 18446744073709551615 ) ) /Int ( AMOUNT:Int +Int 1000000 ) >>Int 64 ==Int 0 ))
+          => 
+          doneLemma(bool2Int ( ( AMOUNT:Int *Int 3000000 ) /Int ( AMOUNT:Int +Int 1000000 ) >>Int 64 ==Int 0 ))
+        </k>
+
+  claim <k>
+          runLemma(( ( AMOUNT:Int *Int 3000000 &Int 18446744073709551615 ) /Int ( AMOUNT:Int +Int 1000000 ) &Int 18446744073709551615 ) *Int 10 /Int 10000 >>Int 64)
+          =>
+          doneLemma(0)
+        </k>
+    requires AMOUNT <Int 18446744073709551615
+     andBool AMOUNT >=Int 0
+
+  claim <k>
+          runLemma( 0 >Int ( ( AMOUNT:Int *Int 3000000 &Int 18446744073709551615 ) /Int ( AMOUNT:Int +Int 1000000 ) &Int 18446744073709551615 ) *Int 9700 /Int 10000 &Int 18446744073709551615 )
+          =>
+          doneLemma(false)
+        </k>
+    requires AMOUNT <Int 18446744073709551615
+     andBool AMOUNT >=Int 0
+
+  claim <k>
+          runLemma(AMOUNT1:Int *Int AMOUNT2:Int /Int AMOUNT3:Int &Int 18446744073709551615)
+          =>
+          doneLemma(AMOUNT1:Int *Int AMOUNT2:Int /Int AMOUNT3:Int)
+        </k>
+    requires AMOUNT1 *Int AMOUNT2 /Int AMOUNT3 <=Int 18446744073709551615
 endmodule

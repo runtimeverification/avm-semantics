@@ -85,8 +85,8 @@ claim [main]:
          <lastTxnGroupID> _ => ?_ </lastTxnGroupID>
       </currentTxnExecution>
       <innerTransactions> .List => ?_ </innerTransactions>
-      <activeApps> .Set </activeApps>
-      <touchedAccounts> .List </touchedAccounts>
+      <activeApps> .Set => ?_ </activeApps>
+      <touchedAccounts> .List => ?_ </touchedAccounts>
     </avmExecution>
 
     <blockchain>
@@ -623,7 +623,6 @@ retsub
    andBool ARG2 <=Int MAX_UINT64
    andBool ARG1 >Int 0
    andBool ARG2 >Int 0
-
 ```
 
 ```k

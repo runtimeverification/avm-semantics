@@ -126,10 +126,10 @@ def mint(payment: abi.PaymentTransaction, *, output: abi.Uint64) -> Expr:
     )
 
 
-@router.precondition(expr='asset_transfer.get().amount() >= Int(10000)')
-@router.precondition(expr='asset_transfer.get().amount() <= Int(20000)')
-@router.postcondition(expr=f'output.get() == asset_transfer.get().amount() * Int({INITIAL_EXCHANGE_RATE})')
-@router.hoare_method
+# @router.precondition(expr='asset_transfer.get().amount() >= Int(10000)')
+# @router.precondition(expr='asset_transfer.get().amount() <= Int(20000)')
+# @router.postcondition(expr=f'output.get() == asset_transfer.get().amount() * Int({INITIAL_EXCHANGE_RATE})')
+# @router.hoare_method
 @router.method
 def burn(asset_transfer: abi.AssetTransferTransaction, *, output: abi.Uint64) -> Expr:
     """

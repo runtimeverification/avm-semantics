@@ -233,7 +233,7 @@ module TEAL-OPCODES
 #### Flow Control Operations
 
 ```k
-  syntax Label ::= r"([a-zA-Z0-9]|_)+" [token]
+  syntax Label           ::= r"([a-zA-Z0-9]|_)+" [token]
 
   syntax BranchingOpCode ::= CondBranchOpCode
                            | JumpOpCode
@@ -398,7 +398,7 @@ module TEAL-SYNTAX
   syntax VersionPragma ::= "version" Int
 
   syntax TealPgm ::= TealOpCodeOrLabel
-                   | TealOpCodeOrLabel TealPgm
+                   | TealOpCodeOrLabel TealPgm [format(%1%n%2)]
   syntax TealInputPgm ::= TealPragmas TealPgm | TealPgm
 
 endmodule
