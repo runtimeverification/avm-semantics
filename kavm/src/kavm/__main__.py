@@ -70,6 +70,7 @@ def exec_prove(
     exclude_claims: Iterable[str] = (),
     profile: bool = False,
     minimize: bool = True,
+    smt_timeout: int = 40,
     haskell_log_format: str = KoreExecLogFormat.ONELINE.value,
     haskell_log_debug_transition: bool = True,
     haskell_log_entries: Iterable[str] = (),
@@ -80,6 +81,8 @@ def exec_prove(
     haskell_args = []
     for de in debug_equations:
         haskell_args += ['--debug-equation', de]
+    if smt_timeout:
+        haskell_args += ['--smt-timeout', str(smt_timeout)]
     if bug_report:
         haskell_args += ['--bug-report', str(spec_file.with_suffix(''))]
     if depth is not None:
@@ -442,6 +445,7 @@ def create_argument_parser() -> ArgumentParser:
     prove_subparser.add_argument('--definition-dir', dest='definition_dir', type=dir_path)
     prove_subparser.add_argument('--debugger', default=False, action='store_true')
     prove_subparser.add_argument('--debug-script', type=file_path)
+    prove_subparser.add_argument('--smt-timeout', dest='smt_timeout', type=int),
     prove_subparser.add_argument(
         '--haskell-log-format',
         type=str,
