@@ -12,11 +12,12 @@ from typing import Any, Callable, Dict, Final, Iterable, List, Optional, TypeVar
 
 from pyk.cli_utils import BugReport, dir_path, file_path
 from pyk.kast.inner import KApply
-from pyk.kast.manip import minimize_term
+from pyk.kast.manip import get_cell, minimize_term
 from pyk.kcfg.explore import KCFGExplore
 from pyk.kcfg.kcfg import KCFG
 from pyk.kcfg.tui import KCFGViewer
 from pyk.kore import syntax as kore
+from pyk.kore.parser import KoreParser
 from pyk.ktool.kprove import KoreExecLogFormat
 
 from kavm.kavm import KAVM
@@ -204,6 +205,7 @@ def exec_run(
     output: str,
     profile: bool,
     depth: Optional[int],
+    check_return_code: bool = True,
     **kwargs: Any,
 ) -> None:
     kavm = KAVM(definition_dir=definition_dir)
@@ -216,14 +218,16 @@ def exec_run(
         if input_file.suffix == '.json':
             scenario = KAVMScenario.from_json(input_file.read_text(), teal_sources_dir)
             final_state, kavm_stderr = kavm.run_avm_json(
-                scenario=scenario, profile=profile, depth=depth, rerun_on_error=True, check=False
+                scenario=scenario, profile=profile, depth=depth, check_return_code=check_return_code
             )
             if output == 'kore':
-                print(final_state)
-                exit(0)
+                print(final_state.text)
             if output == 'pretty':
                 final_state_kast = kavm.kore_to_kast(final_state)
-                print(kavm.pretty_print(final_state_kast))
+                print(kavm.pretty_print(KAVM.reduce_config_for_pretty_printing(final_state_kast)))
+            if output == 'k-cell':
+                final_state_kast = kavm.kore_to_kast(final_state)
+                print(kavm.pretty_print(get_cell(final_state_kast, 'K_CELL')))
             if output == 'final-state-json':
                 _LOGGER.info('Extracting <state_dumps> cell from KORE output')
                 state_dumps_kore = get_state_dumps_kore(final_state)
@@ -235,15 +239,24 @@ def exec_run(
                 print(json.dumps(json.loads(state_dump_str), indent=4))
             if output == 'stderr-json':
                 print(json.dumps(json.loads(kavm_stderr), indent=4))
-            exit(0)
         else:
             print(f'Unrecognized input file extension: {input_file.suffix}')
             exit(1)
     except RuntimeError as err:
         msg, stdout, stderr = err.args
-        _LOGGER.critical(stdout)
-        _LOGGER.critical(msg)
+        if output == 'kore':
+            print(stdout)
+        else:
+            parser = KoreParser(stdout)
+            final_state = parser.pattern()
+            assert parser.eof
+            final_state_kast = kavm.kore_to_kast(final_state)
+            if output == 'pretty':
+                print(kavm.pretty_print(KAVM.reduce_config_for_pretty_printing(final_state_kast)))
+            if output == 'k-cell':
+                print(kavm.pretty_print(get_cell(final_state_kast, 'K_CELL')))
         _LOGGER.critical(stderr)
+        _LOGGER.critical(msg)
 
 
 def exec_env(
@@ -335,7 +348,7 @@ def exec_kcfg_prove(
             cfg_id,
             cfg,
             cfg_dir=kavm.use_directory,
-            terminal_rules=['AVM-EXECUTION.starttx', 'AVM-EXECUTION.endtx', 'AVM-PANIC.panic'],
+            terminal_rules=['AVM-EXECUTION.starttx', 'AVM-EXECUTION.endtx', 'AVM-PANIC.panic', 'AVM-PANIC.richPanic'],
         )
 
 
@@ -531,7 +544,7 @@ def create_argument_parser() -> ArgumentParser:
         dest='output',
         type=str,
         help='Output mode',
-        choices=['pretty', 'json', 'kore', 'kast', 'none', 'final-state-json', 'stderr-json'],
+        choices=['pretty', 'json', 'kore', 'kast', 'none', 'final-state-json', 'stderr-json', 'k-cell'],
         required=True,
     )
     run_subparser.add_argument(
@@ -539,6 +552,13 @@ def create_argument_parser() -> ArgumentParser:
         dest='depth',
         type=int,
         help='Execute at most N rewrite steps',
+    )
+    run_subparser.add_argument(
+        '--skip-check',
+        dest='check_return_code',
+        default=True,
+        action='store_false',
+        help="Don't enforece the check of 'expected-returncode', return the real KAVM panic code instead",
     )
 
     # kcfg-view

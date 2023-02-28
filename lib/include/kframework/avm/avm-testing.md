@@ -32,10 +32,20 @@ module AVM-TESTING
   imports ALGOD-MODELS
   imports AVM-EXECUTION
   imports K-IO
+```
 
+The `<avm-testing>` configuration wraps the semantics' top-level `<kavm>` cell and adds two service cells:
+* `<check-returncode>` holds a boolean configuration variable that indicates if the KAVM return code
+should be checked against the expected one provided in the test scenario. If the expected and actual codes
+are the same, the return code is rewritten to 0 (success); otherwise the actual error return code is retained
+* `<state-dumps>` will hold the JSON-encoded final state of accounts upon successful execution
+
+
+```k
   configuration
     <avm-testing>
       <kavm/>
+      <check-returncode> $CHECK:Bool </check-returncode>
       <state-dumps> .List </state-dumps>
     </avm-testing>
 ```
@@ -148,11 +158,13 @@ The `#setupCounters` rule calculates the appropriate initial values for `<nextAs
                                , "stage-type": "submit-transactions"
                                })
         => #setupTransactions(TXNS) ~> #initGlobals() ~> #evalTxGroup()
-        ~> #checkExecutionResults(EXPECTED_RETURN_CODE) ...
+        ~> #if CHECK #then #checkExecutionResults(EXPECTED_RETURN_CODE) #else .K #fi
+        ...
        </k>
+       <check-returncode> CHECK </check-returncode>
 
   syntax TestingCommand ::= #checkExecutionResults(Int)
-  //--------------------------------------------------------
+  //---------------------------------------------------
   rule <k> #checkExecutionResults(EXPECTED_RETURN_CODE)
         => #dumpFinalState() ...
        </k>
@@ -162,7 +174,7 @@ The `#setupCounters` rule calculates the appropriate initial values for `<nextAs
   rule <k> #checkExecutionResults(EXPECTED_RETURN_CODE)
         => .K ...
        </k>
-       <returncode> RETURN_CODE => 1 </returncode>
+       <returncode> RETURN_CODE </returncode>
    requires notBool (RETURN_CODE ==Int EXPECTED_RETURN_CODE)
 
   syntax TestingCommand ::= #dumpFinalState()

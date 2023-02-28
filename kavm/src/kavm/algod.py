@@ -22,7 +22,6 @@ from algosdk.atomic_transaction_composer import (
 from algosdk.error import AlgodHTTPError
 from algosdk.future.transaction import PaymentTxn, Transaction
 from algosdk.v2client import algod
-from pyk.kore.syntax import Pattern
 
 from kavm import constants
 from kavm.adaptors.algod_account import KAVMAccount
@@ -233,14 +232,6 @@ class KAVMClient(algod.AlgodClient):
             return {'result': b64encode(data)}
         else:
             raise NotImplementedError(f'Endpoint not implemented: {requrl}')
-
-    def intermediate_k_state(self) -> Pattern:
-        # Construct a json scenario with no transactions and execute just the setup-network stage
-        scenario = self._construct_scenario(accounts=self._accounts.values(), transactions=[])
-        final_state, kavm_stderr = self.kavm.run_avm_json(
-            scenario=scenario, existing_decompiled_teal_dir=self._decompiled_teal_dir_path, check=False, output="pretty"
-        )
-        return final_state
 
     def _eval_transactions(self, txns: List[Transaction]) -> Dict[str, str]:
         """

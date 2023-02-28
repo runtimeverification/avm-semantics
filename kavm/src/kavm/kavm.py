@@ -4,11 +4,11 @@ import subprocess
 import tempfile
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union, cast
+from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union
 
 from pyk.cli_utils import BugReport, run_process
-from pyk.kast.inner import KSort, KToken
-from pyk.kast.manip import get_cell
+from pyk.kast.inner import KInner, KSort
+from pyk.kast.manip import minimize_term
 from pyk.kore import syntax as kore
 from pyk.kore.parser import KoreParser
 from pyk.ktool.kprint import paren
@@ -16,6 +16,7 @@ from pyk.ktool.kprove import KProve
 from pyk.ktool.krun import KRun, KRunOutput, _krun
 from pyk.prelude.k import K
 
+from kavm.pyk_utils import empty_cells_to_dots
 from kavm.scenario import KAVMScenario
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -50,6 +51,7 @@ class KAVM(KRun, KProve):
             self._verification_definition = definition_dir
         KRun.__init__(self, definition_dir, use_directory=use_directory, profile=profile, bug_report=bug_report)
 
+        self._bool_parser = definition_dir / 'parser_Bool_AVM-TESTING-SYNTAX'
         self._catcat_parser = definition_dir / 'catcat'
         self._teal_parser = teal_parser if teal_parser else definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
         self._scenario_parser = (
@@ -93,7 +95,7 @@ class KAVM(KRun, KProve):
         check: bool = True,
         existing_decompiled_teal_dir: Optional[Path] = None,
         rerun_on_error: bool = False,
-        output: str = "kore",
+        check_return_code: bool = True,
     ) -> Tuple[kore.Pattern, str]:
         """Run an AVM simulaion scenario with krun"""
 
@@ -114,66 +116,27 @@ class KAVM(KRun, KProve):
             os.environ['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
 
             try:
-                if output == "kore":
-                    proc_result = _krun(
-                        input_file=Path(tmp_scenario_file.name),
-                        definition_dir=self.definition_dir,
-                        output=KRunOutput.KORE,
-                        depth=depth,
-                        no_expand_macros=False,
-                        profile=profile,
-                        check=check,
-                        cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
-                        pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
-                        pipe_stderr=True,
-                    )
-                    if proc_result.returncode != 0:
-                        raise RuntimeError('Non-zero exit-code from krun.')
-
-                    parser = KoreParser(proc_result.stdout)
-                    final_pattern = parser.pattern()
-                    assert parser.eof
-                if output == "pretty":
-                    proc_result = _krun(
-                        input_file=Path(tmp_scenario_file.name),
-                        definition_dir=self.definition_dir,
-                        output=KRunOutput.PRETTY,
-                        depth=depth,
-                        no_expand_macros=False,
-                        profile=profile,
-                        check=check,
-                        cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
-                        pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
-                        pipe_stderr=True,
-                    )
-                    if proc_result.returncode != 0:
-                        raise RuntimeError('Non-zero exit-code from krun.')
-
-                    final_pattern = proc_result.stdout
+                proc_result = _krun(
+                    input_file=Path(tmp_scenario_file.name),
+                    definition_dir=self.definition_dir,
+                    output=KRunOutput.KORE,
+                    depth=depth,
+                    no_expand_macros=False,
+                    profile=profile,
+                    check=check,
+                    cmap={'TEAL_PROGRAMS': tmp_teals_file.name, 'CHECK': str(check_return_code).lower()},
+                    pmap={'TEAL_PROGRAMS': str(self._catcat_parser), 'CHECK': str(self._bool_parser)},
+                    pipe_stderr=True,
+                )
+                if proc_result.returncode != 0:
+                    raise RuntimeError('Non-zero exit-code from krun.')
+                parser = KoreParser(proc_result.stdout)
+                final_pattern = parser.pattern()
+                assert parser.eof
 
                 return final_pattern, proc_result.stderr
-            except RuntimeError as err:
-                # if _krun has thtown a RuntimeError, rerun with --output pretty to see the final state quicker
-                if rerun_on_error:
-                    rerun_result = _krun(
-                        input_file=Path(tmp_scenario_file.name),
-                        definition_dir=self.definition_dir,
-                        output=KRunOutput.PRETTY,
-                        depth=depth,
-                        no_expand_macros=False,
-                        profile=profile,
-                        check=False,
-                        cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
-                        pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
-                        pipe_stderr=True,
-                    )
-                    raise RuntimeError(f'Final configuration was: {rerun_result.stdout}') from err
-                # otherwise, try to establish the reason from the output Kore
-                else:
-                    parser = KoreParser(err.args[1])
-                    final_pattern = parser.pattern()
-                    returnstatus = cast(KToken, get_cell(self.kore_to_kast(final_pattern), 'RETURNSTATUS_CELL')).token
-                    raise RuntimeError(returnstatus) from err
+            except RuntimeError:
+                raise
 
     def kast(
         self,
@@ -213,11 +176,82 @@ class KAVM(KRun, KProve):
 
     @staticmethod
     def _patch_symbol_table(symbol_table: Dict[str, Callable[..., str]]) -> None:
-        symbol_table['_+Int_'] = paren(symbol_table['_+Int_'])
-        symbol_table['_+Bytes_'] = paren(lambda a1, a2: a1 + '+Bytes' + a2)
+        symbol_table['_Map_'] = lambda m1, m2: m1 + '\n' + m2
+        paren_symbols = [
+            '#And',
+            '_andBool_',
+            '#Implies',
+            '_impliesBool_',
+            '_&Int_',
+            '_*Int_',
+            '_+Int_',
+            '_-Int_',
+            '_/Int_',
+            '_|Int_',
+            '_modInt_',
+            'notBool_',
+            '#Or',
+            '_orBool_',
+            '_Set_',
+        ]
+        for symb in paren_symbols:
+            if symb in symbol_table:
+                symbol_table[symb] = paren(symbol_table[symb])
 
     @staticmethod
     def concrete_rules() -> List[str]:
         return [
             'TEAL-TYPES.getAppAddressBytes',
         ]
+
+    @staticmethod
+    def reduce_config_for_pretty_printing(term: KInner) -> KInner:
+        '''
+        Omit various parts of the configuration that are irrelevant
+
+        - Input: <generatedTop> cell term with full information
+        - Output: <generatedTop> cell with the 'empty' or irrelevant cells collappsed
+
+        This function is intended for pretty-printing only and is very opinionated
+        '''
+        labels_to_remove = [
+            '<effects>',
+            '<program>',
+            '<firstValid>',
+            '<lastValid>',
+            '<genesisHash>',
+            '<genesisID>',
+            '<typeEnum>',
+            '<lease>',
+            '<note>',
+            '<blocks>',
+            '<blockheight>',
+            '<globalRound>',
+            '<latestTimestamp>',
+            '<approvalProgramSrc>',
+            '<approvalPgmSrc>',
+            '<clearStateProgramSrc>',
+            '<clearStatePgmSrc>',
+            '<mode>',
+            '<version>',
+            '<stacksize>',
+            '<dequeIndexSet>',
+            '<round>',
+            '<preRewards>',
+            '<rewards>',
+            '<status>',
+            '<state-dumps>',
+            '<tealPrograms>',
+        ]
+        empty_labels = [
+            '.Map',
+            '.AppCellMap',
+            '.OptInAppCellMap',
+            '.AssetCellMap',
+            '.OptInAssetCellMap',
+            '.BoxCellMap',
+            '.TValueList',
+            '.TValuePairList',
+        ]
+        reduced_term = minimize_term(empty_cells_to_dots(term, empty_labels), abstract_labels=labels_to_remove)
+        return reduced_term
