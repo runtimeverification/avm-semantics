@@ -1,15 +1,28 @@
 import typing
 from base64 import b64encode
-from typing import Any, Collection, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Collection, Dict, List, Optional, Set, Tuple, TypeVar, Union
 
 from algosdk.encoding import decode_address
 from algosdk.future.transaction import OnComplete
-from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, bottom_up, build_assoc, top_down
+from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, Subst, bottom_up, build_assoc, top_down
+from pyk.kast.manip import is_anon_var, split_config_from
 from pyk.prelude.bytes import bytesToken
 from pyk.prelude.k import DOTS
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
-from pyk.utils import dequote_str
+from pyk.utils import dequote_str, hash_str
+
+T = TypeVar("T")
+
+
+def token_or_expr(
+    token_constructor: Callable[[T], KInner],
+    value: Union[T, KInner],
+) -> KInner:
+    if isinstance(value, KInner):
+        return value
+    else:
+        return token_constructor(value)
 
 
 def maybe_tvalue(value: Optional[Union[str, int, bytes]]) -> KInner:
@@ -51,6 +64,13 @@ def tvalue_list(values: List[Union[str, int, bytes]]) -> KInner:
         return KApply('.TValueList')
     else:
         return generate_tvalue_list([maybe_tvalue(v) for v in values])
+
+
+def tvalue_bytes_list(values: List[bytes]) -> KInner:
+    if len(values) == 0:
+        return KApply('.TValueList')
+    else:
+        return generate_tvalue_list([bytesToken(dequote_str(str(v))[2:-1]) for v in values])
 
 
 def map_bytes_bytes(d: Dict[str, str]) -> KInner:
@@ -176,3 +196,36 @@ def empty_cells_to_dots(kast: KInner, empty_labels: Collection[str]) -> KInner:
             return _kast
 
     return bottom_up(_empty_cells_to_dots, kast)
+
+
+def plusInt(i1: KInner, i2: KInner) -> KApply:  # noqa: N802
+    return KApply('_+Int_', i1, i2)
+
+
+def minusInt(i1: KInner, i2: KInner) -> KApply:  # noqa: N802
+    return KApply('_-Int_', i1, i2)
+
+
+def mulInt(i1: KInner, i2: KInner) -> KApply:  # noqa: N802
+    return KApply('_*Int_', i1, i2)
+
+
+def divInt(i1: KInner, i2: KInner) -> KApply:  # noqa: N802
+    return KApply('_/Int_', i1, i2)
+
+
+def eqK(i1: KInner, i2: KInner) -> KApply:  # noqa: N802
+    return KApply('_==K_', i1, i2)
+
+
+# borrowed from kevm_pyk
+def existentialize_leafs(term: KInner, keep_vars: Collection[KVariable] = ()) -> KInner:
+    '''
+    Turn every leaf cell of the term into an existential varaible
+    '''
+    config, subst = split_config_from(term)
+    term_hash = hash_str(term)[0:8]
+    for s in subst:
+        if not is_anon_var(subst[s]) and subst[s] not in keep_vars:
+            subst[s] = KVariable('?' + s + '_' + term_hash)
+    return Subst(subst)(config)

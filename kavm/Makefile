@@ -50,6 +50,9 @@ test-integration-algod: poetry-install
 test-integration-kalgod:
 	$(POETRY_RUN) python -m pytest $(PYTEST_ARGS) --ignore=src/tests/algod_integration/contracts/kcoin_vault --backend=kalgod src/tests/algod_integration
 
+test-generated-claims:
+	$(POETRY_RUN) python -m pytest $(PYTEST_ARGS) src/tests/algod_integration/contracts/kcoin_vault/test_specs.py
+
 # Profiling
 
 clean-profiling:

@@ -34,19 +34,22 @@ class KAVM(KRun, KProve):
         teal_parser: Optional[Path] = None,
         scenario_parser: Optional[Path] = None,
         profile: bool = False,
-        verification_definition_dir: Optional[Path] = None,
+        # verification_definition_dir: Optional[Path] = None,
         main_file: Optional[Path] = None,
         bug_report: Optional[BugReport] = None,
     ) -> None:
+        self.backend = (definition_dir / 'backend.txt').read_text()
+
+        if self.backend == 'haskell':
+            KProve.__init__(
+                self,
+                definition_dir=definition_dir,
+                use_directory=use_directory,
+                main_file=main_file,
+                profile=profile,
+            )
+            self._verification_definition = definition_dir
         KRun.__init__(self, definition_dir, use_directory=use_directory, profile=profile, bug_report=bug_report)
-        KProve.__init__(
-            self,
-            verification_definition_dir,
-            use_directory=use_directory,
-            main_file=main_file,
-            profile=profile,
-            bug_report=bug_report,
-        ) if verification_definition_dir else None
 
         self._bool_parser = definition_dir / 'parser_Bool_AVM-TESTING-SYNTAX'
         self._catcat_parser = definition_dir / 'catcat'
@@ -54,7 +57,6 @@ class KAVM(KRun, KProve):
         self._scenario_parser = (
             scenario_parser if scenario_parser else definition_dir / 'parser_JSON_AVM-TESTING-SYNTAX'
         )
-        self._verification_definition = verification_definition_dir
 
     def parse_teal(self, file: Optional[Path]) -> kore.Pattern:
         '''Parse a TEAL program with the fast Bison parser'''
@@ -128,7 +130,6 @@ class KAVM(KRun, KProve):
                 )
                 if proc_result.returncode != 0:
                     raise RuntimeError('Non-zero exit-code from krun.')
-
                 parser = KoreParser(proc_result.stdout)
                 final_pattern = parser.pattern()
                 assert parser.eof

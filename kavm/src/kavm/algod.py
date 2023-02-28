@@ -150,7 +150,13 @@ class KAVMClient(algod.AlgodClient):
         elif endpoint == 'accounts':
             if len(params) == 1:
                 address = params[0]
-                return self._accounts[address].dictify()
+                try:
+                    return self._accounts[address].dictify()
+                except KeyError:
+                    _LOGGER.warning(
+                        f'Account {address} is unknown to KAVM. Returing an account with the requested address and 0 balance to the client'
+                    )
+                    return KAVMAccount(address=address, amount=0).dictify()
             else:
                 raise NotImplementedError(f'Endpoint not implemented: {requrl}')
 
@@ -259,9 +265,12 @@ class KAVMClient(algod.AlgodClient):
                 existing_decompiled_teal_dir=self._decompiled_teal_dir_path,
             )
         except RuntimeError as e:
-            _LOGGER.error(f'Transaction group evaluation failed with status: {e.args[0]}')
-            _LOGGER.debug(f'Last generated scenario was: {json.dumps(scenario.dictify(), indent=4)}')
-            raise AlgodHTTPError(msg=f'KAVM has failed with status {e.args[0]}') from None
+            _LOGGER.critical(
+                f'Transaction group evaluation failed, last generated scenario was: {json.dumps(scenario.dictify(), indent=4)}'
+            )
+            raise AlgodHTTPError(
+                msg='KAVM has failed, rerun witn --log-level=ERROR to see the executed JSON scenario'
+            ) from e
 
         try:
             # on succeful execution, the final state will be serialized and prineted to stderr
@@ -312,9 +321,15 @@ class KAVMClient(algod.AlgodClient):
 
 
 class KAVMAtomicTransactionComposer(AtomicTransactionComposer):
-    def execute(
-        self, client: algod.AlgodClient, wait_rounds: int, override_tx_ids: Optional[List[str]] = None
-    ) -> "AtomicTransactionResponse":
+    """
+    This class overrides the 'execute' method of the base AtomicTransactionComposer class
+    by only introducing two lines of code which override the transactions IDs with
+    sequential integers (converted to strings). This is a requirement of KAVM's K implementation.
+    However, if a vanilla 'AlgodClient' is passed as 'clinet', the default transctions ids will be used
+    to maintain compatibility with go-algorand.
+    """
+
+    def execute(self, client: algod.AlgodClient, wait_rounds: int) -> "AtomicTransactionResponse":
         """
         Send the transaction group to the network and wait until it's committed
         to a block. An error will be thrown if submission or execution fails.
@@ -341,9 +356,10 @@ class KAVMAtomicTransactionComposer(AtomicTransactionComposer):
         self.submit(client)
         self.status = AtomicTransactionComposerStatus.SUBMITTED
 
-        # HACK: override the real transaction ids with the ones KAVM gave us
-        if override_tx_ids:
-            self.tx_ids = override_tx_ids
+        # HACK: override the real transaction ids with sequential integers if running with KAVM
+        # leave them as is otherwise
+        if isinstance(client, KAVMClient):
+            self.tx_ids = [str(idx) for idx, _ in enumerate(self.txn_list)]
 
         resp = transaction.wait_for_confirmation(client, self.tx_ids[0], wait_rounds)
 

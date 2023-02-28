@@ -30,7 +30,7 @@ claim [main]:
           </txnTypeSpecificFields>
           <resume> false </resume>
           ...
-        </transaction> => ?_
+        </transaction>
     </transactions>
 
     <avmExecution>
@@ -78,7 +78,7 @@ claim [main]:
    andBool RECEIVER_MIN_BALANCE >=Int PARAM_MIN_BALANCE
    andBool SENDER_BALANCE       >=Int SENDER_MIN_BALANCE +Int PAYMENT_AMOUNT
    andBool RECEIVER_BALANCE     >=Int RECEIVER_MIN_BALANCE
-   // andBool #rangeUInt(64, RECEIVER_BALANCE +Int PAYMENT_AMOUNT)
+   andBool #rangeUInt(64, RECEIVER_BALANCE +Int PAYMENT_AMOUNT)
 
    // Addresses are unique
    andBool SENDER_ADDRESS =/=K RECEIVER_ADDRESS
