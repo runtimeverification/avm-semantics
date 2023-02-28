@@ -332,6 +332,10 @@ generate-parsers:
              --module TEAL-PARSER-SYNTAX                      \
              --sort TealInputPgm                              \
              $(KAVM_DEFINITION_DIR)/parser_TealInputPgm_TEAL-PARSER-SYNTAX
+	kast --definition $(KAVM_DEFINITION_DIR) --gen-parser \
+             --module AVM-TESTING-SYNTAX                      \
+             --sort Bool                                      \
+             $(KAVM_DEFINITION_DIR)/parser_Bool_AVM-TESTING-SYNTAX
 	echo 'cat $$(cat $$1)' > $(KAVM_DEFINITION_DIR)/catcat
 	@chmod +x $(KAVM_DEFINITION_DIR)/catcat
 
@@ -375,13 +379,11 @@ uninstall:
 KCOVR:=$(KAVM_K_BIN)/kcovr
 
 $(BUILD_DIR)/coverage.xml: test-kavm-avm-simulation
-	$(POETRY_RUN) $(KCOVR) $(KAVM_DEFINITION_DIR)       \
-        -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
+	$(KCOVR) $(KAVM_DEFINITION_DIR) -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
 	$(KAVM_SCRIPTS)/post-process-coverage $(BUILD_DIR)/coverage.xml
 
 transient-coverage:
-	$(POETRY_RUN) $(KCOVR) $(KAVM_DEFINITION_DIR)       \
-        -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
+	$(KCOVR) $(KAVM_DEFINITION_DIR) -- $(avm_includes) $(plugin_includes) > $(BUILD_DIR)/coverage.xml
 	$(KAVM_SCRIPTS)/post-process-coverage $(BUILD_DIR)/coverage.xml
 
 $(BUILD_DIR)/coverage.html: $(BUILD_DIR)/coverage.xml

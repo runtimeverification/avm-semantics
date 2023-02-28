@@ -200,6 +200,8 @@ module VERIFICATION
 // Arithmetic
 ////////////////////////////////////////////////////////////////////////////////
 
+  rule X +Int (0 -Int Y) => X:Int -Int Y:Int [simplification]
+
 //   rule N:Int +Int M:Int >Int M:Int => N:Int >Int 0
 //     requires M =/=Int 0 [simplification, concrete(M)]
 

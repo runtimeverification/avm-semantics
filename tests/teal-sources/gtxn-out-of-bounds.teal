@@ -1,0 +1,7 @@
+#pragma version 5
+
+global GroupSize
+gtxns Sender
+pop
+int 1
+return

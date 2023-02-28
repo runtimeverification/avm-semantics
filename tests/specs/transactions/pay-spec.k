@@ -73,9 +73,6 @@ claim [main]:
    andBool #rangeUInt(64, RECEIVER_BALANCE)
    andBool #rangeUInt(64, PAYMENT_AMOUNT)
 
-   // payment amount is small
-   andBool #range(0 < PAYMENT_AMOUNT <= 10000)
-
    // spec-specific requirements on variables
    andBool SENDER_MIN_BALANCE   >=Int PARAM_MIN_BALANCE
    andBool RECEIVER_MIN_BALANCE >=Int PARAM_MIN_BALANCE
