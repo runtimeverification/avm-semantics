@@ -111,9 +111,6 @@ jobs:
       - name: 'Test AVM semantics --- algod integration'
         run: |
           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'THREADS=4 make test-kavm-algod'
-      # - name: 'Test AVM semantics --- proofs --- internal'
-      #   run: |
-      #     docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-internal-prove'
       - name: 'Test AVM semantics --- proofs --- opcodes'
         run: |
            docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-opcode-prove'
@@ -129,9 +126,6 @@ jobs:
       - name: 'Test AVM semantics --- KCFG proofs --- app calls'
         run: |
            docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make test-avm-semantics-calls-kcfg-prove'
-      # - name: 'Test AVM semantics --- proofs --- simple'
-      #   run: |
-      #     docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-simple-prove'
       - name: 'Tear down Docker'
         if: always()
         run: |
