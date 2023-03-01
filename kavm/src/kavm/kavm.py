@@ -32,7 +32,6 @@ class KAVM(KRun, KProve):
         use_directory: Optional[Path] = None,
         teal_parser: Optional[Path] = None,
         scenario_parser: Optional[Path] = None,
-        profile: bool = False,
         # verification_definition_dir: Optional[Path] = None,
         main_file: Optional[Path] = None,
         bug_report: Optional[BugReport] = None,
@@ -45,10 +44,9 @@ class KAVM(KRun, KProve):
                 definition_dir=definition_dir,
                 use_directory=use_directory,
                 main_file=main_file,
-                profile=profile,
             )
             self._verification_definition = definition_dir
-        KRun.__init__(self, definition_dir, use_directory=use_directory, profile=profile, bug_report=bug_report)
+        KRun.__init__(self, definition_dir, use_directory=use_directory, bug_report=bug_report)
 
         self._catcat_parser = definition_dir / 'catcat'
         self._teal_parser = teal_parser if teal_parser else definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
@@ -121,7 +119,6 @@ class KAVM(KRun, KProve):
                         output=KRunOutput.KORE,
                         depth=depth,
                         no_expand_macros=False,
-                        profile=profile,
                         check=check,
                         cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
                         pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
@@ -140,7 +137,6 @@ class KAVM(KRun, KProve):
                         output=KRunOutput.PRETTY,
                         depth=depth,
                         no_expand_macros=False,
-                        profile=profile,
                         check=check,
                         cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
                         pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
@@ -161,7 +157,6 @@ class KAVM(KRun, KProve):
                         output=KRunOutput.PRETTY,
                         depth=depth,
                         no_expand_macros=False,
-                        profile=profile,
                         check=False,
                         cmap={'TEAL_PROGRAMS': tmp_teals_file.name},
                         pmap={'TEAL_PROGRAMS': str(self._catcat_parser)},
@@ -191,7 +186,7 @@ class KAVM(KRun, KProve):
         kast_command += [str(input_file)]
         command_env = os.environ.copy()
         command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
-        return run_process(kast_command, env=command_env, logger=_LOGGER, profile=True)
+        return run_process(kast_command, env=command_env, logger=_LOGGER)
 
     def kast_expr(
         self,
@@ -209,7 +204,7 @@ class KAVM(KRun, KProve):
         kast_command += ['--expression', expr]
         command_env = os.environ.copy()
         command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
-        return run_process(kast_command, env=command_env, logger=_LOGGER, profile=True)
+        return run_process(kast_command, env=command_env, logger=_LOGGER)
 
     @staticmethod
     def _patch_symbol_table(symbol_table: Dict[str, Callable[..., str]]) -> None:
