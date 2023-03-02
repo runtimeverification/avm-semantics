@@ -141,6 +141,11 @@ return code to 3 (see return codes below).
 
   syntax String ::= returnDesc(Int) [function]
   //----------------------------------------------------
+  rule returnDesc(SUCCESS)                    => "success"
+  rule returnDesc(ZERO_STACK)                 => "stack contained 0 at end of execution"
+  rule returnDesc(BAD_STACK)                  => "stack contained no values, multiple values, or bytes at end of execution"
+  rule returnDesc(STUCK)                      => "k execution stuck"
+  rule returnDesc(INVALID_JSON)              => "invalid json"
   rule returnDesc(INVALID_OP_FOR_MODE)        => "invalid opcode for current execution mode"
   rule returnDesc(ERR_OPCODE)                 => "err opcode encountered"
   rule returnDesc(INT_OVERFLOW)               => "integer overflow"

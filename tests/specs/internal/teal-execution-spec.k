@@ -1,28 +1,9 @@
 module TEAL-EXECUTION-SPEC
   imports VERIFICATION
 
-  claim <k>
-         #LoadPgm(
-           // load Y and X on stack
-           load 0
-           load 1
-           // compare X and Y and jump if Y is greter
-           >
-           bz MAX_Y
-           // if X > Y then load X on top pf the stack
-           load 0
-           b END
-           // otherwise load Y on top of the stack
-           MAX_Y:
-           load 1
-           END:
-         , 0)
-          // => .
-         ~> #startExecution() => .
-        </k>
+  claim <k> #startExecution() => . </k>
         <pc> 0 => ?_ </pc>
         <program>
-          .Map =>
           0 |-> load 0
           1 |-> load 1
           2 |-> >
@@ -33,13 +14,25 @@ module TEAL-EXECUTION-SPEC
           7 |-> load 1
           8 |-> END:
         </program>
+        <currentTx> "0" </currentTx>
+        <transactions>
+          ((<transaction>
+            <txID> "0" </txID>
+            <txType> "appl" </txType>
+            <typeEnum> @ appl </typeEnum>
+            ...
+          </transaction>)=> ?_)
+        </transactions>
+        <labels>
+          END |-> 8
+          MAX_Y |-> 6
+        </labels>
         <jumped> false </jumped>
         <stack> INITIAL_STACK => ?MAX : INITIAL_STACK </stack>
         <stacksize> #sizeTStack(INITIAL_STACK) => 1 +Int #sizeTStack(INITIAL_STACK) </stacksize>
         <scratch> SCRATCH => SCRATCH </scratch>
-        <labels> LL => ?_ </labels>
         <currentApplicationID> APP_ID:Int </currentApplicationID>
-        <activeApps> (SetItem(APP_ID) => .Set) ... </activeApps>
+        <activeApps> (SetItem(APP_ID) => .Set) </activeApps>
         <returncode> 4 => ?RETURN_CODE </returncode>
         <returnstatus>
           "Failure - program is stuck" => ?RETURN_STATUS
@@ -54,9 +47,9 @@ module TEAL-EXECUTION-SPEC
 
       andBool #sizeTStack(INITIAL_STACK) +Int 2 <Int MAX_STACK_DEPTH // at least 2 more free slots on stack
     ensures   (?RETURN_CODE =/=Int 3)
-      andBool (?RETURN_STATUS =/=String "Failure - panic: " +String ILLEGAL_JUMP)
-      andBool (?RETURN_STATUS =/=String "Failure - panic: " +String STACK_OVERFLOW)
-      andBool (?RETURN_STATUS =/=String "Failure - panic: " +String STACK_UNDERFLOW)
+      andBool (?RETURN_STATUS =/=String returnDesc(ILLEGAL_JUMP))
+      andBool (?RETURN_STATUS =/=String returnDesc(STACK_OVERFLOW))
+      andBool (?RETURN_STATUS =/=String returnDesc(STACK_UNDERFLOW))
       andBool (?MAX ==Int maxInt(X, Y))
 
 endmodule

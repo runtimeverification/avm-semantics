@@ -26,8 +26,28 @@ module SUMMARY-SPEC
 
 // From counterexample, prove summary:
 // Note that you can not read `SS +Int 2 <Int MAX_STACK_DEPTH` off directly from the counterexample.
-    claim <k> #LoadPgm(
-              int 18446744073709551615
+    claim <k> #startExecution() => . </k>
+          <currentApplicationID> APP_ID => ?_ </currentApplicationID>
+          <activeApps> SetItem(APP_ID) _ => ?_ </activeApps>
+          <mode> stateless </mode>
+          <pc> 0 => ?_ </pc>
+//           <program> .Map => ?_ </program>
+          <jumped> false </jumped>
+          <version> 2 </version>
+          <stacksize> 1 => 1 +Int 1 </stacksize>
+          <stack> .TStack => 1 : .TStack </stack>
+          <currentTx> "0" </currentTx>
+          <transactions>
+            ((<transaction>
+              <txID> "0" </txID>
+              <txType> "appl" </txType>
+              <typeEnum> @appl </typeEnum>
+              ...
+            </transaction>) => ?_)
+          </transactions>
+          <program> 
+          loadProgramCell(
+              (int 18446744073709551615
               int 18446744073709551615
               mulw
               store 0
@@ -42,18 +62,8 @@ module SUMMARY-SPEC
               mulw
               store 4
               store 5
-              int 1, 0)
-            ~> #startExecution()
-           => . </k>
-          <currentApplicationID> APP_ID => ?_ </currentApplicationID>
-          <activeApps> SetItem(APP_ID) _ => ?_ </activeApps>
-          <mode> stateless </mode>
-          <pc> 0 => ?_ </pc>
-          <program> .Map => ?_ </program>
-          <jumped> false </jumped>
-          <version> 2 </version>
-          <stacksize> 1 => 1 +Int 1 </stacksize>
-          <stack> .TStack => 1 : .TStack </stack>
+              int 1):TealPgm, 0)
+          </program>
           <scratch> SCRATCH
                  => SCRATCH [ 0 <- 1                    ]
                             [ 1 <- 18446744073709551614 ]
