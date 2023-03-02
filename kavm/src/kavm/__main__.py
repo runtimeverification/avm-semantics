@@ -68,14 +68,13 @@ def exec_prove(
     debug_equations: Iterable[str] = (),
     claims: Iterable[str] = (),
     exclude_claims: Iterable[str] = (),
-    profile: bool = False,
     minimize: bool = True,
     haskell_log_format: str = KoreExecLogFormat.ONELINE.value,
     haskell_log_debug_transition: bool = True,
     haskell_log_entries: Iterable[str] = (),
     **kwargs: Any,
 ) -> None:
-    kavm = KAVM(definition_dir=definition_dir, profile=profile)
+    kavm = KAVM(definition_dir=definition_dir)
     prove_args = []
     haskell_args = []
     for de in debug_equations:
@@ -202,7 +201,6 @@ def exec_run(
     avm_simulation_parser: Path,
     avm_json_parser: Path,
     output: str,
-    profile: bool,
     depth: Optional[int],
     **kwargs: Any,
 ) -> None:
@@ -216,7 +214,7 @@ def exec_run(
         if input_file.suffix == '.json':
             scenario = KAVMScenario.from_json(input_file.read_text(), teal_sources_dir)
             final_state, kavm_stderr = kavm.run_avm_json(
-                scenario=scenario, profile=profile, depth=depth, rerun_on_error=True, check=False
+                scenario=scenario, depth=depth, rerun_on_error=True, check=False
             )
             if output == 'kore':
                 print(final_state)
@@ -374,7 +372,6 @@ def create_argument_parser() -> ArgumentParser:
     shared_args = ArgumentParser(add_help=False)
     shared_args.add_argument('--verbose', '-v', default=False, action='store_true', help='Verbose output.')
     shared_args.add_argument('--debug', default=False, action='store_true', help='Debug output.')
-    shared_args.add_argument('--profile', default=False, action='store_true', help='Coarse process-level profiling.')
 
     command_parser = parser.add_subparsers(dest='command', required=True, help='Command to execute')
 
@@ -586,7 +583,7 @@ def _loglevel(args: Namespace) -> int:
     if args.debug:
         return logging.DEBUG
 
-    if args.verbose or args.profile:
+    if args.verbose:
         return logging.INFO
 
     return logging.WARNING
