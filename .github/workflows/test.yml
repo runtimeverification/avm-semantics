@@ -66,8 +66,14 @@ jobs:
 
   test-pr:
     name: 'Test PR'
-    runs-on: [self-hosted, github-runner-9]
+    runs-on: [self-hosted, "{{ matrix.runner }}"]
     needs: version-bump
+    strategy:
+      matrix:
+        include:
+        - runner: "github-runner-9"
+        - runner: "github-runner-13"
+        - runner: "github-runner-17"
     steps:
       - name: 'Check out code'
         uses: actions/checkout@v3
