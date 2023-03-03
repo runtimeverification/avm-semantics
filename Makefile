@@ -164,7 +164,7 @@ $(plugin_include)/kframework/%: $(PLUGIN_SUBMODULE)/plugin/%
 plugin-deps: libsecp256k1 libff libcryptopp $(plugin_includes) $(plugin_c_includes)
 # --------
 
-build: build-kavm build-avm
+build: build-kavm build-avm build-avm-verification
 
 $(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
 	@mkdir -p $(dir $@)
@@ -337,12 +337,12 @@ generate-parsers:
 
 build-avm-verification: $(KAVM_LIB)/$(avm_verification_kompiled)/timestamp
 
-# $(KAVM_LIB)/$(avm_verification_kompiled)/timestamp: tests/specs/verification.k $(avm_includes)
-#   mkdir -p $(KAVM_VERIFICATION_DEFINITION_DIR)
-#   $(POETRY_RUN)                                                                             \
-#   $(KAVM) kompile $< --backend haskell --definition-dir $(KAVM_VERIFICATION_DEFINITION_DIR) \
-#                            --emit-json --hook-namespaces KRYPTO KAVM                              \
-#                            -I "${KAVM_INCLUDE}/kframework" -I "${plugin_include}/kframework"
+$(KAVM_LIB)/$(avm_verification_kompiled)/timestamp: tests/specs/verification.k $(avm_includes)
+	mkdir -p $(KAVM_VERIFICATION_DEFINITION_DIR)
+	$(POETRY_RUN)                                                                             \
+        $(KAVM) kompile $< --backend haskell --definition-dir $(KAVM_VERIFICATION_DEFINITION_DIR) \
+                           --emit-json --hook-namespaces KRYPTO KAVM                              \
+                           -I "${KAVM_INCLUDE}/kframework" -I "${plugin_include}/kframework"
 
 # Installation
 # ------------
