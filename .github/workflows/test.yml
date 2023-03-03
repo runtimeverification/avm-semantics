@@ -66,7 +66,7 @@ jobs:
 
   test-pr:
     name: 'Test PR'
-    runs-on: [self-hosted, "{{ matrix.runner }}"]
+    runs-on: [self-hosted, "${{ matrix.runner }}"]
     needs: version-bump
     strategy:
       matrix:
@@ -79,6 +79,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: recursive
+          run: git submodule foreach git pull --depth 1
       - name: 'Set up Docker'
         run: |
           set -euxo pipefail
