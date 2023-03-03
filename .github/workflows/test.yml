@@ -86,6 +86,7 @@ jobs:
             --build-arg K_VERSION=${K_VERSION}                        \
             --tag runtimeverification/avm-semantics-ci:${KAVM_COMMIT}
 
+          docker stop avm-semantics-ci || true && docker rm avm-semantics-ci || true
           docker run                        \
             --name avm-semantics-ci         \
             --rm                            \
