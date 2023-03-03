@@ -59,7 +59,7 @@ KORE_RPC_PORT := $(if $(KORE_RPC_PORT),$(KORE_RPC_PORT),7777)
 
 .PHONY: all clean distclean install uninstall                                         \
         deps k-deps libsecp256k1 libff plugin-deps hook-deps                          \
-        build build-avm build-avm-verification build-kavm                             \
+        build build-avm build-kavm                                                    \
         test test-avm-semantics test-avm-semantics-prove                              \
         test-kavm test-kavm-bison-parsers                                             \
         test-kavm-hooks build-kavm-hooks-tests                                        \
@@ -340,7 +340,7 @@ build-avm-verification: $(KAVM_LIB)/$(avm_verification_kompiled)/timestamp
 $(KAVM_LIB)/$(avm_verification_kompiled)/timestamp: tests/specs/verification.k $(avm_includes)
 	mkdir -p $(KAVM_VERIFICATION_DEFINITION_DIR)
 	$(POETRY_RUN)                                                                             \
-	$(KAVM) kompile $< --backend haskell --definition-dir $(KAVM_VERIFICATION_DEFINITION_DIR) \
+        $(KAVM) kompile $< --backend haskell --definition-dir $(KAVM_VERIFICATION_DEFINITION_DIR) \
                            --emit-json --hook-namespaces KRYPTO KAVM                              \
                            -I "${KAVM_INCLUDE}/kframework" -I "${plugin_include}/kframework"
 
@@ -452,30 +452,47 @@ avm_prove_simple_specs := $(filter-out $(avm_prove_specs_failing), $(wildcard te
 avm_prove_opcode_specs :=  $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/opcodes/*-spec.md))
 avm_prove_call_specs :=  $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/calls/*-spec.md))
 avm_prove_transactions_specs := $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/transactions/*-spec.k))
+avm_prove_pact_specs := $(filter-out $(avm_prove_specs_failing), $(wildcard tests/specs/pact/*-spec.k))
+
+test-avm-semantics-prove: test-avm-semantics-internal-prove test-avm-semantics-opcode-prove test-avm-semantics-simple-prove test-avm-semantics-calls-prove test-avm-semantics-transactions-prove test-avm-semantics-pact-prove
+
+test-avm-semantics-kcfg-prove: test-avm-semantics-calls-kcfg-prove
 
 test-avm-semantics-internal-prove: $(avm_prove_internal_specs:=.prove)
 test-avm-semantics-opcode-prove: $(avm_prove_opcode_specs:=.prove)
 test-avm-semantics-simple-prove: $(avm_prove_simple_specs:=.prove)
 test-avm-semantics-calls-prove: $(avm_prove_call_specs:=.prove)
 test-avm-semantics-transactions-prove: $(avm_prove_transactions_specs:=.prove)
+test-avm-semantics-pact-prove: $(avm_prove_pact_specs:=.prove)
 test-avm-semantics-calls-kcfg-prove: $(avm_prove_call_specs:=.kcfg.prove)
 
-tests/specs/%-spec.k.prove: build-avm-verification $(KAVM_LIB)/version
-	$(POETRY_RUN) \
-	$(KAVM) prove tests/specs/$*-spec.k --definition $(KAVM_VERIFICATION_DEFINITION_DIR)
+.SECONDEXPANSION:
+tests/specs/%/verification/timestamp: tests/specs/$$(firstword $$(subst /, ,$$*))/verification.k $$(avm_includes)
+	mkdir -p tests/specs/$*/verification
+	$(POETRY_RUN)                                                                             \
+	$(KAVM) kompile tests/specs/$*/verification.k --backend haskell --definition-dir tests/specs/$*/verification         \
+													 --emit-json --hook-namespaces KRYPTO KAVM                              \
+													 -I "${KAVM_INCLUDE}/kframework" -I "${plugin_include}/kframework"
 
-
-tests/specs/%-spec.md.prove: build-avm-verification $(KAVM_LIB)/version
+.SECONDEXPANSION:
+tests/specs/%-spec.k.prove: tests/specs/$$(firstword $$(subst /, ,$$*))/verification/timestamp $$(KAVM_LIB)/version
 	$(POETRY_RUN) \
-	$(KAVM) prove tests/specs/$*-spec.md --definition $(KAVM_VERIFICATION_DEFINITION_DIR)
+	$(KAVM) prove tests/specs/$*-spec.k --definition $(CURDIR)/tests/specs/$(firstword $(subst /, ,$*))/verification --smt-timeout 1000000
 
-tests/specs/%-spec.k.kcfg.prove: build-avm-verification $(KAVM_LIB)/version
+.SECONDEXPANSION:
+tests/specs/%-spec.md.prove: tests/specs/$$(firstword $$(subst /, ,$$*))/verification/timestamp $$(KAVM_LIB)/version
 	$(POETRY_RUN) \
-	$(KAVM) kcfg-prove --port $(KORE_RPC_PORT) --definition-dir $(KAVM_VERIFICATION_DEFINITION_DIR) tests/specs/$*-spec.k main
+	$(KAVM) prove tests/specs/$*-spec.md --definition $(CURDIR)/tests/specs/$(firstword $(subst /, ,$*))/verification --smt-timeout 1000000
 
-tests/specs/%-spec.md.kcfg.prove: build-avm-verification $(KAVM_LIB)/version
+.SECONDEXPANSION:
+tests/specs/%-spec.k.kcfg.prove: tests/specs/$$(firstword $$(subst /, ,$$*))/verification/timestamp $$(KAVM_LIB)/version
 	$(POETRY_RUN) \
-	$(KAVM) kcfg-prove --port $(KORE_RPC_PORT) --definition-dir $(KAVM_VERIFICATION_DEFINITION_DIR) tests/specs/$*-spec.md main
+	$(KAVM) kcfg-prove --port $(KORE_RPC_PORT) --definition-dir $(CURDIR)/tests/specs/$(firstword $(subst /, ,$*))/verification tests/specs/$*-spec.k main
+
+.SECONDEXPANSION:
+tests/specs/%-spec.md.kcfg.prove: tests/specs/$$(firstword $$(subst /, ,$$*))/verification/timestamp $$(KAVM_LIB)/version
+	$(POETRY_RUN) \
+	$(KAVM) kcfg-prove --port $(KORE_RPC_PORT) --definition-dir $(CURDIR)/tests/specs/$(firstword $(subst /, ,$*))/verification tests/specs/$*-spec.md main
 
 clean-verification:
 	rm -rf tests/specs/verification-kompiled
