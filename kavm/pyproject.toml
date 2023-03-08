@@ -17,7 +17,7 @@ py-algorand-sdk = "1.20.1"
 pyteal = "0.20.1"
 tabulate = "0.8.10"
 types-tabulate = "0.8.10"
-pyk = { git = "https://github.com/runtimeverification/pyk.git", tag="v0.1.170" }
+pyk = { git = "https://github.com/runtimeverification/pyk.git", tag="v0.1.171" }
 
 [tool.poetry.group.dev.dependencies]
 autoflake = "*"
