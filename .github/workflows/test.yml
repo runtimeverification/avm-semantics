@@ -77,7 +77,7 @@ jobs:
         run: |
           set -euxo pipefail
 
-          K_VERSION="$(cat deps/k_release | cut --characters=2-)"
+          K_VERSION="$(cat deps/k_release)"
 
           KAVM_COMMIT="$(git rev-parse --short=7 HEAD)"
 
