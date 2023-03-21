@@ -31,14 +31,14 @@ jobs:
           sudo add-apt-repository ppa:deadsnakes/ppa
           sudo apt-get update
           sudo apt-get install --yes python3.10
-      - name: 'Update K Release tag'
+      - name: 'Update K submodule'
         run: |
+          K_VERSION="$(cat deps/k_release)"
           cd deps/k
           git fetch --tags
+          git checkout "v${K_VERSION}"
           cd -
-          K_VERSION="$(cd deps/k && git tag --points-at HEAD)"
-          echo "${K_VERSION}" > deps/k_release
-          git add deps/k_release && git commit -m 'deps/k_release: update release file' || true
+          git add deps/k && git commit -m "deps/k: update submodule ${K_VERSION}" || true
       - name: 'Update plugin release tag'
         run: |
           cd deps/plugin
@@ -46,7 +46,7 @@ jobs:
           cd -
           echo ${rev} > deps/blockchain-k-plugin_release
           sed -i 's!    blockchain-k-plugin.url = "github:runtimeverification/blockchain-k-plugin/[0-9a-f]*"!    blockchain-k-plugin.url = "github:runtimeverification/blockchain-k-plugin/'"${rev}"'"!' flake.nix
-          git add deps/blockchain-k-plugin_release && git commit -m 'deps/blockchain-k-plugin_release: update release file' || true
+          git add deps/blockchain-k-plugin_release && git commit -m "deps/blockchain-k-plugin_release: update release file ${rev}" || true
       - name: 'Update pyk Release tag'
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
@@ -57,7 +57,7 @@ jobs:
           cd kavm
           poetry update
           cd -
-          git add kavm/ && git commit -m 'kavm/: sync poetry files' || true
+          git add kavm/ && git commit -m "kavm/: sync poetry files ${pyk_version}" || true
       - name: 'Install Nix'
         uses: cachix/install-nix-action@v19
         with:
