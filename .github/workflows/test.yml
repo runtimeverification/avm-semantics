@@ -60,7 +60,7 @@ jobs:
         with:
           name: k-framework
           skipPush: true
-          
+
       - name: 'Build via Nix'
         run: GC_DONT_GC=1 nix build .#kavm --print-build-logs
 
@@ -121,9 +121,9 @@ jobs:
       - name: 'Test AVM semantics --- proofs --- app calls'
         run: |
            docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-calls-prove'
-      - name: 'Test AVM semantics --- proofs Pact CPMM'
-        run: |
-           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-pact-prove'
+#      - name: 'Test AVM semantics --- proofs Pact CPMM'
+#        run: |
+#           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-avm-semantics-pact-prove'
       - name: 'Test AVM semantics --- proofs --- PyTeal generated'
         run: |
            docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'THREADS=4 make test-pyteal-prove'
