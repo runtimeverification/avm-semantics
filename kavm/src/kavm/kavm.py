@@ -213,6 +213,4 @@ class KAVM(KRun, KProve):
 
     @staticmethod
     def concrete_rules() -> List[str]:
-        return [
-            'TEAL-TYPES.getAppAddressBytes',
-        ]
+        return []
