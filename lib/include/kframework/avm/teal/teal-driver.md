@@ -1,5 +1,5 @@
 ```k
-requires "krypto.md"
+requires "plugin/krypto.md"
 
 requires "avm/blockchain.md"
 requires "avm/args.md"
