@@ -2,8 +2,8 @@
   description = "A flake for the KAVM Semantics";
 
   inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     k-framework.url = "github:runtimeverification/k";
-    nixpkgs.follows = "k-framework/nixpkgs";
     flake-utils.follows = "k-framework/flake-utils";
     rv-utils.url = "github:runtimeverification/rv-nix-tools";
     poetry2nix.follows = "pyk/poetry2nix";
@@ -72,7 +72,21 @@
             python = prev.python310;
             projectDir = ./kavm;
             overrides = prev.poetry2nix.overrides.withoutDefaults
-              (finalPython: prevPython: { pyk = prev.pyk-python310; });
+              (finalPython: prevPython: {
+                 pyk = prev.pyk-python310;
+                 pycryptodomex = prevPython.pycryptodomex.overridePythonAttrs
+                       (
+                         old: {
+                           buildInputs = (old.buildInputs or [ ]) ++ [ prevPython.setuptools ];
+                         }
+                       );
+                 pynacl = prevPython.pynacl.overridePythonAttrs
+                       (
+                         old: {
+                           buildInputs = (old.buildInputs or [ ]) ++ [ prevPython.setuptools ];
+                         }
+                       );
+              });
             preferWheels = true;
             # We remove `"dev"` from `checkGroups`, so that poetry2nix does not try to resolve dev dependencies.
             checkGroups = [ ];
