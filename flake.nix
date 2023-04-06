@@ -2,15 +2,15 @@
   description = "A flake for the KAVM Semantics";
 
   inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     k-framework.url = "github:runtimeverification/k";
-    nixpkgs.follows = "k-framework/nixpkgs";
     flake-utils.follows = "k-framework/flake-utils";
     rv-utils.url = "github:runtimeverification/rv-nix-tools";
     poetry2nix.follows = "pyk/poetry2nix";
     blockchain-k-plugin.url = "github:runtimeverification/blockchain-k-plugin/d9f5cf8f6caf16c04ac29aeaf0f77641f8203e1d";
     blockchain-k-plugin.inputs.flake-utils.follows = "k-framework/flake-utils";
     blockchain-k-plugin.inputs.nixpkgs.follows = "k-framework/nixpkgs";
-    pyk.url = "github:runtimeverification/pyk/v0.1.159";
+    pyk.url = "github:runtimeverification/pyk/v0.1.220";
     pyk.inputs.flake-utils.follows = "k-framework/flake-utils";
     pyk.inputs.nixpkgs.follows = "k-framework/nixpkgs";
 
@@ -72,7 +72,21 @@
             python = prev.python310;
             projectDir = ./kavm;
             overrides = prev.poetry2nix.overrides.withoutDefaults
-              (finalPython: prevPython: { pyk = prev.pyk-python310; });
+              (finalPython: prevPython: {
+                 pyk = prev.pyk-python310;
+                 pycryptodomex = prevPython.pycryptodomex.overridePythonAttrs
+                       (
+                         old: {
+                           buildInputs = (old.buildInputs or [ ]) ++ [ prevPython.setuptools ];
+                         }
+                       );
+                 pynacl = prevPython.pynacl.overridePythonAttrs
+                       (
+                         old: {
+                           buildInputs = (old.buildInputs or [ ]) ++ [ prevPython.setuptools ];
+                         }
+                       );
+              });
             preferWheels = true;
             # We remove `"dev"` from `checkGroups`, so that poetry2nix does not try to resolve dev dependencies.
             checkGroups = [ ];
