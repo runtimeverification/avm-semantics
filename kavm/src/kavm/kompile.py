@@ -1,3 +1,4 @@
+import itertools
 import logging
 import subprocess
 from pathlib import Path
@@ -105,10 +106,21 @@ def generate_interpreter(
 ) -> None:
     '''Kompile KAVM to produce an LLVM-based interpreter'''
 
-    interpreter_object_file = definition_dir / 'partial.o'
     interpreter_executable_file = definition_dir / 'interpreter'
 
-    def _kompile_partial() -> None:
+    def _clang_flags() -> List[str]:
+        flags = [str(path) for path in hook_cpp_files] if hook_cpp_files else []
+        flags += ['-o', str(interpreter_executable_file)]
+        flags += [flag.strip() for flag in hook_clang_flags] if hook_clang_flags else []
+
+        ccopt_flags = [('-ccopt', flag) for flag in flags]
+        return list(itertools.chain(*ccopt_flags))
+
+    def _kompile(
+        interpreter_executable_file: Path,
+        hook_cpp_files: Optional[List[Path]] = None,
+        hook_clang_flags: Optional[List[str]] = None,
+    ) -> None:
         command = [
             'kompile',
             '--output-definition',
@@ -124,38 +136,16 @@ def generate_interpreter(
         command += [str(arg) for include in includes for arg in ['-I', include]] if includes else []
         command += ['--md-selector', md_selector] if md_selector else []
         command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
-        command += ['-ccopt', '-c', '-ccopt', '-o', '-ccopt', str(interpreter_object_file)]
         command += ['--coverage'] if coverage else []
+        command += _clang_flags()
         try:
             subprocess.run(command, check=True, text=True)
         except CalledProcessError:
             print(' '.join(map(str, command)))
             raise
 
-    def _llvm_kompile(
-        interpreter_object_file: Path,
-        interpreter_executable_file: Path,
-        hook_cpp_files: Optional[List[Path]] = None,
-        hook_clang_flags: Optional[List[str]] = None,
-    ) -> None:
-        command = ['llvm-kompile', str(interpreter_object_file), 'main', '--']
-
-        command += [str(path) for path in hook_cpp_files] if hook_cpp_files else []
-        command += ['-o', str(interpreter_executable_file)]
-        command += [flag.strip() for flag in hook_clang_flags] if hook_clang_flags else []
-
-        try:
-            print(' '.join(map(str, command)))
-            subprocess.run(command, check=True, text=True)
-        except CalledProcessError:
-            print(' '.join(map(str, command)))
-            raise
-
-    _kompile_partial()
-    _llvm_kompile(
-        interpreter_object_file=interpreter_object_file.resolve(),
+    _kompile(
         interpreter_executable_file=interpreter_executable_file.resolve(),
         hook_cpp_files=hook_cpp_files,
-        # includes=includes,
         hook_clang_flags=hook_clang_flags,
     )
