@@ -10,7 +10,7 @@
     blockchain-k-plugin.url = "github:runtimeverification/blockchain-k-plugin/d9f5cf8f6caf16c04ac29aeaf0f77641f8203e1d";
     blockchain-k-plugin.inputs.flake-utils.follows = "k-framework/flake-utils";
     blockchain-k-plugin.inputs.nixpkgs.follows = "k-framework/nixpkgs";
-    pyk.url = "github:runtimeverification/pyk/v0.1.223";
+    pyk.url = "github:runtimeverification/pyk/v0.1.224";
     pyk.inputs.flake-utils.follows = "k-framework/flake-utils";
     pyk.inputs.nixpkgs.follows = "k-framework/nixpkgs";
 
