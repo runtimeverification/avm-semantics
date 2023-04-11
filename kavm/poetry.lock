@@ -1059,14 +1059,14 @@ files = [
 
 [[package]]
 name = "pygments"
-version = "2.14.0"
+version = "2.15.0"
 description = "Pygments is a syntax highlighting package written in Python."
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 files = [
-    {file = "Pygments-2.14.0-py3-none-any.whl", hash = "sha256:fa7bd7bd2771287c0de303af8bfdfc731f51bd2c6a47ab69d117138893b82717"},
-    {file = "Pygments-2.14.0.tar.gz", hash = "sha256:b3ed06a9e8ac9a9aae5a6f5dbe78a8a58655d17b43b93c078f094ddc476ae297"},
+    {file = "Pygments-2.15.0-py3-none-any.whl", hash = "sha256:77a3299119af881904cd5ecd1ac6a66214b6e9bed1f2db16993b54adede64094"},
+    {file = "Pygments-2.15.0.tar.gz", hash = "sha256:f7e36cffc4c517fbc252861b9a6e4644ca0e5abadf9a113c72d1358ad09b9500"},
 ]
 
 [package.extras]
@@ -1074,7 +1074,7 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pyk"
-version = "0.1.225"
+version = "0.1.226"
 description = ""
 category = "main"
 optional = false
@@ -1095,8 +1095,8 @@ tomli = "^2.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/runtimeverification/pyk.git"
-reference = "v0.1.225"
-resolved_reference = "4874526e09228b065e3bfbd04af3d2254edf16a5"
+reference = "v0.1.226"
+resolved_reference = "fb5f40998cc6ef0de1c5845ab11d99d492aedee8"
 
 [[package]]
 name = "pynacl"
@@ -1455,4 +1455,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "fa27aad2bb5536e5cd3316f5dda8dc940cdb0708c6260b2af153cb3de0962049"
+content-hash = "7b3b9c9cd41d37fca2f2f5c3790336735d72763bfebb4f1bf98f0bf4bc0b3ef7"
