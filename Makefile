@@ -65,6 +65,11 @@ build-avm-verification:
 	$(POETRY_RUN) kbuild kompile haskell
 .PHONY: build-avm-verification
 
+## * kavm --- Python library and CLI app
+
+check-kavm-codestyle:
+	$(MAKE) check -C $(PY_KAVM_DIR)
+
 # Tests
 # -----
 
