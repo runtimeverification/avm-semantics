@@ -31,13 +31,17 @@ deps: plugin-deps k-deps
 # Non-K Dependencies
 # ------------------
 
+plugin-deps:
+	$(MAKE) -C $(DEPS_DIR)/plugin libcryptopp libff libsecp256k1
+.PHONY: plugin-deps
+
 # K Dependencies
 # --------------
 
 # Semantics
 # ---------
 
-build: build-avm generate-parsers build-avm-verification
+build: plugin-deps build-avm generate-parsers build-avm-verification
 .PHONY: build
 
 # * avm-semantics --- the K semantics of AVM
