@@ -1,0 +1,9 @@
+[project]
+name = "kavm-hooks"
+version = "0.1.0"
+source = "./"
+
+[project.resources]
+src = "./"
+lib = "./"
+include = "./"
