@@ -99,6 +99,13 @@ test-kavm-avm-simulation:
 	$(MAKE) test-scenarios -C ./kavm
 .PHONY: test-kavm-avm-simulation
 
+#######
+## kavm.algod Python library tests
+#######
+test-kavm-algod:
+	$(MAKE) test-unit -C $(PY_KAVM_DIR)
+	$(MAKE) test-integration-kalgod -C $(PY_KAVM_DIR)
+
 ############################################
 ## AVM PyTeal-generated Symbolic Proof Tests
 ############################################
