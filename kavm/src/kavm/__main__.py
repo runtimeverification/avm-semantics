@@ -18,7 +18,7 @@ from pyk.kcfg.kcfg import KCFG
 from pyk.kcfg.tui import KCFGViewer
 from pyk.kore import syntax as kore
 from pyk.ktool.kprove import KoreExecLogFormat
-from pyk.proof import AGProof, AGProver
+from pyk.proof import APRProof, APRProver
 
 from kavm.kavm import KAVM
 from kavm.kompile import kompile
@@ -331,13 +331,11 @@ def exec_kcfg_prove(
 
     cfg = KCFG.from_claim(kavm.definition, claims[0])
 
-    prover = AGProver(AGProof(cfg))
+    prover = APRProver(APRProof(id=claim_label, kcfg=cfg, proof_dir=kavm.use_directory))
 
     with KCFGExplore(kavm, port=kore_rpc_port, bug_report=bug_report_path) as kcfg_explore:
         prover.advance_proof(
-            claim_label,
             kcfg_explore,
-            kproofs_dir=kavm.use_directory,
             terminal_rules=['AVM-EXECUTION.starttx', 'AVM-EXECUTION.endtx', 'AVM-PANIC.panic'],
         )
 
