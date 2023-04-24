@@ -5,7 +5,7 @@ from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, Subst, build_a
 from pyk.kast.manip import split_config_from
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
-from pyk.utils import dequote_str
+from pyk.dequote import dequote_str
 
 from kavm.adaptors.teal_key_value import raw_list_state_to_dict_bytes_bytes, raw_list_state_to_dict_bytes_ints
 from kavm.constants import MIN_BALANCE
