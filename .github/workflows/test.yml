@@ -59,6 +59,7 @@ jobs:
         if: ${{ !startsWith(matrix.os, 'self') }}
         with:
           name: k-framework
+          authToken: ${{ secrets.CACHIX_PUBLIC_TOKEN }}
           skipPush: true
 
       - name: 'Build via Nix'

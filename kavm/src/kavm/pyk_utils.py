@@ -9,7 +9,8 @@ from pyk.kast.manip import is_anon_var, split_config_from
 from pyk.prelude.bytes import bytesToken
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
-from pyk.utils import dequote_str, hash_str
+from pyk.dequote import dequote_str
+from pyk.utils import hash_str
 
 T = TypeVar("T")
 
