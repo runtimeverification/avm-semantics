@@ -384,14 +384,14 @@ pyreadline3 = {version = "*", markers = "sys_platform == \"win32\" and python_ve
 
 [[package]]
 name = "hypothesis"
-version = "6.75.2"
+version = "6.75.3"
 description = "A library for property-based testing"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "hypothesis-6.75.2-py3-none-any.whl", hash = "sha256:29fee1fabf764eb021665d20e633ef7ba931c5841de20f9ff3e01e8a512d6a4d"},
-    {file = "hypothesis-6.75.2.tar.gz", hash = "sha256:50c270b38d724ce0fefa71b8e3511d123f7a31a9af9ea003447d4e1489292fbc"},
+    {file = "hypothesis-6.75.3-py3-none-any.whl", hash = "sha256:a12bf34c29bd22757d20edf93f95805978ed0ffb8d0b22dbadc890a79dc9baa8"},
+    {file = "hypothesis-6.75.3.tar.gz", hash = "sha256:15cdadb80a7ac59087581624d266a4fb585b5cce9b7f88f506c481a9f0e583f6"},
 ]
 
 [package.dependencies]
@@ -961,14 +961,14 @@ global = ["pybind11-global (==2.10.4)"]
 
 [[package]]
 name = "pycobertura"
-version = "3.1.0"
+version = "3.2.0"
 description = "\"A Cobertura coverage parser that can diff reports and show coverage progress.\""
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pycobertura-3.1.0-py3-none-any.whl", hash = "sha256:67654ff74e9b2f2a4215a865ac6f92777ac28e3764c7db4d61cd7c370146d141"},
-    {file = "pycobertura-3.1.0.tar.gz", hash = "sha256:b6ef35ac32fdecc5051360f191e38c2288436ea8e7211bc87fb35d26f5257f6c"},
+    {file = "pycobertura-3.2.0-py3-none-any.whl", hash = "sha256:6afb515bda11d29202a7205e1e3313e707a4ba74486e6aa8380fec4e70c443bd"},
+    {file = "pycobertura-3.2.0.tar.gz", hash = "sha256:5ac90e83cdcae534b602fd99137cf77a7b46b61887399848784e9534d5921f82"},
 ]
 
 [package.dependencies]
@@ -1074,7 +1074,7 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pyk"
-version = "0.1.288"
+version = "0.1.289"
 description = ""
 category = "main"
 optional = false
@@ -1095,8 +1095,8 @@ tomli = "^2.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/runtimeverification/pyk.git"
-reference = "v0.1.288"
-resolved_reference = "88b854e69d9a924af90660c8ab0aba9f845ff1d3"
+reference = "v0.1.289"
+resolved_reference = "9384cddcb9ff97dfc08db3191afac61c621eda4c"
 
 [[package]]
 name = "pynacl"
@@ -1210,14 +1210,14 @@ tests = ["pytest-virtualenv"]
 
 [[package]]
 name = "pytest-xdist"
-version = "3.2.1"
+version = "3.3.0"
 description = "pytest xdist plugin for distributed testing, most importantly across multiple CPUs"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pytest-xdist-3.2.1.tar.gz", hash = "sha256:1849bd98d8b242b948e472db7478e090bf3361912a8fed87992ed94085f54727"},
-    {file = "pytest_xdist-3.2.1-py3-none-any.whl", hash = "sha256:37290d161638a20b672401deef1cba812d110ac27e35d213f091d15b8beb40c9"},
+    {file = "pytest-xdist-3.3.0.tar.gz", hash = "sha256:d42c9efb388da35480878ef4b2993704c6cea800c8bafbe85a8cdc461baf0748"},
+    {file = "pytest_xdist-3.3.0-py3-none-any.whl", hash = "sha256:76f7683d4f993eaff91c9cb0882de0465c4af9c6dd3debc903833484041edc1a"},
 ]
 
 [package.dependencies]
@@ -1455,4 +1455,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "6ec6932cdf6e4bda29496da75181e28eaf7290cf34d330387da315f883c1179b"
+content-hash = "b342ebee67ff2da6d96d0ba84de2baa93e9938ff002f3964e785fe0e4e4a7483"
