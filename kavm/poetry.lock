@@ -366,13 +366,13 @@ pyreadline3 = {version = "*", markers = "sys_platform == \"win32\" and python_ve
 
 [[package]]
 name = "hypothesis"
-version = "6.75.7"
+version = "6.75.8"
 description = "A library for property-based testing"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "hypothesis-6.75.7-py3-none-any.whl", hash = "sha256:d8a093a3d30281cda6a493321826bc5088f7d8d54695cac867b7e9b035bcb2d6"},
-    {file = "hypothesis-6.75.7.tar.gz", hash = "sha256:a8ef2e0c7d5ebd90043a4ed8f6987de6a2b497b2caf6863364ff41db25971856"},
+    {file = "hypothesis-6.75.8-py3-none-any.whl", hash = "sha256:c60c0c85f4e08ae3702052ddf998a2bdf922c2581354963dcc21e4613b6c4d81"},
+    {file = "hypothesis-6.75.8.tar.gz", hash = "sha256:52efb2bac5dc1097a95060e553859057a04a333dadff91717b6682eeba1a5919"},
 ]
 
 [package.dependencies]
@@ -1027,7 +1027,7 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pyk"
-version = "0.1.312"
+version = "0.1.313"
 description = ""
 optional = false
 python-versions = "^3.10"
@@ -1047,8 +1047,8 @@ tomli = "^2.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/runtimeverification/pyk.git"
-reference = "v0.1.312"
-resolved_reference = "60e476839632474fd11b578aed3f048804bc1d4a"
+reference = "v0.1.313"
+resolved_reference = "65376954ac358d42b607d69059c2f04ab4cc735c"
 
 [[package]]
 name = "pynacl"
@@ -1176,13 +1176,13 @@ testing = ["filelock"]
 
 [[package]]
 name = "rich"
-version = "13.3.5"
+version = "13.4.1"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
 optional = false
 python-versions = ">=3.7.0"
 files = [
-    {file = "rich-13.3.5-py3-none-any.whl", hash = "sha256:69cdf53799e63f38b95b9bf9c875f8c90e78dd62b2f00c13a911c7a3b9fa4704"},
-    {file = "rich-13.3.5.tar.gz", hash = "sha256:2d11b9b8dd03868f09b4fffadc84a6a8cda574e40dc90821bd845720ebb8e89c"},
+    {file = "rich-13.4.1-py3-none-any.whl", hash = "sha256:d204aadb50b936bf6b1a695385429d192bc1fdaf3e8b907e8e26f4c4e4b5bf75"},
+    {file = "rich-13.4.1.tar.gz", hash = "sha256:76f6b65ea7e5c5d924ba80e322231d7cb5b5981aa60bfc1e694f1bc097fe6fe1"},
 ]
 
 [package.dependencies]
@@ -1388,4 +1388,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "ff4042bdcd2ba923c39b695d56fd8217372ba99868e78d4b9b145e640aef0348"
+content-hash = "4cf34601a9f3e178ac1b12236a556625d8222a11bb69824b50a8e50daf2f8e3b"
