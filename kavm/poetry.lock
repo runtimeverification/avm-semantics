@@ -366,13 +366,13 @@ pyreadline3 = {version = "*", markers = "sys_platform == \"win32\" and python_ve
 
 [[package]]
 name = "hypothesis"
-version = "6.75.8"
+version = "6.75.9"
 description = "A library for property-based testing"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "hypothesis-6.75.8-py3-none-any.whl", hash = "sha256:c60c0c85f4e08ae3702052ddf998a2bdf922c2581354963dcc21e4613b6c4d81"},
-    {file = "hypothesis-6.75.8.tar.gz", hash = "sha256:52efb2bac5dc1097a95060e553859057a04a333dadff91717b6682eeba1a5919"},
+    {file = "hypothesis-6.75.9-py3-none-any.whl", hash = "sha256:a971fe32c916ac7a210e2d6a66b33f841a76ec81c7d4146a2a25ae0141d14967"},
+    {file = "hypothesis-6.75.9.tar.gz", hash = "sha256:d006279cbfaef990ac60273fc598a5052a10ae40ea30b7860ade0a767a2e6fc2"},
 ]
 
 [package.dependencies]
@@ -921,13 +921,13 @@ global = ["pybind11-global (==2.10.4)"]
 
 [[package]]
 name = "pycobertura"
-version = "3.2.0"
+version = "3.2.1"
 description = "\"A Cobertura coverage parser that can diff reports and show coverage progress.\""
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pycobertura-3.2.0-py3-none-any.whl", hash = "sha256:6afb515bda11d29202a7205e1e3313e707a4ba74486e6aa8380fec4e70c443bd"},
-    {file = "pycobertura-3.2.0.tar.gz", hash = "sha256:5ac90e83cdcae534b602fd99137cf77a7b46b61887399848784e9534d5921f82"},
+    {file = "pycobertura-3.2.1-py3-none-any.whl", hash = "sha256:09b5de7b3ad20c7c32ef46ff72573808785ae790d238f5fdf36cbe865cf5448e"},
+    {file = "pycobertura-3.2.1.tar.gz", hash = "sha256:8320025acc0371b8def924a398e4ad64d55194dc413c3193b140fee79962941e"},
 ]
 
 [package.dependencies]
@@ -1027,7 +1027,7 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pyk"
-version = "0.1.315"
+version = "0.1.317"
 description = ""
 optional = false
 python-versions = "^3.10"
@@ -1047,8 +1047,8 @@ tomli = "^2.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/runtimeverification/pyk.git"
-reference = "v0.1.315"
-resolved_reference = "267ab3ed304a726cf38cfd79791e5fb3e6c3c811"
+reference = "v0.1.317"
+resolved_reference = "c26ba341b80ae4029e9289ef88fa73a71aee2be1"
 
 [[package]]
 name = "pynacl"
@@ -1350,13 +1350,13 @@ files = [
 
 [[package]]
 name = "typing-extensions"
-version = "4.6.2"
+version = "4.6.3"
 description = "Backported and Experimental Type Hints for Python 3.7+"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "typing_extensions-4.6.2-py3-none-any.whl", hash = "sha256:3a8b36f13dd5fdc5d1b16fe317f5668545de77fa0b8e02006381fd49d731ab98"},
-    {file = "typing_extensions-4.6.2.tar.gz", hash = "sha256:06006244c70ac8ee83fa8282cb188f697b8db25bc8b4df07be1873c43897060c"},
+    {file = "typing_extensions-4.6.3-py3-none-any.whl", hash = "sha256:88a4153d8505aabbb4e13aacb7c486c2b4a33ca3b3f807914a9b4c844c471c26"},
+    {file = "typing_extensions-4.6.3.tar.gz", hash = "sha256:d91d5919357fe7f681a9f2b5b4cb2a5f1ef0a1e9f59c4d8ff0d3491e05c0ffd5"},
 ]
 
 [[package]]
@@ -1388,4 +1388,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "3d4318929112831446217badb224a7e517d77ca9fec872ae4cc5953e01964d92"
+content-hash = "1796ab757dd2f0a46544d09933b2ab5ee19ed980829de02afbfa4504baf3c89a"
