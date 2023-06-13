@@ -15,11 +15,11 @@ from pyk.kast.inner import KApply
 from pyk.kast.manip import minimize_term
 from pyk.kcfg.explore import KCFGExplore
 from pyk.kcfg.kcfg import KCFG
-
-# from pyk.kcfg.tui import KCFGViewer
+from pyk.kcfg.show import KCFGShow
+from pyk.kcfg.tui import KCFGViewer
 from pyk.kore import syntax as kore
 from pyk.ktool.kprove import KoreExecLogFormat
-from pyk.proof import APRProof, APRProver
+from pyk.proof.reachability import APRProof, APRProver
 from pyk.utils import BugReport
 
 from kavm.kavm import KAVM
@@ -260,55 +260,49 @@ def exec_env(
     print(f"KAVM_VERIFICATION_DEFINITION_DIR={os.environ.get('KAVM_VERIFICATION_DEFINITION_DIR')}")
 
 
-# def exec_kcfg_view(
-#     definition_dir: Path,
-#     spec_file: Path,
-#     claim_id: str,
-#     spec_module: Optional[str] = None,
-#     use_directory: Optional[Path] = None,
-#     **kwargs: Any,
-# ) -> None:
-#     use_directory = use_directory if use_directory else Path('.kavm')
-#     kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory)
+def exec_kcfg_view(
+    definition_dir: Path,
+    spec_file: Path,
+    claim_id: str,
+    spec_module: Optional[str] = None,
+    use_directory: Optional[Path] = None,
+    **kwargs: Any,
+) -> None:
+    use_directory = use_directory if use_directory else Path('.kavm')
+    kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory)
 
-#     spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').removesuffix('.md').upper()
+    spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').removesuffix('.md').upper()
 
-#     claim_label = f'{spec_module}.{claim_id}'
-#     cfg_id = f'{claim_label}.kfcg'
-#     kcfg = KCFGExplore.read_cfg(cfg_id, use_directory)
-#     if kcfg is None:
-#         raise ValueError(f'Could not find KCFG in {use_directory} for: {cfg_id}')
-#     app = KCFGViewer(kcfg=kcfg, kprint=kavm, minimize=False)
-#     app.run()
+    proof = APRProof.read_proof(f'{spec_module}.{claim_id}', proof_dir=use_directory)
+    kcfg_viewer = KCFGViewer(proof.kcfg, kavm)
+    kcfg_viewer.run()
 
 
-# def exec_kcfg_show(
-#     definition_dir: Path,
-#     spec_file: Path,
-#     claim_id: str,
-#     spec_module: Optional[str] = None,
-#     use_directory: Optional[Path] = None,
-#     nodes: Iterable[str] = (),
-#     minimize: bool = True,
-#     **kwargs: Any,
-# ) -> None:
-#     use_directory = use_directory if use_directory else Path('.kavm')
-#     kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory)
+def exec_kcfg_show(
+    definition_dir: Path,
+    spec_file: Path,
+    claim_id: str,
+    spec_module: Optional[str] = None,
+    use_directory: Optional[Path] = None,
+    nodes: Iterable[str] = (),
+    minimize: bool = True,
+    **kwargs: Any,
+) -> None:
+    use_directory = use_directory if use_directory else Path('.kavm')
+    kavm = KAVM(definition_dir=definition_dir, use_directory=use_directory)
 
-#     spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').removesuffix('.md').upper()
+    spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').removesuffix('.md').upper()
 
-#     claim_label = f'{spec_module}.{claim_id}'
-#     cfg_id = f'{claim_label}.kfcg'
-#     kcfg = KCFGExplore.read_cfg(cfg_id, use_directory)
-#     if kcfg is None:
-#         raise ValueError(f'Could not find KCFG in {use_directory} for: {cfg_id}')
-#     list(map(print, kcfg.pretty(kavm, minimize=minimize)))
+    proof = APRProof.read_proof(f'{spec_module}.{claim_id}', proof_dir=use_directory)
+    kcfg_show = KCFGShow(kavm)
+    res_lines = kcfg_show.show(
+        proof.id,
+        proof.kcfg,
+    )
+    print('\n'.join(res_lines))
 
-#     for node_id in nodes:
-#         kast = kcfg.node(node_id).cterm.kast
-#         if minimize:
-#             kast = minimize_term(kast)
-#         print(f'\n\nNode {node_id}:\n\n{kavm.pretty_print(kast)}\n')
+    print('Proof summary:')
+    print('\n'.join(proof.summary))
 
 
 def exec_kcfg_prove(
