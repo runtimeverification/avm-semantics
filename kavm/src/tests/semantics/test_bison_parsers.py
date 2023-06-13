@@ -4,7 +4,7 @@ from os.path import abspath
 from pathlib import Path
 
 import pytest
-from pyk.cli_utils import run_process
+from pyk.utils import run_process
 
 project_path = abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
 
