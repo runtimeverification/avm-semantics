@@ -4,17 +4,17 @@ import subprocess
 import tempfile
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Callable, Dict, Final, Iterable, List, Optional, Tuple, Union, cast
+from typing import Final, Iterable, List, Optional, Tuple, Union, cast
 
-from pyk.cli_utils import BugReport, run_process
 from pyk.kast.inner import KSort, KToken
 from pyk.kast.manip import get_cell
+from pyk.kast.pretty import SymbolTable, paren
 from pyk.kore import syntax as kore
 from pyk.kore.parser import KoreParser
-from pyk.ktool.kprint import paren
 from pyk.ktool.kprove import KProve
 from pyk.ktool.krun import KRun, KRunOutput, _krun
 from pyk.prelude.k import K
+from pyk.utils import BugReport, run_process
 
 from kavm.scenario import KAVMScenario
 
@@ -44,9 +44,16 @@ class KAVM(KRun, KProve):
                 definition_dir=definition_dir,
                 use_directory=use_directory,
                 main_file=main_file,
+                patch_symbol_table=KAVM._kavm_patch_symbol_table,
             )
             self._verification_definition = definition_dir
-        KRun.__init__(self, definition_dir, use_directory=use_directory, bug_report=bug_report)
+        KRun.__init__(
+            self,
+            definition_dir,
+            use_directory=use_directory,
+            bug_report=bug_report,
+            patch_symbol_table=KAVM._kavm_patch_symbol_table,
+        )
 
         self._catcat_parser = definition_dir / 'catcat'
         self._teal_parser = teal_parser if teal_parser else definition_dir / 'parser_TealInputPgm_TEAL-PARSER-SYNTAX'
@@ -206,8 +213,8 @@ class KAVM(KRun, KProve):
         command_env['KAVM_DEFINITION_DIR'] = str(self.definition_dir)
         return run_process(kast_command, env=command_env, logger=_LOGGER)
 
-    @staticmethod
-    def _patch_symbol_table(symbol_table: Dict[str, Callable[..., str]]) -> None:
+    @classmethod
+    def _kavm_patch_symbol_table(cls, symbol_table: SymbolTable) -> None:
         symbol_table['_+Int_'] = paren(symbol_table['_+Int_'])
         symbol_table['_+Bytes_'] = paren(lambda a1, a2: a1 + '+Bytes' + a2)
 

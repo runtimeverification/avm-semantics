@@ -4,12 +4,13 @@ from typing import Any, Callable, Collection, Dict, List, Optional, Set, Tuple, 
 
 from algosdk.encoding import decode_address
 from algosdk.future.transaction import OnComplete
+from pyk.dequote import bytes_encode, dequote_string
 from pyk.kast.inner import KApply, KInner, KLabel, KSort, KToken, KVariable, Subst, build_assoc, top_down
 from pyk.kast.manip import is_anon_var, split_config_from
 from pyk.prelude.bytes import bytesToken
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
-from pyk.utils import dequote_str, hash_str
+from pyk.utils import hash_str
 
 T = TypeVar("T")
 
@@ -69,7 +70,7 @@ def tvalue_bytes_list(values: List[bytes]) -> KInner:
     if len(values) == 0:
         return KApply('.TValueList')
     else:
-        return generate_tvalue_list([bytesToken(dequote_str(str(v))[2:-1]) for v in values])
+        return generate_tvalue_list([bytesToken(bytes_encode(dequote_string(str(v))[2:-1])) for v in values])
 
 
 def map_bytes_bytes(d: Dict[str, str]) -> KInner:
@@ -173,12 +174,12 @@ def generate_tvalue_list(tvlist: List[KInner]) -> KInner:
 
 def algorand_address_to_k_bytes(addr: str) -> KToken:
     """Serialize an Algorand address string to K Bytes token"""
-    return bytesToken(dequote_str(str(decode_address(addr)))[2:-1])
+    return bytesToken(bytes_encode(dequote_string(str(decode_address(addr)))[2:-1]))
 
 
 def method_selector_to_k_bytes(method_selector: bytes) -> KToken:
     """Serialize an Algorand address string to K Bytes token"""
-    return bytesToken(dequote_str(str(method_selector))[2:-1])
+    return bytesToken(bytes_encode(dequote_string(str(method_selector))[2:-1]))
 
 
 def plusInt(i1: KInner, i2: KInner) -> KApply:  # noqa: N802
