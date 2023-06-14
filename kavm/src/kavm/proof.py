@@ -22,14 +22,13 @@ from pyk.kast.inner import (
 )
 from pyk.kast.manip import (
     inline_cell_maps,
-    minimize_rule,
     minimize_term,
     push_down_rewrites,
     split_config_and_constraints,
     split_config_from,
 )
 from pyk.kast.outer import KClaim
-from pyk.ktool.kprint import build_symbol_table, paren, pretty_print_kast
+from pyk.kast.pretty import build_symbol_table, paren
 from pyk.prelude.kint import intToken
 from pyk.prelude.string import stringToken
 from pyk.utils import hash_str
@@ -370,8 +369,6 @@ class KAVMProof:
         kavm_haskell = KAVM(
             definition_dir=Path(os.environ.get('KAVM_VERIFICATION_DEFINITION_DIR')), use_directory=self._use_directory
         )
-        kavm_haskell._write_claim_definition(minimize_rule(claim), self._claim_name)
-
         symbol_table = build_symbol_table(kavm_haskell.definition)
         symbol_table['_+Bytes_'] = paren(lambda a1, a2: a1 + ' +Bytes ' + a2)
         symbol_table['_andBool_'] = paren(symbol_table['_andBool_'])
@@ -388,12 +385,14 @@ class KAVMProof:
     def report_failure(self, final_term: KInner, symbol_table: Dict):
         final_config_filename = self._use_directory / f'{self._claim_name}_final_configuration.txt'
         with open(final_config_filename, 'w') as file:
-            file.write(pretty_print_kast(minimize_term(inline_cell_maps(final_term)), symbol_table=symbol_table))
+            file.write(self.kavm.pretty_print(minimize_term(inline_cell_maps(final_term)), symbol_table=symbol_table))
         config, constraints = split_config_and_constraints(final_term)
         _, subst = split_config_from(config)
-        _LOGGER.info('KAVM return code: ' + pretty_print_kast(subst['RETURNCODE_CELL'], symbol_table=symbol_table))
-        _LOGGER.info('KAVM return status: ' + pretty_print_kast(subst['RETURNSTATUS_CELL'], symbol_table=symbol_table))
+        _LOGGER.info('KAVM return code: ' + self.kavm.pretty_print(subst['RETURNCODE_CELL'], symbol_table=symbol_table))
+        _LOGGER.info(
+            'KAVM return status: ' + self.kavm.pretty_print(subst['RETURNSTATUS_CELL'], symbol_table=symbol_table)
+        )
         _LOGGER.info('Constraints: ')
-        _LOGGER.info(pretty_print_kast(constraints, symbol_table=symbol_table))
+        _LOGGER.info(self.kavm.pretty_print(constraints, symbol_table=symbol_table))
         _LOGGER.info(f'Pretty printed final configuration to {final_config_filename}')
         exit(1)
