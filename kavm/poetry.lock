@@ -366,13 +366,13 @@ pyreadline3 = {version = "*", markers = "sys_platform == \"win32\" and python_ve
 
 [[package]]
 name = "hypothesis"
-version = "6.79.1"
+version = "6.79.2"
 description = "A library for property-based testing"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "hypothesis-6.79.1-py3-none-any.whl", hash = "sha256:7a0b8ca178f16720e96f11e96b71b6139db0e30727e9cf8bd8e3059710393fc7"},
-    {file = "hypothesis-6.79.1.tar.gz", hash = "sha256:de8fb599fc855d3006236ab58cd0edafd099d63837225aad848dac22e239475b"},
+    {file = "hypothesis-6.79.2-py3-none-any.whl", hash = "sha256:564d9860ed5e09b0434b7bafea392b0da8f67131190202c6002e58c2c96b7596"},
+    {file = "hypothesis-6.79.2.tar.gz", hash = "sha256:51fb2259489dc446d3edc04cbc8ebd5848d7d3f238121183bee5449b91f7a8d8"},
 ]
 
 [package.dependencies]
@@ -1057,7 +1057,7 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pyk"
-version = "0.1.345"
+version = "0.1.346"
 description = ""
 optional = false
 python-versions = "^3.10"
@@ -1077,8 +1077,8 @@ tomli = "^2.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/runtimeverification/pyk.git"
-reference = "v0.1.345"
-resolved_reference = "bdba8da9a52303139116ed9c72dbbf5de2042345"
+reference = "v0.1.346"
+resolved_reference = "94c3f6928d5dbdafd064de4ad63fbd940c47bb2a"
 
 [[package]]
 name = "pynacl"
@@ -1433,4 +1433,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "00130811c4ddd4cfcfa6b3188b3ed0bd0eb86c2bd067ec17ed750dffdd60f81e"
+content-hash = "ec7858810d214b1f8ed17a78fc905e7ab27a2c6bb4dd764cf6fcf39d5f6afea1"
