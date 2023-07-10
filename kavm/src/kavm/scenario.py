@@ -195,7 +195,6 @@ class KAVMScenario:
                 teal_src = (teal_sources_dir / teal_filename_or_src).read_text()
                 pgm_name = teal_filename_or_src
             else:
-                assert teal_decompiler
                 teal_src = teal_decompiler(teal_filename_or_src)
                 pgm_name = sha512(teal_src.encode()).hexdigest() + '.teal'
             return (pgm_name, teal_src)

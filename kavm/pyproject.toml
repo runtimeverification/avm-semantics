@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "kavm"
-version = "0.1.93"
+version = "0.1.94"
 description = "Python bindings and command-line interface for KAVM"
 authors = [
     "Runtime Verification, Inc. <contact@runtimeverification.com>",
@@ -17,7 +17,7 @@ py-algorand-sdk = "1.20.1"
 pyteal = "0.20.1"
 tabulate = "0.8.10"
 types-tabulate = "0.8.10"
-pyk = { git = "https://github.com/runtimeverification/pyk.git", tag="v0.1.330" }
+pyk = { git = "https://github.com/runtimeverification/pyk.git", tag="v0.1.362" }
 
 [tool.poetry.group.dev.dependencies]
 autoflake = "*"
