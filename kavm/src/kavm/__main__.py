@@ -295,10 +295,7 @@ def exec_kcfg_show(
 
     proof = APRProof.read_proof(f'{spec_module}.{claim_id}', proof_dir=use_directory)
     kcfg_show = KCFGShow(kavm)
-    res_lines = kcfg_show.show(
-        proof.id,
-        proof.kcfg,
-    )
+    res_lines = kcfg_show.show(proof.kcfg, nodes=nodes, minimize=minimize)
     print('\n'.join(res_lines))
 
     print('Proof summary:')
@@ -330,11 +327,10 @@ def exec_kcfg_prove(
     proof = APRProof(
         id=claim_label, kcfg=cfg, init=init_node, target=target_node, proof_dir=kavm.use_directory, logs={}
     )
-    prover = APRProver(proof)
 
     with KCFGExplore(kavm, port=kore_rpc_port, bug_report=bug_report_path) as kcfg_explore:
+        prover = APRProver(proof, kcfg_explore=kcfg_explore)
         prover.advance_proof(
-            kcfg_explore,
             terminal_rules=['AVM-EXECUTION.starttx', 'AVM-EXECUTION.endtx', 'AVM-PANIC.panic'],
         )
 
