@@ -164,7 +164,7 @@ $(plugin_include)/kframework/%: $(PLUGIN_SUBMODULE)/plugin/%
 plugin-deps: libsecp256k1 libff libcryptopp $(plugin_includes) $(plugin_c_includes)
 # --------
 
-build: build-kavm build-avm build-avm-verification
+build: build-kavm build-avm build-avm-llvm-so build-avm-verification
 
 $(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
 	@mkdir -p $(dir $@)
@@ -299,8 +299,25 @@ avm_main_file     := avm/avm-testing.md
 avm_main_filename := $(basename $(notdir $(avm_main_file)))
 avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled/
 
-build-avm: $(KAVM_LIB)/$(avm_kompiled)
+build-avm-llvm-so: plugin-deps $(hook_includes) $(avm_includes) $(KAVM_LIB)/version
+	@mkdir -p $(KAVM_DEFINITION_DIR)
+	@rm -f $(KAVM_DEFINITION_DIR)/interpreter.o # make sure the llvm interpreter gets rebuilt
+	@rm -f $(KAVM_DEFINITION_DIR)/interpreter
+	$(POETRY_RUN) $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file)       \
+                            --backend llvm                                              \
+                            -I "${KAVM_INCLUDE}/kframework"                             \
+                            -I "${plugin_include}/kframework"                           \
+                            --definition-dir "${KAVM_LIB}/${avm_kompiled}"              \
+                            --main-module $(avm_main_module)                            \
+                            --syntax-module $(avm_syntax_module)                        \
+                            --hook-namespaces KRYPTO KAVM                               \
+                            --hook-cpp-files $(HOOK_KAVM_FILES) $(PLUGIN_CPP_FILES)     \
+                            --hook-clang-flags $(HOOK_CC_OPTS)                          \
+			    --llvm-library \
+                            --verbose
+                            $(BUILD_WITH_COVERAGE)
 
+build-avm: $(KAVM_LIB)/$(avm_kompiled)
 $(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM_LIB)/version
 	@mkdir -p $(KAVM_DEFINITION_DIR)
 	@rm -f $(KAVM_DEFINITION_DIR)/interpreter.o # make sure the llvm interpreter gets rebuilt

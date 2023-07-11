@@ -18,6 +18,7 @@ from pyk.kcfg.kcfg import KCFG
 from pyk.kcfg.show import KCFGShow
 from pyk.kcfg.tui import KCFGViewer
 from pyk.kore import syntax as kore
+from pyk.ktool.kompile import LLVMKompileType
 from pyk.ktool.kprove import KoreExecLogFormat
 from pyk.proof.reachability import APRProof, APRProver
 from pyk.utils import BugReport
@@ -45,6 +46,7 @@ def exec_kompile(
     hook_clang_flags: List[str],
     coverage: bool,
     gen_bison_parser: bool = False,
+    llvm_library: bool = False,
     **kwargs: Any,
 ) -> None:
     kompile(
@@ -60,7 +62,39 @@ def exec_kompile(
         hook_clang_flags=hook_clang_flags,
         coverage=coverage,
         gen_bison_parser=gen_bison_parser,
+        llvm_kompile_type=LLVMKompileType.C if llvm_library else LLVMKompileType.MAIN,
     )
+
+
+# def exec_booster_kompile(
+#     definition_dir: Path,
+#     main_file: Path,
+#     main_module: Optional[str],
+#     syntax_module: Optional[str],
+#     backend: Optional[str],
+#     verbose: bool,
+#     includes: List[Path],
+#     hook_namespaces: List[str],
+#     hook_cpp_files: List[Path],
+#     hook_clang_flags: List[str],
+#     coverage: bool,
+#     gen_bison_parser: bool = False,
+#     **kwargs: Any,
+# ) -> None:
+#     kompile(
+#         definition_dir=definition_dir,
+#         main_file=main_file,
+#         main_module_name=main_module,
+#         syntax_module_name=syntax_module,
+#         includes=includes,
+#         backend=backend,
+#         verbose=True,
+#         hook_namespaces=hook_namespaces,
+#         hook_cpp_files=hook_cpp_files,
+#         hook_clang_flags=hook_clang_flags,
+#         coverage=coverage,
+#         gen_bison_parser=gen_bison_parser,
+#     )
 
 
 def exec_prove(
@@ -310,6 +344,8 @@ def exec_kcfg_prove(
     bug_report: bool = False,
     spec_module: Optional[str] = None,
     use_directory: Optional[Path] = None,
+    use_booster: bool = False,
+    llvm_library: Optional[Path] = None,
     **kwargs: Any,
 ) -> None:
     default_kavm_dir = Path('.kavm')
@@ -328,10 +364,19 @@ def exec_kcfg_prove(
         id=claim_label, kcfg=cfg, init=init_node, target=target_node, proof_dir=kavm.use_directory, logs={}
     )
 
-    with KCFGExplore(kavm, port=kore_rpc_port, bug_report=bug_report_path) as kcfg_explore:
+    if use_booster:
+        if llvm_library:
+            kore_rpc_command = ['kore-rpc-booster', '--llvm-backend-library', str(llvm_library)]
+        else:
+            kore_rpc_command = ['kore-rpc-booster']
+    else:
+        kore_rpc_command = ['kore-rpc']
+    with KCFGExplore(
+        kavm, kore_rpc_command=kore_rpc_command, port=kore_rpc_port, bug_report=bug_report_path
+    ) as kcfg_explore:
         prover = APRProver(proof, kcfg_explore=kcfg_explore)
         prover.advance_proof(
-            terminal_rules=['AVM-EXECUTION.starttx', 'AVM-EXECUTION.endtx', 'AVM-PANIC.panic'],
+            cut_point_rules=['AVM-EXECUTION.starttx', 'AVM-EXECUTION.endtx', 'AVM-PANIC.panic'],
         )
 
 
@@ -398,6 +443,7 @@ def create_argument_parser() -> ArgumentParser:
     kompile_subparser.add_argument('--coverage', default=False, action='store_true')
     kompile_subparser.add_argument('--gen-bison-parser', default=False, action='store_true')
     kompile_subparser.add_argument('--emit-json', default=False, action='store_true')
+    kompile_subparser.add_argument('--llvm-library', default=False, action='store_true')
     kompile_subparser.add_argument(
         '-I',
         type=dir_path,
@@ -574,6 +620,8 @@ def create_argument_parser() -> ArgumentParser:
     kcfg_prove_subparser.add_argument('spec_file', type=file_path, help='Path to the K spec file')
     kcfg_prove_subparser.add_argument('claim_id', type=str, help='Claim from "spec_file" to prove')
     kcfg_prove_subparser.add_argument('--port', dest='kore_rpc_port', required=True, type=int, help='Port for kore-rpc')
+    kcfg_prove_subparser.add_argument('--use-booster', default=False, action='store_true')
+    kcfg_prove_subparser.add_argument('--llvm-library', type=file_path, help='Path to interpreter.so')
 
     return parser
 
