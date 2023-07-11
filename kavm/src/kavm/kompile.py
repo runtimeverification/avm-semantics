@@ -116,36 +116,25 @@ def generate_interpreter(
         ccopt_flags = [('-ccopt', flag) for flag in flags]
         return list(itertools.chain(*ccopt_flags))
 
-    def _kompile(
-        interpreter_executable_file: Path,
-        hook_cpp_files: Optional[List[Path]] = None,
-        hook_clang_flags: Optional[List[str]] = None,
-    ) -> None:
-        command = [
-            'kompile',
-            '--output-definition',
-            str(definition_dir),
-            str(main_file),
-        ]
+    command = [
+        'kompile',
+        '--output-definition',
+        str(definition_dir),
+        str(main_file),
+    ]
 
-        command += ['--verbose']
-        command += ['--emit-json']
-        command += ['--gen-glr-bison-parser'] if gen_bison_parser else []
-        command += ['--main-module', main_module_name] if main_module_name else []
-        command += ['--syntax-module', syntax_module_name] if syntax_module_name else []
-        command += [str(arg) for include in includes for arg in ['-I', include]] if includes else []
-        command += ['--md-selector', md_selector] if md_selector else []
-        command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
-        command += ['--coverage'] if coverage else []
-        command += _clang_flags()
-        try:
-            subprocess.run(command, check=True, text=True)
-        except CalledProcessError:
-            print(' '.join(map(str, command)))
-            raise
-
-    _kompile(
-        interpreter_executable_file=interpreter_executable_file.resolve(),
-        hook_cpp_files=hook_cpp_files,
-        hook_clang_flags=hook_clang_flags,
-    )
+    command += ['--verbose']
+    command += ['--emit-json']
+    command += ['--gen-glr-bison-parser'] if gen_bison_parser else []
+    command += ['--main-module', main_module_name] if main_module_name else []
+    command += ['--syntax-module', syntax_module_name] if syntax_module_name else []
+    command += [str(arg) for include in includes for arg in ['-I', include]] if includes else []
+    command += ['--md-selector', md_selector] if md_selector else []
+    command += ['--hook-namespaces', ' '.join(hook_namespaces)] if hook_namespaces else []
+    command += ['--coverage'] if coverage else []
+    command += _clang_flags()
+    try:
+        subprocess.run(command, check=True, text=True)
+    except CalledProcessError:
+        print(' '.join(map(str, command)))
+        raise
