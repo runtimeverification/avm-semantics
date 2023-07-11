@@ -122,6 +122,7 @@ Working on KAVM
 ### Build system
 
 * `make deps`: build K and other dependencies.
+* `make -C kavm poetry-install`: set up a virtual environment using Poetry.
 * `make build`: compile KAVM K modules and the `kavm` tool. By default, `kompile` is called with the LLVM backend. To compile the semantics with the Haskell backend, execute `K_BACKEND=haskell make build`.
 * `make test -j8`: run tests. Adjust the `-jX` option as needed to run `X` tests in parallel.
 

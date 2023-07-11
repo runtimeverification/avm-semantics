@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from pstats import Stats
 from typing import Any, Dict
 
-from pyk.cli_utils import file_path
+from pyk.cli.utils import file_path
 from tabulate import tabulate
 
 

@@ -10,15 +10,17 @@ from pathlib import Path
 from subprocess import CalledProcessError
 from typing import Any, Callable, Dict, Final, Iterable, List, Optional, TypeVar
 
-from pyk.cli_utils import BugReport, dir_path, file_path
+from pyk.cli.utils import dir_path, file_path
 from pyk.kast.inner import KApply
 from pyk.kast.manip import minimize_term
 from pyk.kcfg.explore import KCFGExplore
 from pyk.kcfg.kcfg import KCFG
+from pyk.kcfg.show import KCFGShow
 from pyk.kcfg.tui import KCFGViewer
 from pyk.kore import syntax as kore
 from pyk.ktool.kprove import KoreExecLogFormat
-from pyk.proof import AGProof, AGProver
+from pyk.proof.reachability import APRProof, APRProver
+from pyk.utils import BugReport
 
 from kavm.kavm import KAVM
 from kavm.kompile import kompile
@@ -271,13 +273,9 @@ def exec_kcfg_view(
 
     spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').removesuffix('.md').upper()
 
-    claim_label = f'{spec_module}.{claim_id}'
-    cfg_id = f'{claim_label}.kfcg'
-    kcfg = KCFGExplore.read_cfg(cfg_id, use_directory)
-    if kcfg is None:
-        raise ValueError(f'Could not find KCFG in {use_directory} for: {cfg_id}')
-    app = KCFGViewer(kcfg=kcfg, kprint=kavm, minimize=False)
-    app.run()
+    proof = APRProof.read_proof(f'{spec_module}.{claim_id}', proof_dir=use_directory)
+    kcfg_viewer = KCFGViewer(proof.kcfg, kavm)
+    kcfg_viewer.run()
 
 
 def exec_kcfg_show(
@@ -295,18 +293,13 @@ def exec_kcfg_show(
 
     spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').removesuffix('.md').upper()
 
-    claim_label = f'{spec_module}.{claim_id}'
-    cfg_id = f'{claim_label}.kfcg'
-    kcfg = KCFGExplore.read_cfg(cfg_id, use_directory)
-    if kcfg is None:
-        raise ValueError(f'Could not find KCFG in {use_directory} for: {cfg_id}')
-    list(map(print, kcfg.pretty(kavm, minimize=minimize)))
+    proof = APRProof.read_proof(f'{spec_module}.{claim_id}', proof_dir=use_directory)
+    kcfg_show = KCFGShow(kavm)
+    res_lines = kcfg_show.show(proof.kcfg, nodes=nodes, minimize=minimize)
+    print('\n'.join(res_lines))
 
-    for node_id in nodes:
-        kast = kcfg.node(node_id).cterm.kast
-        if minimize:
-            kast = minimize_term(kast)
-        print(f'\n\nNode {node_id}:\n\n{kavm.pretty_print(kast)}\n')
+    print('Proof summary:')
+    print('\n'.join(proof.summary))
 
 
 def exec_kcfg_prove(
@@ -329,15 +322,15 @@ def exec_kcfg_prove(
     claim_label = f'{spec_module}.{claim_id}'
     claims = kavm.get_claims(spec_file, spec_module_name=spec_module, claim_labels=[claim_label])
 
-    cfg = KCFG.from_claim(kavm.definition, claims[0])
+    cfg, init_node, target_node = KCFG.from_claim(kavm.definition, claims[0])
 
-    prover = AGProver(AGProof(cfg))
+    proof = APRProof(
+        id=claim_label, kcfg=cfg, init=init_node, target=target_node, proof_dir=kavm.use_directory, logs={}
+    )
 
     with KCFGExplore(kavm, port=kore_rpc_port, bug_report=bug_report_path) as kcfg_explore:
+        prover = APRProver(proof, kcfg_explore=kcfg_explore)
         prover.advance_proof(
-            claim_label,
-            kcfg_explore,
-            kproofs_dir=kavm.use_directory,
             terminal_rules=['AVM-EXECUTION.starttx', 'AVM-EXECUTION.endtx', 'AVM-PANIC.panic'],
         )
 

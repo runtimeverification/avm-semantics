@@ -2,15 +2,15 @@
   description = "A flake for the KAVM Semantics";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/b01f185e4866de7c5b5a82f833ca9ea3c3f72fc4";
     k-framework.url = "github:runtimeverification/k";
     flake-utils.follows = "k-framework/flake-utils";
     rv-utils.url = "github:runtimeverification/rv-nix-tools";
     poetry2nix.follows = "pyk/poetry2nix";
-    blockchain-k-plugin.url = "github:runtimeverification/blockchain-k-plugin/d9f5cf8f6caf16c04ac29aeaf0f77641f8203e1d";
+    blockchain-k-plugin.url = "github:runtimeverification/blockchain-k-plugin/efba5851e4363485a8b1ec6d7d54033c68a5c1cc";
     blockchain-k-plugin.inputs.flake-utils.follows = "k-framework/flake-utils";
     blockchain-k-plugin.inputs.nixpkgs.follows = "k-framework/nixpkgs";
-    pyk.url = "github:runtimeverification/pyk/v0.1.220";
+    pyk.url = "github:runtimeverification/pyk/v0.1.362";
     pyk.inputs.flake-utils.follows = "k-framework/flake-utils";
     pyk.inputs.nixpkgs.follows = "k-framework/nixpkgs";
 
