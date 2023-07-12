@@ -164,7 +164,7 @@ $(plugin_include)/kframework/%: $(PLUGIN_SUBMODULE)/plugin/%
 plugin-deps: libsecp256k1 libff libcryptopp $(plugin_includes) $(plugin_c_includes)
 # --------
 
-build: build-kavm build-avm build-avm-llvm-so build-avm-verification
+build: build-kavm build-avm-llvm-so build-avm build-avm-verification
 
 $(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
 	@mkdir -p $(dir $@)

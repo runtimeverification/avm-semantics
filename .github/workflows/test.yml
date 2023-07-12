@@ -102,8 +102,7 @@ jobs:
         run: docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make check-kavm-codestyle'
       - name: 'Build AVM semantics'
         run: |
-          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'cd deps/plugin && make clean'
-          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make build'
+          docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -C deps/plugin clean && make build'
       - name: 'Test Bison parsers '
         run: |
           docker exec --user user --workdir /home/user -t avm-semantics-ci /bin/bash -c 'make -j4 test-kavm-bison-parsers'
