@@ -10,17 +10,17 @@ from pathlib import Path
 from subprocess import CalledProcessError
 from typing import Any, Callable, Dict, Final, Iterable, List, Optional, TypeVar
 
-from pyk.cli.utils import dir_path, file_path
+from pyk.cli.utils import dir_path, file_path, node_id_like
 from pyk.kast.inner import KApply
 from pyk.kast.manip import minimize_term
 from pyk.kcfg.explore import KCFGExplore
-from pyk.kcfg.kcfg import KCFG
-from pyk.kcfg.show import KCFGShow
+from pyk.kcfg.kcfg import KCFG, NodeIdLike
 from pyk.kcfg.tui import KCFGViewer
 from pyk.kore import syntax as kore
 from pyk.ktool.kompile import LLVMKompileType
 from pyk.ktool.kprove import KoreExecLogFormat
 from pyk.proof.reachability import APRProof, APRProver
+from pyk.proof.show import APRProofShow
 from pyk.utils import BugReport
 
 from kavm.kavm import KAVM
@@ -287,7 +287,7 @@ def exec_kcfg_show(
     claim_id: str,
     spec_module: Optional[str] = None,
     use_directory: Optional[Path] = None,
-    nodes: Iterable[str] = (),
+    nodes: Iterable[NodeIdLike] = (),
     minimize: bool = True,
     **kwargs: Any,
 ) -> None:
@@ -297,8 +297,14 @@ def exec_kcfg_show(
     spec_module = spec_module if spec_module else spec_file.name.removesuffix('.k').removesuffix('.md').upper()
 
     proof = APRProof.read_proof(f'{spec_module}.{claim_id}', proof_dir=use_directory)
-    kcfg_show = KCFGShow(kavm)
-    res_lines = kcfg_show.show(proof.kcfg, nodes=nodes, minimize=minimize)
+    proof_show = APRProofShow(kavm)
+
+    res_lines = proof_show.show(
+        proof,
+        nodes=nodes,
+        minimize=minimize,
+        sort_collections=True,
+    )
     print('\n'.join(res_lines))
 
     print('Proof summary:')
@@ -567,7 +573,7 @@ def create_argument_parser() -> ArgumentParser:
     kcfg_show_subparser.add_argument('claim_id', type=str, help='Claim from "spec_file" to prove')
     kcfg_show_subparser.add_argument(
         '--node',
-        type=str,
+        type=node_id_like,
         dest='nodes',
         default=[],
         action='append',
