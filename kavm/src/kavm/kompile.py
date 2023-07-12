@@ -71,34 +71,6 @@ def kompile(
         sys.stderr.write(f'\nkompile returncode:\n{err.args[3]}\n')
         sys.stderr.flush()
         raise
-    # if backend == 'llvm':
-    #     generate_interpreter(
-    #         definition_dir,
-    #         main_file,
-    #         includes,
-    #         main_module_name,
-    #         syntax_module_name,
-    #         md_selector,
-    #         hook_namespaces,
-    #         hook_cpp_files,
-    #         hook_clang_flags,
-    #         coverage=coverage,
-    #         gen_bison_parser=gen_bison_parser,
-    #     )
-    # elif backend == 'haskell':
-    #     kompile_haskell(
-    #         definition_dir=definition_dir,
-    #         main_file=main_file,
-    #         includes=includes,
-    #         main_module_name=main_module_name,
-    #         syntax_module_name=syntax_module_name,
-    #         md_selector=md_selector,
-    #         hook_namespaces=hook_namespaces,
-    #         backend=backend,
-    #         verbose=verbose,
-    #         emit_json=emit_json,
-    #     )
-    # return KAVM(definition_dir)
 
 
 def kompile_haskell(

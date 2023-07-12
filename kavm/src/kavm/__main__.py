@@ -66,37 +66,6 @@ def exec_kompile(
     )
 
 
-# def exec_booster_kompile(
-#     definition_dir: Path,
-#     main_file: Path,
-#     main_module: Optional[str],
-#     syntax_module: Optional[str],
-#     backend: Optional[str],
-#     verbose: bool,
-#     includes: List[Path],
-#     hook_namespaces: List[str],
-#     hook_cpp_files: List[Path],
-#     hook_clang_flags: List[str],
-#     coverage: bool,
-#     gen_bison_parser: bool = False,
-#     **kwargs: Any,
-# ) -> None:
-#     kompile(
-#         definition_dir=definition_dir,
-#         main_file=main_file,
-#         main_module_name=main_module,
-#         syntax_module_name=syntax_module,
-#         includes=includes,
-#         backend=backend,
-#         verbose=True,
-#         hook_namespaces=hook_namespaces,
-#         hook_cpp_files=hook_cpp_files,
-#         hook_clang_flags=hook_clang_flags,
-#         coverage=coverage,
-#         gen_bison_parser=gen_bison_parser,
-#     )
-
-
 def exec_prove(
     definition_dir: Path,
     spec_file: Path,
