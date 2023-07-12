@@ -90,7 +90,7 @@ $(libsecp256k1_out): $(PLUGIN_SUBMODULE)/deps/secp256k1/autogen.sh
 	    && $(MAKE)                                                        \
 	    && $(MAKE) install
 
-LIBFF_CMAKE_FLAGS :=
+LIBFF_CMAKE_FLAGS := -DCMAKE_CXX_FLAGS=-fPIC
 
 ifeq ($(UNAME_S),Linux)
     LIBFF_CMAKE_FLAGS +=
