@@ -90,7 +90,7 @@ $(libsecp256k1_out): $(PLUGIN_SUBMODULE)/deps/secp256k1/autogen.sh
 	    && $(MAKE)                                                        \
 	    && $(MAKE) install
 
-LIBFF_CMAKE_FLAGS :=
+LIBFF_CMAKE_FLAGS := -DCMAKE_CXX_FLAGS=-fPIC
 
 ifeq ($(UNAME_S),Linux)
     LIBFF_CMAKE_FLAGS +=
@@ -164,7 +164,7 @@ $(plugin_include)/kframework/%: $(PLUGIN_SUBMODULE)/plugin/%
 plugin-deps: libsecp256k1 libff libcryptopp $(plugin_includes) $(plugin_c_includes)
 # --------
 
-build: build-kavm build-avm build-avm-verification
+build: build-kavm build-avm-llvm-so build-avm build-avm-verification
 
 $(KAVM_INCLUDE)/kframework/%: lib/include/kframework/%
 	@mkdir -p $(dir $@)
@@ -299,9 +299,26 @@ avm_main_file     := avm/avm-testing.md
 avm_main_filename := $(basename $(notdir $(avm_main_file)))
 avm_kompiled      := $(avm_dir)/$(avm_main_filename)-kompiled/
 
-build-avm: $(KAVM_LIB)/$(avm_kompiled)
 
-$(KAVM_LIB)/$(avm_kompiled): plugin-deps $(hook_includes) $(avm_includes) $(KAVM_LIB)/version
+build-avm-llvm-so: plugin-deps $(hook_includes) $(avm_includes) $(KAVM_LIB)/version
+	@mkdir -p $(KAVM_DEFINITION_DIR)
+	@rm -f $(KAVM_DEFINITION_DIR)/interpreter.o # make sure the llvm interpreter gets rebuilt
+	@rm -f $(KAVM_DEFINITION_DIR)/interpreter.so
+	$(POETRY_RUN) $(KAVM) kompile $(KAVM_INCLUDE)/kframework/$(avm_main_file)       \
+                            --backend llvm                                              \
+                            --llvm-library                                              \
+                            -I "${KAVM_INCLUDE}/kframework"                             \
+                            -I "${plugin_include}/kframework"                           \
+                            --definition-dir "${KAVM_LIB}/${avm_kompiled}"              \
+                            --main-module $(avm_main_module)                            \
+                            --syntax-module $(avm_syntax_module)                        \
+                            --hook-namespaces KRYPTO KAVM                               \
+                            --hook-cpp-files $(HOOK_KAVM_FILES) $(PLUGIN_CPP_FILES)     \
+                            --hook-clang-flags $(HOOK_CC_OPTS)                          \
+                            $(BUILD_WITH_COVERAGE)
+	@make generate-parsers
+
+build-avm: plugin-deps $(hook_includes) $(avm_includes) $(KAVM_LIB)/version
 	@mkdir -p $(KAVM_DEFINITION_DIR)
 	@rm -f $(KAVM_DEFINITION_DIR)/interpreter.o # make sure the llvm interpreter gets rebuilt
 	@rm -f $(KAVM_DEFINITION_DIR)/interpreter

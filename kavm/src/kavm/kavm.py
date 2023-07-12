@@ -217,6 +217,7 @@ class KAVM(KRun, KProve):
     def _kavm_patch_symbol_table(cls, symbol_table: SymbolTable) -> None:
         symbol_table['_+Int_'] = paren(symbol_table['_+Int_'])
         symbol_table['_+Bytes_'] = paren(lambda a1, a2: a1 + '+Bytes' + a2)
+        symbol_table['_Map_'] = paren(lambda m1, m2: m1 + '\n' + m2)
 
     @staticmethod
     def concrete_rules() -> List[str]:
