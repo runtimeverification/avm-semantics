@@ -891,11 +891,11 @@
         "rv-utils": "rv-utils"
       },
       "locked": {
-        "lastModified": 1690820975,
-        "narHash": "sha256-Ui/wrd2ebEiIyjbrZoha6lz8RktpavNsGnDcoYoQr6s=",
+        "lastModified": 1690474331,
+        "narHash": "sha256-8m5Rt34kWrXNfoxr4KvuPdtxLkms6EVi/abMZYtXRxo=",
         "owner": "runtimeverification",
         "repo": "k",
-        "rev": "6952e8a1fe6094fa55125cec28f76313f17166bf",
+        "rev": "8b0629a7143b639ae55c33184b62ade8699646fb",
         "type": "github"
       },
       "original": {
@@ -936,11 +936,11 @@
         "utils": "utils_2"
       },
       "locked": {
-        "lastModified": 1690795467,
-        "narHash": "sha256-ATXiJ2HOy7J+K/yRSY/kspaLQKT5hUeCAxKUInjV+Oc=",
+        "lastModified": 1690388816,
+        "narHash": "sha256-gVE/tV3FZu8fZ+9rq1cFyr8LOgxDj9gvqKM7/JraNIQ=",
         "owner": "runtimeverification",
         "repo": "llvm-backend",
-        "rev": "e4af5de2c5d72924b0f5d2822989f7eab97a7f3b",
+        "rev": "5c094c59e7ab316f9aa1348a8627338f08954071",
         "type": "github"
       },
       "original": {
@@ -1379,11 +1379,11 @@
     },
     "nixpkgs_5": {
       "locked": {
-        "lastModified": 1690630041,
-        "narHash": "sha256-gbnvqm5goS9DSKAqGFpq3398aOpwejmq4qWikqmQyRo=",
+        "lastModified": 1690271650,
+        "narHash": "sha256-qwdsW8DBY1qH+9luliIH7VzgwvL+ZGI3LZWC0LTiDMI=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "d57e8c535d4cbb07f441c30988ce52eec69db7a8",
+        "rev": "6dc93f0daec55ee2f441da385aaf143863e3d671",
         "type": "github"
       },
       "original": {
