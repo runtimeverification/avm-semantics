@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "kavm"
-version = "0.1.96"
+version = "0.1.97"
 description = "Python bindings and command-line interface for KAVM"
 authors = [
     "Runtime Verification, Inc. <contact@runtimeverification.com>",
