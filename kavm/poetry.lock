@@ -1069,7 +1069,7 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pyk"
-version = "0.1.417"
+version = "0.1.418"
 description = ""
 optional = false
 python-versions = "^3.10"
@@ -1089,8 +1089,8 @@ tomli = "^2.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/runtimeverification/pyk.git"
-reference = "v0.1.417"
-resolved_reference = "0151483b7f9174f9c2652fcf5b026ddd87092151"
+reference = "v0.1.418"
+resolved_reference = "949163ea8cc7f168490c84a7daa5df5481d1af9c"
 
 [[package]]
 name = "pynacl"
@@ -1445,4 +1445,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "f1fd1fbedbe46c926e93639b2c9f4686a8388e78e08115c8fa3f9d07a04842f3"
+content-hash = "31501635e94a677b167f81c8ea97a2372599d6e9bc322b8c0fdbf570c156e5a7"
