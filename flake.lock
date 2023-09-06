@@ -888,11 +888,11 @@
         "rv-utils": "rv-utils"
       },
       "locked": {
-        "lastModified": 1693945467,
-        "narHash": "sha256-fPadg9+IHZ9Zr+dPHoiYhUwPj9H6Q5/ZSG73TAKNtI4=",
+        "lastModified": 1693947872,
+        "narHash": "sha256-pKiHZz+koADXQ3MdfzE39ADKSVnUIvmVbfkyZqNmXGQ=",
         "owner": "runtimeverification",
         "repo": "k",
-        "rev": "e212abd2bdeabead3273be41087c070383251afc",
+        "rev": "3997d65c227fde4e67cedfca83a8a2d2436229e6",
         "type": "github"
       },
       "original": {
