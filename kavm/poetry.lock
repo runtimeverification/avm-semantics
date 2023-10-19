@@ -1060,7 +1060,7 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pyk"
-version = "0.1.471"
+version = "0.1.472"
 description = ""
 optional = false
 python-versions = "^3.10"
@@ -1080,8 +1080,8 @@ tomli = "^2.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/runtimeverification/pyk.git"
-reference = "v0.1.471"
-resolved_reference = "962f4aa6a93780a75ede63ff5f8ead82043f20da"
+reference = "v0.1.472"
+resolved_reference = "d4dfeb564a3b814a9d827e77ec8f90cde89be4ff"
 
 [[package]]
 name = "pynacl"
@@ -1227,20 +1227,20 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "ruamel-yaml"
-version = "0.17.35"
+version = "0.17.36"
 description = "ruamel.yaml is a YAML parser/emitter that supports roundtrip preservation of comments, seq/map flow style, and map key order"
 optional = false
 python-versions = ">=3"
 files = [
-    {file = "ruamel.yaml-0.17.35-py3-none-any.whl", hash = "sha256:b105e3e6fc15b41fdb201ba1b95162ae566a4ef792b9f884c46b4ccc5513a87a"},
-    {file = "ruamel.yaml-0.17.35.tar.gz", hash = "sha256:801046a9caacb1b43acc118969b49b96b65e8847f29029563b29ac61d02db61b"},
+    {file = "ruamel.yaml-0.17.36-py3-none-any.whl", hash = "sha256:9d0a8ae7050ce0065bab51d4f0b000aa8afa91e8e04d1364bc304491f4f25943"},
+    {file = "ruamel.yaml-0.17.36.tar.gz", hash = "sha256:497d9f12c32e3201b12e897f1c7756bea59a7c50461daff66781598c48a7f289"},
 ]
 
 [package.dependencies]
 "ruamel.yaml.clib" = {version = ">=0.2.7", markers = "platform_python_implementation == \"CPython\" and python_version < \"3.13\""}
 
 [package.extras]
-docs = ["ryd"]
+docs = ["mercurial (>5.7)", "ryd"]
 jinja2 = ["ruamel.yaml.jinja2 (>=0.2)"]
 
 [[package]]
@@ -1435,4 +1435,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "74930749604baeca57d7f3387b837a28d6fe11d8fdb8b384068ab063fc6dd6c8"
+content-hash = "c4166e1dbc3accbae83a1e9f2aef6adb875c85faae28c660ea908fb0fd38cf43"
