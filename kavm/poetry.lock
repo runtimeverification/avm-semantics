@@ -281,13 +281,13 @@ pyflakes = ">=3.2.0,<3.3.0"
 
 [[package]]
 name = "flake8-bugbear"
-version = "24.1.15"
+version = "24.1.16"
 description = "A plugin for flake8 finding likely bugs and design problems in your program. Contains warnings that don't belong in pyflakes and pycodestyle."
 optional = false
 python-versions = ">=3.8.1"
 files = [
-    {file = "flake8-bugbear-24.1.15.tar.gz", hash = "sha256:5f927884f6879999a9370341b2004feff97d4b551dcbd0a9376edc33b2693331"},
-    {file = "flake8_bugbear-24.1.15-py3-none-any.whl", hash = "sha256:5ae5bbe3cd1fa695919fb66291d5e329429d2c004082b91d074b99d958596c79"},
+    {file = "flake8-bugbear-24.1.16.tar.gz", hash = "sha256:e94514b1f866270663ce047d23dea731025c24ebacb4ce5999d8959076027504"},
+    {file = "flake8_bugbear-24.1.16-py3-none-any.whl", hash = "sha256:1648f4a433d11da8fb4e148cbaa845692ff51379f3f598e3225010e3b9a667b7"},
 ]
 
 [package.dependencies]
@@ -354,13 +354,13 @@ pyreadline3 = {version = "*", markers = "sys_platform == \"win32\" and python_ve
 
 [[package]]
 name = "hypothesis"
-version = "6.93.2"
+version = "6.94.0"
 description = "A library for property-based testing"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "hypothesis-6.93.2-py3-none-any.whl", hash = "sha256:7cf1e01aa0e23d92841383bc297102172f667fc9088e8184c1d73281258ae7d5"},
-    {file = "hypothesis-6.93.2.tar.gz", hash = "sha256:2c7880180732f1596f415cca548ac6156942a5cdf871361358e2d27958fbb38a"},
+    {file = "hypothesis-6.94.0-py3-none-any.whl", hash = "sha256:69bdaff4a8d87ca6b07e48a5ee28652bba766429ddcef1d74d7729b9de4026d0"},
+    {file = "hypothesis-6.94.0.tar.gz", hash = "sha256:bfe02236bd701eaf1056fd7023ced31fc583c6d136ca534a55cd2d64617059aa"},
 ]
 
 [package.dependencies]
