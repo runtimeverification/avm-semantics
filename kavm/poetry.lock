@@ -281,13 +281,13 @@ pyflakes = ">=3.2.0,<3.3.0"
 
 [[package]]
 name = "flake8-bugbear"
-version = "23.12.2"
+version = "24.1.15"
 description = "A plugin for flake8 finding likely bugs and design problems in your program. Contains warnings that don't belong in pyflakes and pycodestyle."
 optional = false
 python-versions = ">=3.8.1"
 files = [
-    {file = "flake8-bugbear-23.12.2.tar.gz", hash = "sha256:32b2903e22331ae04885dae25756a32a8c666c85142e933f43512a70f342052a"},
-    {file = "flake8_bugbear-23.12.2-py3-none-any.whl", hash = "sha256:83324bad4d90fee4bf64dd69c61aff94debf8073fbd807c8b6a36eec7a2f0719"},
+    {file = "flake8-bugbear-24.1.15.tar.gz", hash = "sha256:5f927884f6879999a9370341b2004feff97d4b551dcbd0a9376edc33b2693331"},
+    {file = "flake8_bugbear-24.1.15-py3-none-any.whl", hash = "sha256:5ae5bbe3cd1fa695919fb66291d5e329429d2c004082b91d074b99d958596c79"},
 ]
 
 [package.dependencies]
@@ -354,13 +354,13 @@ pyreadline3 = {version = "*", markers = "sys_platform == \"win32\" and python_ve
 
 [[package]]
 name = "hypothesis"
-version = "6.92.8"
+version = "6.93.2"
 description = "A library for property-based testing"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "hypothesis-6.92.8-py3-none-any.whl", hash = "sha256:227fd8848415df88c6f43dabe0ac7496a2173982283a008bb0d372faf3ffa9a0"},
-    {file = "hypothesis-6.92.8.tar.gz", hash = "sha256:c7fb3ee895fac41be63b19d4a849a440bd34dc6b177ab3a97045b16e41c540e9"},
+    {file = "hypothesis-6.93.2-py3-none-any.whl", hash = "sha256:7cf1e01aa0e23d92841383bc297102172f667fc9088e8184c1d73281258ae7d5"},
+    {file = "hypothesis-6.93.2.tar.gz", hash = "sha256:2c7880180732f1596f415cca548ac6156942a5cdf871361358e2d27958fbb38a"},
 ]
 
 [package.dependencies]
@@ -943,13 +943,13 @@ global = ["pybind11-global (==2.11.1)"]
 
 [[package]]
 name = "pycobertura"
-version = "3.2.4"
+version = "3.3.0"
 description = "\"A Cobertura coverage parser that can diff reports and show coverage progress.\""
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pycobertura-3.2.4-py3-none-any.whl", hash = "sha256:d1437adccc05444221067dd3faf2fbd350f30c5c117c0290cc3b77427796ceb9"},
-    {file = "pycobertura-3.2.4.tar.gz", hash = "sha256:d6fe45ad12712cd3d2610e3e81f66136c770240593927817799c32e29e967484"},
+    {file = "pycobertura-3.3.0-py3-none-any.whl", hash = "sha256:4ed6d080ef0a11b4112b41a290336a40f73c12aadf8a24898f308aeaee1b89c0"},
+    {file = "pycobertura-3.3.0.tar.gz", hash = "sha256:66843fead1592e9f744b500e8e7ca49f7568cf237344a2d87c86a5d10f7fcd86"},
 ]
 
 [package.dependencies]
