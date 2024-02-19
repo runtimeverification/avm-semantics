@@ -21,13 +21,13 @@ tests-no-zope = ["attrs[tests-mypy]", "cloudpickle", "hypothesis", "pympler", "p
 
 [[package]]
 name = "autoflake"
-version = "2.2.1"
+version = "2.3.0"
 description = "Removes unused imports and unused variables"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "autoflake-2.2.1-py3-none-any.whl", hash = "sha256:265cde0a43c1f44ecfb4f30d95b0437796759d07be7706a2f70e4719234c0f79"},
-    {file = "autoflake-2.2.1.tar.gz", hash = "sha256:62b7b6449a692c3c9b0c916919bbc21648da7281e8506bcf8d3f8280e431ebc1"},
+    {file = "autoflake-2.3.0-py3-none-any.whl", hash = "sha256:79a51eb8c0744759d2efe052455ab20aa6a314763510c3fd897499a402126327"},
+    {file = "autoflake-2.3.0.tar.gz", hash = "sha256:8c2011fa34701b9d7dcf05b9873bc4859d4fce4e62dfea90dffefd1576f5f01d"},
 ]
 
 [package.dependencies]
@@ -354,13 +354,13 @@ pyreadline3 = {version = "*", markers = "sys_platform == \"win32\" and python_ve
 
 [[package]]
 name = "hypothesis"
-version = "6.98.6"
+version = "6.98.8"
 description = "A library for property-based testing"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "hypothesis-6.98.6-py3-none-any.whl", hash = "sha256:6d94e748311e331d1bc975550bece652d961b3f5218d77a2d450eb541a94cbae"},
-    {file = "hypothesis-6.98.6.tar.gz", hash = "sha256:2d80f64c58f58a60e035c665e94a36f77c3f8fe057b55053d06b2c82dcefc507"},
+    {file = "hypothesis-6.98.8-py3-none-any.whl", hash = "sha256:82d13cc46311c4a8de49a8a8613f4e6afbeabbc037e86d24ac16e2f15a0d676d"},
+    {file = "hypothesis-6.98.8.tar.gz", hash = "sha256:35bcb6e497967e73d968fc4adedaf49ca5d85a22cc8065798716581f2205563a"},
 ]
 
 [package.dependencies]
@@ -943,13 +943,13 @@ global = ["pybind11-global (==2.11.1)"]
 
 [[package]]
 name = "pycobertura"
-version = "3.3.0"
+version = "3.3.1"
 description = "\"A Cobertura coverage parser that can diff reports and show coverage progress.\""
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pycobertura-3.3.0-py3-none-any.whl", hash = "sha256:4ed6d080ef0a11b4112b41a290336a40f73c12aadf8a24898f308aeaee1b89c0"},
-    {file = "pycobertura-3.3.0.tar.gz", hash = "sha256:66843fead1592e9f744b500e8e7ca49f7568cf237344a2d87c86a5d10f7fcd86"},
+    {file = "pycobertura-3.3.1-py3-none-any.whl", hash = "sha256:47b7829d3ea35bf30fb243e20201f599607d32b698ba85ef33acb3cbd2a8582e"},
+    {file = "pycobertura-3.3.1.tar.gz", hash = "sha256:f0e9d6ba36dd706ba3601c6de525ac4be6df35a59718956dc4158a9fd42dbbd2"},
 ]
 
 [package.dependencies]
@@ -1138,13 +1138,13 @@ semantic-version = ">=2.9.0,<3.0.0"
 
 [[package]]
 name = "pytest"
-version = "8.0.0"
+version = "8.0.1"
 description = "pytest: simple powerful testing with Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pytest-8.0.0-py3-none-any.whl", hash = "sha256:50fb9cbe836c3f20f0dfa99c565201fb75dc54c8d76373cd1bde06b06657bdb6"},
-    {file = "pytest-8.0.0.tar.gz", hash = "sha256:249b1b0864530ba251b7438274c4d251c58d868edaaec8762893ad4a0d71c36c"},
+    {file = "pytest-8.0.1-py3-none-any.whl", hash = "sha256:3e4f16fe1c0a9dc9d9389161c127c3edc5d810c38d6793042fb81d9f48a59fca"},
+    {file = "pytest-8.0.1.tar.gz", hash = "sha256:267f6563751877d772019b13aacbe4e860d73fe8f651f28112e9ac37de7513ae"},
 ]
 
 [package.dependencies]
