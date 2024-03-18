@@ -324,19 +324,19 @@ files = [
 
 [[package]]
 name = "graphviz"
-version = "0.20.1"
+version = "0.20.2"
 description = "Simple Python interface for Graphviz"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "graphviz-0.20.1-py3-none-any.whl", hash = "sha256:587c58a223b51611c0cf461132da386edd896a029524ca61a1462b880bf97977"},
-    {file = "graphviz-0.20.1.zip", hash = "sha256:8c58f14adaa3b947daf26c19bc1e98c4e0702cdc31cf99153e6f06904d492bf8"},
+    {file = "graphviz-0.20.2-py3-none-any.whl", hash = "sha256:63d1ae75f1ca60f980e1cd3a61a678eef8de645ef8427736b2bb9bdd035ca44b"},
+    {file = "graphviz-0.20.2.zip", hash = "sha256:d29ca3aadbe5d6e6c584045b7ec4fc1c15af2448dc1c0211b5e94344833243da"},
 ]
 
 [package.extras]
 dev = ["flake8", "pep8-naming", "tox (>=3)", "twine", "wheel"]
-docs = ["sphinx (>=5)", "sphinx-autodoc-typehints", "sphinx-rtd-theme"]
-test = ["coverage", "mock (>=4)", "pytest (>=7)", "pytest-cov", "pytest-mock (>=3)"]
+docs = ["sphinx (>=5,<7)", "sphinx-autodoc-typehints", "sphinx-rtd-theme"]
+test = ["coverage", "pytest (>=7,<8.1)", "pytest-cov", "pytest-mock (>=3)"]
 
 [[package]]
 name = "humanfriendly"
@@ -354,13 +354,13 @@ pyreadline3 = {version = "*", markers = "sys_platform == \"win32\" and python_ve
 
 [[package]]
 name = "hypothesis"
-version = "6.99.6"
+version = "6.99.8"
 description = "A library for property-based testing"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "hypothesis-6.99.6-py3-none-any.whl", hash = "sha256:f5287e0ca8be94b2129483e1268639f8675c8c041d1b1756561a374575659940"},
-    {file = "hypothesis-6.99.6.tar.gz", hash = "sha256:397e362c8d7e3a5f4654644db964759f6a7f26a8c8a46d2a9e909595d9769ed1"},
+    {file = "hypothesis-6.99.8-py3-none-any.whl", hash = "sha256:8b5175a906c0a11967c3a04eeb17c42b4b395cacd02a246ce926613189a14279"},
+    {file = "hypothesis-6.99.8.tar.gz", hash = "sha256:1274abcc12137645a1bcb8453063060cf38f949a90b31d08bea45e1818e05b8b"},
 ]
 
 [package.dependencies]
@@ -369,10 +369,10 @@ exceptiongroup = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
 sortedcontainers = ">=2.1.0,<3.0.0"
 
 [package.extras]
-all = ["backports.zoneinfo (>=0.2.1)", "black (>=19.10b0)", "click (>=7.0)", "crosshair-tool (>=0.0.50)", "django (>=3.2)", "dpcontracts (>=0.4)", "hypothesis-crosshair (>=0.0.1)", "lark (>=0.10.1)", "libcst (>=0.3.16)", "numpy (>=1.17.3)", "pandas (>=1.1)", "pytest (>=4.6)", "python-dateutil (>=1.4)", "pytz (>=2014.1)", "redis (>=3.0.0)", "rich (>=9.0.0)", "tzdata (>=2024.1)"]
+all = ["backports.zoneinfo (>=0.2.1)", "black (>=19.10b0)", "click (>=7.0)", "crosshair-tool (>=0.0.51)", "django (>=3.2)", "dpcontracts (>=0.4)", "hypothesis-crosshair (>=0.0.2)", "lark (>=0.10.1)", "libcst (>=0.3.16)", "numpy (>=1.17.3)", "pandas (>=1.1)", "pytest (>=4.6)", "python-dateutil (>=1.4)", "pytz (>=2014.1)", "redis (>=3.0.0)", "rich (>=9.0.0)", "tzdata (>=2024.1)"]
 cli = ["black (>=19.10b0)", "click (>=7.0)", "rich (>=9.0.0)"]
 codemods = ["libcst (>=0.3.16)"]
-crosshair = ["crosshair-tool (>=0.0.50)", "hypothesis-crosshair (>=0.0.1)"]
+crosshair = ["crosshair-tool (>=0.0.51)", "hypothesis-crosshair (>=0.0.2)"]
 dateutil = ["python-dateutil (>=1.4)"]
 django = ["django (>=3.2)"]
 dpcontracts = ["dpcontracts (>=0.4)"]
