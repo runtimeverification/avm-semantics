@@ -1010,13 +1010,13 @@ global = ["pybind11-global (==2.12.0)"]
 
 [[package]]
 name = "pycobertura"
-version = "3.3.1"
+version = "3.3.2"
 description = "\"A Cobertura coverage parser that can diff reports and show coverage progress.\""
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pycobertura-3.3.1-py3-none-any.whl", hash = "sha256:47b7829d3ea35bf30fb243e20201f599607d32b698ba85ef33acb3cbd2a8582e"},
-    {file = "pycobertura-3.3.1.tar.gz", hash = "sha256:f0e9d6ba36dd706ba3601c6de525ac4be6df35a59718956dc4158a9fd42dbbd2"},
+    {file = "pycobertura-3.3.2-py3-none-any.whl", hash = "sha256:208aeb85de58d3acef05212c80d7d65fafb0246f3f2e17c0b726c7b72dbaa851"},
+    {file = "pycobertura-3.3.2.tar.gz", hash = "sha256:34019472da9fcf5ebf33dbb47829d4ab953bcfdfdf42f02b0cebcee4b18e48bf"},
 ]
 
 [package.dependencies]
@@ -1489,13 +1489,13 @@ files = [
 
 [[package]]
 name = "zipp"
-version = "3.18.2"
+version = "3.19.0"
 description = "Backport of pathlib-compatible object wrapper for zip files"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "zipp-3.18.2-py3-none-any.whl", hash = "sha256:dce197b859eb796242b0622af1b8beb0a722d52aa2f57133ead08edd5bf5374e"},
-    {file = "zipp-3.18.2.tar.gz", hash = "sha256:6278d9ddbcfb1f1089a88fde84481528b07b0e10474e09dcfe53dad4069fa059"},
+    {file = "zipp-3.19.0-py3-none-any.whl", hash = "sha256:96dc6ad62f1441bcaccef23b274ec471518daf4fbbc580341204936a5a3dddec"},
+    {file = "zipp-3.19.0.tar.gz", hash = "sha256:952df858fb3164426c976d9338d3961e8e8b3758e2e059e0f754b8c4262625ee"},
 ]
 
 [package.extras]
