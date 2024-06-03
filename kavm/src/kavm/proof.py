@@ -13,6 +13,7 @@ from pyk.kast.inner import (
     KInner,
     KLabel,
     KRewrite,
+    KSequence,
     KSort,
     KToken,
     KVariable,
@@ -20,6 +21,7 @@ from pyk.kast.inner import (
     build_assoc,
     var_occurrences,
 )
+from pyk.kast.kast import KAtt
 from pyk.kast.manip import (
     inline_cell_maps,
     minimize_term,
@@ -273,11 +275,12 @@ class KAVMProof:
         lhs_subst['DEQUE_CELL'] = KAVMProof.build_deque(txn_ids)
         lhs_subst['DEQUEINDEXSET_CELL'] = KAVMProof.build_deque_set(txn_ids)
         lhs_subst['TXNINDEXMAP_CELL'] = KToken('.Bag', 'TxnIndexMapGroupCell')
-        lhs_subst['K_CELL'] = KApply('#evalTxGroup')
+        lhs_subst['K_CELL'] = KSequence([KApply('#initGlobals'), KApply('#evalTxGroup')])
         lhs_subst['NEXTTXNID_CELL'] = intToken(len(self._txns_pre))
         lhs_subst['NEXTGROUPID_CELL'] = intToken(2)
         lhs_subst['NEXTAPPID_CELL'] = intToken(2)
         lhs_subst['NEXTASSETID_CELL'] = intToken(2)
+        lhs_subst['TEALPROGRAMS_CELL'] = KApply(".Map")
 
         lhs = Subst(lhs_subst).apply(symbolic_config)
 
@@ -339,6 +342,7 @@ class KAVMProof:
         rhs_subst['INNERTRANSACTIONS_CELL'] = KVariable('?_')
         rhs_subst['ACTIVEAPPS_CELL'] = KVariable('?_')
         rhs_subst['TOUCHEDACCOUNTS_CELL'] = KVariable('?_')
+        rhs_subst['TEALPROGRAMS_CELL'] = KApply(".Map")
 
         # <k> and friends post-state
         rhs_subst['RETURNSTATUS_CELL'] = KVariable('?_')
@@ -359,6 +363,7 @@ class KAVMProof:
             body=push_down_rewrites(KRewrite(lhs, rhs)),
             requires=requires,
             ensures=ensures,
+            att=KAtt({'label': 'main'}),
         )
 
         return claim

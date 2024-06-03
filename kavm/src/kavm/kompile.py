@@ -1,9 +1,12 @@
 import itertools
 import logging
 import subprocess
+import sys
 from pathlib import Path
 from subprocess import CalledProcessError, CompletedProcess
 from typing import Final, List, Optional
+
+from pyk.ktool.kompile import HaskellKompile, Kompile, KompileArgs, LLVMKompile, LLVMKompileType
 
 from kavm.kavm import KAVM
 
@@ -18,6 +21,7 @@ def kompile(
     main_module_name: Optional[str] = None,
     syntax_module_name: Optional[str] = None,
     backend: Optional[str] = 'llvm',
+    llvm_kompile_type: LLVMKompileType | None = None,
     md_selector: Optional[str] = None,
     verbose: bool = True,
     hook_namespaces: Optional[List[str]] = None,
@@ -27,34 +31,46 @@ def kompile(
     gen_bison_parser: bool = False,
     emit_json: bool = True,
 ) -> KAVM:
-    if backend == 'llvm':
-        generate_interpreter(
-            definition_dir,
-            main_file,
-            includes,
-            main_module_name,
-            syntax_module_name,
-            md_selector,
-            hook_namespaces,
-            hook_cpp_files,
-            hook_clang_flags,
-            coverage=coverage,
-            gen_bison_parser=gen_bison_parser,
-        )
-    elif backend == 'haskell':
-        kompile_haskell(
-            definition_dir=definition_dir,
-            main_file=main_file,
-            includes=includes,
-            main_module_name=main_module_name,
-            syntax_module_name=syntax_module_name,
-            md_selector=md_selector,
-            hook_namespaces=hook_namespaces,
-            backend=backend,
-            verbose=verbose,
-            emit_json=emit_json,
-        )
-    return KAVM(definition_dir)
+    if includes:
+        include_dirs = [Path(include) for include in includes]
+    else:
+        include_dirs = []
+
+    base_args = KompileArgs(
+        main_file=main_file,
+        main_module=main_module_name,
+        syntax_module=syntax_module_name,
+        include_dirs=include_dirs,
+        md_selector=md_selector,
+        hook_namespaces=hook_namespaces if hook_namespaces else [],
+        emit_json=emit_json,
+    )
+    kompile: Kompile
+    match backend:
+        case 'llvm':
+            cpp_files = hook_cpp_files if hook_cpp_files else []
+            clang_flags = hook_clang_flags if hook_clang_flags else []
+            kompile = LLVMKompile(
+                base_args=base_args,
+                ccopts=[f.lstrip() for f in clang_flags] + [str(p) for p in cpp_files],
+                llvm_kompile_type=llvm_kompile_type,
+            )
+        case 'haskell':
+            kompile = HaskellKompile(
+                base_args=base_args,
+            )
+        case _:
+            raise ValueError(f'Unsupported backend: {backend}')
+
+    try:
+        kompile(output_dir=definition_dir)
+        return KAVM(definition_dir)
+    except RuntimeError as err:
+        sys.stderr.write(f'\nkompile stdout:\n{err.args[1]}\n')
+        sys.stderr.write(f'\nkompile stderr:\n{err.args[2]}\n')
+        sys.stderr.write(f'\nkompile returncode:\n{err.args[3]}\n')
+        sys.stderr.flush()
+        raise
 
 
 def kompile_haskell(
