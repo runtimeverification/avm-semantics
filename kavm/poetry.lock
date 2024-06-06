@@ -313,13 +313,13 @@ flake8 = ">=3.0,<3.2.0 || >3.2.0"
 
 [[package]]
 name = "gprof2dot"
-version = "2024.6.5"
+version = "2024.6.6"
 description = "Generate a dot graph from the output of several profilers."
 optional = false
-python-versions = ">=2.7"
+python-versions = ">=3.8"
 files = [
-    {file = "gprof2dot-2024.6.5-py2.py3-none-any.whl", hash = "sha256:0be69ac4f5e0d6f57e0c627fa8f6053bdca6a7a226ea6fd8a74b69c845c7d2df"},
-    {file = "gprof2dot-2024.6.5.tar.gz", hash = "sha256:7564e4483f710d463bca1f27668aa595faaf0beee8ad0461df063a44305122a0"},
+    {file = "gprof2dot-2024.6.6-py2.py3-none-any.whl", hash = "sha256:45b14ad7ce64e299c8f526881007b9eb2c6b75505d5613e96e66ee4d5ab33696"},
+    {file = "gprof2dot-2024.6.6.tar.gz", hash = "sha256:fa1420c60025a9eb7734f65225b4da02a10fc6dd741b37fa129bc6b41951e5ab"},
 ]
 
 [[package]]
