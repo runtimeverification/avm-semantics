@@ -7,7 +7,7 @@
     flake-utils.follows = "k-framework/flake-utils";
     rv-utils.url = "github:runtimeverification/rv-nix-tools";
     poetry2nix.follows = "pyk/poetry2nix";
-    blockchain-k-plugin.url = "github:runtimeverification/blockchain-k-plugin/640a700ed9cfb515062ee9cffaeeb631b38dd95a";
+    blockchain-k-plugin.url = "github:runtimeverification/blockchain-k-plugin/f8a93660317c377fc7a16b3d49b0518892354a28";
     blockchain-k-plugin.inputs.flake-utils.follows = "k-framework/flake-utils";
     blockchain-k-plugin.inputs.nixpkgs.follows = "k-framework/nixpkgs";
     pyk.url = "github:runtimeverification/pyk/v0.1.362";
