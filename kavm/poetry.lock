@@ -2,13 +2,13 @@
 
 [[package]]
 name = "attrs"
-version = "24.1.0"
+version = "24.2.0"
 description = "Classes Without Boilerplate"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "attrs-24.1.0-py3-none-any.whl", hash = "sha256:377b47448cb61fea38533f671fba0d0f8a96fd58facd4dc518e3dac9dbea0905"},
-    {file = "attrs-24.1.0.tar.gz", hash = "sha256:adbdec84af72d38be7628e353a09b6a6790d15cd71819f6e9d7b0faa8a125745"},
+    {file = "attrs-24.2.0-py3-none-any.whl", hash = "sha256:81921eb96de3191c8258c199618104dd27ac608d9366f5e35d011eae1867ede2"},
+    {file = "attrs-24.2.0.tar.gz", hash = "sha256:5cfb1b9148b5b086569baec03f20d7b6bf3bcacc9a42bebf87ffaaca362f6346"},
 ]
 
 [package.extras]
@@ -354,13 +354,13 @@ pyreadline3 = {version = "*", markers = "sys_platform == \"win32\" and python_ve
 
 [[package]]
 name = "hypothesis"
-version = "6.108.8"
+version = "6.108.10"
 description = "A library for property-based testing"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "hypothesis-6.108.8-py3-none-any.whl", hash = "sha256:33e8bbc25c2f40d931327b210e9de5639eb954743c97984bcc19bdc7ef21a625"},
-    {file = "hypothesis-6.108.8.tar.gz", hash = "sha256:310eb6ce1ae7cbb34195ec76b054572c182d008564a42069883920f4ab3c80ac"},
+    {file = "hypothesis-6.108.10-py3-none-any.whl", hash = "sha256:7b24f7197dad30de0799181eeb885452846ed81022707e35c9c275cf63ddd24f"},
+    {file = "hypothesis-6.108.10.tar.gz", hash = "sha256:8d8b3a57f27bd964b04e58c5731ab9862134fbb5511958c814aaca3120286f28"},
 ]
 
 [package.dependencies]
